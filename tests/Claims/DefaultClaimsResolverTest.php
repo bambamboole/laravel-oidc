@@ -1,8 +1,8 @@
 <?php
 
-use Bababoole\LaravelOidc\Claims\ClaimSet;
-use Bababoole\LaravelOidc\Claims\DefaultClaimsResolver;
-use Bababoole\LaravelOidc\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Claims\ClaimSet;
+use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
+use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Workbench\App\Models\User;
 
 it('is bound as the default claims resolver', function () {
