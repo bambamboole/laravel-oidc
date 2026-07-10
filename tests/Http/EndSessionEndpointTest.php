@@ -39,6 +39,21 @@ it('logs out and redirects to a registered post_logout_redirect_uri', function (
     expect(auth()->guest())->toBeTrue();
 });
 
+it('preserves an existing query string when appending state', function () {
+    $this->client->forceFill([
+        'post_logout_redirect_uris' => json_encode(['https://rp.test/logged-out?tenant=abc']),
+    ])->save();
+
+    $response = $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => issueIdToken($this),
+        'post_logout_redirect_uri' => 'https://rp.test/logged-out?tenant=abc',
+        'state' => 'xyz',
+    ]));
+
+    $response->assertRedirect('https://rp.test/logged-out?tenant=abc&state=xyz');
+    expect(auth()->guest())->toBeTrue();
+});
+
 it('falls back to the configured redirect for unregistered uris', function () {
     $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this),

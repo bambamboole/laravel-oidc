@@ -39,8 +39,14 @@ class EndSessionController
 
         $state = $request->input('state');
 
+        if ($state === null) {
+            return redirect()->away($redirectUri);
+        }
+
+        $separator = str_contains($redirectUri, '?') ? '&' : '?';
+
         return redirect()->away(
-            $redirectUri.($state !== null ? '?'.http_build_query(['state' => $state]) : ''),
+            $redirectUri.$separator.http_build_query(['state' => $state]),
         );
     }
 
