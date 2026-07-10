@@ -8,3 +8,5 @@ parameters:
         - tests
         - workbench/app
     level: 6
+    peststan:
+        testCaseClass: Bambamboole\LaravelOidc\Tests\TestCase

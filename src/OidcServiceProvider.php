@@ -27,5 +27,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/oidc.php' => config_path('oidc.php'),
         ], 'oidc-config');
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
     }
 }
