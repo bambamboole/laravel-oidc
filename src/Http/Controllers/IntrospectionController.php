@@ -19,7 +19,9 @@ class IntrospectionController
     {
         $clientId = $credentials->validate($request);
 
-        abort_if($clientId === null, 401, 'invalid_client');
+        if ($clientId === null) {
+            return response()->json(['error' => 'invalid_client'], 401, ['WWW-Authenticate' => 'Basic']);
+        }
 
         $tokenValue = (string) $request->input('token');
 
@@ -44,14 +46,14 @@ class IntrospectionController
 
         $scopes = $token->getAttribute('scopes');
 
-        return response()->json([
+        return response()->json(array_filter([
             'active' => true,
             'token_type' => 'Bearer',
             'scope' => implode(' ', is_array($scopes) ? $scopes : []),
             'client_id' => $tokenClientId,
-            'sub' => (string) $token->getAttribute('user_id'),
+            'sub' => $this->subject($token->getAttribute('user_id')),
             'exp' => $expiresAt instanceof CarbonInterface ? $expiresAt->getTimestamp() : null,
-        ]);
+        ], fn (mixed $value): bool => $value !== null));
     }
 
     private function introspectRefreshToken(string $tokenValue, string $clientId, TokenInspector $inspector): JsonResponse
@@ -73,11 +75,20 @@ class IntrospectionController
             return response()->json(['active' => false]);
         }
 
-        return response()->json([
+        return response()->json(array_filter([
             'active' => true,
             'client_id' => $clientId,
-            'sub' => (string) ($payload->user_id ?? ''),
+            'sub' => $this->subject($payload->user_id ?? null),
             'exp' => $expireTime,
-        ]);
+        ], fn (mixed $value): bool => $value !== null));
+    }
+
+    private function subject(mixed $userId): ?string
+    {
+        if ($userId === null || $userId === '') {
+            return null;
+        }
+
+        return (string) $userId;
     }
 }

@@ -30,7 +30,24 @@ function issueAccessTokenViaPersonalClient(mixed $test): array
 }
 
 it('rejects requests without client authentication', function () {
-    $this->postJson('/oauth/introspect', ['token' => 'x'])->assertUnauthorized();
+    $response = $this->postJson('/oauth/introspect', ['token' => 'x'])->assertUnauthorized();
+
+    expect($response->headers->get('WWW-Authenticate'))->toBe('Basic');
+});
+
+it('omits sub and exp when the token has no user or expiry', function () {
+    [$jwt, $token] = issueAccessTokenViaPersonalClient($this);
+    $token->forceFill(['client_id' => $this->client->id, 'user_id' => null, 'expires_at' => null])->save();
+
+    $response = $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $jwt,
+    ])->assertOk();
+
+    expect($response->json())->toHaveKey('active', true)
+        ->and($response->json())->not->toHaveKey('sub')
+        ->and($response->json())->not->toHaveKey('exp');
 });
 
 it('reports active for a valid access token of the same client', function () {

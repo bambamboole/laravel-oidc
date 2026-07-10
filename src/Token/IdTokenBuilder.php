@@ -69,7 +69,7 @@ class IdTokenBuilder
 
     private function resolveUser(AccessTokenEntityInterface $accessToken): Authenticatable
     {
-        $guard = config('passport.guard', 'web');
+        $guard = config('passport.guard') ?? config('auth.defaults.guard');
         $provider = Auth::createUserProvider(config("auth.guards.{$guard}.provider"));
         $user = $provider?->retrieveById($accessToken->getUserIdentifier());
 

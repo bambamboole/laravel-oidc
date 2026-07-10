@@ -17,7 +17,9 @@ class RevocationController
     {
         $clientId = $credentials->validate($request);
 
-        abort_if($clientId === null, 401, 'invalid_client');
+        if ($clientId === null) {
+            return response('invalid_client', 401, ['WWW-Authenticate' => 'Basic']);
+        }
 
         $tokenValue = (string) $request->input('token');
 

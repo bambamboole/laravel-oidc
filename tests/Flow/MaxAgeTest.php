@@ -40,6 +40,31 @@ it('treats a missing auth_time as stale', function () {
         ->assertRedirect();
 });
 
+it('does not log out when max_age references an unknown client', function () {
+    $query = http_build_query([
+        'client_id' => 'this-client-does-not-exist',
+        'redirect_uri' => 'https://rp.test/callback',
+        'response_type' => 'code',
+        'scope' => 'openid',
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->withSession(['oidc.auth_time' => time() - 3600])
+        ->get('/oauth/authorize?'.$query.'&max_age=1');
+
+    expect($response->getStatusCode())->toBeGreaterThanOrEqual(400)
+        ->and(auth()->check())->toBeTrue();
+});
+
+it('forces re-authentication when max_age is zero', function () {
+    $this->actingAs($this->user)
+        ->withSession(['oidc.auth_time' => time()])
+        ->get('/oauth/authorize?'.$this->query.'&max_age=0')
+        ->assertRedirect();
+
+    expect(auth()->guest())->toBeTrue();
+});
+
 it('records auth_time in the session on login', function () {
     $this->startSession();
 

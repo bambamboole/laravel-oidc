@@ -24,6 +24,10 @@ class BridgeScopeRepository extends PassportBridgeScopeRepository
 
     public function getScopeEntityByIdentifier(string $identifier): ?ScopeEntityInterface
     {
+        if ($identifier === '*') {
+            return new BridgeScope($identifier);
+        }
+
         return $this->scopes->find($identifier) instanceof Scope ? new BridgeScope($identifier) : null;
     }
 
@@ -34,25 +38,35 @@ class BridgeScopeRepository extends PassportBridgeScopeRepository
         ?string $userIdentifier = null,
         ?string $authCodeId = null
     ): array {
-        $candidates = collect($scopes)
+        $entities = collect($scopes)
             ->unless(in_array($grantType, ['password', 'personal_access', 'client_credentials']),
                 fn (Collection $scopes): Collection => $scopes->reject(
                     fn (ScopeEntityInterface $scope): bool => $scope->getIdentifier() === '*'
                 )
             )
-            ->map(fn (ScopeEntityInterface $scope): ?Scope => $this->scopes->find($scope->getIdentifier()))
-            ->filter()
             ->when($this->clients->findActive($clientEntity->getIdentifier()),
                 fn (Collection $scopes, Client $client): Collection => $scopes->filter(
-                    fn (Scope $scope): bool => $client->hasScope($scope->id)
+                    fn (ScopeEntityInterface $scope): bool => $client->hasScope($scope->getIdentifier())
                 )
-            )
+            );
+
+        $wildcard = $entities->contains(
+            fn (ScopeEntityInterface $scope): bool => $scope->getIdentifier() === '*'
+        );
+
+        $candidates = $entities
+            ->map(fn (ScopeEntityInterface $scope): ?Scope => $this->scopes->find($scope->getIdentifier()))
+            ->filter()
             ->values()
             ->all();
 
-        return collect($this->scopes->finalize($candidates, $grantType, $clientEntity, $userIdentifier))
-            ->map(fn (Scope $scope): ScopeEntityInterface => new BridgeScope($scope->id))
-            ->values()
-            ->all();
+        $finalized = collect($this->scopes->finalize($candidates, $grantType, $clientEntity, $userIdentifier))
+            ->map(fn (Scope $scope): ScopeEntityInterface => new BridgeScope($scope->id));
+
+        if ($wildcard) {
+            $finalized->prepend(new BridgeScope('*'));
+        }
+
+        return $finalized->values()->all();
     }
 }

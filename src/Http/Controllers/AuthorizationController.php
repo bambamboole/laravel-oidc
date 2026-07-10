@@ -59,6 +59,16 @@ class AuthorizationController extends PassportAuthorizationController
             return;
         }
 
+        // A stale-but-valid session must never be torn down before the request
+        // itself is trustworthy. Without a resolvable, non-revoked client the
+        // logout would be a cross-site logout vector (e.g. an <img> tag hitting
+        // /oauth/authorize?max_age=1). Defer to parent::authorize to reject.
+        $clientId = $request->query('client_id');
+
+        if (! is_string($clientId) || $this->clients->findActive($clientId) === null) {
+            return;
+        }
+
         // Mirrors Passport's prompt=login loop guard: after the forced login
         // redirect returns here, promptedForLogin is set, so we don't force again.
         if ($request->session()->get('promptedForLogin', false)) {
@@ -67,7 +77,7 @@ class AuthorizationController extends PassportAuthorizationController
 
         $authTime = (int) $request->session()->get('oidc.auth_time', 0);
 
-        if (time() - $authTime > (int) $maxAge) {
+        if (time() - $authTime >= (int) $maxAge) {
             $this->guard->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

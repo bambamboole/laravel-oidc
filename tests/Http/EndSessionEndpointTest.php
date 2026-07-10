@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Tests\TestCase;
 use Bambamboole\LaravelOidc\Token\IdTokenBuilder;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Passport\Bridge\AccessToken;
 use Laravel\Passport\Bridge\Client as BridgeClient;
 use Laravel\Passport\Bridge\Scope as BridgeScope;
@@ -17,10 +18,11 @@ beforeEach(function () {
     $this->client->forceFill(['post_logout_redirect_uris' => json_encode(['https://rp.test/logged-out'])])->save();
 });
 
-function issueIdToken(TestCase $test): string
+function issueIdToken(TestCase $test, ?User $subject = null): string
 {
+    $user = $subject ?? $test->user;
     $client = new BridgeClient((string) $test->client->id, 'RP', ['https://rp.test/callback']);
-    $token = new AccessToken((string) $test->user->id, [new BridgeScope('openid')], $client);
+    $token = new AccessToken((string) $user->id, [new BridgeScope('openid')], $client);
     $token->setIdentifier('tid');
     $token->setExpiryDateTime(new DateTimeImmutable('+1 hour'));
     $token->setPrivateKey(new CryptKey(__DIR__.'/../fixtures/oauth-private.key', null, false));
@@ -61,17 +63,44 @@ it('falls back to the configured redirect for unregistered uris', function () {
     ]))->assertRedirect('/');
 });
 
-it('falls back without a valid id_token_hint', function () {
+it('does not log out on a GET without a valid id_token_hint', function () {
     $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => 'garbage',
         'post_logout_redirect_uri' => 'https://rp.test/logged-out',
     ]))->assertRedirect('/');
 
+    expect(auth()->check())->toBeTrue();
+});
+
+it('does not log out on a parameterless GET', function () {
+    $this->actingAs($this->user)->get('/oauth/logout')->assertRedirect('/');
+
+    expect(auth()->check())->toBeTrue();
+});
+
+it('logs out on a POST without a valid id_token_hint', function () {
+    $this->withoutMiddleware(ValidateCsrfToken::class)
+        ->actingAs($this->user)
+        ->post('/oauth/logout')
+        ->assertRedirect('/');
+
     expect(auth()->guest())->toBeTrue();
 });
 
-it('logs out without any parameters', function () {
-    $this->actingAs($this->user)->get('/oauth/logout')->assertRedirect('/');
+it('logs out on a GET with a valid id_token_hint', function () {
+    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => issueIdToken($this),
+    ]))->assertRedirect('/');
 
     expect(auth()->guest())->toBeTrue();
+});
+
+it('does not log out when the hint sub does not match the current user', function () {
+    $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'x']);
+
+    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => issueIdToken($this, $other),
+    ]))->assertRedirect('/');
+
+    expect(auth()->check())->toBeTrue();
 });

@@ -24,13 +24,16 @@ class EndSessionController
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        $redirectUri = $this->validatedPostLogoutUri($request);
+        $hint = $this->validatedHint($request);
+        $redirectUri = $this->validatedPostLogoutUri($request, $hint);
 
-        Auth::guard(config('passport.guard', null))->logout();
+        if ($this->shouldLogout($request, $hint)) {
+            Auth::guard(config('passport.guard', null))->logout();
 
-        if ($request->hasSession()) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
         }
 
         if ($redirectUri === null) {
@@ -50,12 +53,34 @@ class EndSessionController
         );
     }
 
-    private function validatedPostLogoutUri(Request $request): ?string
+    private function shouldLogout(Request $request, ?Plain $hint): bool
+    {
+        if ($hint !== null) {
+            return $this->hintMatchesCurrentUser($hint);
+        }
+
+        // A GET without a verified hint is not proof of user intent: it can be
+        // forged cross-site (e.g. an <img> tag). Only same-site POST requests,
+        // which pass through the web guard's CSRF check, may log the user out.
+        return $request->isMethod('post');
+    }
+
+    private function hintMatchesCurrentUser(Plain $hint): bool
+    {
+        $user = Auth::guard(config('passport.guard', null))->user();
+
+        if ($user === null) {
+            return true;
+        }
+
+        return (string) $hint->claims()->get('sub') === (string) $user->getAuthIdentifier();
+    }
+
+    private function validatedHint(Request $request): ?Plain
     {
         $hint = $request->input('id_token_hint');
-        $uri = $request->input('post_logout_redirect_uri');
 
-        if ($hint === null || $uri === null) {
+        if (! is_string($hint) || $hint === '') {
             return null;
         }
 
@@ -65,17 +90,28 @@ class EndSessionController
             return null;
         }
 
-        $valid = $token instanceof Plain && (new Validator)->validate(
+        if (! $token instanceof Plain) {
+            return null;
+        }
+
+        $valid = (new Validator)->validate(
             $token,
             new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey())),
             new IssuedBy(Issuer::url()),
         );
 
-        if (! $valid) {
+        return $valid ? $token : null;
+    }
+
+    private function validatedPostLogoutUri(Request $request, ?Plain $hint): ?string
+    {
+        $uri = $request->input('post_logout_redirect_uri');
+
+        if ($hint === null || $uri === null) {
             return null;
         }
 
-        $clientId = $token->claims()->get('aud')[0] ?? null;
+        $clientId = $hint->claims()->get('aud')[0] ?? null;
         $client = $clientId !== null ? Passport::client()::query()->find($clientId) : null;
 
         if ($client === null) {

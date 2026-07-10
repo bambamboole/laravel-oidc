@@ -29,6 +29,14 @@ class IdTokenResponse extends BearerTokenResponse
 
     protected function getExtraParams(AccessTokenEntityInterface $accessToken): array
     {
+        // Read-and-clear: this response type is resolved once and reused across
+        // requests on long-lived workers (Octane), so nonce/auth_time must never
+        // leak into a subsequent token issuance.
+        $nonce = $this->nonce;
+        $authTime = $this->authTime;
+        $this->nonce = null;
+        $this->authTime = null;
+
         $scopes = array_map(
             fn (ScopeEntityInterface $scope) => $scope->getIdentifier(),
             $accessToken->getScopes(),
@@ -38,6 +46,6 @@ class IdTokenResponse extends BearerTokenResponse
             return [];
         }
 
-        return ['id_token' => $this->builder->build($accessToken, $this->nonce, $this->authTime)];
+        return ['id_token' => $this->builder->build($accessToken, $nonce, $authTime)];
     }
 }
