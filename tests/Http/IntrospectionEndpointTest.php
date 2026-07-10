@@ -79,3 +79,51 @@ it('reports inactive for tokens belonging to another client', function () {
         'token' => $jwt,
     ])->assertOk()->assertExactJson(['active' => false]);
 });
+
+it('reports active for a valid refresh token of the same client', function () {
+    [$refreshTokenValue] = issueRefreshToken($this);
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $refreshTokenValue,
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk()->assertJson([
+        'active' => true,
+        'client_id' => $this->client->id,
+        'sub' => (string) $this->user->id,
+    ])->assertJsonStructure(['active', 'client_id', 'sub', 'exp']);
+});
+
+it('reports inactive for a revoked refresh token', function () {
+    [$refreshTokenValue, $refreshToken] = issueRefreshToken($this);
+    $refreshToken->revoke();
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $refreshTokenValue,
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk()->assertExactJson(['active' => false]);
+});
+
+it('reports inactive for a garbage refresh token without leaking errors', function () {
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => 'not-a-token',
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk()->assertExactJson(['active' => false]);
+});
+
+it('reports inactive for a refresh token belonging to another client', function () {
+    $other = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Other', ['https://other.test/cb']);
+    [$refreshTokenValue] = issueRefreshToken($this, (string) $other->id);
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $refreshTokenValue,
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk()->assertExactJson(['active' => false]);
+});

@@ -50,3 +50,32 @@ it('silently ignores tokens of other clients per rfc 7009', function () {
 it('rejects unauthenticated revocation', function () {
     $this->postJson('/oauth/revoke', ['token' => $this->jwt])->assertUnauthorized();
 });
+
+it('revokes a refresh token and its linked access token for its own client', function () {
+    [$refreshTokenValue, $refreshToken, $accessToken] = issueRefreshToken($this);
+
+    $this->postJson('/oauth/revoke', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $refreshTokenValue,
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk();
+
+    expect($refreshToken->refresh()->getAttribute('revoked'))->toBeTrue()
+        ->and($accessToken->refresh()->getAttribute('revoked'))->toBeTrue();
+});
+
+it('silently ignores refresh tokens of other clients per rfc 7009', function () {
+    $other = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Other', ['https://other.test/cb']);
+    [$refreshTokenValue, $refreshToken, $accessToken] = issueRefreshToken($this);
+
+    $this->postJson('/oauth/revoke', [
+        'client_id' => $other->id,
+        'client_secret' => $other->plainSecret,
+        'token' => $refreshTokenValue,
+        'token_type_hint' => 'refresh_token',
+    ])->assertOk();
+
+    expect($refreshToken->refresh()->getAttribute('revoked'))->toBeFalse()
+        ->and($accessToken->refresh()->getAttribute('revoked'))->toBeFalse();
+});
