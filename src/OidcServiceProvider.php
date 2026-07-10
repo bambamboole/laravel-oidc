@@ -7,9 +7,22 @@ namespace Bambamboole\LaravelOidc;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
+use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Token\OidcAccessToken;
+use DateInterval;
+use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Bridge\AuthCodeRepository;
+use Laravel\Passport\Bridge\RefreshTokenRepository;
+use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
+use Laravel\Passport\Passport;
+use League\OAuth2\Server\AuthorizationServer;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -17,17 +30,40 @@ class OidcServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/oidc.php', 'oidc');
 
+        Passport::ignoreRoutes();
+        Passport::useAccessTokenEntity(OidcAccessToken::class);
+
         $this->app->singleton(ScopeRepository::class, PassportScopeRepository::class);
-        $this->app->bind(\Laravel\Passport\Bridge\ScopeRepository::class, BridgeScopeRepository::class);
+        $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
+
+        $this->app->when(AuthorizationController::class)
+            ->needs(StatefulGuard::class)
+            ->give(fn () => Auth::guard(config('passport.guard', null)));
+
+        $this->app->extend(AuthorizationServer::class, function (AuthorizationServer $server, Application $app): AuthorizationServer {
+            $grant = new OidcAuthCodeGrant(
+                $app->make(AuthCodeRepository::class),
+                $app->make(RefreshTokenRepository::class),
+                new DateInterval('PT10M'),
+            );
+            $grant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
+
+            $server->enableGrantType($grant, Passport::tokensExpireIn());
+
+            return $server;
+        });
     }
 
     public function boot(): void
     {
+        Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
+
+        $this->loadRoutesFrom(__DIR__.'/../routes/passport.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
+
         $this->publishes([
             __DIR__.'/../config/oidc.php' => config_path('oidc.php'),
         ], 'oidc-config');
-
-        $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
     }
 }

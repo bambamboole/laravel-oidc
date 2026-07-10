@@ -10,3 +10,11 @@ parameters:
     level: 6
     peststan:
         testCaseClass: Bambamboole\LaravelOidc\Tests\TestCase
+    ignoreErrors:
+        # AuthorizationController::parseScopes() intentionally returns our richer Scope VO
+        # (carries `hidden` for the OIDC consent page) instead of Passport's Scope; the parent
+        # only documents the type via PHPDoc and consumes the result structurally (pluck('id')).
+        -
+            identifier: return.type
+            message: '#Method Bambamboole\\LaravelOidc\\Http\\Controllers\\AuthorizationController::parseScopes\(\) should return array<Laravel\\Passport\\Scope>#'
+            path: src/Http/Controllers/AuthorizationController.php
