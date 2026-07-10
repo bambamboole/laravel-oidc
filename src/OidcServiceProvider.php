@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
@@ -39,6 +40,8 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ScopeRepository::class, PassportScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
+        $this->app->singleton(ClaimHooks::class);
+        $this->app->singleton(OidcManager::class);
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
