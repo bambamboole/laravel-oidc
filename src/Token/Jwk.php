@@ -4,35 +4,40 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
+use phpseclib3\Crypt\PublicKeyLoader;
+use phpseclib3\Crypt\RSA\PublicKey;
 use RuntimeException;
+use Throwable;
 
 final class Jwk
 {
     /** @return array{kty: string, use: string, alg: string, kid: string, n: string, e: string} */
     public static function fromPem(string $pem): array
     {
-        $key = openssl_pkey_get_public($pem);
-
-        if ($key === false) {
-            throw new RuntimeException('The given PEM is not a readable public key.');
+        try {
+            $key = PublicKeyLoader::load(trim($pem));
+        } catch (Throwable $exception) {
+            throw new RuntimeException('The given PEM is not a readable public key.', 0, $exception);
         }
 
-        $details = openssl_pkey_get_details($key);
-
-        if ($details === false || ($details['type'] ?? null) !== OPENSSL_KEYTYPE_RSA) {
+        if (! $key instanceof PublicKey) {
             throw new RuntimeException('Only RSA public keys can be converted to a JWK.');
         }
 
-        $n = self::base64UrlEncode($details['rsa']['n']);
-        $e = self::base64UrlEncode($details['rsa']['e']);
+        $decoded = json_decode($key->toString('JWK'), true);
+        $jwk = is_array($decoded) ? ($decoded['keys'][0] ?? null) : null;
+
+        if (! is_array($jwk) || ! is_string($jwk['n'] ?? null) || ! is_string($jwk['e'] ?? null)) {
+            throw new RuntimeException('Unable to derive JWK parameters from the given RSA public key.');
+        }
 
         return [
             'kty' => 'RSA',
             'use' => 'sig',
             'alg' => 'RS256',
-            'kid' => self::thumbprint($n, $e),
-            'n' => $n,
-            'e' => $e,
+            'kid' => self::thumbprint($jwk['n'], $jwk['e']),
+            'n' => $jwk['n'],
+            'e' => $jwk['e'],
         ];
     }
 
