@@ -12,8 +12,10 @@ parameters:
         testCaseClass: Bambamboole\LaravelOidc\Tests\TestCase
     ignoreErrors:
         # AuthorizationController::parseScopes() intentionally returns our richer Scope VO
-        # (carries `hidden` for the OIDC consent page) instead of Passport's Scope; the parent
-        # only documents the type via PHPDoc and consumes the result structurally (pluck('id')).
+        # (carries `hidden` for the OIDC consent page) instead of Passport's Scope. This is a
+        # type-incompatible override, but it is safe because Passport only ever consumes the
+        # result structurally, via ->id/->description (hasGrantedScopes()'s pluck('id') and the
+        # authorization view params), never via the concrete Laravel\Passport\Scope type.
         -
             identifier: return.type
             message: '#Method Bambamboole\\LaravelOidc\\Http\\Controllers\\AuthorizationController::parseScopes\(\) should return array<Laravel\\Passport\\Scope>#'

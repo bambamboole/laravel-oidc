@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
+use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
 use Bambamboole\LaravelOidc\Tests\TestCase;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -140,9 +143,17 @@ it('issues an id_token without nonce or auth_time on refresh', function () {
         ->and($idToken->claims()->has('auth_time'))->toBeFalse();
 });
 
-it('registers exactly one set of oauth routes', function () {
-    $routes = collect(app('router')->getRoutes()->getRoutesByName())->keys();
+it('owns the oauth routes with package controllers', function () {
+    $routes = app('router')->getRoutes();
 
-    expect($routes->filter(fn (string $name) => str_starts_with($name, 'passport.'))->count())
-        ->toBe($routes->filter(fn (string $name) => str_starts_with($name, 'passport.'))->unique()->count());
+    expect($routes->getByName('passport.authorizations.authorize')->getControllerClass())
+        ->toBe(AuthorizationController::class)
+        ->and($routes->getByName('passport.authorizations.approve')->getControllerClass())
+        ->toBe(ApproveAuthorizationController::class)
+        ->and($routes->getByName('passport.authorizations.deny')->getControllerClass())
+        ->toBe(DenyAuthorizationController::class);
+
+    expect(collect($routes->getRoutes())->filter(
+        fn ($route) => $route->uri() === 'oauth/token' && in_array('POST', $route->methods(), true)
+    )->count())->toBe(1);
 });
