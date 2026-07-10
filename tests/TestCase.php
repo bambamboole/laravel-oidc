@@ -41,6 +41,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        Passport::$validateKeyPermissions = false;
         Passport::loadKeysFrom(__DIR__.'/fixtures');
     }
 
