@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+
+use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Token;
+use Workbench\App\Models\User;
+
+beforeEach(function () {
+    $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
+    $this->client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('RP', ['https://rp.test/callback']);
+    $this->secret = $this->client->plainSecret;
+});
+
+/**
+ * @return array{0: string, 1: Token}
+ */
+function issueAccessTokenViaPersonalClient(mixed $test): array
+{
+    app(ClientRepository::class)->createPersonalAccessGrantClient('PAT', 'users');
+    $result = $test->user->createToken('t', ['openid', 'email']);
+
+    $token = $result->getToken();
+
+    if (! $token instanceof Token) {
+        throw new RuntimeException('Expected the personal access token to be persisted.');
+    }
+
+    return [$result->accessToken, $token];
+}
+
+it('rejects requests without client authentication', function () {
+    $this->postJson('/oauth/introspect', ['token' => 'x'])->assertUnauthorized();
+});
+
+it('reports active for a valid access token of the same client', function () {
+    [$jwt, $token] = issueAccessTokenViaPersonalClient($this);
+    $token->forceFill(['client_id' => $this->client->id])->save();
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $jwt,
+    ])->assertOk()->assertJson([
+        'active' => true,
+        'token_type' => 'Bearer',
+        'client_id' => $this->client->id,
+        'sub' => (string) $this->user->id,
+        'scope' => 'openid email',
+    ]);
+});
+
+it('reports inactive for revoked tokens', function () {
+    [$jwt, $token] = issueAccessTokenViaPersonalClient($this);
+    $token->forceFill(['client_id' => $this->client->id])->save();
+    $token->revoke();
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $jwt,
+    ])->assertOk()->assertExactJson(['active' => false]);
+});
+
+it('reports inactive for garbage tokens without leaking errors', function () {
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => 'not-a-token',
+    ])->assertOk()->assertExactJson(['active' => false]);
+});
+
+it('reports inactive for tokens belonging to another client', function () {
+    [$jwt] = issueAccessTokenViaPersonalClient($this);
+
+    $this->postJson('/oauth/introspect', [
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'token' => $jwt,
+    ])->assertOk()->assertExactJson(['active' => false]);
+});

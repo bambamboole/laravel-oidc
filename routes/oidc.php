@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Http\Controllers\DiscoveryController;
 use Bambamboole\LaravelOidc\Http\Controllers\EndSessionController;
+use Bambamboole\LaravelOidc\Http\Controllers\IntrospectionController;
 use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
+use Bambamboole\LaravelOidc\Http\Controllers\RevocationController;
 use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
@@ -24,9 +26,13 @@ if (config('oidc.endpoints.end_session')) {
 }
 
 if (config('oidc.endpoints.introspection')) {
-    Route::post('/oauth/introspect', fn () => abort(501))->name('oidc.introspect');
+    Route::post('/oauth/introspect', IntrospectionController::class)
+        ->middleware('throttle')
+        ->name('oidc.introspect');
 }
 
 if (config('oidc.endpoints.revocation')) {
-    Route::post('/oauth/revoke', fn () => abort(501))->name('oidc.revoke');
+    Route::post('/oauth/revoke', RevocationController::class)
+        ->middleware('throttle')
+        ->name('oidc.revoke');
 }
