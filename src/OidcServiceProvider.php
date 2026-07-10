@@ -70,5 +70,9 @@ class OidcServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/oidc.php' => config_path('oidc.php'),
         ], 'oidc-config');
+
+        $this->publishesMigrations([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'oidc-migrations');
     }
 }

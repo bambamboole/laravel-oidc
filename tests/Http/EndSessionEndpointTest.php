@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+use Bambamboole\LaravelOidc\Tests\TestCase;
+use Bambamboole\LaravelOidc\Token\IdTokenBuilder;
+use Laravel\Passport\Bridge\AccessToken;
+use Laravel\Passport\Bridge\Client as BridgeClient;
+use Laravel\Passport\Bridge\Scope as BridgeScope;
+use Laravel\Passport\ClientRepository;
+use League\OAuth2\Server\CryptKey;
+use Workbench\App\Models\User;
+
+beforeEach(function () {
+    $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
+    $this->client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('RP', ['https://rp.test/callback']);
+    $this->client->forceFill(['post_logout_redirect_uris' => json_encode(['https://rp.test/logged-out'])])->save();
+});
+
+function issueIdToken(TestCase $test): string
+{
+    $client = new BridgeClient((string) $test->client->id, 'RP', ['https://rp.test/callback']);
+    $token = new AccessToken((string) $test->user->id, [new BridgeScope('openid')], $client);
+    $token->setIdentifier('tid');
+    $token->setExpiryDateTime(new DateTimeImmutable('+1 hour'));
+    $token->setPrivateKey(new CryptKey(__DIR__.'/../fixtures/oauth-private.key', null, false));
+
+    return app(IdTokenBuilder::class)->build($token, null, null);
+}
+
+it('logs out and redirects to a registered post_logout_redirect_uri', function () {
+    $response = $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => issueIdToken($this),
+        'post_logout_redirect_uri' => 'https://rp.test/logged-out',
+        'state' => 'xyz',
+    ]));
+
+    $response->assertRedirect('https://rp.test/logged-out?state=xyz');
+    expect(auth()->guest())->toBeTrue();
+});
+
+it('falls back to the configured redirect for unregistered uris', function () {
+    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => issueIdToken($this),
+        'post_logout_redirect_uri' => 'https://evil.test/phish',
+    ]))->assertRedirect('/');
+});
+
+it('falls back without a valid id_token_hint', function () {
+    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+        'id_token_hint' => 'garbage',
+        'post_logout_redirect_uri' => 'https://rp.test/logged-out',
+    ]))->assertRedirect('/');
+
+    expect(auth()->guest())->toBeTrue();
+});
+
+it('logs out without any parameters', function () {
+    $this->actingAs($this->user)->get('/oauth/logout')->assertRedirect('/');
+
+    expect(auth()->guest())->toBeTrue();
+});

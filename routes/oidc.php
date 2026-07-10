@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Http\Controllers\DiscoveryController;
+use Bambamboole\LaravelOidc\Http\Controllers\EndSessionController;
 use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
 use Illuminate\Support\Facades\Route;
@@ -17,7 +18,9 @@ if (config('oidc.endpoints.userinfo')) {
 }
 
 if (config('oidc.endpoints.end_session')) {
-    Route::match(['get', 'post'], '/oauth/logout', fn () => abort(501))->name('oidc.logout');
+    Route::match(['get', 'post'], '/oauth/logout', EndSessionController::class)
+        ->middleware('web')
+        ->name('oidc.logout');
 }
 
 if (config('oidc.endpoints.introspection')) {
