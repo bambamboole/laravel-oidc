@@ -1,0 +1,75 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "bambamboole/laravel-oidc",
+    "description": "OpenID Connect provider layer for Laravel Passport",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "passport", "oidc", "openid-connect", "oauth2"],
+    "authors": [
+        {
+            "name": "Manuel Christlieb",
+            "email": "manuel@christlieb.eu"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "laravel/passport": "^13.0",
+        "lcobucci/jwt": "^5.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/boost": "^2.4",
+        "laravel/pint": "^1.16",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bambamboole\\LaravelOidc\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bambamboole\\LaravelOidc\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Bambamboole\\LaravelOidc\\OidcServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "analyse": "./vendor/bin/phpstan analyse",
+        "check": [
+            "@test:lint",
+            "@analyse",
+            "@test"
+        ],
+        "lint": "./vendor/bin/pint",
+        "test:lint": "./vendor/bin/pint --test",
+        "test": "./vendor/bin/pest",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "post-install-cmd": ["@boost:refresh"],
+        "post-update-cmd": ["@boost:refresh"],
+        "boost:refresh": "@php vendor/bin/testbench boost:update --no-interaction"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
