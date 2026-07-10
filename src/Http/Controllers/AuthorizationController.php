@@ -7,11 +7,16 @@ namespace Bambamboole\LaravelOidc\Http\Controllers;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\Scope;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Http\Request;
 use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Contracts\AuthorizationViewResponse;
 use Laravel\Passport\Http\Controllers\AuthorizationController as PassportAuthorizationController;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthorizationController extends PassportAuthorizationController
 {
@@ -24,6 +29,17 @@ class AuthorizationController extends PassportAuthorizationController
         parent::__construct($server, $guard, $clients);
     }
 
+    public function authorize(
+        ServerRequestInterface $psrRequest,
+        Request $request,
+        ResponseInterface $psrResponse,
+        AuthorizationViewResponse $viewResponse
+    ): Response|AuthorizationViewResponse {
+        $this->enforceMaxAge($request);
+
+        return parent::authorize($psrRequest, $request, $psrResponse, $viewResponse);
+    }
+
     protected function parseScopes(AuthorizationRequestInterface $authRequest): array
     {
         return collect($authRequest->getScopes())
@@ -33,5 +49,30 @@ class AuthorizationController extends PassportAuthorizationController
             ->filter()
             ->values()
             ->all();
+    }
+
+    protected function enforceMaxAge(Request $request): void
+    {
+        $maxAge = $request->query('max_age');
+
+        if ($maxAge === null || ! is_numeric($maxAge) || $this->guard->guest()) {
+            return;
+        }
+
+        // Mirrors Passport's prompt=login loop guard: after the forced login
+        // redirect returns here, promptedForLogin is set, so we don't force again.
+        if ($request->session()->get('promptedForLogin', false)) {
+            return;
+        }
+
+        $authTime = (int) $request->session()->get('oidc.auth_time', 0);
+
+        if (time() - $authTime > (int) $maxAge) {
+            $this->guard->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $this->promptForLogin($request);
+        }
     }
 }

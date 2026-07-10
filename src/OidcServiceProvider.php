@@ -9,14 +9,17 @@ use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Bridge\AuthCodeRepository;
 use Laravel\Passport\Bridge\RefreshTokenRepository;
@@ -58,6 +61,8 @@ class OidcServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
+
+        Event::listen(Login::class, RecordAuthTime::class);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/passport.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
