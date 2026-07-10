@@ -1,12 +1,12 @@
 <?php
+declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Claims\ClaimSet;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Workbench\App\Models\User;
 
 it('is bound as the default claims resolver', function () {
-    expect(app(ClaimsResolver::class))->toBeInstanceOf(DefaultClaimsResolver::class);
+    expect(app(ClaimsResolver::class)::class)->toBe(DefaultClaimsResolver::class);
 });
 
 it('maps common user attributes into scope-grouped claims', function () {
