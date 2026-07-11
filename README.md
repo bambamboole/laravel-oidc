@@ -133,7 +133,7 @@ run at one of five triggers:
 | Trigger | Fires on | Context |
 | --- | --- | --- |
 | `Oidc::onPostLogin()` | `authorization_code` grant (interactive login) | `PostLoginContext` — `user`, `client`, `grantedScopes`, `nonce`, `authTime`, and writers for `idToken` and `accessToken` |
-| `Oidc::onRefresh()` | `refresh_token` grant | `RefreshContext` — writer for `idToken` (there is no `id_token` `nonce`/`auth_time` on refresh) |
+| `Oidc::onRefresh()` | `refresh_token` grant | `RefreshContext` — `user`, `client`, `grantedScopes`, and writers for `idToken` and `accessToken` (there is no `id_token` `nonce`/`auth_time` on refresh) |
 | `Oidc::onClientCredentials()` | `client_credentials` grant | `ClientCredentialsContext` — `client`, `grantedScopes`, and a writer for `accessToken` |
 | `Oidc::onTokenExchange()` | RFC 8693 token exchange (Phase 2) | `TokenExchangeContext` — `user`, `client`, `grantedScopes`, `audience`, `subjectClaims`, and a writer for `accessToken` |
 | `Oidc::onUserinfo()` | `GET\|POST /oauth/userinfo` | `UserinfoContext` — `user`, `client`, `grantedScopes`, and a writer for `claims` |
