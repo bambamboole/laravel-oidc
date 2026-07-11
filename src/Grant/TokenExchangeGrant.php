@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Grant;
 
-use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
-use Bambamboole\LaravelOidc\Exchange\ExchangeRequest;
-use Bambamboole\LaravelOidc\Token\OidcAccessToken;
-use Bambamboole\LaravelOidc\Token\TokenInspector;
+use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use DateInterval;
-use DateTimeImmutable;
-use DateTimeInterface;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AbstractGrant;
@@ -25,8 +20,7 @@ class TokenExchangeGrant extends AbstractGrant
     private const string ACCESS_TOKEN_URN = 'urn:ietf:params:oauth:token-type:access_token';
 
     public function __construct(
-        private readonly ExchangePolicy $policy,
-        private readonly TokenInspector $inspector,
+        private readonly TokenExchanger $exchanger,
     ) {}
 
     public function getIdentifier(): string
@@ -58,26 +52,9 @@ class TokenExchangeGrant extends AbstractGrant
             throw OAuthServerException::invalidRequest('subject_token');
         }
 
-        $parsed = $this->inspector->parse($subjectTokenJwt);
-        $dbToken = $this->inspector->accessToken($subjectTokenJwt);
-        if ($parsed === null || $dbToken === null || (bool) $dbToken->getAttribute('revoked')) {
-            throw OAuthServerException::invalidGrant('The subject token is invalid.');
-        }
-
-        if (($dbToken->getAttribute('user_id') ?? '') === '') {
-            throw OAuthServerException::invalidGrant('The subject token must be bound to a user.');
-        }
-
-        $claims = $parsed->claims()->all();
-        $subjectExpiresAt = $this->claimTimestamp($claims['exp'] ?? null);
-
-        if ($subjectExpiresAt <= time()) {
-            throw OAuthServerException::invalidGrant('The subject token has expired.');
-        }
-
-        $dbExpiresAt = $dbToken->getAttribute('expires_at');
-        if ($dbExpiresAt instanceof DateTimeInterface && $dbExpiresAt->getTimestamp() <= time()) {
-            throw OAuthServerException::invalidGrant('The subject token has expired.');
+        $audience = $this->getRequestParameter('audience', $request);
+        if ($audience === null) {
+            throw OAuthServerException::invalidRequest('audience');
         }
 
         $passportClient = Passport::client()->newQuery()->find($client->getIdentifier());
@@ -85,64 +62,19 @@ class TokenExchangeGrant extends AbstractGrant
             throw OAuthServerException::invalidClient($request);
         }
 
-        $result = $this->policy->authorize(new ExchangeRequest(
-            client: $passportClient,
-            subjectClaims: $claims,
-            requestedAudience: $this->getRequestParameter('audience', $request),
-            requestedScopes: $this->scopeParam($request),
-            subjectExpiresAt: $subjectExpiresAt,
-        ));
-
-        $scopeEntities = array_map(
-            fn (string $id) => $this->scopeRepository->getScopeEntityByIdentifier($id),
-            $result->scopes,
+        $accessToken = $this->exchanger->exchange(
+            $subjectTokenJwt,
+            $passportClient,
+            $audience,
+            $this->scopeParam($request) ?? [],
+            $accessTokenTTL,
         );
-        $scopeEntities = $this->scopeRepository->finalizeScopes(
-            array_values(array_filter($scopeEntities)),
-            $this->getIdentifier(),
-            $client,
-            $result->userId,
-        );
-
-        $accessToken = $this->issueAccessToken(
-            $this->cappedTtl($accessTokenTTL, $result->expiresAt),
-            $client,
-            $result->userId,
-            $scopeEntities,
-        );
-
-        // OidcAccessToken (Passport::useAccessTokenEntity) is what league returns here; the RFC 8693
-        // `act` claim is server-trusted, so it bypasses the user-driven hook blocklist via addExtraClaim.
-        if ($accessToken instanceof OidcAccessToken) {
-            $accessToken->setGrantType(self::GRANT_URN);
-            $accessToken->setAudience(...$result->audience);
-            $accessToken->setSubjectClaims($claims);
-            $accessToken->addExtraClaim('act', ['client_id' => $client->getIdentifier()]);
-        }
 
         $this->getEmitter()->emit(new RequestEvent(RequestEvent::ACCESS_TOKEN_ISSUED, $request));
         $responseType->setAccessToken($accessToken);
 
         // Exchange must never mint a refresh token; issueRefreshToken is deliberately never called.
         return $responseType;
-    }
-
-    private function claimTimestamp(mixed $exp): int
-    {
-        if ($exp instanceof DateTimeImmutable) {
-            return $exp->getTimestamp();
-        }
-
-        return is_numeric($exp) ? (int) $exp : 0;
-    }
-
-    private function cappedTtl(DateInterval $default, int $subjectExpiresAt): DateInterval
-    {
-        $defaultExpiry = (new DateTimeImmutable)->add($default)->getTimestamp();
-        $expiry = min($defaultExpiry, $subjectExpiresAt);
-        $seconds = max(1, $expiry - (new DateTimeImmutable)->getTimestamp());
-
-        return new DateInterval('PT'.$seconds.'S');
     }
 
     /** @return string[]|null */

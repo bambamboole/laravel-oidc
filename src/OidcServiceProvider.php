@@ -21,7 +21,6 @@ use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
-use Bambamboole\LaravelOidc\Token\TokenInspector;
 use DateInterval;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Auth\StatefulGuard;
@@ -71,8 +70,7 @@ class OidcServiceProvider extends ServiceProvider
             if (config('oidc.token_exchange.enabled', true)) {
                 $server->enableGrantType(
                     new TokenExchangeGrant(
-                        $app->make(ExchangePolicy::class),
-                        $app->make(TokenInspector::class),
+                        $app->make(TokenExchanger::class),
                     ),
                     Passport::tokensExpireIn(),
                 );
