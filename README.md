@@ -123,6 +123,63 @@ $this->app->singleton(
 );
 ```
 
+## Custom claims
+
+Register a hook to inject claims into an issued artifact (an `id_token`, an access
+token, or a userinfo response) without replacing the `ClaimsResolver`. Hooks are
+registered against the `Oidc` facade, typically in a service provider `boot()`, and
+run at one of five triggers:
+
+| Trigger | Fires on | Context |
+| --- | --- | --- |
+| `Oidc::onPostLogin()` | `authorization_code` grant (interactive login) | `PostLoginContext` — `user`, `client`, `grantedScopes`, `nonce`, `authTime`, and writers for `idToken` and `accessToken` |
+| `Oidc::onRefresh()` | `refresh_token` grant | `RefreshContext` — writer for `idToken` (there is no `id_token` `nonce`/`auth_time` on refresh) |
+| `Oidc::onClientCredentials()` | `client_credentials` grant | `ClientCredentialsContext` — `client`, `grantedScopes`, and a writer for `accessToken` |
+| `Oidc::onTokenExchange()` | RFC 8693 token exchange (Phase 2) | `TokenExchangeContext` — `user`, `client`, `grantedScopes`, `audience`, `subjectClaims`, and a writer for `accessToken` |
+| `Oidc::onUserinfo()` | `GET\|POST /oauth/userinfo` | `UserinfoContext` — `user`, `client`, `grantedScopes`, and a writer for `claims` |
+
+Each context exposes one `ClaimsBag` per artifact it can write to (`$context->idToken`,
+`$context->accessToken`, `$context->claims`). Call `->set($name, $value)` to add a
+claim; a hook that throws is caught, logged, and skipped rather than failing the
+request.
+
+`ClaimsBag::set()` silently drops (and logs a warning for) any claim name the
+artifact controls itself, so hooks cannot forge protocol claims:
+
+| Artifact | Protected claims |
+| --- | --- |
+| `id_token` | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`, `c_hash`, `auth_time`, `azp`, `acr`, `amr` |
+| Access token | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf` |
+| Userinfo | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti` |
+
+```php
+use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
+
+Oidc::onPostLogin(function (PostLoginContext $context): void {
+    $context->idToken->set('department', $context->user->department);
+    $context->accessToken->set('tenant', $context->user->tenant_id);
+});
+```
+
+These hooks only fire while issuing OIDC artifacts. User-lifecycle events —
+registration, email verification, password resets — are not part of this package;
+handle them where the rest of the app's authentication lives (Fortify).
+
+## Access token format (RFC 9068)
+
+Access tokens issued by this package are structured JWTs per
+[RFC 9068](https://www.rfc-editor.org/rfc/rfc9068) rather than opaque strings:
+
+- The JWT header carries `"typ": "at+jwt"` and a `kid` matching the JWKS endpoint.
+- Standard claims: `iss`, `aud`, `sub`, `client_id`, `iat`, `nbf`, `exp`, `jti`, and a
+  space-delimited `scope` string (e.g. `"openid email"`).
+- The legacy `scopes` array claim (`["openid", "email"]`) is retained alongside
+  `scope` because Passport's `auth:api` guard and this package's userinfo endpoint
+  read it — dropping it would break authentication.
+- `aud` defaults to the requesting client's id. It is overridden by RFC 8693 token
+  exchange (Phase 2), which sets it to the requested `resource`/`audience` instead.
+
 ## Consent view (required)
 
 The authorization endpoint renders Passport's consent view. You must register one via
