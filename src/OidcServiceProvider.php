@@ -10,6 +10,7 @@ use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
@@ -18,6 +19,7 @@ use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
+use Bambamboole\LaravelOidc\Token\TokenInspector;
 use DateInterval;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Auth\StatefulGuard;
@@ -61,6 +63,16 @@ class OidcServiceProvider extends ServiceProvider
             $grant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
 
             $server->enableGrantType($grant, Passport::tokensExpireIn());
+
+            if (config('oidc.token_exchange.enabled', true)) {
+                $server->enableGrantType(
+                    new TokenExchangeGrant(
+                        $app->make(ExchangePolicy::class),
+                        $app->make(TokenInspector::class),
+                    ),
+                    Passport::tokensExpireIn(),
+                );
+            }
 
             return $server;
         });

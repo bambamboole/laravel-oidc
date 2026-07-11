@@ -20,6 +20,10 @@ class DiscoveryController
             $grantTypes[] = 'urn:ietf:params:oauth:grant-type:device_code';
         }
 
+        if (config('oidc.token_exchange.enabled', true)) {
+            $grantTypes[] = 'urn:ietf:params:oauth:grant-type:token-exchange';
+        }
+
         $document = [
             'issuer' => Issuer::url(),
             'authorization_endpoint' => route('passport.authorizations.authorize'),

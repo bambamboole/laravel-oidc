@@ -34,6 +34,9 @@ class OidcAccessToken extends AccessToken
     /** @var array<string, mixed> */
     private array $subjectClaims = [];
 
+    /** @var array<string, mixed> */
+    private array $extra = [];
+
     public function setAudience(string ...$audience): void
     {
         $this->audience = $audience;
@@ -66,6 +69,11 @@ class OidcAccessToken extends AccessToken
         return $this->subjectClaims;
     }
 
+    public function addExtraClaim(string $name, mixed $value): void
+    {
+        $this->extra[$name] = $value;
+    }
+
     public function convertToJWT(): Token
     {
         $this->initJwtConfiguration();
@@ -96,6 +104,10 @@ class OidcAccessToken extends AccessToken
         }
 
         foreach (app(AccessTokenHookRunner::class)->claims($this) as $name => $value) {
+            $builder = $builder->withClaim($name, $value);
+        }
+
+        foreach ($this->extra as $name => $value) {
             $builder = $builder->withClaim($name, $value);
         }
 

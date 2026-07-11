@@ -18,6 +18,10 @@ return [
         'name', 'email', 'email_verified', 'locale', 'zoneinfo', 'updated_at',
     ],
 
+    'token_exchange' => [
+        'enabled' => env('OIDC_TOKEN_EXCHANGE_ENABLED', true),
+    ],
+
     'additional_public_keys' => [],
 
     'logout_redirect' => '/',

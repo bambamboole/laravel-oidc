@@ -11,6 +11,10 @@ use League\OAuth2\Server\ResponseTypes\BearerTokenResponse;
 
 class IdTokenResponse extends BearerTokenResponse
 {
+    private const string EXCHANGE_URN = 'urn:ietf:params:oauth:grant-type:token-exchange';
+
+    private const string ACCESS_TOKEN_URN = 'urn:ietf:params:oauth:token-type:access_token';
+
     private ?string $nonce = null;
 
     private ?int $authTime = null;
@@ -42,11 +46,19 @@ class IdTokenResponse extends BearerTokenResponse
             $accessToken->getScopes(),
         );
 
-        if (! in_array('openid', $scopes, true) || $accessToken->getUserIdentifier() === null) {
-            return [];
+        $grantType = $this->requestGrantType();
+        $params = [];
+
+        if (in_array('openid', $scopes, true) && $accessToken->getUserIdentifier() !== null) {
+            $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $grantType);
         }
 
-        return ['id_token' => $this->builder->build($accessToken, $nonce, $authTime, $this->requestGrantType())];
+        if ($grantType === self::EXCHANGE_URN) {
+            $params['issued_token_type'] = self::ACCESS_TOKEN_URN;
+            $params['scope'] = implode(' ', $scopes);
+        }
+
+        return $params;
     }
 
     private function requestGrantType(): ?string

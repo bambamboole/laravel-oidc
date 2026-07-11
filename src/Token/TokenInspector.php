@@ -46,6 +46,24 @@ class TokenInspector
         return is_string($jti) ? Passport::token()->newQuery()->find($jti) : null;
     }
 
+    public function parse(string $jwt): ?Plain
+    {
+        try {
+            $parsed = (new Parser(new JoseEncoder))->parse($jwt);
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (! $parsed instanceof Plain || ! (new Validator)->validate(
+            $parsed,
+            new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey())),
+        )) {
+            return null;
+        }
+
+        return $parsed;
+    }
+
     public function refreshTokenPayload(string $encrypted): ?object
     {
         try {
