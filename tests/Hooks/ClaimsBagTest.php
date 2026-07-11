@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Hooks\Artifact;
 use Bambamboole\LaravelOidc\Hooks\ClaimsBag;
 use Illuminate\Support\Facades\Log;
+use Psr\Log\AbstractLogger;
 
 it('stores and returns non-protected claims', function () {
     $bag = new ClaimsBag(Artifact::AccessToken);
@@ -20,15 +21,26 @@ it('forgets a claim', function () {
 });
 
 it('silently drops protected claims common to all artifacts and logs', function () {
-    Log::spy();
+    $logger = new class extends AbstractLogger
+    {
+        public int $warnings = 0;
+
+        public function log($level, string|Stringable $message, array $context = []): void
+        {
+            if ($level === 'warning') {
+                $this->warnings++;
+            }
+        }
+    };
+    Log::swap($logger);
     $bag = new ClaimsBag(Artifact::Userinfo);
 
     foreach (['iss', 'sub', 'aud', 'exp', 'iat', 'nbf', 'jti'] as $claim) {
         $bag->set($claim, 'x');
     }
 
-    expect($bag->all())->toBe([]);
-    Log::shouldHaveReceived('warning')->times(7);
+    expect($bag->all())->toBe([])
+        ->and($logger->warnings)->toBe(7);
 });
 
 it('drops id_token-specific protected claims but allows them on access tokens', function () {

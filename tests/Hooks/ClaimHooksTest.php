@@ -9,6 +9,7 @@ use Bambamboole\LaravelOidc\Hooks\Context\ClientCredentialsContext;
 use Bambamboole\LaravelOidc\Hooks\Trigger;
 use Illuminate\Support\Facades\Log;
 use Laravel\Passport\Bridge\Client;
+use Psr\Log\AbstractLogger;
 
 it('runs registered hooks in order and lets later hooks override earlier ones', function () {
     Oidc::onClientCredentials(fn (ClientCredentialsContext $c) => $c->accessToken->set('a', 1)->set('b', 1));
@@ -33,7 +34,18 @@ it('isolates triggers from each other', function () {
 });
 
 it('catches a throwing hook, logs it, and continues', function () {
-    Log::spy();
+    $logger = new class extends AbstractLogger
+    {
+        public int $errors = 0;
+
+        public function log($level, string|Stringable $message, array $context = []): void
+        {
+            if ($level === 'error') {
+                $this->errors++;
+            }
+        }
+    };
+    Log::swap($logger);
     Oidc::onClientCredentials(function () {
         throw new RuntimeException('boom');
     });
@@ -43,6 +55,6 @@ it('catches a throwing hook, logs it, and continues', function () {
     $context = new ClientCredentialsContext(new Client('cid', 'n', ['https://x/cb']), [], $bag);
     app(ClaimHooks::class)->run(Trigger::ClientCredentials, $context);
 
-    expect($bag->all())->toBe(['after' => true]);
-    Log::shouldHaveReceived('error')->once();
+    expect($bag->all())->toBe(['after' => true])
+        ->and($logger->errors)->toBe(1);
 });
