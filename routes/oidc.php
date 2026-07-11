@@ -8,14 +8,12 @@ use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Http\Controllers\RevocationController;
 use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Passport\Http\Middleware\CheckToken;
 
 Route::get('/.well-known/jwks.json', JwksController::class)->name('oidc.jwks');
 Route::get('/.well-known/openid-configuration', DiscoveryController::class)->name('oidc.discovery');
 
 if (config('oidc.endpoints.userinfo')) {
     Route::match(['get', 'post'], '/oauth/userinfo', UserinfoController::class)
-        ->middleware(['auth:api', CheckToken::using('openid')])
         ->name('oidc.userinfo');
 }
 

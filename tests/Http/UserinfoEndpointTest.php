@@ -12,14 +12,19 @@ beforeEach(function () {
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'email_verified_at' => now(), 'password' => 'x']);
 });
 
-it('rejects unauthenticated requests', function () {
-    $this->getJson('/oauth/userinfo')->assertUnauthorized();
+it('returns an RFC 6750 error on an unauthenticated userinfo request', function () {
+    $response = $this->getJson('/oauth/userinfo');
+    $response->assertUnauthorized()
+        ->assertJsonPath('error', 'invalid_token')
+        ->assertHeader('WWW-Authenticate', 'Bearer realm="OIDC", error="invalid_token"');
 });
 
-it('rejects tokens without the openid scope', function () {
+it('returns insufficient_scope when the token lacks openid', function () {
     Passport::actingAs($this->user, ['email']);
-
-    $this->getJson('/oauth/userinfo')->assertForbidden();
+    $this->getJson('/oauth/userinfo')
+        ->assertForbidden()
+        ->assertJsonPath('error', 'insufficient_scope')
+        ->assertHeader('WWW-Authenticate', 'Bearer realm="OIDC", error="insufficient_scope"');
 });
 
 it('returns sub plus scope-filtered claims', function () {

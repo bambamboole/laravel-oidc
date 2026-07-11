@@ -52,7 +52,10 @@ it('silently ignores tokens of other clients per rfc 7009', function () {
 });
 
 it('rejects unauthenticated revocation', function () {
-    $this->postJson('/oauth/revoke', ['token' => $this->jwt])->assertUnauthorized();
+    $this->postJson('/oauth/revoke', ['token' => $this->jwt])
+        ->assertUnauthorized()
+        ->assertJsonPath('error', 'invalid_client')
+        ->assertHeader('WWW-Authenticate', 'Basic realm="OIDC"');
 });
 
 it('revokes a refresh token and its linked access token for its own client', function () {

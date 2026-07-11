@@ -30,7 +30,10 @@ it('passes a resource-audience token without auth:api', function () {
 it('rejects a token whose aud lacks the required audience', function () {
     $jwt = resourceServerBearer($this, ['https://other/api']);
 
-    $this->getJson('/test/orders', ['Authorization' => "Bearer $jwt"])->assertForbidden();
+    $this->getJson('/test/orders', ['Authorization' => "Bearer $jwt"])
+        ->assertForbidden()
+        ->assertJsonPath('error', 'insufficient_scope')
+        ->assertHeader('WWW-Authenticate', 'Bearer error="insufficient_scope"');
 });
 
 it('rejects an id_token presented as a bearer (typ is not at+jwt)', function () {
@@ -40,7 +43,10 @@ it('rejects an id_token presented as a bearer (typ is not at+jwt)', function () 
 });
 
 it('rejects a request without a bearer token', function () {
-    $this->getJson('/test/orders')->assertUnauthorized();
+    $this->getJson('/test/orders')
+        ->assertUnauthorized()
+        ->assertJsonPath('error', 'invalid_token')
+        ->assertHeader('WWW-Authenticate', 'Bearer error="invalid_token"');
 });
 
 it('rejects a garbage token that fails signature validation', function () {

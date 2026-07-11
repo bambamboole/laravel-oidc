@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Http\Middleware;
 
+use Bambamboole\LaravelOidc\Http\OAuthError;
 use Bambamboole\LaravelOidc\Token\ResolvesTokenUser;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Closure;
@@ -35,39 +36,39 @@ class CheckAudience
         $jwt = $request->bearerToken();
 
         if ($jwt === null) {
-            abort(401);
+            OAuthError::bearer('invalid_token', 401);
         }
 
         $parsed = $this->inspector->parse($jwt);
 
         if ($parsed === null || $parsed->headers()->get('typ') !== 'at+jwt') {
-            abort(401);
+            OAuthError::bearer('invalid_token', 401);
         }
 
         $exp = $parsed->claims()->get('exp');
         $expiry = $exp instanceof DateTimeInterface ? $exp->getTimestamp() : (is_numeric($exp) ? (int) $exp : 0);
 
         if ($expiry <= time()) {
-            abort(401);
+            OAuthError::bearer('invalid_token', 401);
         }
 
         $token = $this->inspector->accessToken($jwt);
 
         if ($token === null || $token->getAttribute('revoked')) {
-            abort(401);
+            OAuthError::bearer('invalid_token', 401);
         }
 
         $tokenAudiences = $this->normalize($parsed->claims()->get('aud'));
 
         if (array_intersect($audiences, $tokenAudiences) === []) {
-            abort(403);
+            OAuthError::bearer('insufficient_scope', 403);
         }
 
         $sub = $parsed->claims()->get('sub');
         $user = $this->resolveUser(is_string($sub) ? $sub : null);
 
         if ($user === null) {
-            abort(401);
+            OAuthError::bearer('invalid_token', 401);
         }
 
         $request->setUserResolver(fn () => $user);

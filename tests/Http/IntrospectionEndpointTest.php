@@ -34,9 +34,10 @@ function issueAccessTokenViaPersonalClient(mixed $test): array
 }
 
 it('rejects requests without client authentication', function () {
-    $response = $this->postJson('/oauth/introspect', ['token' => 'x'])->assertUnauthorized();
-
-    expect($response->headers->get('WWW-Authenticate'))->toBe('Basic');
+    $this->postJson('/oauth/introspect', ['token' => 'x'])
+        ->assertUnauthorized()
+        ->assertJsonPath('error', 'invalid_client')
+        ->assertHeader('WWW-Authenticate', 'Basic realm="OIDC"');
 });
 
 it('omits sub and exp when the token has no user or expiry', function () {
