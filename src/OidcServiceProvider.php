@@ -6,7 +6,9 @@ namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
+use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
@@ -44,6 +46,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ClaimHooks::class);
         $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->singleton(OidcManager::class);
+        $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
