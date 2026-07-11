@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void onClientCredentials(Closure $hook)
  * @method static void onTokenExchange(Closure $hook)
  * @method static void onUserinfo(Closure $hook)
+ * @method static \Bambamboole\LaravelOidc\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
  *
  * @see OidcManager
  */

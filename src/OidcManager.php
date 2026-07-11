@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
+use Bambamboole\LaravelOidc\Exchange\IssuedToken;
+use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Hooks\Trigger;
 use Closure;
+use Laravel\Passport\Passport;
+use RuntimeException;
 
 class OidcManager
 {
-    public function __construct(private readonly ClaimHooks $hooks) {}
+    public function __construct(
+        private readonly ClaimHooks $hooks,
+        private readonly SessionTokenProvider $sessionTokens,
+        private readonly TokenExchanger $exchanger,
+    ) {}
 
     public function onPostLogin(Closure $hook): void
     {
@@ -35,5 +44,27 @@ class OidcManager
     public function onUserinfo(Closure $hook): void
     {
         $this->hooks->register(Trigger::Userinfo, $hook);
+    }
+
+    /**
+     * @param  string[]  $scopes
+     */
+    public function issueScopedToken(string $audience, array $scopes): IssuedToken
+    {
+        $subject = $this->sessionTokens->currentToken();
+
+        if ($subject === null) {
+            throw new RuntimeException('No session token is available for the current user.');
+        }
+
+        $client = Passport::client()->newQuery()->find(config('oidc.first_party_client'));
+
+        if ($client === null) {
+            throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');
+        }
+
+        $token = $this->exchanger->exchange($subject, $client, $audience, $scopes);
+
+        return IssuedToken::fromEntity($token, $audience);
     }
 }
