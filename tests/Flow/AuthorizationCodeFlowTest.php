@@ -150,6 +150,23 @@ it('issues an id_token without nonce or auth_time on refresh', function () {
         ->and($idToken->claims()->has('auth_time'))->toBeFalse();
 });
 
+// OAuth 2.1 §4.1.1 / §7.6 (PKCE required for every client)
+it('rejects an authorization request without PKCE even for a confidential client', function () {
+    $response = $this->actingAs($this->user)->get('/oauth/authorize?'.http_build_query([
+        'client_id' => $this->client->id,
+        'redirect_uri' => 'https://rp.test/callback',
+        'response_type' => 'code',
+        'scope' => 'openid',
+        'state' => 'st4te',
+    ]));
+
+    // League's invalidRequest() exception never carries a redirect_uri (same
+    // as its own public-client PKCE-required path), so this surfaces as a
+    // 400 JSON error rather than a redirect back to the client.
+    $response->assertStatus(400);
+    expect($response->json('error'))->toBe('invalid_request');
+});
+
 it('owns the oauth routes with package controllers', function () {
     $routes = app('router')->getRoutes();
 

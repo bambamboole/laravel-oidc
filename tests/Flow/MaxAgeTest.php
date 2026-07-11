@@ -14,11 +14,17 @@ beforeEach(function () {
     Passport::authorizationView(fn (array $parameters) => response()->json(['authToken' => $parameters['authToken']]));
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
     $this->client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('RP', ['https://rp.test/callback']);
+
+    $verifier = str_repeat('v', 64);
+    $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+
     $this->query = http_build_query([
         'client_id' => $this->client->id,
         'redirect_uri' => 'https://rp.test/callback',
         'response_type' => 'code',
         'scope' => 'openid',
+        'code_challenge' => $challenge,
+        'code_challenge_method' => 'S256',
     ]);
 });
 
