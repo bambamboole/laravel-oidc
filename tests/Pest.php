@@ -164,6 +164,46 @@ function persistedBearer(mixed $test, array $audience): string
 }
 
 /**
+ * Mints an RFC 9068 at+jwt access token addressed to the given resource audiences only (no client
+ * id prepended) and persists a matching Passport token row. CheckAudience is now a self-contained
+ * resource-server validator, so this exercises the auth:api-free path: the aud claim need not carry
+ * a client id, and revocation/expiry are read from the persisted row.
+ *
+ * @param  string[]  $audience
+ */
+function resourceServerBearer(
+    mixed $test,
+    array $audience,
+    bool $revoked = false,
+    bool $expired = false,
+): string {
+    $tokenId = Str::random(80);
+    $expiresAt = $expired ? new DateTimeImmutable('-1 hour') : new DateTimeImmutable('+1 hour');
+    $clientId = (string) $test->client->id;
+
+    $accessToken = new OidcAccessToken(
+        (string) $test->user->id,
+        [new BridgeScope('openid')],
+        new BridgeClient($clientId, 'RP', ['https://rp.test/cb']),
+    );
+    $accessToken->setIdentifier($tokenId);
+    $accessToken->setAudience(...$audience);
+    $accessToken->setExpiryDateTime($expiresAt);
+    $accessToken->setPrivateKey(new CryptKey(__DIR__.'/fixtures/oauth-private.key', null, false));
+
+    Passport::token()->forceFill([
+        'id' => $tokenId,
+        'user_id' => $test->user->id,
+        'client_id' => $test->client->id,
+        'scopes' => ['openid'],
+        'revoked' => $revoked,
+        'expires_at' => $expiresAt,
+    ])->save();
+
+    return $accessToken->toString();
+}
+
+/**
  * Mints a plain JWT (default header typ=JWT, as an id_token would carry) and persists a
  * matching Passport token row, so auth:api authenticates it and only CheckAudience's typ
  * guard is left to reject it.

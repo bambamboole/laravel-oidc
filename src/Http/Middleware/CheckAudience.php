@@ -4,23 +4,27 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Http\Middleware;
 
+use Bambamboole\LaravelOidc\Token\ResolvesTokenUser;
+use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Closure;
+use DateTimeInterface;
 use Illuminate\Http\Request;
-use Lcobucci\JWT\Encoding\JoseEncoder;
-use Lcobucci\JWT\Token\Parser;
-use Lcobucci\JWT\Token\Plain;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 /**
- * Enforces that the bearer token presented to a resource-server route is an RFC 9068
- * access token (typ: at+jwt) addressed to one of the given audiences. This middleware
- * re-parses the bearer token but does not re-verify its signature or revocation status
- * — that is auth:api's job, which MUST run before this middleware in the route's
- * middleware list.
+ * Self-contained RFC 9068 resource-server validator for a bearer access token: verifies the OP
+ * signature, the at+jwt typ, expiry, revocation, and that the token is addressed to one of the
+ * given audiences. It does NOT require auth:api to precede it — an exchanged token's aud is a
+ * resource audience rather than a client id, which auth:api rejects. Revocation is checked against
+ * the OP's own token store, so this suits a resource server that shares (or is) the OP; a fully
+ * external RS would validate via token introspection instead.
  */
 class CheckAudience
 {
+    use ResolvesTokenUser;
+
+    public function __construct(private readonly TokenInspector $inspector) {}
+
     public static function using(string ...$audiences): string
     {
         return static::class.':'.implode(',', $audiences);
@@ -31,23 +35,39 @@ class CheckAudience
         $jwt = $request->bearerToken();
 
         if ($jwt === null) {
-            abort(403);
+            abort(401);
         }
 
-        try {
-            $parsed = (new Parser(new JoseEncoder))->parse($jwt);
-        } catch (Throwable) {
-            abort(403);
+        $parsed = $this->inspector->parse($jwt);
+
+        if ($parsed === null || $parsed->headers()->get('typ') !== 'at+jwt') {
+            abort(401);
         }
 
-        if (! $parsed instanceof Plain || $parsed->headers()->get('typ') !== 'at+jwt') {
-            abort(403);
+        $exp = $parsed->claims()->get('exp');
+        $expiry = $exp instanceof DateTimeInterface ? $exp->getTimestamp() : (is_numeric($exp) ? (int) $exp : 0);
+
+        if ($expiry <= time()) {
+            abort(401);
+        }
+
+        $token = $this->inspector->accessToken($jwt);
+
+        if ($token === null || $token->getAttribute('revoked')) {
+            abort(401);
         }
 
         $tokenAudiences = $this->normalize($parsed->claims()->get('aud'));
 
         if (array_intersect($audiences, $tokenAudiences) === []) {
             abort(403);
+        }
+
+        $sub = $parsed->claims()->get('sub');
+        $user = $this->resolveUser(is_string($sub) ? $sub : null);
+
+        if ($user !== null) {
+            $request->setUserResolver(fn () => $user);
         }
 
         return $next($request);
