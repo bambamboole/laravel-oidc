@@ -13,9 +13,9 @@
     ],
     "require": {
         "php": "^8.4",
-        "laravel/passport": "^13.0",
+        "laravel/passport": "^13.4",
         "lcobucci/jwt": "^5.0",
-        "phpseclib/phpseclib": "^3.0"
+        "phpseclib/phpseclib": "^3.0.15"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",

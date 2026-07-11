@@ -34,6 +34,12 @@ trait RetrievesAuthRequestFromSession
         $authRequest = $request->session()->pull('authRequest')
             ?? throw new Exception('Authorization request was not present in the session.');
 
+        // Passport 13.x stored the request object directly in the session before it moved to
+        // serialize()/unserialize() with an allow-list. Handle both so any 13.x patch works.
+        if ($authRequest instanceof AuthorizationRequestInterface) {
+            return $authRequest;
+        }
+
         return unserialize($authRequest, ['allowed_classes' => [
             OidcAuthorizationRequest::class,
             AuthorizationRequest::class,

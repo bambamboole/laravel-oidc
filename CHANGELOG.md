@@ -38,7 +38,7 @@ Initial release — an OpenID Connect provider layer on top of Laravel Passport 
 
 ### Notes
 
-- Requires PHP `^8.4`, `laravel/passport ^13`, `lcobucci/jwt ^5`, `phpseclib/phpseclib ^3`.
+- Requires PHP `^8.4`, `laravel/passport ^13.4`, `lcobucci/jwt ^5`, `phpseclib/phpseclib ^3.0.15`.
 - The GitHub Actions test workflow (`.github/workflows/tests.yml`) runs the suite across
   Laravel 11/12/13 on the standalone repository.
 - Known limitations (see the README): no back-channel logout, no `acr`/`amr` claims, refresh
