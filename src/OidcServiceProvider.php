@@ -18,6 +18,7 @@ use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use DateInterval;
@@ -49,6 +50,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
+        $this->app->singleton(AccessTokenMinter::class);
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
