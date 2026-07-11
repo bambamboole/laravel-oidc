@@ -25,4 +25,13 @@ return [
     'additional_public_keys' => [],
 
     'logout_redirect' => '/',
+
+    'first_party_client' => env('OIDC_FIRST_PARTY_CLIENT'),
+
+    'session_token' => [
+        'ttl' => (int) env('OIDC_SESSION_TOKEN_TTL', 3600),
+        'session_key' => 'oidc.session_token',
+        'refresh_skew' => 60,
+        'scopes' => null,
+    ],
 ];

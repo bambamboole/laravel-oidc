@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
+use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
@@ -19,10 +20,14 @@ use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
+use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
+use Bambamboole\LaravelOidc\Session\SessionMintTokenProvider;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -52,6 +57,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
+        $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
@@ -85,6 +91,8 @@ class OidcServiceProvider extends ServiceProvider
         Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
 
         Event::listen(Login::class, RecordAuthTime::class);
+        Event::listen(Login::class, EstablishSessionToken::class);
+        Event::listen(Logout::class, ForgetSessionToken::class);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/passport.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
