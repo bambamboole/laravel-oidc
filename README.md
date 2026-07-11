@@ -39,6 +39,9 @@ On registration the package calls `Passport::ignoreRoutes()` and registers the *
 - The authorization, token, approve/deny, and token-refresh routes are registered by
   this package using its own controllers (so `max_age`, OIDC scopes, and the `id_token`
   response type are wired in).
+- **PKCE (`code_challenge`) is required on every authorization request**, per OAuth 2.1
+  §4.1.1/§7.6 — for confidential clients as well as public ones (league's default only
+  mandates it for public clients). A request missing it is rejected with `invalid_request`.
 - **Passport's optional JSON API management routes are *not* registered** (client CRUD,
   personal-access-token management, scope listing, etc.). If your app relies on those,
   register them yourself.
@@ -51,10 +54,20 @@ On registration the package calls `Passport::ignoreRoutes()` and registers the *
 | --- | --- | --- |
 | Discovery | `GET /.well-known/openid-configuration` | OIDC provider metadata |
 | JWKS | `GET /.well-known/jwks.json` | Public signing keys (RS256) |
-| UserInfo | `GET\|POST /oauth/userinfo` | Claims for the bearer token (`auth:api`, requires `openid`) |
+| UserInfo | `GET\|POST /oauth/userinfo` | Claims for the bearer token (guard: `oidc.api_guard`, default `api`; requires `openid`) |
 | End session | `GET\|POST /oauth/logout` | RP-initiated logout (see threat model) |
 | Introspection | `POST /oauth/introspect` | RFC 7662 token introspection (client-authenticated) |
 | Revocation | `POST /oauth/revoke` | RFC 7009 token revocation (client-authenticated) |
+
+The `/oauth/*` paths above shift with `config('passport.path', 'oauth')`. The discovery
+document advertises `response_types_supported: ["code"]`, `response_modes_supported: ["query"]`,
+`grant_types_supported` (`authorization_code`, `refresh_token`, `client_credentials`, plus the
+device-code and token-exchange URNs when those grants are enabled),
+`claims_parameter_supported`, `request_parameter_supported`, and
+`request_uri_parameter_supported` all `false`, `code_challenge_methods_supported: ["S256"]`, and
+`introspection_endpoint_auth_methods_supported` / `revocation_endpoint_auth_methods_supported`
+(`client_secret_basic`, `client_secret_post`) when those endpoints are enabled. Every URL in the
+document is built from the configured `issuer` origin, not the incoming request's host.
 
 Each of the last four can be toggled off via config.
 
@@ -62,15 +75,20 @@ Each of the last four can be toggled off via config.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `issuer` | `env('OIDC_ISSUER')` | Issuer URL. Falls back to `app.url` when null. |
+| `issuer` | `env('OIDC_ISSUER')` | Issuer URL. Falls back to `app.url` when null. All endpoint URLs advertised in discovery are derived from this origin. |
 | `id_token_ttl` | `3600` | `id_token` lifetime in seconds. |
 | `endpoints.userinfo` | `true` | Register the userinfo endpoint. |
 | `endpoints.end_session` | `true` | Register the logout endpoint. |
 | `endpoints.introspection` | `true` | Register the introspection endpoint. |
 | `endpoints.revocation` | `true` | Register the revocation endpoint. |
+| `api_guard` | `env('OIDC_API_GUARD', 'api')` | The guard the userinfo endpoint authenticates against. |
 | `claims_supported` | standard set | Advertised in discovery. |
 | `additional_public_keys` | `[]` | Extra PEM public keys to publish in JWKS (key rotation). |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
+
+The `/oauth/*` routes this package registers (see [Endpoints](#endpoints)) are mounted under
+`config('passport.path', 'oauth')`, so changing Passport's route prefix moves this package's
+routes with it.
 
 ## Extension contracts
 
@@ -541,8 +559,14 @@ singletons hold request state.
 - No front-channel or back-channel logout — only RP-initiated (front-channel initiation)
   logout is implemented.
 - Introspection/revocation authenticate the client and return the RFC-shaped body
-  (`{"active": false}` for unknown/inactive tokens; `401` with `WWW-Authenticate: Basic`
-  for failed client authentication). `sub`/`exp` are omitted when absent.
+  (`{"active": false}` for unknown/inactive tokens; a `401` with `WWW-Authenticate: Basic
+  realm="OIDC"` and an RFC 6749 §5.2 `{"error": "invalid_client"}` JSON body for failed client
+  authentication). `sub`/`exp` are omitted when absent.
+- The userinfo endpoint and the `CheckAudience` middleware return RFC 6750 bearer-token error
+  responses on failure: a `WWW-Authenticate: Bearer error="..."` header plus a JSON
+  `{"error": "invalid_token"}` (missing/expired/revoked/malformed token) or
+  `{"error": "insufficient_scope"}` (valid token, wrong scope/audience) body, instead of a bare
+  `401`/`403`.
 
 ## Releasing
 
