@@ -82,14 +82,20 @@ function issueRefreshToken(mixed $test, ?string $clientId = null, bool $expired 
 }
 
 /**
- * Mints an RFC 9068 access token addressed to $clientId and persists a matching,
- * non-revoked Passport token row so TokenInspector::accessToken() resolves it.
+ * Mints an RFC 9068 access token addressed to $clientId and persists a matching
+ * Passport token row so TokenInspector::accessToken() resolves it.
  *
  * @param  string[]  $scopeIds
  */
-function mintExchangeSubjectToken(string $clientId, string $userId, array $scopeIds): string
-{
+function mintExchangeSubjectToken(
+    string $clientId,
+    string $userId,
+    array $scopeIds,
+    ?DateTimeImmutable $expiresAt = null,
+    bool $revoked = false,
+): string {
     $tokenId = Str::random(80);
+    $expiresAt ??= new DateTimeImmutable('+1 hour');
 
     $subject = new OidcAccessToken(
         $userId,
@@ -98,7 +104,7 @@ function mintExchangeSubjectToken(string $clientId, string $userId, array $scope
     );
     $subject->setIdentifier($tokenId);
     $subject->setAudience($clientId);
-    $subject->setExpiryDateTime(new DateTimeImmutable('+1 hour'));
+    $subject->setExpiryDateTime($expiresAt);
     $subject->setPrivateKey(new CryptKey(__DIR__.'/fixtures/oauth-private.key', null, false));
 
     Passport::token()->forceFill([
@@ -106,8 +112,8 @@ function mintExchangeSubjectToken(string $clientId, string $userId, array $scope
         'user_id' => $userId,
         'client_id' => $clientId,
         'scopes' => $scopeIds,
-        'revoked' => false,
-        'expires_at' => now()->addHour(),
+        'revoked' => $revoked,
+        'expires_at' => $expiresAt,
     ])->save();
 
     return $subject->toString();

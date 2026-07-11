@@ -10,6 +10,7 @@ use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use DateInterval;
 use DateTimeImmutable;
+use DateTimeInterface;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AbstractGrant;
@@ -64,6 +65,16 @@ class TokenExchangeGrant extends AbstractGrant
         }
 
         $claims = $parsed->claims()->all();
+        $subjectExpiresAt = $this->claimTimestamp($claims['exp'] ?? null);
+
+        if ($subjectExpiresAt <= time()) {
+            throw OAuthServerException::invalidGrant('The subject token has expired.');
+        }
+
+        $dbExpiresAt = $dbToken->getAttribute('expires_at');
+        if ($dbExpiresAt instanceof DateTimeInterface && $dbExpiresAt->getTimestamp() <= time()) {
+            throw OAuthServerException::invalidGrant('The subject token has expired.');
+        }
 
         $passportClient = Passport::client()->newQuery()->find($client->getIdentifier());
         if ($passportClient === null) {
@@ -75,7 +86,7 @@ class TokenExchangeGrant extends AbstractGrant
             subjectClaims: $claims,
             requestedAudience: $this->getRequestParameter('audience', $request),
             requestedScopes: $this->scopeParam($request),
-            subjectExpiresAt: $this->claimTimestamp($claims['exp'] ?? null),
+            subjectExpiresAt: $subjectExpiresAt,
         ));
 
         $scopeEntities = array_map(

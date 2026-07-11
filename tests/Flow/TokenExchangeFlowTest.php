@@ -61,6 +61,41 @@ it('rejects an unlisted audience with invalid_target', function () {
     ])->assertStatus(400)->assertJsonPath('error', 'invalid_target');
 });
 
+it('rejects an expired subject token with invalid_grant', function () {
+    $subject = mintExchangeSubjectToken(
+        (string) $this->client->id,
+        (string) $this->user->id,
+        ['openid'],
+        expiresAt: new DateTimeImmutable('-1 hour'),
+    );
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+    ])->assertStatus(400)
+        ->assertJsonPath('error', 'invalid_grant')
+        ->assertJsonMissingPath('access_token');
+});
+
+it('rejects a revoked subject token with invalid_grant', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid'], revoked: true);
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+    ])->assertStatus(400)
+        ->assertJsonPath('error', 'invalid_grant')
+        ->assertJsonMissingPath('access_token');
+});
+
 it('rejects a client without the grant', function () {
     $other = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Other', ['https://o/cb']);
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
