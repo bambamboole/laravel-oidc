@@ -89,7 +89,14 @@ class TokenExchanger
         $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience);
         $token->setGrantType(self::GRANT_URN);
         $token->setSubjectClaims($claims);
-        $token->addExtraClaim('act', ['client_id' => (string) $requestingClient->getKey()]);
+
+        $act = ['client_id' => (string) $requestingClient->getKey()];
+
+        if (isset($claims['act']) && is_array($claims['act'])) {
+            $act['act'] = $claims['act'];
+        }
+
+        $token->addExtraClaim('act', $act);
 
         return $token;
     }
