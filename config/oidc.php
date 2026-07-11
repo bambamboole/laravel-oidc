@@ -26,7 +26,7 @@ return [
 
     'logout_redirect' => '/',
 
-    'first_party_client' => env('OIDC_FIRST_PARTY_CLIENT'),
+    'first_party_client' => env('OIDC_FIRST_PARTY_CLIENT') ?: null,
 
     'session_token' => [
         'ttl' => (int) env('OIDC_SESSION_TOKEN_TTL', 3600),

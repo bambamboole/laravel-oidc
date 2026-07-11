@@ -382,6 +382,10 @@ servers without ever holding a long-lived, broadly-scoped credential:
    exchanged from the root token via RFC 8693 token exchange, one per resource
    server the browser needs to call. These are the only tokens handed to the client.
 
+> With `SESSION_DRIVER=cookie` the root token rides inside the encrypted session
+> cookie sent to the browser; a server-side session driver (e.g. `database`,
+> `redis`) is recommended so the root token stays server-side.
+
 ### Config
 
 | Key | Default | Description |

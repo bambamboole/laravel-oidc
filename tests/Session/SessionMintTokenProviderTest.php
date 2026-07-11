@@ -5,6 +5,7 @@ use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
@@ -58,6 +59,30 @@ it('currentToken self-heals by minting when none is stored', function () {
 
 it('currentToken returns null without an authenticated user', function () {
     expect(app(SessionTokenProvider::class)->currentToken())->toBeNull();
+});
+
+it('re-establishes for the current user when the stored token belongs to a different user', function () {
+    $userB = User::create(['name' => 'B', 'email' => 'b@example.com', 'password' => 'x']);
+
+    $this->actingAs($this->user);
+    app(SessionTokenProvider::class)->establish($this->user);
+
+    $this->actingAs($userB);
+    $jwt = app(SessionTokenProvider::class)->currentToken();
+
+    expect($jwt)->toBeString()
+        ->and(parseSessionToken($jwt)->claims()->get('sub'))->toBe((string) $userB->id);
+});
+
+it('revokes the superseded root token when re-establishing', function () {
+    $this->actingAs($this->user);
+    app(SessionTokenProvider::class)->establish($this->user);
+    $firstJti = session('oidc.session_token')['jti'];
+
+    app(SessionTokenProvider::class)->establish($this->user);
+
+    $first = Passport::token()->newQuery()->whereKey($firstJti)->first();
+    expect((bool) $first->getAttribute('revoked'))->toBeTrue();
 });
 
 it('forget revokes the root token and clears the session', function () {

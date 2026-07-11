@@ -30,8 +30,12 @@ class SessionMintTokenProvider implements SessionTokenProvider
     public function currentToken(): ?string
     {
         $stored = $this->session()->get($this->key());
+        $currentUserId = Auth::guard()->id();
 
-        if (is_array($stored) && is_string($stored['jwt'] ?? null) && ((int) ($stored['expires_at'] ?? 0)) - time() > $this->skew()) {
+        if (is_array($stored)
+            && is_string($stored['jwt'] ?? null)
+            && ($stored['user_id'] ?? null) === ($currentUserId === null ? null : (string) $currentUserId)
+            && ((int) ($stored['expires_at'] ?? 0)) - time() > $this->skew()) {
             return $stored['jwt'];
         }
 
@@ -54,6 +58,12 @@ class SessionMintTokenProvider implements SessionTokenProvider
             throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');
         }
 
+        $prior = $this->session()->get($this->key());
+
+        if (is_array($prior) && is_string($prior['jti'] ?? null)) {
+            Passport::token()->newQuery()->whereKey($prior['jti'])->update(['revoked' => true]);
+        }
+
         $ttl = (int) config('oidc.session_token.ttl', 3600);
         $token = $this->minter->mint(
             (string) $user->getAuthIdentifier(),
@@ -65,6 +75,7 @@ class SessionMintTokenProvider implements SessionTokenProvider
         $this->session()->put($this->key(), [
             'jwt' => $token->toString(),
             'jti' => $token->getIdentifier(),
+            'user_id' => (string) $user->getAuthIdentifier(),
             'expires_at' => $token->getExpiryDateTime()->getTimestamp(),
         ]);
     }
