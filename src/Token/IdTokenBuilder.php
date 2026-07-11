@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Token;
 
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Hooks\Artifact;
+use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
+use Bambamboole\LaravelOidc\Hooks\ClaimsBag;
+use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
+use Bambamboole\LaravelOidc\Hooks\Context\RefreshContext;
+use Bambamboole\LaravelOidc\Hooks\Trigger;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
@@ -18,9 +24,12 @@ class IdTokenBuilder
 {
     use ResolvesTokenUser;
 
-    public function __construct(private readonly ClaimsResolver $claims) {}
+    public function __construct(
+        private readonly ClaimsResolver $claims,
+        private readonly ClaimHooks $hooks,
+    ) {}
 
-    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime): string
+    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null): string
     {
         $config = Configuration::forAsymmetricSigner(
             new Sha256,
@@ -60,6 +69,24 @@ class IdTokenBuilder
 
         foreach ($this->claims->resolve($user)->forScopes($scopes) as $name => $value) {
             $builder = $builder->withClaim($name, $value);
+        }
+
+        $trigger = match ($grantType) {
+            'authorization_code' => Trigger::PostLogin,
+            'refresh_token' => Trigger::Refresh,
+            default => null,
+        };
+
+        if ($trigger !== null) {
+            $bag = new ClaimsBag(Artifact::IdToken);
+            $context = $trigger === Trigger::PostLogin
+                ? new PostLoginContext($user, $accessToken->getClient(), $scopes, $nonce, $authTime, $bag, new ClaimsBag(Artifact::AccessToken))
+                : new RefreshContext($user, $accessToken->getClient(), $scopes, $bag, new ClaimsBag(Artifact::AccessToken));
+            $this->hooks->run($trigger, $context);
+
+            foreach ($bag->all() as $name => $value) {
+                $builder = $builder->withClaim($name, $value);
+            }
         }
 
         return $builder->getToken($config->signer(), $config->signingKey())->toString();

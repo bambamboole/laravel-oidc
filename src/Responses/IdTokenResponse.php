@@ -46,6 +46,17 @@ class IdTokenResponse extends BearerTokenResponse
             return [];
         }
 
-        return ['id_token' => $this->builder->build($accessToken, $nonce, $authTime)];
+        return ['id_token' => $this->builder->build($accessToken, $nonce, $authTime, $this->requestGrantType())];
+    }
+
+    private function requestGrantType(): ?string
+    {
+        if (! app()->bound('request')) {
+            return null;
+        }
+
+        $value = app('request')->input('grant_type');
+
+        return is_string($value) ? $value : null;
     }
 }
