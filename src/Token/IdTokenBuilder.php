@@ -7,8 +7,6 @@ namespace Bambamboole\LaravelOidc\Token;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Auth;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
@@ -18,6 +16,8 @@ use RuntimeException;
 
 class IdTokenBuilder
 {
+    use ResolvesTokenUser;
+
     public function __construct(private readonly ClaimsResolver $claims) {}
 
     public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime): string
@@ -53,7 +53,12 @@ class IdTokenBuilder
             $builder = $builder->withClaim('auth_time', $authTime);
         }
 
-        foreach ($this->claims->resolve($this->resolveUser($accessToken))->forScopes($scopes) as $name => $value) {
+        $user = $this->resolveUser((string) $accessToken->getUserIdentifier())
+            ?? throw new RuntimeException(
+                'Unable to resolve the user for id_token issuance: '.$accessToken->getUserIdentifier(),
+            );
+
+        foreach ($this->claims->resolve($user)->forScopes($scopes) as $name => $value) {
             $builder = $builder->withClaim($name, $value);
         }
 
@@ -65,16 +70,5 @@ class IdTokenBuilder
         $hash = substr(hash('sha256', $accessTokenJwt, true), 0, 16);
 
         return rtrim(strtr(base64_encode($hash), '+/', '-_'), '=');
-    }
-
-    private function resolveUser(AccessTokenEntityInterface $accessToken): Authenticatable
-    {
-        $guard = config('passport.guard') ?? config('auth.defaults.guard');
-        $provider = Auth::createUserProvider(config("auth.guards.{$guard}.provider"));
-        $user = $provider?->retrieveById($accessToken->getUserIdentifier());
-
-        return $user ?? throw new RuntimeException(
-            'Unable to resolve the user for id_token issuance: '.$accessToken->getUserIdentifier(),
-        );
     }
 }

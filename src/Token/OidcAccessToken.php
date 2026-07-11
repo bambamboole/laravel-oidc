@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
+use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
 use Laravel\Passport\Bridge\AccessToken;
@@ -92,6 +93,10 @@ class OidcAccessToken extends AccessToken
 
         foreach ($audience as $aud) {
             $builder = $builder->permittedFor($aud);
+        }
+
+        foreach (app(AccessTokenHookRunner::class)->claims($this) as $name => $value) {
+            $builder = $builder->withClaim($name, $value);
         }
 
         return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
