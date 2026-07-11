@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * OpenID Connect Core 1.0 §5.3 (UserInfo endpoint)
+ */
+
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
 

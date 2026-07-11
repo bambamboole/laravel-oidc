@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * RFC 7009 (OAuth 2.0 Token Revocation)
+ */
+
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Token;
 use Workbench\App\Models\User;

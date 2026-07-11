@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * RFC 8693 (token exchange) + RFC 9068 (issued access token) — session-token → browser-token issuance
+ */
+
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Laravel\Passport\ClientRepository;

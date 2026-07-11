@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * RFC 7662 (OAuth 2.0 Token Introspection)
+ */
+
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Token;
 use Workbench\App\Models\User;

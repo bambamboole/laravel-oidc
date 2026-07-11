@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * RFC 9068 (JWT profile for OAuth 2.0 access tokens); RFC 6750 §2.1 (bearer usage)
+ */
+
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -29,6 +33,7 @@ function parseRfc9068AccessToken(string $jwt): UnencryptedToken
     return $token;
 }
 
+// RFC 9068 §2.1 (at+jwt header), §2.2 (required claims)
 it('issues an RFC 9068 access token through the real flow with hook claims', function () {
     config(['app.url' => 'https://op.test']);
     Oidc::onPostLogin(fn (PostLoginContext $c) => $c->accessToken->set('tenant', 'acme'));

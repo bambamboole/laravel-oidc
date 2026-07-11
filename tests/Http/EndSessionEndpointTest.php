@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenID Connect RP-Initiated Logout 1.0 §2 (id_token_hint, post_logout_redirect_uri, state), §4 (security/CSRF)
+ */
+
 use Bambamboole\LaravelOidc\Tests\TestCase;
 use Bambamboole\LaravelOidc\Token\IdTokenBuilder;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;

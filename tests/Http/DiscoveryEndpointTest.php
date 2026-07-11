@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+/**
+ * OpenID Connect Discovery 1.0 §3 + RFC 8414 §2 (authorization server metadata)
+ */
 it('serves a spec-compliant discovery document', function () {
     config(['app.url' => 'https://op.test', 'oidc.issuer' => null]);
 

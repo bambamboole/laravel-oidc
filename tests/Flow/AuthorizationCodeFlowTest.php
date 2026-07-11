@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
+ */
+
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -92,6 +96,7 @@ function completeAuthorization(TestCase $test, array $overrides = []): TestRespo
     ]);
 }
 
+// OIDC Core §3.1.3.6 (at_hash)
 it('issues an id_token through the full code + pkce flow', function () {
     config(['app.url' => 'https://op.test', 'oidc.issuer' => null]);
 
@@ -121,6 +126,7 @@ it('issues an id_token through the full code + pkce flow', function () {
     expect($idToken->headers()->get('kid'))->toBe($jwks[0]['kid']);
 });
 
+// OIDC Core §3.1.2.1 / §5.4 (openid scope)
 it('omits the id_token without the openid scope', function () {
     $response = completeAuthorization($this, ['scope' => 'email'])->assertOk();
 
@@ -128,6 +134,7 @@ it('omits the id_token without the openid scope', function () {
         ->and($response->json())->not->toHaveKey('id_token');
 });
 
+// OAuth 2.1 §4.3 (refresh) + OIDC Core §12.2 (refreshed id_token)
 it('issues an id_token without nonce or auth_time on refresh', function () {
     $refreshToken = completeAuthorization($this)->json('refresh_token');
 

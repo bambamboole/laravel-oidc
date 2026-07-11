@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * RFC 8693 (OAuth 2.0 Token Exchange); RFC 6749 §5.2 (error responses)
+ */
+
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
@@ -26,6 +30,7 @@ beforeEach(function () {
     $this->secret = $this->client->plainSecret;
 });
 
+// RFC 8693 §2.1–2.2, §4.1 (act)
 it('exchanges a reciprocal token for a narrowed, audience-scoped access token', function () {
     config(['app.url' => 'https://op.test']);
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read', 'orders:write']);
@@ -72,6 +77,7 @@ it('inherits the subject token full scope set when the scope param is omitted', 
     expect(explode(' ', (string) $at->claims()->get('scope')))->toEqualCanonicalizing(['openid', 'orders:read', 'orders:write']);
 });
 
+// RFC 8693 §2.2.2 (invalid_target)
 it('rejects an unlisted audience with invalid_target', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
     $this->post('/oauth/token', [
@@ -80,6 +86,7 @@ it('rejects an unlisted audience with invalid_target', function () {
     ])->assertStatus(400)->assertJsonPath('error', 'invalid_target');
 });
 
+// RFC 8693 §2.2.2 + RFC 6749 §5.2 (invalid_grant)
 it('rejects an expired subject token with invalid_grant', function () {
     $subject = mintExchangeSubjectToken(
         (string) $this->client->id,
@@ -100,6 +107,7 @@ it('rejects an expired subject token with invalid_grant', function () {
         ->assertJsonMissingPath('access_token');
 });
 
+// RFC 8693 §2.2.2 + RFC 6749 §5.2 (invalid_grant)
 it('rejects a revoked subject token with invalid_grant', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid'], revoked: true);
 
@@ -115,6 +123,7 @@ it('rejects a revoked subject token with invalid_grant', function () {
         ->assertJsonMissingPath('access_token');
 });
 
+// RFC 8693 §2.2.2 + RFC 6749 §5.2 (invalid_grant)
 it('rejects a subject token not bound to a user with invalid_grant', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid'], userless: true);
 
@@ -166,6 +175,7 @@ it('rejects a public client with invalid_client', function () {
         ->assertJsonPath('error', 'invalid_client');
 });
 
+// RFC 8693 §3 (token type identifiers)
 it('rejects a wrong subject_token_type with invalid_request', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
 
@@ -189,6 +199,7 @@ it('rejects a client without the grant', function () {
     ])->assertStatus(400);
 });
 
+// RFC 8414 §2 (grant_types_supported)
 it('advertises the grant in discovery when enabled', function () {
     expect($this->getJson('/.well-known/openid-configuration')->json('grant_types_supported'))
         ->toContain(EXCHANGE_URN);

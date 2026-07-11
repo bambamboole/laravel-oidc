@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * OpenID Connect Core 1.0 §3.1.2.1 (max_age, prompt), §2 (auth_time), §3.1.2.6 (login_required/consent_required)
+ */
+
 use Illuminate\Auth\Events\Login;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
