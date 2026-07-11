@@ -55,6 +55,12 @@ it('rejects an expired token', function () {
     $this->getJson('/test/orders', ['Authorization' => "Bearer $jwt"])->assertUnauthorized();
 });
 
+it('rejects a token whose sub resolves to no user (fail closed)', function () {
+    $jwt = resourceServerBearer($this, ['https://api.internal/orders'], subjectId: '999999');
+
+    $this->getJson('/test/orders', ['Authorization' => "Bearer $jwt"])->assertUnauthorized();
+});
+
 it('resolves the request user from the sub claim', function () {
     $jwt = resourceServerBearer($this, ['https://api.internal/orders']);
 

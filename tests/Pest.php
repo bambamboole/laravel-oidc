@@ -99,6 +99,7 @@ function mintExchangeSubjectToken(
     array $scopeIds,
     ?DateTimeImmutable $expiresAt = null,
     bool $revoked = false,
+    bool $userless = false,
 ): string {
     $tokenId = Str::random(80);
     $expiresAt ??= new DateTimeImmutable('+1 hour');
@@ -115,7 +116,7 @@ function mintExchangeSubjectToken(
 
     Passport::token()->forceFill([
         'id' => $tokenId,
-        'user_id' => $userId,
+        'user_id' => $userless ? null : $userId,
         'client_id' => $clientId,
         'scopes' => $scopeIds,
         'revoked' => $revoked,
@@ -123,44 +124,6 @@ function mintExchangeSubjectToken(
     ])->save();
 
     return $subject->toString();
-}
-
-/**
- * Mints an RFC 9068 at+jwt access token addressed to the given audience and persists a
- * matching Passport token row, so the token both authenticates via auth:api and carries
- * an aud claim for CheckAudience to enforce.
- *
- * League's BearerTokenValidator (which auth:api relies on) reads aud[0] as the client id
- * to resolve the authenticating client, so the client id is always prepended to the given
- * audience — otherwise auth:api itself would 401 before CheckAudience ever runs.
- *
- * @param  string[]  $audience
- */
-function persistedBearer(mixed $test, array $audience): string
-{
-    $tokenId = Str::random(80);
-    $clientId = (string) $test->client->id;
-
-    $accessToken = new OidcAccessToken(
-        (string) $test->user->id,
-        [new BridgeScope('openid')],
-        new BridgeClient($clientId, 'RP', ['https://rp.test/cb']),
-    );
-    $accessToken->setIdentifier($tokenId);
-    $accessToken->setAudience($clientId, ...$audience);
-    $accessToken->setExpiryDateTime(new DateTimeImmutable('+1 hour'));
-    $accessToken->setPrivateKey(new CryptKey(__DIR__.'/fixtures/oauth-private.key', null, false));
-
-    Passport::token()->forceFill([
-        'id' => $tokenId,
-        'user_id' => $test->user->id,
-        'client_id' => $test->client->id,
-        'scopes' => ['openid'],
-        'revoked' => false,
-        'expires_at' => now()->addHour(),
-    ])->save();
-
-    return $accessToken->toString();
 }
 
 /**
@@ -176,13 +139,15 @@ function resourceServerBearer(
     array $audience,
     bool $revoked = false,
     bool $expired = false,
+    ?string $subjectId = null,
 ): string {
     $tokenId = Str::random(80);
     $expiresAt = $expired ? new DateTimeImmutable('-1 hour') : new DateTimeImmutable('+1 hour');
     $clientId = (string) $test->client->id;
+    $subjectId ??= (string) $test->user->id;
 
     $accessToken = new OidcAccessToken(
-        (string) $test->user->id,
+        $subjectId,
         [new BridgeScope('openid')],
         new BridgeClient($clientId, 'RP', ['https://rp.test/cb']),
     );
@@ -193,7 +158,7 @@ function resourceServerBearer(
 
     Passport::token()->forceFill([
         'id' => $tokenId,
-        'user_id' => $test->user->id,
+        'user_id' => $subjectId,
         'client_id' => $test->client->id,
         'scopes' => ['openid'],
         'revoked' => $revoked,
@@ -205,8 +170,8 @@ function resourceServerBearer(
 
 /**
  * Mints a plain JWT (default header typ=JWT, as an id_token would carry) and persists a
- * matching Passport token row, so auth:api authenticates it and only CheckAudience's typ
- * guard is left to reject it.
+ * matching Passport token row. CheckAudience validates the signature and persisted row but
+ * still rejects it on its typ guard, since the header typ is not at+jwt.
  */
 function persistedIdTokenAsBearer(mixed $test): string
 {

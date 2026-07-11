@@ -96,6 +96,71 @@ it('rejects a revoked subject token with invalid_grant', function () {
         ->assertJsonMissingPath('access_token');
 });
 
+it('rejects a subject token not bound to a user with invalid_grant', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid'], userless: true);
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+    ])->assertStatus(400)
+        ->assertJsonPath('error', 'invalid_grant')
+        ->assertJsonMissingPath('access_token');
+});
+
+it('never mints an id_token even when the exchange requests scope openid', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read']);
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+        'scope' => 'openid',
+    ])->assertOk();
+
+    $response->assertJsonMissingPath('id_token');
+    expect($response->json('access_token'))->not->toBeNull()
+        ->and($response->json('issued_token_type'))->toBe(ACCESS_TOKEN_URN);
+});
+
+it('rejects a public client with invalid_client', function () {
+    $public = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Public', ['https://p/cb'], confidential: false);
+    $public->forceFill([
+        'grant_types' => [...(array) $public->getAttribute('grant_types'), EXCHANGE_URN],
+        'allowed_exchange_audiences' => json_encode(['https://api.internal/orders']),
+    ])->save();
+    $subject = mintExchangeSubjectToken((string) $public->id, (string) $this->user->id, ['openid']);
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $public->id,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+    ])->assertStatus(401)
+        ->assertJsonPath('error', 'invalid_client');
+});
+
+it('rejects a wrong subject_token_type with invalid_request', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => 'urn:ietf:params:oauth:token-type:refresh_token',
+        'audience' => 'https://api.internal/orders',
+    ])->assertStatus(400)
+        ->assertJsonPath('error', 'invalid_request');
+});
+
 it('rejects a client without the grant', function () {
     $other = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Other', ['https://o/cb']);
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);

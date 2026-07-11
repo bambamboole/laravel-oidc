@@ -48,12 +48,13 @@ class IdTokenResponse extends BearerTokenResponse
 
         $grantType = $this->requestGrantType();
         $params = [];
+        $isExchange = $grantType === self::EXCHANGE_URN;
 
-        if (in_array('openid', $scopes, true) && $accessToken->getUserIdentifier() !== null) {
+        if (! $isExchange && in_array('openid', $scopes, true) && $accessToken->getUserIdentifier() !== null) {
             $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $grantType);
         }
 
-        if ($grantType === self::EXCHANGE_URN) {
+        if ($isExchange) {
             $params['issued_token_type'] = self::ACCESS_TOKEN_URN;
             $params['scope'] = implode(' ', $scopes);
         }

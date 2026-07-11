@@ -55,7 +55,7 @@ it('drops id_token-specific protected claims but allows them on access tokens', 
 
 it('drops access-token-specific protected claims but allows them on id_tokens', function () {
     $accessToken = new ClaimsBag(Artifact::AccessToken);
-    $accessToken->set('scope', 'a b')->set('scopes', ['a'])->set('client_id', 'x')->set('cnf', []);
+    $accessToken->set('scope', 'a b')->set('scopes', ['a'])->set('client_id', 'x')->set('cnf', [])->set('act', ['client_id' => 'x']);
     expect($accessToken->all())->toBe([]);
 
     $idToken = new ClaimsBag(Artifact::IdToken);

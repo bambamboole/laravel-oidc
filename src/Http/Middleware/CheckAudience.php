@@ -66,9 +66,11 @@ class CheckAudience
         $sub = $parsed->claims()->get('sub');
         $user = $this->resolveUser(is_string($sub) ? $sub : null);
 
-        if ($user !== null) {
-            $request->setUserResolver(fn () => $user);
+        if ($user === null) {
+            abort(401);
         }
+
+        $request->setUserResolver(fn () => $user);
 
         return $next($request);
     }

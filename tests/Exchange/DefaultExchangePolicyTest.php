@@ -44,6 +44,20 @@ it('authorizes a reciprocal, allowlisted, narrowed exchange', function () {
         ->and($result->expiresAt)->toBeLessThanOrEqual(time() + 3600);
 });
 
+it('rejects a subject token with an empty sub claim with invalid_grant', function () {
+    $client = exchangeClient();
+    $claims = subjectClaims((string) $client->id, [(string) $client->id], ['openid']);
+    unset($claims['sub']);
+    $request = new ExchangeRequest($client, $claims, 'https://api.internal/orders', null, time() + 3600);
+
+    try {
+        (new DefaultExchangePolicy)->authorize($request);
+        $this->fail('expected rejection');
+    } catch (OAuthServerException $e) {
+        expect($e->getErrorType())->toBe('invalid_grant');
+    }
+});
+
 it('rejects when the requesting client is not in the subject token audience (reciprocity)', function () {
     $client = exchangeClient();
     $request = new ExchangeRequest($client, subjectClaims('someone-else', ['other-service'], ['openid']), 'https://api.internal/orders', null, time() + 3600);

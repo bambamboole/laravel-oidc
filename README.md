@@ -149,7 +149,7 @@ artifact controls itself, so hooks cannot forge protocol claims:
 | Artifact | Protected claims |
 | --- | --- |
 | `id_token` | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`, `c_hash`, `auth_time`, `azp`, `acr`, `amr` |
-| Access token | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf` |
+| Access token | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf`, `act` |
 | Userinfo | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti` |
 
 ```php
@@ -161,6 +161,17 @@ Oidc::onPostLogin(function (PostLoginContext $context): void {
     $context->accessToken->set('tenant', $context->user->tenant_id);
 });
 ```
+
+> **Hooks must be pure claim writers.** A hook is a side-effect-free function that
+> only writes claims onto the artifact's `ClaimsBag`. The `PostLogin` and `Refresh`
+> triggers run their hooks **more than once** per issuance — once when the access
+> token is serialized (via `AccessTokenHookRunner`) and again when the `id_token` is
+> serialized (via `IdTokenBuilder`), each time with the sibling artifact's bag
+> discarded. Each artifact's writer is applied only when that artifact is serialized.
+> Because a hook may be invoked multiple times per request, it must be idempotent: do
+> **not** perform audit logging, increment counters, or write to the database inside a
+> hook. For side effects that must happen once per authentication, use Laravel's auth
+> events (e.g. `Illuminate\Auth\Events\Login`) instead.
 
 These hooks only fire while issuing OIDC artifacts. User-lifecycle events —
 registration, email verification, password resets — are not part of this package;
@@ -315,13 +326,18 @@ $this->app->singleton(ExchangePolicy::class, TenantScopedExchangePolicy::class);
    exchanged token never outlives the token it was derived from.
 
 Independently of the policy, the grant itself rejects an **expired or revoked
-subject token** with `invalid_grant` before the policy ever runs.
+subject token**, and a subject token that is **not bound to a user** (e.g. a
+client-credentials token whose `sub` is a client id), with `invalid_grant` before the
+policy ever runs — the exchange design assumes a user subject.
 
 ### Guarantees
 
 - No refresh token is ever issued from this grant.
 - The exchanged token's subject (`sub`) is always identical to the subject token's.
 - The exchanged token's lifetime never exceeds the subject token's remaining lifetime.
+- Revoking a subject token does **not** cascade to already-issued exchanged tokens:
+  each exchanged token remains valid until its own `exp` (capped at the subject's
+  `exp`) or until it is independently revoked.
 
 ### `CheckAudience` — the resource-server middleware
 

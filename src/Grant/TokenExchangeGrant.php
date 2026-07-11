@@ -64,6 +64,10 @@ class TokenExchangeGrant extends AbstractGrant
             throw OAuthServerException::invalidGrant('The subject token is invalid.');
         }
 
+        if (($dbToken->getAttribute('user_id') ?? '') === '') {
+            throw OAuthServerException::invalidGrant('The subject token must be bound to a user.');
+        }
+
         $claims = $parsed->claims()->all();
         $subjectExpiresAt = $this->claimTimestamp($claims['exp'] ?? null);
 

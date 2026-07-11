@@ -18,6 +18,11 @@ class DefaultExchangePolicy implements ExchangePolicy
     public function authorize(ExchangeRequest $request): ExchangeGrantResult
     {
         $claims = $request->subjectClaims;
+        $subject = (string) ($claims['sub'] ?? '');
+        if ($subject === '') {
+            throw OAuthServerException::invalidGrant('The subject token has no subject.');
+        }
+
         $subjectAudience = $this->normalize($claims['aud'] ?? []);
         $subjectClientId = is_string($claims['client_id'] ?? null) ? $claims['client_id'] : null;
         $clientId = (string) $request->client->getKey();
@@ -42,7 +47,7 @@ class DefaultExchangePolicy implements ExchangePolicy
         }
 
         return new ExchangeGrantResult(
-            userId: (string) ($claims['sub'] ?? ''),
+            userId: $subject,
             scopes: array_values($requested),
             audience: [$audience],
             expiresAt: $request->subjectExpiresAt,

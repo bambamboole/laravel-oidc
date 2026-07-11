@@ -12,7 +12,7 @@ final class ClaimsBag
 
     private const array ID_TOKEN = ['nonce', 'at_hash', 'c_hash', 'auth_time', 'azp', 'acr', 'amr'];
 
-    private const array ACCESS_TOKEN = ['client_id', 'scope', 'scopes', 'cnf'];
+    private const array ACCESS_TOKEN = ['client_id', 'scope', 'scopes', 'cnf', 'act'];
 
     /** @var array<string, mixed> */
     private array $claims = [];
