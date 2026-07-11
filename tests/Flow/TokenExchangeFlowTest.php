@@ -53,6 +53,25 @@ it('exchanges a reciprocal token for a narrowed, audience-scoped access token', 
         ->and($at->claims()->get('act'))->toBe(['client_id' => $this->client->id]);
 });
 
+it('inherits the subject token full scope set when the scope param is omitted', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read', 'orders:write']);
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+    ])->assertOk();
+
+    expect($response->json('scope'))->not->toBeEmpty();
+    expect(explode(' ', (string) $response->json('scope')))->toEqualCanonicalizing(['openid', 'orders:read', 'orders:write']);
+
+    $at = parseAccessToken($response->json('access_token'));
+    expect(explode(' ', (string) $at->claims()->get('scope')))->toEqualCanonicalizing(['openid', 'orders:read', 'orders:write']);
+});
+
 it('rejects an unlisted audience with invalid_target', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
     $this->post('/oauth/token', [

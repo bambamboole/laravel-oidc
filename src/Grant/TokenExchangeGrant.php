@@ -66,7 +66,7 @@ class TokenExchangeGrant extends AbstractGrant
             $subjectTokenJwt,
             $passportClient,
             $audience,
-            $this->scopeParam($request) ?? [],
+            $this->scopeParam($request),
             $accessTokenTTL,
         );
 

@@ -30,13 +30,13 @@ class TokenExchanger
     ) {}
 
     /**
-     * @param  string[]  $scopes
+     * @param  string[]|null  $scopes
      */
     public function exchange(
         string $subjectToken,
         Client $requestingClient,
         string $audience,
-        array $scopes,
+        ?array $scopes = null,
         ?DateInterval $accessTokenTTL = null,
     ): OidcAccessToken {
         $parsed = $this->inspector->parse($subjectToken);
