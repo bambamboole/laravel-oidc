@@ -544,6 +544,25 @@ singletons hold request state.
   (`{"active": false}` for unknown/inactive tokens; `401` with `WWW-Authenticate: Basic`
   for failed client authentication). `sub`/`exp` are omitted when absent.
 
+## Releasing
+
+The package is developed inside the [saas-starter-kit](https://github.com/bambamboole/saas-starter-kit)
+monorepo under `packages/laravel-oidc` and mirrored to this repository. To cut a release:
+
+```bash
+# from the monorepo root, split the package's history to a standalone branch
+git subtree split --prefix=packages/laravel-oidc -b oidc-release
+
+# push it to this repository's main
+git push git@github.com:bambamboole/laravel-oidc.git oidc-release:main
+
+# tag the release (on the mirror), then submit/enable auto-update on Packagist
+git tag v0.1.0 && git push git@github.com:bambamboole/laravel-oidc.git v0.1.0
+```
+
+CI (`.github/workflows/tests.yml`) runs the suite across Laravel 11/12/13 on every push and pull
+request to this repository.
+
 ## License
 
 MIT.

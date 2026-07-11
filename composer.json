@@ -38,7 +38,15 @@
             "Workbench\\App\\": "workbench/app/"
         }
     },
+    "homepage": "https://github.com/bambamboole/laravel-oidc",
+    "support": {
+        "issues": "https://github.com/bambamboole/laravel-oidc/issues",
+        "source": "https://github.com/bambamboole/laravel-oidc"
+    },
     "extra": {
+        "branch-alias": {
+            "dev-main": "0.1-dev"
+        },
         "laravel": {
             "providers": [
                 "Bambamboole\\LaravelOidc\\OidcServiceProvider"
@@ -61,8 +69,6 @@
         ],
         "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "post-install-cmd": ["@boost:refresh"],
-        "post-update-cmd": ["@boost:refresh"],
         "boost:refresh": "@php vendor/bin/testbench boost:update --no-interaction"
     },
     "config": {
