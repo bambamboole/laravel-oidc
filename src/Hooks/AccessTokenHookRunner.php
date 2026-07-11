@@ -8,12 +8,14 @@ use Bambamboole\LaravelOidc\Hooks\Context\ClientCredentialsContext;
 use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
 use Bambamboole\LaravelOidc\Hooks\Context\RefreshContext;
 use Bambamboole\LaravelOidc\Hooks\Context\TokenExchangeContext;
+use Bambamboole\LaravelOidc\Support\ResolvesRequestGrantType;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Bambamboole\LaravelOidc\Token\ResolvesTokenUser;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 
 class AccessTokenHookRunner
 {
+    use ResolvesRequestGrantType;
     use ResolvesTokenUser;
 
     public function __construct(private readonly ClaimHooks $hooks) {}
@@ -58,16 +60,5 @@ class AccessTokenHookRunner
         $this->hooks->run($trigger, $context);
 
         return $bag->all();
-    }
-
-    private function requestGrantType(): ?string
-    {
-        if (! app()->bound('request')) {
-            return null;
-        }
-
-        $value = app('request')->input('grant_type');
-
-        return is_string($value) ? $value : null;
     }
 }

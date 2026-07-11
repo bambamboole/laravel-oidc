@@ -52,7 +52,7 @@ class CheckAudience
             OAuthError::bearer('invalid_token', 401);
         }
 
-        $token = $this->inspector->accessToken($jwt);
+        $token = $this->inspector->tokenForParsed($parsed);
 
         if ($token === null || $token->getAttribute('revoked')) {
             OAuthError::bearer('invalid_token', 401);
