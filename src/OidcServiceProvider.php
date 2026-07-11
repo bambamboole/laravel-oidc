@@ -9,6 +9,7 @@ use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
+use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
 use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
@@ -51,6 +52,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
+        $this->app->singleton(TokenExchanger::class);
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
