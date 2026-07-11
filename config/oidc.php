@@ -13,6 +13,8 @@ return [
         'revocation' => true,
     ],
 
+    'api_guard' => env('OIDC_API_GUARD', 'api'),
+
     'claims_supported' => [
         'iss', 'sub', 'aud', 'exp', 'iat', 'auth_time', 'nonce', 'at_hash', 'azp',
         'name', 'email', 'email_verified', 'locale', 'zoneinfo', 'updated_at',

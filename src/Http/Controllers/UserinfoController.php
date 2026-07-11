@@ -20,7 +20,7 @@ class UserinfoController
 {
     public function __invoke(Request $request, ClaimsResolver $claims, ClaimHooks $hooks): JsonResponse
     {
-        $user = $request->user('api');
+        $user = $request->user(config('oidc.api_guard', 'api'));
 
         if (! $user instanceof OAuthenticatable) {
             OAuthError::bearer('invalid_token', 401, withRealm: true);
