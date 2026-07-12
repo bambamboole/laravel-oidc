@@ -57,8 +57,8 @@ it('registers each handler with its intrinsic method', function () {
 
     expect($routes->getByName(Handler::Login->value)->methods())->toContain('GET')
         ->and($routes->getByName(Handler::LoginStore->value)->methods())->toContain('POST')
-        ->and($routes->getByName(Handler::OidcUserinfo->value)->methods())->toContain('GET', 'POST')
-        ->and($routes->getByName(Handler::PassportDeny->value)->methods())->toContain('DELETE');
+        ->and($routes->getByName(Handler::Userinfo->value)->methods())->toContain('GET', 'POST')
+        ->and($routes->getByName(Handler::Deny->value)->methods())->toContain('DELETE');
 });
 
 it('carries the configured middleware onto the registered route', function () {
@@ -70,13 +70,13 @@ it('carries the configured middleware onto the registered route', function () {
 
 it('does not register a handler set to false', function () {
     $handlers = config('oidc.handlers');
-    $handlers[Handler::OidcUserinfo->value] = false;
+    $handlers[Handler::Userinfo->value] = false;
     config(['oidc.handlers' => $handlers]);
 
     $routes = registerHandlersInFreshRouter()->getRoutes();
 
-    expect($routes->getByName(Handler::OidcUserinfo->value))->toBeNull()
-        ->and($routes->getByName(Handler::OidcJwks->value))->not->toBeNull();
+    expect($routes->getByName(Handler::Userinfo->value))->toBeNull()
+        ->and($routes->getByName(Handler::Jwks->value))->not->toBeNull();
 });
 
 it('applies a custom route path, controller and middleware override', function () {
@@ -106,10 +106,10 @@ it('exposes a handler config DTO through the facade', function () {
 
 it('returns false from the facade for a disabled handler', function () {
     $handlers = config('oidc.handlers');
-    $handlers[Handler::OidcUserinfo->value] = false;
+    $handlers[Handler::Userinfo->value] = false;
     config(['oidc.handlers' => $handlers]);
 
-    expect(Oidc::handlerConfig(Handler::OidcUserinfo))->toBeFalse();
+    expect(Oidc::handlerConfig(Handler::Userinfo))->toBeFalse();
 });
 
 it('exposes the issuer url through the facade', function () {
