@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Grant;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
@@ -164,7 +164,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
     private function currentAmr(): array
     {
         if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            return $this->normalizeAmr(app('session.store')->get(AuthenticationContext::SESSION_KEY, []));
+            return $this->normalizeAmr(app('session.store')->get(AuthenticationMethods::SESSION_KEY, []));
         }
 
         return [];
