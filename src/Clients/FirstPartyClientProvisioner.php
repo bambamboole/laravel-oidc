@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
+use League\Uri\Http;
+use League\Uri\Uri;
+use League\Uri\Urn;
+use Throwable;
 
 final readonly class FirstPartyClientProvisioner
 {
@@ -214,10 +218,34 @@ final readonly class FirstPartyClientProvisioner
         return $this->normalize($values, function (string $value): void {
             if ($this->containsForbiddenUriCharacters($value)
                 || $this->hasMalformedPercentEscape($value)
-                || preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:/', $value) !== 1) {
+                || ! $this->isValidAudienceUri($value)) {
                 throw new FirstPartyClientProvisioningException("The audience [{$value}] must be an absolute URI identifier.");
             }
         });
+    }
+
+    private function isValidAudienceUri(string $value): bool
+    {
+        try {
+            $uri = Uri::new($value);
+            $scheme = $uri->getScheme();
+
+            if ($scheme === null) {
+                return false;
+            }
+
+            if (in_array($scheme, ['http', 'https'], true)) {
+                return Http::new($value)->getHost() !== '';
+            }
+
+            if ($scheme === 'urn') {
+                Urn::new($value);
+            }
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     private function containsForbiddenUriCharacters(string $value): bool
