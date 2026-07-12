@@ -20,6 +20,11 @@ final class AuthenticationMethods
         session()->put(self::SESSION_KEY, $this->dedupe([...$existing, ...$methods]));
     }
 
+    public function forget(): void
+    {
+        session()->forget(self::SESSION_KEY);
+    }
+
     /**
      * @param  list<string>  $amr
      */
