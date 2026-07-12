@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth;
 
-final class AuthenticationContext
+final class AuthenticationMethods
 {
     public const string SESSION_KEY = 'oidc.amr';
 
@@ -18,6 +18,11 @@ final class AuthenticationContext
         $existing = (array) session()->get(self::SESSION_KEY, []);
 
         session()->put(self::SESSION_KEY, $this->dedupe([...$existing, ...$methods]));
+    }
+
+    public function forget(): void
+    {
+        session()->forget([self::SESSION_KEY, 'oidc.id_token_claims']);
     }
 
     /**

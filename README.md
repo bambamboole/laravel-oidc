@@ -225,6 +225,66 @@ These hooks only fire while issuing OIDC artifacts. User-lifecycle events —
 registration, email verification, password resets — are not part of this package;
 handle them where the rest of the app's authentication lives (Fortify).
 
+### The login decision hook — `Oidc::postLogin()`
+
+`Oidc::postLogin()` is different from the five claim hooks above: it does not write
+claims onto an issued artifact, it participates in the interactive login decision
+itself. Register it in a service provider's `boot()`. Unlike the claim hooks, it runs
+**exactly once** per login attempt — after the primary factor (password) succeeds and
+before the MFA challenge is presented — so it is safe to perform side effects such as
+audit logging from inside it.
+
+```php
+use Bambamboole\LaravelOidc\Auth\Pipeline\LoginApi;
+use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
+use Bambamboole\LaravelOidc\Facades\Oidc;
+
+Oidc::postLogin(function (LoginEvent $event, LoginApi $api): void {
+    if ($event->requestsAcr('mfa')) {
+        $api->requireMfa();
+    }
+    $api->setIdTokenClaim('tenant', $event->user->tenant_id);
+});
+```
+
+`LoginEvent` is read-only and describes the attempt:
+
+| Property / method | Description |
+| --- | --- |
+| `$event->user` | The `Authenticatable` who just passed the primary factor |
+| `$event->client` | The requesting OAuth client (`?ClientEntityInterface`), or `null` outside an authorization request |
+| `$event->scopes` | The scopes being requested (`list<string>`) |
+| `$event->requestedAcrValues` | The `acr_values` requested by the client (`list<string>`) |
+| `$event->ip` | The request's IP address |
+| `$event->userAgent` | The request's user agent string |
+| `$event->amr` | Authentication methods satisfied so far (`list<string>`, e.g. `['pwd']`) |
+| `$event->authTime` | Unix timestamp of authentication, if already known |
+| `$event->requestsAcr(string $value): bool` | Whether `$value` is present in `requestedAcrValues` |
+| `$event->isNewDevice(): bool` | Device-recognition signal — see limitations below |
+
+`LoginApi` is the write side, used to decide the outcome:
+
+| Method | Effect |
+| --- | --- |
+| `$api->deny(string $reason)` | Denies the login; the user sees a generic authentication failure |
+| `$api->requireMfa()` | Forces the MFA challenge for this login, even if the client didn't request one |
+| `$api->setIdTokenClaim(string $name, mixed $value)` | Queues a claim to be added to the `id_token` once the login completes; protocol-reserved claim names (`iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`, `c_hash`, `auth_time`, `azp`, `acr`, `amr`) are refused and logged instead of applied |
+
+**Fail-closed:** if the hook throws, the exception is logged and the login is denied —
+it never falls through to a permissive default.
+
+**`requireMfa()` semantics:** calling it forces the MFA challenge to be presented. If
+the user has no challengeable factor enrolled, the login is denied rather than
+silently skipping MFA.
+
+**Current limitations:**
+
+- Only `setIdTokenClaim()` exists today. `setAccessTokenClaim()`, and reissuing these
+  claims on a refreshed token, are planned for a follow-up phase (2a-2) and are not
+  available yet.
+- `isNewDevice()` always returns `false` until the device-recognition release
+  (phase 2b) ships; there is no real device tracking behind it yet.
+
 ## Access token format (RFC 9068)
 
 Access tokens issued by this package are structured JWTs per
