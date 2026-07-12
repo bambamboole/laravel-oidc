@@ -22,6 +22,9 @@ class IdTokenResponse extends BearerTokenResponse
 
     private ?int $authTime = null;
 
+    /** @var list<string> */
+    private array $amr = [];
+
     public function __construct(private readonly IdTokenBuilder $builder) {}
 
     public function setNonce(?string $nonce): void
@@ -34,6 +37,14 @@ class IdTokenResponse extends BearerTokenResponse
         $this->authTime = $authTime;
     }
 
+    /**
+     * @param  list<string>  $amr
+     */
+    public function setAmr(array $amr): void
+    {
+        $this->amr = $amr;
+    }
+
     protected function getExtraParams(AccessTokenEntityInterface $accessToken): array
     {
         // Read-and-clear: this response type is resolved once and reused across
@@ -41,8 +52,10 @@ class IdTokenResponse extends BearerTokenResponse
         // leak into a subsequent token issuance.
         $nonce = $this->nonce;
         $authTime = $this->authTime;
+        $amr = $this->amr;
         $this->nonce = null;
         $this->authTime = null;
+        $this->amr = [];
 
         $scopes = array_map(
             fn (ScopeEntityInterface $scope) => $scope->getIdentifier(),
@@ -54,7 +67,7 @@ class IdTokenResponse extends BearerTokenResponse
         $isExchange = $grantType === self::EXCHANGE_URN;
 
         if (! $isExchange && in_array('openid', $scopes, true) && $accessToken->getUserIdentifier() !== null) {
-            $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $grantType);
+            $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $grantType, $amr);
         }
 
         if ($isExchange) {
