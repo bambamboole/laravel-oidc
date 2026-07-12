@@ -32,8 +32,9 @@ class IdTokenBuilder
 
     /**
      * @param  array<int, string>  $amr
+     * @param  array<string, mixed>  $idTokenClaims
      */
-    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = []): string
+    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = [], array $idTokenClaims = []): string
     {
         $config = Configuration::forAsymmetricSigner(
             new Sha256,
@@ -74,6 +75,10 @@ class IdTokenBuilder
             if ($acr !== null) {
                 $builder = $builder->withClaim('acr', $acr);
             }
+        }
+
+        foreach ($idTokenClaims as $name => $value) {
+            $builder = $builder->withClaim($name, $value);
         }
 
         $user = $this->resolveUser((string) $accessToken->getUserIdentifier())
