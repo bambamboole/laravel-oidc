@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
+use Bambamboole\LaravelOidc\Auth\LoginDestination;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\Scope;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
+use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Contracts\AuthorizationViewResponse;
 use Laravel\Passport\Http\Controllers\AuthorizationController as PassportAuthorizationController;
@@ -25,6 +29,7 @@ class AuthorizationController extends PassportAuthorizationController
         StatefulGuard $guard,
         ClientRepository $clients,
         protected ScopeRepository $scopeRepository,
+        private readonly LoginDestination $loginDestination,
     ) {
         parent::__construct($server, $guard, $clients);
     }
@@ -35,9 +40,25 @@ class AuthorizationController extends PassportAuthorizationController
         ResponseInterface $psrResponse,
         AuthorizationViewResponse $viewResponse
     ): Response|AuthorizationViewResponse {
+        $this->removeConsentPromptForTrustedClient($request);
         $this->enforceMaxAge($request);
 
         return parent::authorize($psrRequest, $request, $psrResponse, $viewResponse);
+    }
+
+    protected function hasGrantedScopes(Authenticatable $user, Client $client, array $scopes): bool
+    {
+        return $this->isTrustedClient($client->getKey()) || parent::hasGrantedScopes($user, $client, $scopes);
+    }
+
+    protected function promptForLogin(Request $request): never
+    {
+        $request->session()->put('promptedForLogin', true);
+
+        throw new AuthenticationException(
+            guards: [(string) config('oidc.auth.guard', 'identity')],
+            redirectTo: $this->loginDestination->url(),
+        );
     }
 
     protected function parseScopes(AuthorizationRequestInterface $authRequest): array
@@ -84,5 +105,32 @@ class AuthorizationController extends PassportAuthorizationController
 
             $this->promptForLogin($request);
         }
+    }
+
+    private function removeConsentPromptForTrustedClient(Request $request): void
+    {
+        if (! $this->isTrustedClient($request->query('client_id'))) {
+            return;
+        }
+
+        $prompt = $request->string('prompt')
+            ->explode(' ')
+            ->map(fn (string $value): string => trim($value))
+            ->reject(fn (string $value): bool => $value === 'consent')
+            ->filter()
+            ->implode(' ');
+
+        $request->query->set('prompt', $prompt);
+    }
+
+    private function isTrustedClient(mixed $clientId): bool
+    {
+        if (! is_string($clientId) && ! is_int($clientId)) {
+            return false;
+        }
+
+        $trustedClients = array_map(strval(...), (array) config('oidc.trusted_clients', []));
+
+        return in_array((string) $clientId, $trustedClients, true);
     }
 }

@@ -29,12 +29,19 @@ it('sends a password reset link through the Laravel broker', function () {
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
 
-    $this->from('/forgot-password')
-        ->post(route('password.email'), ['email' => 'm@example.com'])
-        ->assertRedirect('/forgot-password')
+    $this->from('/auth/forgot-password')
+        ->post(route('identity.password.email'), ['email' => 'm@example.com'])
+        ->assertRedirect('/auth/forgot-password')
         ->assertSessionHas('status', __(Password::RESET_LINK_SENT));
 
-    Notification::assertSentTo($user, ResetPassword::class);
+    Notification::assertSentTo(
+        $user,
+        ResetPassword::class,
+        fn (ResetPassword $notification): bool => str_contains(
+            (string) $notification->toMail($user)->actionUrl,
+            '/auth/reset-password/',
+        ),
+    );
 });
 
 it('resets a password through the package action seam and logs the user in', function () {
@@ -47,14 +54,14 @@ it('resets a password through the package action seam and logs the user in', fun
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
     });
 
-    $this->post(route('password.update'), [
+    $this->post(route('identity.password.update'), [
         'token' => $token,
         'email' => 'm@example.com',
         'password' => 'new-password',
         'password_confirmation' => 'new-password',
-    ])->assertRedirect(route('login'));
+    ])->assertRedirect(route('identity.login'));
 
-    $this->assertAuthenticatedAs($user->fresh());
+    $this->assertAuthenticatedAs($user->fresh(), 'identity');
     expect(Hash::check('new-password', (string) User::query()->findOrFail($user->getKey())->getAttribute('password')))->toBeTrue();
     Event::assertDispatched(PasswordReset::class);
 });
@@ -66,13 +73,13 @@ it('returns validation errors for an invalid reset token', function () {
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
     });
 
-    $this->from('/reset-password/invalid-token')
-        ->post(route('password.update'), [
+    $this->from('/auth/reset-password/invalid-token')
+        ->post(route('identity.password.update'), [
             'token' => 'invalid-token',
             'email' => (string) $user->getAttribute('email'),
             'password' => 'new-password',
             'password_confirmation' => 'new-password',
         ])
-        ->assertRedirect('/reset-password/invalid-token')
+        ->assertRedirect('/auth/reset-password/invalid-token')
         ->assertSessionHasErrors('email');
 });

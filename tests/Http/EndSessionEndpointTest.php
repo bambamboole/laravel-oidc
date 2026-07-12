@@ -35,14 +35,14 @@ function issueIdToken(TestCase $test, ?User $subject = null): string
 }
 
 it('logs out and redirects to a registered post_logout_redirect_uri', function () {
-    $response = $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $response = $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this),
         'post_logout_redirect_uri' => 'https://rp.test/logged-out',
         'state' => 'xyz',
     ]));
 
     $response->assertRedirect('https://rp.test/logged-out?state=xyz');
-    expect(auth()->guest())->toBeTrue();
+    expect(auth('identity')->guest())->toBeTrue();
 });
 
 it('preserves an existing query string when appending state', function () {
@@ -50,61 +50,61 @@ it('preserves an existing query string when appending state', function () {
         'post_logout_redirect_uris' => json_encode(['https://rp.test/logged-out?tenant=abc']),
     ])->save();
 
-    $response = $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $response = $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this),
         'post_logout_redirect_uri' => 'https://rp.test/logged-out?tenant=abc',
         'state' => 'xyz',
     ]));
 
     $response->assertRedirect('https://rp.test/logged-out?tenant=abc&state=xyz');
-    expect(auth()->guest())->toBeTrue();
+    expect(auth('identity')->guest())->toBeTrue();
 });
 
 it('falls back to the configured redirect for unregistered uris', function () {
-    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this),
         'post_logout_redirect_uri' => 'https://evil.test/phish',
     ]))->assertRedirect('/');
 });
 
 it('does not log out on a GET without a valid id_token_hint', function () {
-    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => 'garbage',
         'post_logout_redirect_uri' => 'https://rp.test/logged-out',
     ]))->assertRedirect('/');
 
-    expect(auth()->check())->toBeTrue();
+    expect(auth('identity')->check())->toBeTrue();
 });
 
 it('does not log out on a parameterless GET', function () {
-    $this->actingAs($this->user)->get('/oauth/logout')->assertRedirect('/');
+    $this->actingAs($this->user, 'identity')->get('/oauth/logout')->assertRedirect('/');
 
-    expect(auth()->check())->toBeTrue();
+    expect(auth('identity')->check())->toBeTrue();
 });
 
 it('logs out on a POST without a valid id_token_hint', function () {
     $this->withoutMiddleware(ValidateCsrfToken::class)
-        ->actingAs($this->user)
+        ->actingAs($this->user, 'identity')
         ->post('/oauth/logout')
         ->assertRedirect('/');
 
-    expect(auth()->guest())->toBeTrue();
+    expect(auth('identity')->guest())->toBeTrue();
 });
 
 it('logs out on a GET with a valid id_token_hint', function () {
-    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this),
     ]))->assertRedirect('/');
 
-    expect(auth()->guest())->toBeTrue();
+    expect(auth('identity')->guest())->toBeTrue();
 });
 
 it('does not log out when the hint sub does not match the current user', function () {
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'x']);
 
-    $this->actingAs($this->user)->get('/oauth/logout?'.http_build_query([
+    $this->actingAs($this->user, 'identity')->get('/oauth/logout?'.http_build_query([
         'id_token_hint' => issueIdToken($this, $other),
     ]))->assertRedirect('/');
 
-    expect(auth()->check())->toBeTrue();
+    expect(auth('identity')->check())->toBeTrue();
 });

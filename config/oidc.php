@@ -19,6 +19,7 @@ use Bambamboole\LaravelOidc\Auth\Controllers\ShowTwoFactorQrCodeController;
 use Bambamboole\LaravelOidc\Auth\Controllers\ShowTwoFactorSecretKeyController;
 use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorChallengeController;
 use Bambamboole\LaravelOidc\Auth\Controllers\VerifyEmailController;
+use Bambamboole\LaravelOidc\Auth\Middleware\AuthenticateIdentity;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
@@ -32,6 +33,10 @@ use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Http\Controllers\RevocationController;
 use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
 use Bambamboole\LaravelOidc\Routing\Handler;
+use Illuminate\Auth\Middleware\RequirePassword;
+use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
+use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
+use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\TransientTokenController;
 
@@ -61,6 +66,10 @@ return [
 
     'first_party_client' => env('OIDC_FIRST_PARTY_CLIENT') ?: null,
 
+    'trusted_clients' => [],
+
+    'login_route' => env('OIDC_LOGIN_ROUTE', 'login'),
+
     'session_token' => [
         'ttl' => (int) env('OIDC_SESSION_TOKEN_TTL', 3600),
         'session_key' => 'oidc.session_token',
@@ -69,12 +78,11 @@ return [
     ],
 
     'auth' => [
-        'guard' => env('OIDC_AUTH_GUARD', 'web'),
+        'guard' => env('OIDC_AUTH_GUARD', 'identity'),
+        'provider' => env('OIDC_AUTH_PROVIDER', 'users'),
         'home' => env('OIDC_AUTH_HOME', '/dashboard'),
         'username' => env('OIDC_AUTH_USERNAME', 'email'),
         'two_factor' => [
-            'requires_password_confirmation' => env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true),
-            'throttle' => env('OIDC_AUTH_2FA_THROTTLE', '5,1'),
             'challenge_providers' => ['totp'],
             'secret_length' => 16,
             'window' => 1,
@@ -101,119 +109,196 @@ return [
     */
     'handlers' => [
         Handler::Login->value => [
-            'route' => 'login',
+            'route' => 'auth/login',
             'controller' => [AuthenticatedSessionController::class, 'create'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::LoginStore->value => [
-            'route' => 'login',
+            'route' => 'auth/login',
             'controller' => [AuthenticatedSessionController::class, 'store'],
-            'middleware' => ['web', 'guest:web', 'throttle:5,1'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
         ],
         Handler::Register->value => [
-            'route' => 'register',
+            'route' => 'auth/register',
             'controller' => [RegisteredUserController::class, 'create'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::RegisterStore->value => [
-            'route' => 'register',
+            'route' => 'auth/register',
             'controller' => [RegisteredUserController::class, 'store'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordRequest->value => [
-            'route' => 'forgot-password',
+            'route' => 'auth/forgot-password',
             'controller' => [PasswordResetLinkController::class, 'create'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordEmail->value => [
-            'route' => 'forgot-password',
+            'route' => 'auth/forgot-password',
             'controller' => [PasswordResetLinkController::class, 'store'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordReset->value => [
-            'route' => 'reset-password/{token}',
+            'route' => 'auth/reset-password/{token}',
             'controller' => [NewPasswordController::class, 'create'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordUpdate->value => [
-            'route' => 'reset-password',
+            'route' => 'auth/reset-password',
             'controller' => [NewPasswordController::class, 'store'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordConfirm->value => [
-            'route' => 'user/confirm-password',
+            'route' => 'auth/user/confirm-password',
             'controller' => [ConfirmablePasswordController::class, 'show'],
-            'middleware' => ['web', 'auth:web'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordConfirmStore->value => [
-            'route' => 'user/confirm-password',
+            'route' => 'auth/user/confirm-password',
             'controller' => [ConfirmablePasswordController::class, 'store'],
-            'middleware' => ['web', 'auth:web'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::PasswordConfirmation->value => [
-            'route' => 'user/confirmed-password-status',
+            'route' => 'auth/user/confirmed-password-status',
             'controller' => ShowConfirmedPasswordStatusController::class,
-            'middleware' => ['web', 'auth:web'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::VerificationNotice->value => [
-            'route' => 'email/verify',
+            'route' => 'auth/email/verify',
             'controller' => EmailVerificationPromptController::class,
-            'middleware' => ['web', 'auth:web'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::VerificationVerify->value => [
-            'route' => 'email/verify/{id}/{hash}',
+            'route' => 'auth/email/verify/{id}/{hash}',
             'controller' => VerifyEmailController::class,
-            'middleware' => ['web', 'auth:web', 'signed', 'throttle:6,1'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'), 'signed', 'throttle:6,1'],
         ],
         Handler::VerificationSend->value => [
-            'route' => 'email/verification-notification',
+            'route' => 'auth/email/verification-notification',
             'controller' => SendEmailVerificationNotificationController::class,
-            'middleware' => ['web', 'auth:web', 'throttle:6,1'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:6,1'],
         ],
         Handler::TwoFactorLogin->value => [
-            'route' => 'two-factor-challenge',
+            'route' => 'auth/two-factor-challenge',
             'controller' => [TwoFactorChallengeController::class, 'create'],
-            'middleware' => ['web', 'guest:web'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::TwoFactorLoginStore->value => [
-            'route' => 'two-factor-challenge',
+            'route' => 'auth/two-factor-challenge',
             'controller' => [TwoFactorChallengeController::class, 'store'],
-            'middleware' => ['web', 'guest:web', 'throttle:'.env('OIDC_AUTH_2FA_THROTTLE', '5,1')],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
         ],
         Handler::TwoFactorEnable->value => [
-            'route' => 'user/two-factor-authentication',
+            'route' => 'auth/user/two-factor-authentication',
             'controller' => EnableTwoFactorAuthenticationController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorConfirm->value => [
-            'route' => 'user/confirmed-two-factor-authentication',
+            'route' => 'auth/user/confirmed-two-factor-authentication',
             'controller' => ConfirmTwoFactorAuthenticationController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorDisable->value => [
-            'route' => 'user/two-factor-authentication',
+            'route' => 'auth/user/two-factor-authentication',
             'controller' => DisableTwoFactorAuthenticationController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorQrCode->value => [
-            'route' => 'user/two-factor-qr-code',
+            'route' => 'auth/user/two-factor-qr-code',
             'controller' => ShowTwoFactorQrCodeController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorSecretKey->value => [
-            'route' => 'user/two-factor-secret-key',
+            'route' => 'auth/user/two-factor-secret-key',
             'controller' => ShowTwoFactorSecretKeyController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorRecoveryCodes->value => [
-            'route' => 'user/two-factor-recovery-codes',
+            'route' => 'auth/user/two-factor-recovery-codes',
             'controller' => ShowRecoveryCodesController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
         Handler::TwoFactorRegenerateRecoveryCodes->value => [
-            'route' => 'user/two-factor-recovery-codes',
+            'route' => 'auth/user/two-factor-recovery-codes',
             'controller' => RegenerateRecoveryCodesController::class,
-            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
+        ],
+        Handler::PasskeyLoginOptions->value => [
+            'route' => 'auth/passkeys/login/options',
+            'controller' => [PasskeyLoginController::class, 'index'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
+        ],
+        Handler::PasskeyLogin->value => [
+            'route' => 'auth/passkeys/login',
+            'controller' => [PasskeyLoginController::class, 'store'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
+        ],
+        Handler::PasskeyConfirmOptions->value => [
+            'route' => 'auth/passkeys/confirm/options',
+            'controller' => [PasskeyConfirmationController::class, 'index'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
+        ],
+        Handler::PasskeyConfirm->value => [
+            'route' => 'auth/passkeys/confirm',
+            'controller' => [PasskeyConfirmationController::class, 'store'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'), 'throttle:5,1'],
+        ],
+        Handler::PasskeyRegistrationOptions->value => [
+            'route' => 'auth/user/passkeys/options',
+            'controller' => [PasskeyRegistrationController::class, 'index'],
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+                'throttle:5,1',
+            ],
+        ],
+        Handler::PasskeyStore->value => [
+            'route' => 'auth/user/passkeys',
+            'controller' => [PasskeyRegistrationController::class, 'store'],
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+                'throttle:5,1',
+            ],
+        ],
+        Handler::PasskeyDestroy->value => [
+            'route' => 'auth/user/passkeys/{passkey}',
+            'controller' => [PasskeyRegistrationController::class, 'destroy'],
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
         ],
 
         Handler::Jwks->value => [
@@ -259,17 +344,17 @@ return [
         Handler::TokenRefresh->value => [
             'route' => 'oauth/token/refresh',
             'controller' => [TransientTokenController::class, 'refresh'],
-            'middleware' => ['web', 'auth'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::Approve->value => [
             'route' => 'oauth/authorize',
             'controller' => [ApproveAuthorizationController::class, 'approve'],
-            'middleware' => ['web', 'auth'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
         Handler::Deny->value => [
             'route' => 'oauth/authorize',
             'controller' => [DenyAuthorizationController::class, 'deny'],
-            'middleware' => ['web', 'auth'],
+            'middleware' => ['web', AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity')],
         ],
     ],
 ];

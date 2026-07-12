@@ -14,7 +14,7 @@ class EmailVerificationPromptController
 
     public function __invoke(Request $request): mixed
     {
-        $user = $request->user((string) config('oidc.auth.guard', 'web'));
+        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
 
         if ($user instanceof MustVerifyEmail && $user->hasVerifiedEmail()) {
             return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));

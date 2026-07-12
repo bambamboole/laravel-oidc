@@ -21,7 +21,7 @@ class ShowTwoFactorQrCodeController
      */
     public function __invoke(Request $request): JsonResponse|array
     {
-        $user = $request->user((string) config('oidc.auth.guard', 'web'));
+        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
         $factor = $this->twoFactor->currentFactor($user);
 
         if ($factor === null) {

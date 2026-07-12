@@ -20,7 +20,7 @@ it('registers a user through the package action seam and logs them in', function
         ]);
     });
 
-    $response = $this->from('/register')->post(route('register.store'), [
+    $response = $this->from('/auth/register')->post(route('identity.register.store'), [
         'name' => 'M',
         'email' => 'MixedCase@Example.com',
         'password' => 'password',
@@ -30,7 +30,7 @@ it('registers a user through the package action seam and logs them in', function
     $user = User::where('email', 'mixedcase@example.com')->firstOrFail();
 
     $response->assertRedirect('/dashboard');
-    $this->assertAuthenticatedAs($user);
+    $this->assertAuthenticatedAs($user, 'identity');
     Event::assertDispatched(Registered::class, fn (Registered $event): bool => $event->user->is($user));
 });
 
@@ -43,12 +43,12 @@ it('returns Fortify-compatible JSON after registration', function () {
         ]);
     });
 
-    $this->postJson(route('register.store'), [
+    $this->postJson(route('identity.register.store'), [
         'name' => 'M',
         'email' => 'm@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
     ])->assertCreated();
 
-    $this->assertAuthenticated();
+    $this->assertAuthenticated('identity');
 });

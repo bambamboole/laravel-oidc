@@ -36,10 +36,14 @@ use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\Passkeys;
@@ -55,8 +59,20 @@ class OidcServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/oidc.php', 'oidc');
 
+        $identityGuard = (string) config('oidc.auth.guard', 'identity');
+
+        if (! config()->has("auth.guards.{$identityGuard}")) {
+            config()->set("auth.guards.{$identityGuard}", [
+                'driver' => 'session',
+                'provider' => (string) config('oidc.auth.provider', 'users'),
+            ]);
+        }
+
+        config()->set('passport.guard', $identityGuard);
+
         Passport::ignoreRoutes();
         Passport::useAccessTokenEntity(OidcAccessToken::class);
+        Passkeys::ignoreRoutes();
 
         $this->app->singleton(ScopeRepository::class, PassportScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
@@ -89,13 +105,11 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(TokenExchanger::class);
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
 
-        config()->set('passkeys.guard', config('oidc.auth.guard', 'web'));
+        config()->set('passkeys.guard', $identityGuard);
         config()->set('passkeys.redirect', config('oidc.auth.home', '/dashboard'));
         config()->set('passkeys.middleware', ['web']);
-        config()->set('passkeys.management_middleware', config('oidc.auth.two_factor.requires_password_confirmation', true)
-            ? ['password.confirm']
-            : []);
-        config()->set('passkeys.throttle', 'throttle:'.config('oidc.auth.two_factor.throttle', '5,1'));
+        config()->set('passkeys.management_middleware', []);
+        config()->set('passkeys.throttle', 'throttle:5,1');
 
         $userModel = config('auth.providers.users.model');
 
@@ -137,6 +151,17 @@ class OidcServiceProvider extends ServiceProvider
         Event::listen(Login::class, RecordAuthTime::class);
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
+
+        ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => url(route(
+            'identity.password.reset',
+            ['token' => $token, 'email' => $notifiable->getEmailForPasswordReset()],
+            false,
+        )));
+        VerifyEmail::createUrlUsing(fn (mixed $notifiable): string => URL::temporarySignedRoute(
+            'identity.verification.verify',
+            Carbon::now()->addMinutes((int) config('auth.verification.expire', 60)),
+            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())],
+        ));
 
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
 

@@ -16,7 +16,7 @@ it('renders the verification notice for an unverified user', function () {
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
-    $this->actingAs($user)->get('/email/verify')->assertOk()->assertSee('verify-email-view');
+    $this->actingAs($user, 'identity')->get('/auth/email/verify')->assertOk()->assertSee('verify-email-view');
 });
 
 it('redirects verified users away from the verification notice', function () {
@@ -29,7 +29,7 @@ it('redirects verified users away from the verification notice', function () {
         'password' => 'secret',
     ]);
 
-    $this->actingAs($user)->get('/email/verify')->assertRedirect('/dashboard');
+    $this->actingAs($user, 'identity')->get('/auth/email/verify')->assertRedirect('/dashboard');
 });
 
 it('verifies a signed email verification URL and fires the event', function () {
@@ -37,12 +37,12 @@ it('verifies a signed email verification URL and fires the event', function () {
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
-    $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+    $url = URL::temporarySignedRoute('identity.verification.verify', now()->addMinutes(60), [
         'id' => $user->getKey(),
         'hash' => sha1($user->getEmailForVerification()),
     ]);
 
-    $this->actingAs($user)->get($url)->assertRedirect('/dashboard?verified=1');
+    $this->actingAs($user, 'identity')->get($url)->assertRedirect('/dashboard?verified=1');
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     Event::assertDispatched(Verified::class);
@@ -53,11 +53,18 @@ it('resends the email verification notification', function () {
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
-    $this->actingAs($user)
-        ->from('/email/verify')
-        ->post('/email/verification-notification')
-        ->assertRedirect('/email/verify')
+    $this->actingAs($user, 'identity')
+        ->from('/auth/email/verify')
+        ->post('/auth/email/verification-notification')
+        ->assertRedirect('/auth/email/verify')
         ->assertSessionHas('status', 'verification-link-sent');
 
-    Notification::assertSentTo($user, VerifyEmail::class);
+    Notification::assertSentTo(
+        $user,
+        VerifyEmail::class,
+        fn (VerifyEmail $notification): bool => str_contains(
+            (string) $notification->toMail($user)->actionUrl,
+            '/auth/email/verify/',
+        ),
+    );
 });
