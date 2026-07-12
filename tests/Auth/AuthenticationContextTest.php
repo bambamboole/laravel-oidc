@@ -12,6 +12,12 @@ it('starts a fresh amr list, overwriting any previous value', function () {
     expect(session()->get(AuthenticationContext::SESSION_KEY))->toBe(['pwd']);
 });
 
+it('initializes the amr list from empty when adding without a prior start', function () {
+    app(AuthenticationContext::class)->add('otp');
+
+    expect(session()->get(AuthenticationContext::SESSION_KEY))->toBe(['otp']);
+});
+
 it('appends factor methods and de-dupes while preserving order', function () {
     $context = app(AuthenticationContext::class);
     $context->start('pwd');
