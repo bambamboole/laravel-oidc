@@ -32,7 +32,7 @@ class RegisteredUserController
 
         event(new Registered($user = $this->actions->createUser($input)));
 
-        Auth::guard((string) config('oidc.auth.guard', 'web'))->login($user);
+        Auth::guard((string) config('oidc.auth.guard', 'identity'))->login($user);
 
         if ($request->hasSession()) {
             $request->session()->regenerate();

@@ -39,7 +39,7 @@ it('issues an RFC 9068 access token through the real flow with hook claims', fun
     Oidc::onPostLogin(fn (PostLoginContext $c) => $c->accessToken->set('tenant', 'acme'));
 
     [$verifier, $challenge] = [str_repeat('v', 64), rtrim(strtr(base64_encode(hash('sha256', str_repeat('v', 64), true)), '+/', '-_'), '=')];
-    $view = $this->actingAs($this->user)->withSession(['oidc.auth_time' => time()])->get('/oauth/authorize?'.http_build_query([
+    $view = $this->actingAs($this->user, 'identity')->withSession(['oidc.auth_time' => time()])->get('/oauth/authorize?'.http_build_query([
         'client_id' => $this->client->id, 'redirect_uri' => 'https://rp.test/callback', 'response_type' => 'code',
         'scope' => 'openid email', 'state' => 's', 'nonce' => 'n', 'code_challenge' => $challenge, 'code_challenge_method' => 'S256',
     ]))->assertOk();

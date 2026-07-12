@@ -24,7 +24,7 @@ class ConfirmablePasswordController
     {
         $request->validate(['password' => ['required', 'string']]);
 
-        $user = $request->user((string) config('oidc.auth.guard', 'web'));
+        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
 
         if ($user === null || ! Hash::check($request->string('password')->value(), (string) $user->getAuthPassword())) {
             throw ValidationException::withMessages(['password' => __('auth.password')]);
