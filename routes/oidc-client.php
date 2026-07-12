@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Routing\HandlerRegistrar;
+use Bambamboole\LaravelOidcClient\Facades\OidcClient;
 
-app(HandlerRegistrar::class)->register();
+OidcClient::routes();

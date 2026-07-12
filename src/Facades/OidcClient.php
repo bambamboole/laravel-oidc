@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static void resolveUsersUsing(\Closure $callback)
+ * @method static void routes()
  *
  * @see OidcClientManager
  */
