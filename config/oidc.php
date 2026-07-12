@@ -40,4 +40,10 @@ return [
         'refresh_skew' => 60,
         'scopes' => null,
     ],
+
+    'auth' => [
+        'enabled' => env('OIDC_AUTH_ENABLED', true),
+        'guard' => env('OIDC_AUTH_GUARD', 'web'),
+        'home' => env('OIDC_AUTH_HOME', '/dashboard'),
+    ],
 ];
