@@ -88,10 +88,13 @@ it('auto-approves trusted clients without rendering consent', function () {
 });
 
 it('does not bypass consent for an untrusted first-party client', function () {
-    config(['oidc.first_party' => [
-        'client_id' => (string) $this->client->id,
-        'trusted' => false,
-    ]]);
+    config([
+        'oidc.first_party' => [
+            'client_id' => (string) $this->client->id,
+            'trusted' => false,
+        ],
+        'oidc.trusted_clients' => [(string) $this->client->id],
+    ]);
 
     $this->actingAs($this->user, (string) config('oidc.auth.guard'))
         ->withSession(['oidc.auth_time' => time()])

@@ -57,7 +57,7 @@ class SessionMintTokenProvider implements SessionTokenProvider
         $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
 
         if ($client === null) {
-            throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');
+            throw new RuntimeException('The oidc.first_party.client_id is not configured or does not exist.');
         }
 
         $prior = $this->session()->get($this->key());

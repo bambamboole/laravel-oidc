@@ -190,11 +190,16 @@ final readonly class FirstPartyClientProvisioner
         return $this->normalize($values, function (string $value) use ($label): void {
             $parts = parse_url($value);
 
-            if (! is_array($parts)
-                || ! in_array($parts['scheme'] ?? null, ['http', 'https'], true)
-                || ! isset($parts['host'])
+            if ($this->containsForbiddenUriCharacters($value)
+                || $this->hasMalformedPercentEscape($value)
+                || filter_var($value, FILTER_VALIDATE_URL) === false
+                || ! is_array($parts)
+                || ! in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)
+                || ! is_string($parts['host'] ?? null)
+                || $parts['host'] === ''
                 || isset($parts['user'])
-                || isset($parts['fragment'])) {
+                || isset($parts['pass'])
+                || array_key_exists('fragment', $parts)) {
                 throw new FirstPartyClientProvisioningException("The {$label} [{$value}] must be an absolute HTTP(S) URI without user information or a fragment.");
             }
         });
@@ -207,12 +212,22 @@ final readonly class FirstPartyClientProvisioner
     private function normalizeAudiences(array $values): array
     {
         return $this->normalize($values, function (string $value): void {
-            $parts = parse_url($value);
-
-            if (! is_array($parts) || ! isset($parts['scheme'])) {
+            if ($this->containsForbiddenUriCharacters($value)
+                || $this->hasMalformedPercentEscape($value)
+                || preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:/', $value) !== 1) {
                 throw new FirstPartyClientProvisioningException("The audience [{$value}] must be an absolute URI identifier.");
             }
         });
+    }
+
+    private function containsForbiddenUriCharacters(string $value): bool
+    {
+        return preg_match('/[\x00-\x20\x7F\\\\]/', $value) === 1;
+    }
+
+    private function hasMalformedPercentEscape(string $value): bool
+    {
+        return preg_match('/%(?![0-9A-Fa-f]{2})/', $value) === 1;
     }
 
     /**

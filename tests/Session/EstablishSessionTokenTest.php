@@ -17,8 +17,8 @@ beforeEach(function () {
     $this->startSession();
 });
 
-it('does not throw and establishes no token when first_party_client is an empty string', function () {
-    config(['oidc.first_party_client' => '']);
+it('does not throw and establishes no token when the first-party client id is empty', function () {
+    config(['oidc.first_party.client_id' => '']);
 
     event(new Login('web', $this->user, false));
 
@@ -26,7 +26,7 @@ it('does not throw and establishes no token when first_party_client is an empty 
 });
 
 it('does not throw when the configured client id is stale, establishing no token', function () {
-    config(['oidc.first_party_client' => 'nonexistent-client-id']);
+    config(['oidc.first_party.client_id' => 'nonexistent-client-id']);
 
     event(new Login('web', $this->user, false));
 

@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
 
 function clientCommandEnv(string $contents = "APP_NAME=Testing\n"): string
 {
@@ -19,18 +22,42 @@ it('creates and prints first-party credentials without changing env', function (
     $env = clientCommandEnv();
     $before = File::get($env);
 
-    $this->artisan('oidc:client', [
+    $exitCode = Artisan::call('oidc:client', [
         '--first-party' => true,
         '--name' => 'First-party app',
-        '--redirect-uri' => ['https://app.test/login/callback'],
-        '--post-logout-redirect-uri' => ['https://app.test'],
-        '--audience' => ['https://api.test/orders'],
+        '--redirect-uri' => ['https://app.test/login/callback', 'https://app.test/oauth/callback'],
+        '--post-logout-redirect-uri' => ['https://app.test/logged-out', 'https://app.test/signed-out'],
+        '--audience' => ['urn:example:orders', 'https://api.test/invoices'],
         '--no-interaction' => true,
-    ])->expectsOutputToContain('OIDC_FIRST_PARTY_CLIENT=')
-        ->expectsOutputToContain('OIDC_RP_CLIENT_SECRET=')
-        ->assertSuccessful();
+    ]);
+    $output = trim(Artisan::output());
+    preg_match('/^OIDC_RP_CLIENT_SECRET=(.+)$/m', $output, $secretMatch);
+    $client = Passport::client()->newQuery()->where('oidc_provisioning_key', 'first-party')->firstOrFail();
+    $clientId = (string) $client->getKey();
+    $plainSecret = $secretMatch[1] ?? null;
 
-    expect(File::get($env))->toBe($before);
+    expect($exitCode)->toBe(0)
+        ->and($plainSecret)->toBeString()->not->toBeEmpty()
+        ->and($output)->toBe(implode(PHP_EOL, [
+            'OIDC_FIRST_PARTY_CLIENT='.$clientId,
+            'OIDC_FIRST_PARTY_TRUSTED=false',
+            'OIDC_RP_CLIENT_ID='.$clientId,
+            'OIDC_RP_CLIENT_SECRET='.$plainSecret,
+        ]))
+        ->and(Hash::check($plainSecret, (string) $client->getRawOriginal('secret')))->toBeTrue()
+        ->and($client->getAttribute('redirect_uris'))->toBe([
+            'https://app.test/login/callback',
+            'https://app.test/oauth/callback',
+        ])
+        ->and(json_decode((string) $client->getRawOriginal('post_logout_redirect_uris'), true, flags: JSON_THROW_ON_ERROR))->toBe([
+            'https://app.test/logged-out',
+            'https://app.test/signed-out',
+        ])
+        ->and(json_decode((string) $client->getRawOriginal('allowed_exchange_audiences'), true, flags: JSON_THROW_ON_ERROR))->toBe([
+            'urn:example:orders',
+            'https://api.test/invoices',
+        ])
+        ->and(File::get($env))->toBe($before);
 });
 
 it('reconciles without printing a secret and writes selected config explicitly', function () {

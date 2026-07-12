@@ -15,12 +15,8 @@ final readonly class FirstPartyClientConfig
 
     public static function fromConfig(): self
     {
-        $newClientId = config('oidc.first_party.client_id');
-        $usesNewConfig = is_string($newClientId) && $newClientId !== '';
-        $legacyClientId = config('oidc.first_party_client');
-        $resolved = $usesNewConfig
-            ? $newClientId
-            : (is_string($legacyClientId) && $legacyClientId !== '' ? $legacyClientId : null);
+        $clientId = config('oidc.first_party.client_id');
+        $resolved = is_string($clientId) && $clientId !== '' ? $clientId : null;
         $trusted = array_values(array_unique(array_map(
             strval(...),
             (array) config('oidc.trusted_clients', []),
@@ -28,9 +24,7 @@ final readonly class FirstPartyClientConfig
 
         return new self(
             resolvedClientId: $resolved,
-            firstPartyTrusted: $usesNewConfig
-                ? (bool) config('oidc.first_party.trusted', false)
-                : ($resolved !== null && in_array($resolved, $trusted, true)),
+            firstPartyTrusted: (bool) config('oidc.first_party.trusted', false),
             additionalTrustedClientIds: $trusted,
         );
     }
@@ -49,7 +43,10 @@ final readonly class FirstPartyClientConfig
     {
         $clientId = (string) $clientId;
 
-        return ($this->resolvedClientId === $clientId && $this->firstPartyTrusted)
-            || in_array($clientId, $this->additionalTrustedClientIds, true);
+        if ($this->resolvedClientId === $clientId) {
+            return $this->firstPartyTrusted;
+        }
+
+        return in_array($clientId, $this->additionalTrustedClientIds, true);
     }
 }
