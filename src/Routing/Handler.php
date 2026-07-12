@@ -34,6 +34,15 @@ enum Handler: string
     case VerificationNotice = 'verification.notice';
     case VerificationVerify = 'verification.verify';
     case VerificationSend = 'verification.send';
+    case TwoFactorLogin = 'two-factor.login';
+    case TwoFactorLoginStore = 'two-factor.login.store';
+    case TwoFactorEnable = 'two-factor.enable';
+    case TwoFactorConfirm = 'two-factor.confirm';
+    case TwoFactorDisable = 'two-factor.disable';
+    case TwoFactorQrCode = 'two-factor.qr-code';
+    case TwoFactorSecretKey = 'two-factor.secret-key';
+    case TwoFactorRecoveryCodes = 'two-factor.recovery-codes';
+    case TwoFactorRegenerateRecoveryCodes = 'two-factor.regenerate-recovery-codes';
 
     // OIDC / OAuth protocol
     case Jwks = 'oidc.jwks';
@@ -83,12 +92,16 @@ enum Handler: string
             self::PasswordUpdate,
             self::PasswordConfirmStore,
             self::VerificationSend,
+            self::TwoFactorLoginStore,
+            self::TwoFactorEnable,
+            self::TwoFactorConfirm,
+            self::TwoFactorRegenerateRecoveryCodes,
             self::Introspect,
             self::Revoke,
             self::IssueToken,
             self::TokenRefresh,
             self::Approve => 'post',
-            self::Deny => 'delete',
+            self::Deny, self::TwoFactorDisable => 'delete',
             self::Userinfo, self::Logout => ['get', 'post'],
             default => 'get',
         };

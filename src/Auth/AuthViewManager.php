@@ -22,6 +22,8 @@ class AuthViewManager
 
     public const string VerifyEmail = 'verify-email';
 
+    public const string TwoFactorChallenge = 'two-factor-challenge';
+
     /**
      * @var array<string, Closure(Request): mixed>
      */
