@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Http;
+use Workbench\App\Models\User;
+
+beforeEach(function () {
+    config()->set('oidc-client.enabled', true);
+    config()->set('oidc-client.issuer', 'https://id.example.com');
+
+    Http::fake([
+        'https://id.example.com/.well-known/openid-configuration' => Http::response([
+            'issuer' => 'https://id.example.com',
+            'authorization_endpoint' => 'https://id.example.com/oauth/authorize',
+            'token_endpoint' => 'https://id.example.com/oauth/token',
+            'jwks_uri' => 'https://id.example.com/.well-known/jwks.json',
+            'end_session_endpoint' => 'https://id.example.com/oauth/logout',
+        ]),
+    ]);
+});
+
+it('logs out and redirects to the provider end-session endpoint', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $response = $this->actingAs($user)
+        ->withSession(['oidc-client.tokens' => ['id_token' => 'the-id-token']])
+        ->post(route('logout'));
+
+    $response->assertRedirectContains('https://id.example.com/oauth/logout');
+    $response->assertRedirectContains('id_token_hint=the-id-token');
+    $this->assertGuest();
+});
