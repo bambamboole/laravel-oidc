@@ -75,7 +75,6 @@ return [
     |
     */
     'handlers' => [
-        // Authentication
         Handler::Login->value => [
             'route' => 'login',
             'controller' => [AuthenticatedSessionController::class, 'create'],
@@ -147,7 +146,6 @@ return [
             'middleware' => ['web', 'auth:web', 'throttle:6,1'],
         ],
 
-        // OIDC / OAuth protocol
         Handler::Jwks->value => [
             'route' => '.well-known/jwks.json',
             'controller' => JwksController::class,
