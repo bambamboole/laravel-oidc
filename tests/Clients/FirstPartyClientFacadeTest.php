@@ -14,6 +14,6 @@ it('provisions through the public facade', function () {
     );
 
     expect($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Created)
-        ->and($result->clientId)->toBeString()
+        ->and($result->clientId)->toBe((string) $result->client->getKey())
         ->and($result->clientSecret)->toBeString();
 });
