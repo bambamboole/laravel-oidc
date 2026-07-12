@@ -36,6 +36,12 @@ it('carries the client, one-time secret, and outcome in a readonly result', func
     expect($result->client)->toBe($client)
         ->and($result->clientId)->toBe((string) $client->getKey())
         ->and($result->clientSecret)->toBe('plain-secret')
-        ->and($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Created)
-        ->and(FirstPartyClientProvisioningException::class)->toBeString();
+        ->and($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Created);
+});
+
+it('provides a constructible provisioning exception', function () {
+    $exception = new FirstPartyClientProvisioningException('Provisioning failed.');
+
+    expect($exception->getMessage())->toBe('Provisioning failed.')
+        ->and((new ReflectionClass($exception))->isSubclassOf(RuntimeException::class))->toBeTrue();
 });
