@@ -12,14 +12,15 @@ class JwksController
 {
     public function __invoke(): JsonResponse
     {
-        $keys = [Jwk::fromPem(PassportKeys::publicKey())];
+        $keys = [];
 
-        foreach (config('oidc.additional_public_keys', []) as $pem) {
-            $keys[] = Jwk::fromPem($pem);
+        foreach ([PassportKeys::publicKey(), ...config('oidc.additional_public_keys', [])] as $pem) {
+            $jwk = Jwk::fromPem($pem);
+            $keys[$jwk['kid']] = $jwk;
         }
 
         return response()
-            ->json(['keys' => $keys])
+            ->json(['keys' => array_values($keys)])
             ->header('Cache-Control', 'max-age=3600, public');
     }
 }

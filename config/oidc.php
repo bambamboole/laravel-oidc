@@ -24,7 +24,11 @@ return [
         'enabled' => env('OIDC_TOKEN_EXCHANGE_ENABLED', true),
     ],
 
-    'additional_public_keys' => [],
+    'key_size' => (int) env('OIDC_KEY_SIZE', 2048),
+
+    'additional_public_keys' => array_values(array_filter([
+        str_replace('\n', "\n", (string) env('OIDC_PREVIOUS_PUBLIC_KEY', '')),
+    ], static fn (string $pem): bool => trim($pem) !== '')),
 
     'logout_redirect' => '/',
 
