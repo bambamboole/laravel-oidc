@@ -60,3 +60,22 @@ it('clears the nonce and auth_time after the first issuance', function () {
     expect($second->claims()->has('nonce'))->toBeFalse()
         ->and($second->claims()->has('auth_time'))->toBeFalse();
 });
+
+it('clears amr after emitting so it does not leak to the next issuance', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
+    $accessToken = buildOpenidAccessToken($user);
+
+    $response = app(IdTokenResponse::class);
+    $response->setAmr(['pwd', 'otp']);
+
+    expect((new ReflectionProperty($response, 'amr'))->getValue($response))->toBe(['pwd', 'otp']);
+
+    $first = parseResponseIdToken(extraParams($response, $accessToken)['id_token']);
+
+    expect($first->claims()->get('amr'))->toBe(['pwd', 'otp'])
+        ->and((new ReflectionProperty($response, 'amr'))->getValue($response))->toBe([]);
+
+    $second = parseResponseIdToken(extraParams($response, $accessToken)['id_token']);
+
+    expect($second->claims()->has('amr'))->toBeFalse();
+});
