@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
+use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
+use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
@@ -104,6 +108,9 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
+        $this->app->singleton(PostLoginPipeline::class);
+        $this->app->singleton(AuthenticationContextStore::class);
+        $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
         config()->set('passkeys.guard', $identityGuard);
         config()->set('passkeys.redirect', config('oidc.auth.home', '/dashboard'));
