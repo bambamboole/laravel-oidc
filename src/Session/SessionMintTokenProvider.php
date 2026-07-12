@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Session;
 
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Scopes\Scope;
@@ -25,6 +26,7 @@ class SessionMintTokenProvider implements SessionTokenProvider
     public function __construct(
         private readonly AccessTokenMinter $minter,
         private readonly ScopeRepository $scopes,
+        private readonly FirstPartyClientConfig $firstPartyClient,
     ) {}
 
     public function currentToken(): ?string
@@ -52,10 +54,10 @@ class SessionMintTokenProvider implements SessionTokenProvider
 
     public function establish(Authenticatable $user): void
     {
-        $client = Passport::client()->newQuery()->find(config('oidc.first_party_client'));
+        $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
 
         if ($client === null) {
-            throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');
+            throw new RuntimeException('The oidc.first_party.client_id is not configured or does not exist.');
         }
 
         $prior = $this->session()->get($this->key());

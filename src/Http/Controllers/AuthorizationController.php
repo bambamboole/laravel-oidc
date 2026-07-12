@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\LoginDestination;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\Scope;
 use Illuminate\Auth\AuthenticationException;
@@ -30,6 +31,7 @@ class AuthorizationController extends PassportAuthorizationController
         ClientRepository $clients,
         protected ScopeRepository $scopeRepository,
         private readonly LoginDestination $loginDestination,
+        private readonly FirstPartyClientConfig $firstPartyClient,
     ) {
         parent::__construct($server, $guard, $clients);
     }
@@ -125,12 +127,7 @@ class AuthorizationController extends PassportAuthorizationController
 
     private function isTrustedClient(mixed $clientId): bool
     {
-        if (! is_string($clientId) && ! is_int($clientId)) {
-            return false;
-        }
-
-        $trustedClients = array_map(strval(...), (array) config('oidc.trusted_clients', []));
-
-        return in_array((string) $clientId, $trustedClients, true);
+        return (is_string($clientId) || is_int($clientId))
+            && $this->firstPartyClient->isTrusted($clientId);
     }
 }

@@ -17,8 +17,8 @@ beforeEach(function () {
     $this->startSession();
 });
 
-it('does not throw and establishes no token when first_party_client is an empty string', function () {
-    config(['oidc.first_party_client' => '']);
+it('does not throw and establishes no token when the first-party client id is empty', function () {
+    config(['oidc.first_party.client_id' => '']);
 
     event(new Login('web', $this->user, false));
 
@@ -26,16 +26,16 @@ it('does not throw and establishes no token when first_party_client is an empty 
 });
 
 it('does not throw when the configured client id is stale, establishing no token', function () {
-    config(['oidc.first_party_client' => 'nonexistent-client-id']);
+    config(['oidc.first_party.client_id' => 'nonexistent-client-id']);
 
     event(new Login('web', $this->user, false));
 
     expect(session('oidc.session_token'))->toBeNull();
 });
 
-it('establishes a token on login when a valid first_party_client is configured', function () {
+it('establishes a token on login when a valid first-party client is configured', function () {
     $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
-    config(['oidc.first_party_client' => $client->id]);
+    config(['oidc.first_party.client_id' => (string) $client->id]);
 
     event(new Login('web', $this->user, false));
 
@@ -44,7 +44,7 @@ it('establishes a token on login when a valid first_party_client is configured',
 
 it('revokes and clears the token on logout', function () {
     $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
-    config(['oidc.first_party_client' => $client->id]);
+    config(['oidc.first_party.client_id' => (string) $client->id]);
     app(SessionTokenProvider::class)->establish($this->user);
     $jwt = session('oidc.session_token')['jwt'];
 

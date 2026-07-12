@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void twoFactorChallengeView(Closure $view)
  * @method static void createUsersUsing(callable|string $action)
  * @method static void resetUserPasswordsUsing(callable|string $action)
+ * @method static \Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult provisionFirstPartyClient(string $name, string[] $redirectUris, string[] $postLogoutRedirectUris = [], string[] $allowedExchangeAudiences = [], ?string $adoptClientId = null, bool $rotateSecret = false)
  * @method static \Bambamboole\LaravelOidc\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
  * @method static string issuer()
  * @method static \Bambamboole\LaravelOidc\Routing\HandlerConfig|false handlerConfig(\Bambamboole\LaravelOidc\Routing\Handler $handler)

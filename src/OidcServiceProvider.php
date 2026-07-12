@@ -15,6 +15,9 @@ use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
+use Bambamboole\LaravelOidc\Console\ProvisionClientCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
@@ -103,6 +106,11 @@ class OidcServiceProvider extends ServiceProvider
             return $registry;
         });
         $this->app->singleton(AccessTokenHookRunner::class);
+        $this->app->bind(
+            FirstPartyClientConfig::class,
+            fn (): FirstPartyClientConfig => FirstPartyClientConfig::fromConfig(),
+        );
+        $this->app->singleton(FirstPartyClientProvisioner::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
@@ -182,7 +190,10 @@ class OidcServiceProvider extends ServiceProvider
         ], 'oidc-migrations');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([RotateKeysCommand::class]);
+            $this->commands([
+                ProvisionClientCommand::class,
+                RotateKeysCommand::class,
+            ]);
         }
     }
 }
