@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
@@ -19,7 +20,28 @@ class OidcManager
         private readonly ClaimHooks $hooks,
         private readonly SessionTokenProvider $sessionTokens,
         private readonly TokenExchanger $exchanger,
+        private readonly AuthViewManager $authViews,
     ) {}
+
+    public function registerView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::Register, $view);
+    }
+
+    public function requestPasswordResetLinkView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::RequestPasswordResetLink, $view);
+    }
+
+    public function resetPasswordView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::ResetPassword, $view);
+    }
+
+    public function verifyEmailView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::VerifyEmail, $view);
+    }
 
     public function onPostLogin(Closure $hook): void
     {

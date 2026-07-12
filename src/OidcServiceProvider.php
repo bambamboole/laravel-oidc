@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
@@ -53,6 +54,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
         $this->app->singleton(ClaimHooks::class);
+        $this->app->singleton(AuthViewManager::class);
         $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
@@ -97,6 +99,10 @@ class OidcServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(__DIR__.'/../routes/passport.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
+
+        if (config('oidc.auth.enabled', true)) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/auth.php');
+        }
 
         $this->publishes([
             __DIR__.'/../config/oidc.php' => config_path('oidc.php'),
