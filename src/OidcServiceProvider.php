@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
@@ -36,6 +41,8 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\Passkeys;
 use Laravel\Passport\Bridge\AuthCodeRepository;
 use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
@@ -57,12 +64,44 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ClaimHooks::class);
         $this->app->singleton(AuthViewManager::class);
         $this->app->singleton(UserActionManager::class);
+        $this->app->singleton(TotpFactorProvider::class);
+        $this->app->singleton(RecoveryCodeProvider::class);
+        $this->app->singleton(WebAuthnFactorProvider::class);
+        $this->app->singleton(FactorRegistry::class, function (Application $app): FactorRegistry {
+            $registry = new FactorRegistry;
+
+            foreach ((array) config('oidc.auth.factors', []) as $provider) {
+                $resolved = $app->make($provider);
+
+                if (! $resolved instanceof FactorProvider) {
+                    throw new \LogicException("The configured factor provider [{$provider}] must implement FactorProvider.");
+                }
+
+                $registry->register($resolved);
+            }
+
+            return $registry;
+        });
         $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
+
+        config()->set('passkeys.guard', config('oidc.auth.guard', 'web'));
+        config()->set('passkeys.redirect', config('oidc.auth.home', '/dashboard'));
+        config()->set('passkeys.middleware', ['web']);
+        config()->set('passkeys.management_middleware', config('oidc.auth.two_factor.requires_password_confirmation', true)
+            ? ['password.confirm']
+            : []);
+        config()->set('passkeys.throttle', 'throttle:'.config('oidc.auth.two_factor.throttle', '5,1'));
+
+        $userModel = config('auth.providers.users.model');
+
+        if (is_string($userModel) && is_subclass_of($userModel, PasskeyUser::class)) {
+            Passkeys::useUserModel($userModel);
+        }
 
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
@@ -107,6 +146,7 @@ class OidcServiceProvider extends ServiceProvider
 
         $this->publishesMigrations([
             __DIR__.'/../database/migrations' => database_path('migrations'),
+            Passkeys::migrationPath() => database_path('migrations'),
         ], 'oidc-migrations');
 
         if ($this->app->runningInConsole()) {

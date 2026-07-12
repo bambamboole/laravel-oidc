@@ -74,6 +74,11 @@ class OidcManager
         $this->authViews->bind(AuthViewManager::VerifyEmail, $view);
     }
 
+    public function twoFactorChallengeView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::TwoFactorChallenge, $view);
+    }
+
     public function createUsersUsing(callable|string $action): void
     {
         $this->userActions->createUsersUsing($action);
