@@ -11,7 +11,6 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use League\Uri\Http;
 use League\Uri\Uri;
-use League\Uri\Urn;
 use Throwable;
 
 final readonly class FirstPartyClientProvisioner
@@ -239,13 +238,27 @@ final readonly class FirstPartyClientProvisioner
             }
 
             if ($scheme === 'urn') {
-                Urn::new($value);
+                return $this->isValidUrn($value);
             }
 
             return true;
         } catch (Throwable) {
             return false;
         }
+    }
+
+    private function isValidUrn(string $value): bool
+    {
+        $pathCharacter = "(?:[A-Za-z0-9._\\~!$&'()*+,;=:@-]|%[0-9A-Fa-f]{2})";
+
+        return preg_match(
+            '~^urn:[A-Za-z0-9](?:[A-Za-z0-9-]{0,30}[A-Za-z0-9]):'
+            .$pathCharacter.'+(?:/|'.$pathCharacter.')*'
+            .'(?:\?\+(?:/|'.$pathCharacter.')+)?'
+            .'(?:\?=(?:[/?]|'.$pathCharacter.')+)?'
+            .'(?:#(?:[/?]|'.$pathCharacter.')+)?$~i',
+            $value,
+        ) === 1;
     }
 
     private function containsForbiddenUriCharacters(string $value): bool
