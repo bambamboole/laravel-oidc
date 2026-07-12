@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorResponse;
+use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,7 @@ class TwoFactorChallengeController
     public function create(Request $request): mixed
     {
         if ($this->challengedUser($request) === null) {
-            return redirect()->route('login');
+            return redirect()->route(Handler::Login->value);
         }
 
         return $this->views->render(AuthViewManager::TwoFactorChallenge, $request);
@@ -43,7 +44,7 @@ class TwoFactorChallengeController
         $user = $this->challengedUser($request);
 
         if ($user === null) {
-            return redirect()->route('login');
+            return redirect()->route(Handler::Login->value);
         }
 
         $usesRecoveryCode = $request->filled('recovery_code');
@@ -87,7 +88,7 @@ class TwoFactorChallengeController
 
     private function guard(): SessionGuard
     {
-        $guard = Auth::guard((string) config('oidc.auth.guard', 'web'));
+        $guard = Auth::guard((string) config('oidc.auth.guard', 'identity'));
 
         if (! $guard instanceof SessionGuard) {
             throw new RuntimeException('OIDC authentication requires a session guard.');

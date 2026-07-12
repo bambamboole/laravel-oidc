@@ -15,7 +15,7 @@ class RegenerateRecoveryCodesController
 
     public function __invoke(Request $request): JsonResponse|RedirectResponse
     {
-        $this->twoFactor->regenerateRecoveryCodes($request->user((string) config('oidc.auth.guard', 'web')));
+        $this->twoFactor->regenerateRecoveryCodes($request->user((string) config('oidc.auth.guard', 'identity')));
 
         return $request->wantsJson()
             ? new JsonResponse('', 200)

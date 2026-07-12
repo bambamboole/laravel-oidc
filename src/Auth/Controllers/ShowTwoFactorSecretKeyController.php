@@ -14,7 +14,7 @@ class ShowTwoFactorSecretKeyController
 
     public function __invoke(Request $request): JsonResponse
     {
-        $factor = $this->twoFactor->currentFactor($request->user((string) config('oidc.auth.guard', 'web')));
+        $factor = $this->twoFactor->currentFactor($request->user((string) config('oidc.auth.guard', 'identity')));
 
         abort_if($factor === null, 404, 'Two factor authentication has not been enabled.');
 

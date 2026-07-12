@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Hash;
 use Workbench\App\Models\User;
 
 it('configures native passkey routes from package auth settings', function () {
-    expect(route('passkey.login-options'))->toEndWith('/passkeys/login/options')
-        ->and(route('passkey.store'))->toEndWith('/user/passkeys')
+    expect(route('identity.passkey.login-options'))->toEndWith('/auth/passkeys/login/options')
+        ->and(route('identity.passkey.store'))->toEndWith('/auth/user/passkeys')
         ->and(config('passkeys.guard'))->toBe(config('oidc.auth.guard'))
         ->and(config('passkeys.redirect'))->toBe(config('oidc.auth.home'));
 });
@@ -31,10 +31,10 @@ it('does not force the deferred WebAuthn MFA ceremony during password login', fu
         'credential' => [],
     ]);
 
-    $this->post(route('login.store'), [
+    $this->post(route('identity.login.store'), [
         'email' => 'm@example.com',
         'password' => 'password',
     ])->assertRedirect('/dashboard');
 
-    $this->assertAuthenticatedAs($user);
+    $this->assertAuthenticatedAs($user, 'identity');
 });

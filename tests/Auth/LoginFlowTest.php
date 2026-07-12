@@ -10,63 +10,63 @@ use Workbench\App\Models\User;
 it('renders the login view through the package seam', function () {
     Oidc::loginView(fn (Request $request) => response('login-view'));
 
-    $this->get('/login')->assertOk()->assertSee('login-view');
+    $this->get('/auth/login')->assertOk()->assertSee('login-view');
 });
 
 it('logs a user in with canonicalized credentials and redirects home', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
-    $response = $this->from('/login')->post(route('login.store'), [
+    $response = $this->from('/auth/login')->post(route('identity.login.store'), [
         'email' => 'M@Example.com',
         'password' => 'password',
     ]);
 
     $response->assertRedirect('/dashboard');
-    $this->assertAuthenticatedAs($user);
+    $this->assertAuthenticatedAs($user, 'identity');
 });
 
 it('returns Fortify-compatible JSON after login', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
-    $this->postJson(route('login.store'), [
+    $this->postJson(route('identity.login.store'), [
         'email' => 'm@example.com',
         'password' => 'password',
     ])->assertOk();
 
-    $this->assertAuthenticatedAs($user);
+    $this->assertAuthenticatedAs($user, 'identity');
 });
 
 it('rejects invalid credentials with a validation error', function () {
     User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
-    $this->from('/login')
-        ->post(route('login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password'])
-        ->assertRedirect('/login')
+    $this->from('/auth/login')
+        ->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password'])
+        ->assertRedirect('/auth/login')
         ->assertSessionHasErrors('email');
 
-    $this->assertGuest();
+    $this->assertGuest('identity');
 });
 
 it('sets a remember cookie when remember is requested', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->post(route('identity.login.store'), [
         'email' => 'm@example.com',
         'password' => 'password',
         'remember' => true,
     ]);
 
-    $this->assertAuthenticatedAs($user);
-    $response->assertCookie(auth()->guard('web')->getRecallerName());
+    $this->assertAuthenticatedAs($user, 'identity');
+    $response->assertCookie(auth()->guard('identity')->getRecallerName());
 });
 
 it('throttles repeated login attempts', function () {
     User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
     foreach (range(1, 5) as $ignored) {
-        $this->post(route('login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password']);
+        $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password']);
     }
 
-    $this->post(route('login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password'])
+    $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password'])
         ->assertStatus(429);
 });

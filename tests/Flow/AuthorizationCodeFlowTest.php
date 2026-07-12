@@ -76,7 +76,7 @@ function completeAuthorization(TestCase $test, array $overrides = []): TestRespo
         'code_challenge_method' => 'S256',
     ], $overrides);
 
-    $view = $test->actingAs($test->user)
+    $view = $test->actingAs($test->user, 'identity')
         ->withSession(['oidc.auth_time' => time() - 60])
         ->get('/oauth/authorize?'.http_build_query($query))
         ->assertOk();
@@ -152,7 +152,7 @@ it('issues an id_token without nonce or auth_time on refresh', function () {
 
 // OAuth 2.1 §4.1.1 / §7.6 (PKCE required for every client)
 it('rejects an authorization request without PKCE even for a confidential client', function () {
-    $response = $this->actingAs($this->user)->get('/oauth/authorize?'.http_build_query([
+    $response = $this->actingAs($this->user, 'identity')->get('/oauth/authorize?'.http_build_query([
         'client_id' => $this->client->id,
         'redirect_uri' => 'https://rp.test/callback',
         'response_type' => 'code',

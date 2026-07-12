@@ -16,7 +16,7 @@ class EnableTwoFactorAuthenticationController
     public function __invoke(Request $request): JsonResponse|RedirectResponse
     {
         $this->twoFactor->enable(
-            $request->user((string) config('oidc.auth.guard', 'web')),
+            $request->user((string) config('oidc.auth.guard', 'identity')),
             $request->boolean('force'),
         );
 
