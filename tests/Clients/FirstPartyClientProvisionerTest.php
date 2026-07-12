@@ -147,10 +147,12 @@ it('rejects invalid provisioning input before writing', function (
     array $redirectUris,
     array $audiences,
     string $message,
+    array $postLogoutRedirectUris = [],
 ) {
     expect(fn () => app(FirstPartyClientProvisioner::class)->provision(
         $name,
         $redirectUris,
+        postLogoutRedirectUris: $postLogoutRedirectUris,
         allowedExchangeAudiences: $audiences,
     ))->toThrow(FirstPartyClientProvisioningException::class, $message);
 
@@ -161,8 +163,31 @@ it('rejects invalid provisioning input before writing', function (
     'missing redirect' => ['App', [], [], 'At least one redirect URI'],
     'redirect user info' => ['App', ['https://user@app.test/callback'], [], 'without user information'],
     'redirect fragment' => ['App', ['https://app.test/callback#fragment'], [], 'without user information or a fragment'],
+    'redirect raw space' => ['App', ['https://app.test/call back'], [], 'absolute HTTP(S) URI'],
+    'redirect control character' => ['App', ["https://app.test/callback\nnext"], [], 'absolute HTTP(S) URI'],
+    'redirect backslash' => ['App', ['https://app.test\\callback'], [], 'absolute HTTP(S) URI'],
+    'redirect malformed percent escape' => ['App', ['https://app.test/callback%2'], [], 'absolute HTTP(S) URI'],
+    'redirect missing host' => ['App', ['https:///callback'], [], 'absolute HTTP(S) URI'],
+    'redirect malformed host' => ['App', ['https://app_test/callback'], [], 'absolute HTTP(S) URI'],
+    'post logout raw space' => ['App', ['https://app.test/callback'], [], 'absolute HTTP(S) URI', ['https://app.test/logged out']],
     'relative audience' => ['App', ['https://app.test/callback'], ['/orders'], 'absolute URI'],
+    'audience raw space' => ['App', ['https://app.test/callback'], ['urn:example:order details'], 'absolute URI'],
+    'audience control character' => ['App', ['https://app.test/callback'], ["urn:example:orders\tadmin"], 'absolute URI'],
+    'audience backslash' => ['App', ['https://app.test/callback'], ['urn:example:orders\\admin'], 'absolute URI'],
+    'audience malformed percent escape' => ['App', ['https://app.test/callback'], ['urn:example:orders%2'], 'absolute URI'],
+    'audience invalid scheme' => ['App', ['https://app.test/callback'], ['1abc:orders'], 'absolute URI'],
 ]);
+
+it('accepts absolute URI audience identifiers with hierarchical and non-hierarchical schemes', function () {
+    $result = app(FirstPartyClientProvisioner::class)->provision(
+        'First-party app',
+        ['https://app.test/callback'],
+        allowedExchangeAudiences: ['urn:example:orders', 'https://api.test/orders'],
+    );
+
+    expect(json_decode((string) $result->client->getRawOriginal('allowed_exchange_audiences'), true, flags: JSON_THROW_ON_ERROR))
+        ->toBe(['urn:example:orders', 'https://api.test/orders']);
+});
 
 it('rejects adoption when another managed client already exists', function () {
     $provisioner = app(FirstPartyClientProvisioner::class);
