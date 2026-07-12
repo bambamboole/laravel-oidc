@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationNotificationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationPromptController;
 use Bambamboole\LaravelOidc\Auth\Controllers\NewPasswordController;
 use Bambamboole\LaravelOidc\Auth\Controllers\PasswordResetLinkController;
 use Bambamboole\LaravelOidc\Auth\Controllers\RegisteredUserController;
+use Bambamboole\LaravelOidc\Auth\Controllers\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 $guard = (string) config('oidc.auth.guard', 'web');
@@ -22,5 +24,13 @@ Route::middleware('web')->group(function () use ($guard): void {
 
     Route::middleware('auth:'.$guard)->group(function (): void {
         Route::get('email/verify', EmailVerificationPromptController::class)->name('verification.notice');
+
+        Route::get('email/verify/{id}/{hash}', VerifyEmailController::class)
+            ->middleware(['signed', 'throttle:6,1'])
+            ->name('verification.verify');
+
+        Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+            ->middleware('throttle:6,1')
+            ->name('verification.send');
     });
 });
