@@ -19,10 +19,15 @@ class OidcClientServiceProvider extends ServiceProvider
         $this->app->singleton(OidcDiscovery::class);
         $this->app->singleton(JwksKeyResolver::class);
         $this->app->singleton(IdTokenValidator::class);
+        $this->app->singleton(RelyingParty::class);
     }
 
     public function boot(): void
     {
+        if (config('oidc-client.enabled', false)) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/oidc-client.php');
+        }
+
         $this->publishes([
             __DIR__.'/../config/oidc-client.php' => config_path('oidc-client.php'),
         ], 'oidc-client-config');
