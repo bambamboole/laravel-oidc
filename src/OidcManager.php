@@ -11,6 +11,8 @@ use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Hooks\Trigger;
+use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Routing\HandlerConfig;
 use Closure;
 use Laravel\Passport\Passport;
 use RuntimeException;
@@ -24,6 +26,23 @@ class OidcManager
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
     ) {}
+
+    /**
+     * The issuer URL advertised in discovery and stamped into every token.
+     */
+    public function issuer(): string
+    {
+        return Issuer::url();
+    }
+
+    /**
+     * Resolve the configuration for a route handler, or `false` when it is
+     * disabled (or not present in config).
+     */
+    public function handlerConfig(Handler $handler): HandlerConfig|false
+    {
+        return $handler->config();
+    }
 
     public function loginView(Closure $view): void
     {

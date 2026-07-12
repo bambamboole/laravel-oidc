@@ -1,17 +1,32 @@
 <?php
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Auth\Controllers\AuthenticatedSessionController;
+use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmablePasswordController;
+use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmedPasswordStatusController;
+use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationNotificationController;
+use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationPromptController;
+use Bambamboole\LaravelOidc\Auth\Controllers\NewPasswordController;
+use Bambamboole\LaravelOidc\Auth\Controllers\PasswordResetLinkController;
+use Bambamboole\LaravelOidc\Auth\Controllers\RegisteredUserController;
+use Bambamboole\LaravelOidc\Auth\Controllers\VerifyEmailController;
+use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
+use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
+use Bambamboole\LaravelOidc\Http\Controllers\DiscoveryController;
+use Bambamboole\LaravelOidc\Http\Controllers\EndSessionController;
+use Bambamboole\LaravelOidc\Http\Controllers\IntrospectionController;
+use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
+use Bambamboole\LaravelOidc\Http\Controllers\RevocationController;
+use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
+use Bambamboole\LaravelOidc\Routing\Handler;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+use Laravel\Passport\Http\Controllers\TransientTokenController;
+
 return [
     'issuer' => env('OIDC_ISSUER'),
 
     'id_token_ttl' => (int) env('OIDC_ID_TOKEN_TTL', 3600),
-
-    'endpoints' => [
-        'userinfo' => true,
-        'end_session' => true,
-        'introspection' => true,
-        'revocation' => true,
-    ],
 
     'api_guard' => env('OIDC_API_GUARD', 'api'),
 
@@ -42,10 +57,151 @@ return [
     ],
 
     'auth' => [
-        'enabled' => env('OIDC_AUTH_ENABLED', true),
         'guard' => env('OIDC_AUTH_GUARD', 'web'),
         'home' => env('OIDC_AUTH_HOME', '/dashboard'),
         'username' => env('OIDC_AUTH_USERNAME', 'email'),
-        'login_throttle' => env('OIDC_AUTH_LOGIN_THROTTLE', '5,1'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route handlers
+    |--------------------------------------------------------------------------
+    |
+    | Every HTTP endpoint the package registers is defined here, keyed by its
+    | route name. Each entry has a `route` (URI path), a `controller`, and a
+    | `middleware` list. Customize any of these, or set an entry to `false` to
+    | disable that endpoint entirely. The HTTP verb is intrinsic to each
+    | endpoint and is therefore not configurable here.
+    |
+    */
+    'handlers' => [
+        // Authentication
+        Handler::Login->value => [
+            'route' => 'login',
+            'controller' => [AuthenticatedSessionController::class, 'create'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::LoginStore->value => [
+            'route' => 'login',
+            'controller' => [AuthenticatedSessionController::class, 'store'],
+            'middleware' => ['web', 'guest:web', 'throttle:5,1'],
+        ],
+        Handler::Register->value => [
+            'route' => 'register',
+            'controller' => [RegisteredUserController::class, 'create'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::RegisterStore->value => [
+            'route' => 'register',
+            'controller' => [RegisteredUserController::class, 'store'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::PasswordRequest->value => [
+            'route' => 'forgot-password',
+            'controller' => [PasswordResetLinkController::class, 'create'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::PasswordEmail->value => [
+            'route' => 'forgot-password',
+            'controller' => [PasswordResetLinkController::class, 'store'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::PasswordReset->value => [
+            'route' => 'reset-password/{token}',
+            'controller' => [NewPasswordController::class, 'create'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::PasswordUpdate->value => [
+            'route' => 'reset-password',
+            'controller' => [NewPasswordController::class, 'store'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::PasswordConfirm->value => [
+            'route' => 'user/confirm-password',
+            'controller' => [ConfirmablePasswordController::class, 'show'],
+            'middleware' => ['web', 'auth:web'],
+        ],
+        Handler::PasswordConfirmStore->value => [
+            'route' => 'user/confirm-password',
+            'controller' => [ConfirmablePasswordController::class, 'store'],
+            'middleware' => ['web', 'auth:web'],
+        ],
+        Handler::PasswordConfirmation->value => [
+            'route' => 'user/confirmed-password-status',
+            'controller' => [ConfirmedPasswordStatusController::class, 'show'],
+            'middleware' => ['web', 'auth:web'],
+        ],
+        Handler::VerificationNotice->value => [
+            'route' => 'email/verify',
+            'controller' => EmailVerificationPromptController::class,
+            'middleware' => ['web', 'auth:web'],
+        ],
+        Handler::VerificationVerify->value => [
+            'route' => 'email/verify/{id}/{hash}',
+            'controller' => VerifyEmailController::class,
+            'middleware' => ['web', 'auth:web', 'signed', 'throttle:6,1'],
+        ],
+        Handler::VerificationSend->value => [
+            'route' => 'email/verification-notification',
+            'controller' => [EmailVerificationNotificationController::class, 'store'],
+            'middleware' => ['web', 'auth:web', 'throttle:6,1'],
+        ],
+
+        // OIDC / OAuth protocol
+        Handler::Jwks->value => [
+            'route' => '.well-known/jwks.json',
+            'controller' => JwksController::class,
+            'middleware' => [],
+        ],
+        Handler::Discovery->value => [
+            'route' => '.well-known/openid-configuration',
+            'controller' => DiscoveryController::class,
+            'middleware' => [],
+        ],
+        Handler::Userinfo->value => [
+            'route' => 'oauth/userinfo',
+            'controller' => UserinfoController::class,
+            'middleware' => [],
+        ],
+        Handler::Logout->value => [
+            'route' => 'oauth/logout',
+            'controller' => EndSessionController::class,
+            'middleware' => ['web'],
+        ],
+        Handler::Introspect->value => [
+            'route' => 'oauth/introspect',
+            'controller' => IntrospectionController::class,
+            'middleware' => ['throttle'],
+        ],
+        Handler::Revoke->value => [
+            'route' => 'oauth/revoke',
+            'controller' => RevocationController::class,
+            'middleware' => ['throttle'],
+        ],
+        Handler::Authorize->value => [
+            'route' => 'oauth/authorize',
+            'controller' => [AuthorizationController::class, 'authorize'],
+            'middleware' => ['web'],
+        ],
+        Handler::IssueToken->value => [
+            'route' => 'oauth/token',
+            'controller' => [AccessTokenController::class, 'issueToken'],
+            'middleware' => ['throttle'],
+        ],
+        Handler::TokenRefresh->value => [
+            'route' => 'oauth/token/refresh',
+            'controller' => [TransientTokenController::class, 'refresh'],
+            'middleware' => ['web', 'auth'],
+        ],
+        Handler::Approve->value => [
+            'route' => 'oauth/authorize',
+            'controller' => [ApproveAuthorizationController::class, 'approve'],
+            'middleware' => ['web', 'auth'],
+        ],
+        Handler::Deny->value => [
+            'route' => 'oauth/authorize',
+            'controller' => [DenyAuthorizationController::class, 'deny'],
+            'middleware' => ['web', 'auth'],
+        ],
     ],
 ];
