@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Routing\Handler;
@@ -20,6 +21,7 @@ class AuthenticatedSessionController
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
+        private readonly AuthenticationContext $context,
     ) {}
 
     public function create(Request $request): mixed
@@ -57,6 +59,8 @@ class AuthenticatedSessionController
         if (config('hashing.rehash_on_login', true)) {
             $provider->rehashPasswordIfRequired($user, $credentials);
         }
+
+        $this->context->start('pwd');
 
         $challengeProviders = array_values(array_filter(
             (array) config('oidc.auth.two_factor.challenge_providers', ['totp']),
