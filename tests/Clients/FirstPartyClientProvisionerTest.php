@@ -194,6 +194,20 @@ it('does not require the optional scheme-specific League URN parser', function (
         ->not->toContain('League\\Uri\\Urn');
 });
 
+it('accepts valid RFC 8141 optional components', function (string $audience) {
+    $result = app(FirstPartyClientProvisioner::class)->provision(
+        'First-party app',
+        ['https://app.test/callback'],
+        allowedExchangeAudiences: [$audience],
+    );
+
+    expect(json_decode((string) $result->client->getRawOriginal('allowed_exchange_audiences'), true, flags: JSON_THROW_ON_ERROR))
+        ->toBe([$audience]);
+})->with([
+    'question mark in r-component' => 'urn:example:orders?+a?b',
+    'empty fragment' => 'urn:example:orders#',
+]);
+
 it('accepts absolute URI audience identifiers with hierarchical and non-hierarchical schemes', function () {
     $result = app(FirstPartyClientProvisioner::class)->provision(
         'First-party app',

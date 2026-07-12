@@ -226,8 +226,9 @@ final readonly class FirstPartyClientProvisioner
     private function isValidAudienceUri(string $value): bool
     {
         try {
-            $uri = Uri::new($value);
-            $scheme = $uri->getScheme();
+            $isUrn = str_starts_with(strtolower($value), 'urn:');
+            $uri = Uri::new($isUrn ? 'x-'.$value : $value);
+            $scheme = $isUrn ? 'urn' : $uri->getScheme();
 
             if ($scheme === null) {
                 return false;
@@ -254,9 +255,9 @@ final readonly class FirstPartyClientProvisioner
         return preg_match(
             '~^urn:[A-Za-z0-9](?:[A-Za-z0-9-]{0,30}[A-Za-z0-9]):'
             .$pathCharacter.'+(?:/|'.$pathCharacter.')*'
-            .'(?:\?\+(?:/|'.$pathCharacter.')+)?'
+            .'(?:\?\+(?:[/?]|'.$pathCharacter.')+)?'
             .'(?:\?=(?:[/?]|'.$pathCharacter.')+)?'
-            .'(?:#(?:[/?]|'.$pathCharacter.')+)?$~i',
+            .'(?:#(?:[/?]|'.$pathCharacter.')*)?$~i',
             $value,
         ) === 1;
     }
