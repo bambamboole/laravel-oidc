@@ -92,3 +92,17 @@ it('requires recent password confirmation to manage factors', function () {
 
     expect($user->totpFactors()->exists())->toBeFalse();
 });
+
+it('removes provider-owned factors when the authenticatable is deleted', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->postJson(route('two-factor.enable'))
+        ->assertOk();
+
+    $user->delete();
+
+    expect(DB::table('oidc_totp_factors')->count())->toBe(0)
+        ->and(DB::table('oidc_recovery_codes')->count())->toBe(0);
+});
