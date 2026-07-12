@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Grant;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
@@ -70,6 +71,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     $payload = json_decode($this->decrypt($encryptedAuthCode));
                     $responseType->setNonce($payload->nonce ?? null);
                     $responseType->setAuthTime(isset($payload->auth_time) ? (int) $payload->auth_time : null);
+                    $responseType->setAmr($this->normalizeAmr($payload->amr ?? []));
                 } catch (\Throwable) {
                     // Parent will reject the malformed code with a proper OAuth error.
                 }
@@ -81,8 +83,8 @@ class OidcAuthCodeGrant extends AuthCodeGrant
 
     /**
      * Fork of League\OAuth2\Server\Grant\AuthCodeGrant::completeAuthorizationRequest() (league v9),
-     * kept byte-identical except for the added `nonce` and `auth_time` payload keys so future
-     * league diffs remain easy to port.
+     * kept byte-identical except for the added `nonce`, `auth_time`, and `amr` payload keys so
+     * future league diffs remain easy to port.
      */
     public function completeAuthorizationRequest(AuthorizationRequestInterface $authorizationRequest): ResponseTypeInterface
     {
@@ -115,6 +117,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     ? $authorizationRequest->getNonce()
                     : null,
                 'auth_time' => $this->currentAuthTime(),
+                'amr' => $this->currentAmr(),
             ];
 
             $jsonPayload = json_encode($payload);
@@ -153,5 +156,25 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         }
 
         return time();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function currentAmr(): array
+    {
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
+            return $this->normalizeAmr(app('session.store')->get(AuthenticationContext::SESSION_KEY, []));
+        }
+
+        return [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function normalizeAmr(mixed $amr): array
+    {
+        return is_array($amr) ? array_values(array_filter($amr, is_string(...))) : [];
     }
 }

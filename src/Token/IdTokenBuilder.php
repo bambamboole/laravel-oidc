@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Hooks\Artifact;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
@@ -29,7 +30,10 @@ class IdTokenBuilder
         private readonly ClaimHooks $hooks,
     ) {}
 
-    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null): string
+    /**
+     * @param  array<int, string>  $amr
+     */
+    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = []): string
     {
         $config = Configuration::forAsymmetricSigner(
             new Sha256,
@@ -60,6 +64,16 @@ class IdTokenBuilder
 
         if ($authTime !== null) {
             $builder = $builder->withClaim('auth_time', $authTime);
+        }
+
+        if ($amr !== []) {
+            $amr = array_values($amr);
+            $builder = $builder->withClaim('amr', $amr);
+
+            $acr = AuthenticationContext::deriveAcr($amr);
+            if ($acr !== null) {
+                $builder = $builder->withClaim('acr', $acr);
+            }
         }
 
         $user = $this->resolveUser((string) $accessToken->getUserIdentifier())
