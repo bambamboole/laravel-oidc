@@ -65,7 +65,7 @@ final readonly class FirstPartyClientProvisioner
                     $redirectUris,
                     $postLogoutRedirectUris,
                     $allowedExchangeAudiences,
-                    null,
+                    $adoptClientId,
                     $rotateSecret,
                 );
             }
