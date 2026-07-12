@@ -20,7 +20,7 @@ use Workbench\App\Models\User;
 beforeEach(function () {
     $this->appClient = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
     $this->appClient->forceFill(['allowed_exchange_audiences' => json_encode(['https://api.orders.test'])])->save();
-    config(['oidc.first_party_client' => $this->appClient->id, 'app.url' => 'https://op.test']);
+    config(['oidc.first_party.client_id' => (string) $this->appClient->id, 'app.url' => 'https://op.test']);
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
     $this->startSession();
 });

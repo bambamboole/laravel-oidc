@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
@@ -29,7 +30,8 @@ class OidcManager
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
-        private readonly FirstPartyClientProvisioner $firstPartyClients,
+        private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
+        private readonly FirstPartyClientConfig $firstPartyClient,
     ) {}
 
     /**
@@ -107,7 +109,7 @@ class OidcManager
         ?string $adoptClientId = null,
         bool $rotateSecret = false,
     ): FirstPartyClientProvisioningResult {
-        return $this->firstPartyClients->provision(
+        return $this->firstPartyClientProvisioner->provision(
             $name,
             $redirectUris,
             $postLogoutRedirectUris,
@@ -158,7 +160,7 @@ class OidcManager
             throw new RuntimeException('No session token is available for the current user.');
         }
 
-        $client = Passport::client()->newQuery()->find(config('oidc.first_party_client'));
+        $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
 
         if ($client === null) {
             throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');

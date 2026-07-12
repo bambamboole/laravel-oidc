@@ -64,7 +64,10 @@ return [
 
     'logout_redirect' => '/',
 
-    'first_party_client' => env('OIDC_FIRST_PARTY_CLIENT') ?: null,
+    'first_party' => [
+        'client_id' => env('OIDC_FIRST_PARTY_CLIENT') ?: null,
+        'trusted' => env('OIDC_FIRST_PARTY_TRUSTED', false),
+    ],
 
     'trusted_clients' => [],
 

@@ -87,6 +87,37 @@ it('auto-approves trusted clients without rendering consent', function () {
         ->toContain('code=');
 });
 
+it('does not bypass consent for an untrusted first-party client', function () {
+    config(['oidc.first_party' => [
+        'client_id' => (string) $this->client->id,
+        'trusted' => false,
+    ]]);
+
+    $this->actingAs($this->user, (string) config('oidc.auth.guard'))
+        ->withSession(['oidc.auth_time' => time()])
+        ->get('/oauth/authorize?'.http_build_query(selfSsoAuthorizationQuery($this->client->id)))
+        ->assertOk()
+        ->assertJsonStructure(['authToken']);
+});
+
+it('auto-approves a trusted first-party client without duplicating its id', function () {
+    config([
+        'oidc.first_party' => [
+            'client_id' => (string) $this->client->id,
+            'trusted' => true,
+        ],
+        'oidc.trusted_clients' => [],
+    ]);
+
+    $response = $this->actingAs($this->user, (string) config('oidc.auth.guard'))
+        ->withSession(['oidc.auth_time' => time()])
+        ->get('/oauth/authorize?'.http_build_query(selfSsoAuthorizationQuery($this->client->id)));
+
+    $response->assertRedirect();
+    expect($response->headers->get('Location'))->toStartWith('https://rp.test/callback?')
+        ->toContain('code=');
+});
+
 it('does not show forced consent for trusted clients', function () {
     config(['oidc.trusted_clients' => [$this->client->id]]);
 
