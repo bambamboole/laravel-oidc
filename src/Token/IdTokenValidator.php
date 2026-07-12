@@ -62,6 +62,11 @@ class IdTokenValidator
             throw new OidcClientException('The id_token issuer does not match.');
         }
 
+        $sub = $claims->get('sub');
+        if (! is_string($sub) || $sub === '') {
+            throw new OidcClientException('The id_token is missing a subject.');
+        }
+
         $clientId = (string) config('oidc-client.client_id');
         $audience = (array) $claims->get('aud', []);
         if (! in_array($clientId, $audience, true)) {
@@ -69,7 +74,11 @@ class IdTokenValidator
         }
 
         $azp = $claims->get('azp');
-        if (is_string($azp) && $azp !== $clientId) {
+        if (count($audience) > 1) {
+            if (! is_string($azp) || $azp !== $clientId) {
+                throw new OidcClientException('The id_token azp does not match this client.');
+            }
+        } elseif (is_string($azp) && $azp !== $clientId) {
             throw new OidcClientException('The id_token azp does not match this client.');
         }
 

@@ -56,28 +56,34 @@ it('rejects a token whose nonce does not match', function () {
     $jwt = $this->provider->idToken(fakeProviderClaims(), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'different-nonce');
-})->throws(OidcClientException::class);
+})->throws(OidcClientException::class, 'nonce does not match');
 
 it('rejects a token with the wrong audience', function () {
     $jwt = $this->provider->idToken(fakeProviderClaims(['aud' => 'someone-else']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
-})->throws(OidcClientException::class);
+})->throws(OidcClientException::class, 'audience does not include');
 
 it('rejects a token with the wrong issuer', function () {
     $jwt = $this->provider->idToken(fakeProviderClaims(['iss' => 'https://evil.example.com']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
-})->throws(OidcClientException::class);
+})->throws(OidcClientException::class, 'issuer does not match');
 
 it('rejects an expired token', function () {
     $jwt = $this->provider->idToken(fakeProviderClaims(['exp' => time() - 3600]), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
-})->throws(OidcClientException::class);
+})->throws(OidcClientException::class, 'has expired');
 
 it('rejects a token signed with an unknown kid', function () {
     $jwt = $this->provider->idToken(fakeProviderClaims(), 'unknown-kid');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
-})->throws(OidcClientException::class);
+})->throws(OidcClientException::class, 'No JWKS key matches');
+
+it('rejects a token missing a subject', function () {
+    $jwt = $this->provider->idToken(fakeProviderClaims(['sub' => '']), 'key-1');
+
+    app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
+})->throws(OidcClientException::class, 'missing a subject');

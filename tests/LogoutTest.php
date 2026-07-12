@@ -31,3 +31,33 @@ it('logs out and redirects to the provider end-session endpoint', function () {
     $response->assertRedirectContains('id_token_hint=the-id-token');
     $this->assertGuest();
 });
+
+it('redirects home when the provider has no end-session endpoint', function () {
+    config()->set('oidc-client.issuer', 'https://no-end-session.example.com');
+
+    Http::fake([
+        'https://no-end-session.example.com/.well-known/openid-configuration' => Http::response([
+            'issuer' => 'https://no-end-session.example.com',
+            'authorization_endpoint' => 'https://no-end-session.example.com/oauth/authorize',
+            'token_endpoint' => 'https://no-end-session.example.com/oauth/token',
+            'jwks_uri' => 'https://no-end-session.example.com/.well-known/jwks.json',
+        ]),
+    ]);
+
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $response = $this->actingAs($user)->post(route('logout'));
+
+    $response->assertRedirect('/');
+    $this->assertGuest();
+});
+
+it('omits id_token_hint when no id_token was stored in the session', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $response = $this->actingAs($user)->post(route('logout'));
+
+    $response->assertRedirectContains('https://id.example.com/oauth/logout');
+    $location = $response->headers->get('Location');
+    expect($location)->not->toContain('id_token_hint');
+});

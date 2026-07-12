@@ -71,4 +71,6 @@ it('rejects a tampered state and does not log in', function () {
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+
+    Http::assertNotSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token');
 });

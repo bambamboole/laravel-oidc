@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidcClient\Token;
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
 use phpseclib3\Crypt\RSA;
+use Throwable;
 
 class JwksKeyResolver
 {
@@ -14,7 +15,27 @@ class JwksKeyResolver
 
     public function publicKeyPem(string $kid): string
     {
-        foreach ($this->discovery->jwks() as $jwk) {
+        $pem = $this->findKeyInJwks($kid, $this->discovery->jwks());
+
+        if ($pem !== null) {
+            return $pem;
+        }
+
+        $pem = $this->findKeyInJwks($kid, $this->discovery->jwks(fresh: true));
+
+        if ($pem !== null) {
+            return $pem;
+        }
+
+        throw new OidcClientException("No JWKS key matches the token kid [{$kid}].");
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $jwks
+     */
+    private function findKeyInJwks(string $kid, array $jwks): ?string
+    {
+        foreach ($jwks as $jwk) {
             if (($jwk['kid'] ?? null) !== $kid) {
                 continue;
             }
@@ -23,11 +44,15 @@ class JwksKeyResolver
                 throw new OidcClientException("The JWKS key [{$kid}] is missing modulus/exponent.");
             }
 
-            $key = RSA::loadFormat('JWK', (string) json_encode($jwk));
+            try {
+                $key = RSA::loadFormat('JWK', (string) json_encode($jwk));
 
-            return (string) $key->toString('PKCS8');
+                return (string) $key->toString('PKCS8');
+            } catch (Throwable $e) {
+                throw new OidcClientException("The JWKS key [{$kid}] could not be parsed.", 0, $e);
+            }
         }
 
-        throw new OidcClientException("No JWKS key matches the token kid [{$kid}].");
+        return null;
     }
 }

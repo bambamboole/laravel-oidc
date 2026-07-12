@@ -38,6 +38,8 @@ return [
 
     'redirect_after_login' => env('OIDC_RP_HOME', '/dashboard'),
 
+    'post_logout_redirect_uri' => env('OIDC_RP_POST_LOGOUT_REDIRECT_URI'),
+
     /*
     |--------------------------------------------------------------------------
     | Discovery cache

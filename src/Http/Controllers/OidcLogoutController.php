@@ -25,11 +25,15 @@ class OidcLogoutController
             return redirect('/');
         }
 
+        $postLogoutRedirectUri = config('oidc-client.post_logout_redirect_uri');
+
         $query = http_build_query(array_filter([
             'id_token_hint' => is_string($idToken) ? $idToken : null,
-            'post_logout_redirect_uri' => (string) config('oidc-client.redirect_after_login', '/dashboard'),
+            'post_logout_redirect_uri' => is_string($postLogoutRedirectUri) && $postLogoutRedirectUri !== '' ? $postLogoutRedirectUri : null,
         ]));
 
-        return redirect()->away($endSession.'?'.$query);
+        $separator = str_contains($endSession, '?') ? '&' : '?';
+
+        return redirect()->away($endSession.$separator.$query);
     }
 }

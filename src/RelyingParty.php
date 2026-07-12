@@ -71,14 +71,16 @@ class RelyingParty
 
         $metadata = $this->discovery->metadata();
 
-        $response = $this->http->asForm()->post($metadata->tokenEndpoint, [
+        $clientSecret = config('oidc-client.client_secret');
+
+        $response = $this->http->asForm()->post($metadata->tokenEndpoint, array_filter([
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => (string) config('oidc-client.redirect_uri'),
             'client_id' => (string) config('oidc-client.client_id'),
-            'client_secret' => (string) config('oidc-client.client_secret'),
+            'client_secret' => is_string($clientSecret) && $clientSecret !== '' ? $clientSecret : null,
             'code_verifier' => $verifier,
-        ]);
+        ], fn (mixed $value): bool => $value !== null));
 
         if ($response->failed()) {
             throw new OidcClientException('The token endpoint rejected the code exchange.');
