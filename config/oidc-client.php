@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidcClient\Http\Controllers\OidcCallbackController;
+use Bambamboole\LaravelOidcClient\Http\Controllers\OidcLoginController;
+use Bambamboole\LaravelOidcClient\Http\Controllers\OidcLogoutController;
+use Bambamboole\LaravelOidcClient\Routing\Handler;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -30,13 +35,40 @@ return [
 
     'login_guard' => env('OIDC_RP_LOGIN_GUARD', 'web'),
 
-    'routes' => [
-        'login' => ['path' => 'login', 'name' => 'login'],
-        'callback' => ['path' => 'login/callback', 'name' => 'login.callback'],
-        'logout' => ['path' => 'logout', 'name' => 'logout'],
+    /*
+    |--------------------------------------------------------------------------
+    | Route handlers
+    |--------------------------------------------------------------------------
+    |
+    | Each endpoint the package registers is a single entry keyed by its route
+    | name. The `route` (URI path), `controller`, and `middleware` are yours to
+    | change; set an entry to `false` to disable that endpoint entirely. The
+    | HTTP verb is intrinsic to the endpoint and lives in code, not here, so it
+    | cannot be mis-set. Routes are only registered when `enabled` is true.
+    |
+    */
+
+    'handlers' => [
+        Handler::Login->value => [
+            'route' => 'login',
+            'controller' => OidcLoginController::class,
+            'middleware' => ['web'],
+        ],
+        Handler::Callback->value => [
+            'route' => 'login/callback',
+            'controller' => OidcCallbackController::class,
+            'middleware' => ['web'],
+        ],
+        Handler::Logout->value => [
+            'route' => 'logout',
+            'controller' => OidcLogoutController::class,
+            'middleware' => ['web'],
+        ],
     ],
 
     'redirect_after_login' => env('OIDC_RP_HOME', '/dashboard'),
+
+    'post_logout_redirect_uri' => env('OIDC_RP_POST_LOGOUT_REDIRECT_URI'),
 
     /*
     |--------------------------------------------------------------------------

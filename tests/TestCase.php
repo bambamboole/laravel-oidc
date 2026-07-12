@@ -34,6 +34,7 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.connections.sqlite.database', $database);
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('session.driver', 'array');
+        $app['config']->set('oidc-client.enabled', true);
     }
 
     protected function defineDatabaseMigrations(): void
