@@ -10,11 +10,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-class ConfirmedTwoFactorAuthenticationController
+class ConfirmTwoFactorAuthenticationController
 {
     public function __construct(private readonly TwoFactorManager $twoFactor) {}
 
-    public function store(Request $request): JsonResponse|RedirectResponse
+    public function __invoke(Request $request): JsonResponse|RedirectResponse
     {
         $request->validate(['code' => ['required', 'string']]);
 

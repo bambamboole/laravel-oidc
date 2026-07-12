@@ -53,14 +53,15 @@ class FactorRegistry
     }
 
     /**
+     * @param  list<string>|null  $providerKeys
      * @return list<FactorEnrollment>
      */
-    public function challengeableEnrollments(Authenticatable $user): array
+    public function challengeableEnrollments(Authenticatable $user, ?array $providerKeys = null): array
     {
         $enrollments = [];
 
         foreach ($this->providers as $provider) {
-            if ($provider->isBackup()) {
+            if ($provider->isBackup() || ($providerKeys !== null && ! in_array($provider->key(), $providerKeys, true))) {
                 continue;
             }
 

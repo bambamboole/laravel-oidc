@@ -57,7 +57,11 @@ class AuthenticatedSessionController
             $provider->rehashPasswordIfRequired($user, $credentials);
         }
 
-        $enrollments = $this->factors->challengeableEnrollments($user);
+        $challengeProviders = array_values(array_filter(
+            (array) config('oidc.auth.two_factor.challenge_providers', ['totp']),
+            is_string(...),
+        ));
+        $enrollments = $this->factors->challengeableEnrollments($user, $challengeProviders);
 
         if ($enrollments !== []) {
             $request->session()->put([

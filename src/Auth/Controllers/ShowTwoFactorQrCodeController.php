@@ -9,7 +9,7 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\TwoFactorManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class TwoFactorQrCodeController
+class ShowTwoFactorQrCodeController
 {
     public function __construct(
         private readonly TwoFactorManager $twoFactor,
@@ -19,7 +19,7 @@ class TwoFactorQrCodeController
     /**
      * @return JsonResponse|array<never, never>
      */
-    public function show(Request $request): JsonResponse|array
+    public function __invoke(Request $request): JsonResponse|array
     {
         $user = $request->user((string) config('oidc.auth.guard', 'web'));
         $factor = $this->twoFactor->currentFactor($user);

@@ -8,11 +8,11 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\TwoFactorManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class TwoFactorSecretKeyController
+class ShowTwoFactorSecretKeyController
 {
     public function __construct(private readonly TwoFactorManager $twoFactor) {}
 
-    public function show(Request $request): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         $factor = $this->twoFactor->currentFactor($request->user((string) config('oidc.auth.guard', 'web')));
 

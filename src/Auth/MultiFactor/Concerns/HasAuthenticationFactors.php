@@ -17,6 +17,14 @@ trait HasAuthenticationFactors
 {
     use PasskeyAuthenticatable;
 
+    protected static function bootHasAuthenticationFactors(): void
+    {
+        static::deleting(function (Model $authenticatable): void {
+            $authenticatable->morphMany(TotpFactor::class, 'authenticatable')->delete();
+            $authenticatable->morphMany(RecoveryCode::class, 'authenticatable')->delete();
+        });
+    }
+
     /**
      * @return MorphMany<TotpFactor, $this>
      */
