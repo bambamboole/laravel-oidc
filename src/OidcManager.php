@@ -50,6 +50,11 @@ class OidcManager
         $this->userActions->createUsersUsing($action);
     }
 
+    public function resetUserPasswordsUsing(callable|string $action): void
+    {
+        $this->userActions->resetUserPasswordsUsing($action);
+    }
+
     public function onPostLogin(Closure $hook): void
     {
         $this->hooks->register(Trigger::PostLogin, $hook);
