@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Grant;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
@@ -71,7 +73,12 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     $payload = json_decode($this->decrypt($encryptedAuthCode));
                     $responseType->setNonce($payload->nonce ?? null);
                     $responseType->setAuthTime(isset($payload->auth_time) ? (int) $payload->auth_time : null);
-                    $responseType->setAmr($this->normalizeAmr($payload->amr ?? []));
+
+                    $context = $this->context(app(AuthenticationContextStore::class), $payload->context_id ?? null);
+                    if ($context !== null) {
+                        $responseType->setAmr($context->amr);
+                        $responseType->setIdTokenClaims($context->id_token_claims);
+                    }
                 } catch (\Throwable) {
                     // Parent will reject the malformed code with a proper OAuth error.
                 }
@@ -83,7 +90,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
 
     /**
      * Fork of League\OAuth2\Server\Grant\AuthCodeGrant::completeAuthorizationRequest() (league v9),
-     * kept byte-identical except for the added `nonce`, `auth_time`, and `amr` payload keys so
+     * kept byte-identical except for the added `nonce`, `auth_time`, and `context_id` payload keys so
      * future league diffs remain easy to port.
      */
     public function completeAuthorizationRequest(AuthorizationRequestInterface $authorizationRequest): ResponseTypeInterface
@@ -117,7 +124,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     ? $authorizationRequest->getNonce()
                     : null,
                 'auth_time' => $this->currentAuthTime(),
-                'amr' => $this->currentAmr(),
+                'context_id' => $this->finalizeContext(),
             ];
 
             $jsonPayload = json_encode($payload);
@@ -158,23 +165,54 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         return time();
     }
 
-    /**
-     * @return list<string>
-     */
+    private function finalizeContext(): ?string
+    {
+        $amr = $this->currentAmr();
+
+        if ($amr === [] && $this->currentIdTokenClaims() === []) {
+            return null;
+        }
+
+        return app(AuthenticationContextStore::class)->create([
+            'user_id' => (string) $this->sessionUserId(),
+            'amr' => $amr,
+            'acr' => AuthenticationMethods::deriveAcr($amr),
+            'auth_time' => $this->currentAuthTime(),
+            'id_token_claims' => $this->currentIdTokenClaims(),
+        ]);
+    }
+
+    private function context(AuthenticationContextStore $store, mixed $id): ?AuthenticationContext
+    {
+        return is_string($id) && $id !== '' ? $store->find($id) : null;
+    }
+
+    /** @return list<string> */
     private function currentAmr(): array
     {
         if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            return $this->normalizeAmr(app('session.store')->get(AuthenticationMethods::SESSION_KEY, []));
+            $amr = app('session.store')->get(AuthenticationMethods::SESSION_KEY, []);
+
+            return is_array($amr) ? array_values(array_filter($amr, is_string(...))) : [];
         }
 
         return [];
     }
 
-    /**
-     * @return list<string>
-     */
-    private function normalizeAmr(mixed $amr): array
+    /** @return array<string, mixed> */
+    private function currentIdTokenClaims(): array
     {
-        return is_array($amr) ? array_values(array_filter($amr, is_string(...))) : [];
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
+            $claims = app('session.store')->get('oidc.id_token_claims', []);
+
+            return is_array($claims) ? $claims : [];
+        }
+
+        return [];
+    }
+
+    private function sessionUserId(): string
+    {
+        return (string) (app('auth')->guard((string) config('oidc.auth.guard', 'identity'))->id() ?? '');
     }
 }
