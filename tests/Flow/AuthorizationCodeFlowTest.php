@@ -59,9 +59,10 @@ function parseIdToken(string $jwt): UnencryptedToken
 
 /**
  * @param  array<string, mixed>  $overrides
+ * @param  array<string, mixed>  $session
  * @return TestResponse<JsonResponse>
  */
-function completeAuthorization(TestCase $test, array $overrides = []): TestResponse
+function completeAuthorization(TestCase $test, array $overrides = [], array $session = []): TestResponse
 {
     [$verifier, $challenge] = pkcePair();
 
@@ -77,7 +78,7 @@ function completeAuthorization(TestCase $test, array $overrides = []): TestRespo
     ], $overrides);
 
     $view = $test->actingAs($test->user, 'identity')
-        ->withSession(['oidc.auth_time' => time() - 60])
+        ->withSession(array_merge(['oidc.auth_time' => time() - 60], $session))
         ->get('/oauth/authorize?'.http_build_query($query))
         ->assertOk();
 
@@ -136,7 +137,7 @@ it('omits the id_token without the openid scope', function () {
 
 // OAuth 2.1 §4.3 (refresh) + OIDC Core §12.2 (refreshed id_token)
 it('issues an id_token without nonce or auth_time on refresh', function () {
-    $refreshToken = completeAuthorization($this)->json('refresh_token');
+    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd', 'otp']])->json('refresh_token');
 
     $response = $this->post('/oauth/token', [
         'grant_type' => 'refresh_token',
@@ -147,7 +148,33 @@ it('issues an id_token without nonce or auth_time on refresh', function () {
 
     $idToken = parseIdToken($response->json('id_token'));
     expect($idToken->claims()->has('nonce'))->toBeFalse()
-        ->and($idToken->claims()->has('auth_time'))->toBeFalse();
+        ->and($idToken->claims()->has('auth_time'))->toBeFalse()
+        ->and($idToken->claims()->has('amr'))->toBeFalse()
+        ->and($idToken->claims()->has('acr'))->toBeFalse();
+});
+
+// OIDC Core §3.1.3.6 / RFC 8176 (amr) + §2 (acr derived from amr method count)
+it('carries amr from the session into the auth_code id_token with derived acr', function () {
+    $response = completeAuthorization($this, [], ['oidc.amr' => ['pwd', 'otp']])->assertOk();
+
+    $idToken = parseIdToken($response->json('id_token'));
+    expect($idToken->claims()->get('amr'))->toBe(['pwd', 'otp'])
+        ->and($idToken->claims()->get('acr'))->toBe('2');
+});
+
+it('emits acr "1" for a single-method session', function () {
+    $response = completeAuthorization($this, [], ['oidc.amr' => ['pwd']])->assertOk();
+
+    $idToken = parseIdToken($response->json('id_token'));
+    expect($idToken->claims()->get('amr'))->toBe(['pwd'])
+        ->and($idToken->claims()->get('acr'))->toBe('1');
+});
+
+it('omits amr and acr when the session held no methods', function () {
+    $idToken = parseIdToken(completeAuthorization($this)->assertOk()->json('id_token'));
+
+    expect($idToken->claims()->has('amr'))->toBeFalse()
+        ->and($idToken->claims()->has('acr'))->toBeFalse();
 });
 
 // OAuth 2.1 §4.1.1 / §7.6 (PKCE required for every client)
