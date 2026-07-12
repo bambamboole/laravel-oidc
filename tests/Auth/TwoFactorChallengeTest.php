@@ -114,6 +114,17 @@ it('appends the otp method after a successful totp challenge', function () {
     expect(session()->get('oidc.amr'))->toBe(['pwd', 'otp']);
 });
 
+it('appends the otp method after a successful recovery code challenge', function () {
+    [$user] = confirmedTotpUser();
+    $recoveryCode = $user->recoveryCodes()->firstOrFail()->code;
+
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'oidc.amr' => ['pwd']])
+        ->post(route('identity.two-factor.login.store'), ['recovery_code' => $recoveryCode])
+        ->assertRedirect('/dashboard');
+
+    expect(session()->get('oidc.amr'))->toBe(['pwd', 'otp']);
+});
+
 it('redirects challenge requests without a pending user to login', function () {
     $this->get(route('identity.two-factor.login'))->assertRedirect(route('identity.login'));
 });
