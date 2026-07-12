@@ -45,5 +45,7 @@ return [
         'enabled' => env('OIDC_AUTH_ENABLED', true),
         'guard' => env('OIDC_AUTH_GUARD', 'web'),
         'home' => env('OIDC_AUTH_HOME', '/dashboard'),
+        'username' => env('OIDC_AUTH_USERNAME', 'email'),
+        'login_throttle' => env('OIDC_AUTH_LOGIN_THROTTLE', '5,1'),
     ],
 ];

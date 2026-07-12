@@ -10,6 +10,10 @@ use RuntimeException;
 
 class AuthViewManager
 {
+    public const string Login = 'login';
+
+    public const string ConfirmPassword = 'confirm-password';
+
     public const string Register = 'register';
 
     public const string RequestPasswordResetLink = 'request-password-reset-link';
