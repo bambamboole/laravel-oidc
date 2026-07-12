@@ -34,7 +34,8 @@ The service provider is auto-discovered.
 ## What it takes over
 
 On registration the package calls `Passport::ignoreRoutes()` and registers the **full
-`/oauth/*` route surface itself** (`routes/passport.php` + `routes/oidc.php`). This means:
+`/oauth/*` route surface itself** from the unified `oidc.handlers` config (see
+[Configuration](#configuration-configoidcphp)). This means:
 
 - The authorization, token, approve/deny, and token-refresh routes are registered by
   this package using its own controllers (so `max_age`, OIDC scopes, and the `id_token`
@@ -69,7 +70,8 @@ device-code and token-exchange URNs when those grants are enabled),
 (`client_secret_basic`, `client_secret_post`) when those endpoints are enabled. Every URL in the
 document is built from the configured `issuer` origin, not the incoming request's host.
 
-Each of the last four can be toggled off via config.
+Each of the last four can be toggled off by setting its handler to `false` in
+`config('oidc.handlers')` (`oidc.userinfo`, `oidc.logout`, `oidc.introspect`, `oidc.revoke`).
 
 ## Configuration (`config/oidc.php`)
 
@@ -77,19 +79,46 @@ Each of the last four can be toggled off via config.
 | --- | --- | --- |
 | `issuer` | `env('OIDC_ISSUER')` | Issuer URL. Falls back to `app.url` when null. All endpoint URLs advertised in discovery are derived from this origin. |
 | `id_token_ttl` | `3600` | `id_token` lifetime in seconds. |
-| `endpoints.userinfo` | `true` | Register the userinfo endpoint. |
-| `endpoints.end_session` | `true` | Register the logout endpoint. |
-| `endpoints.introspection` | `true` | Register the introspection endpoint. |
-| `endpoints.revocation` | `true` | Register the revocation endpoint. |
+| `handlers` | full map | Every HTTP endpoint the package registers, keyed by route name (see [Route handlers](#route-handlers)). |
 | `api_guard` | `env('OIDC_API_GUARD', 'api')` | The guard the userinfo endpoint authenticates against. |
 | `claims_supported` | standard set | Advertised in discovery. |
 | `additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys to publish in JWKS; defaults to the previous signing key during rotation. |
 | `key_size` | `OIDC_KEY_SIZE` (2048) | RSA key size `oidc:rotate-keys` generates. |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
 
-The `/oauth/*` routes this package registers (see [Endpoints](#endpoints)) are mounted under
-`config('passport.path', 'oauth')`, so changing Passport's route prefix moves this package's
-routes with it.
+### Route handlers
+
+Every endpoint the package registers lives in `config('oidc.handlers')`, a flat map keyed by the
+`Bambamboole\LaravelOidc\Routing\Handler` enum. Each entry has three keys and is registered by a
+single `HandlerRegistrar`:
+
+```php
+use Bambamboole\LaravelOidc\Routing\Handler;
+
+Handler::Userinfo->value => [
+    'route' => 'oauth/userinfo',                 // URI path (literal)
+    'controller' => UserinfoController::class,   // invokable class, or [Class::class, 'method']
+    'middleware' => [],
+],
+```
+
+Customize any entry — point it at your own controller, change its path, or adjust its
+middleware — or set it to `false` to disable that endpoint entirely. The HTTP verb is intrinsic
+to each endpoint (defined on `Handler::method()`) and is therefore not configurable. Because
+paths are literal, the `/oauth/*` routes no longer follow `config('passport.path')`
+automatically; if you change Passport's prefix, update the corresponding handler paths (and the
+`guest:web`/`auth:web` guard middleware if you run a non-`web` guard).
+
+Resolve a handler's configuration anywhere via the facade instead of reading config directly —
+it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
+
+```php
+use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Routing\Handler;
+
+$config = Oidc::handlerConfig(Handler::Userinfo); // HandlerConfig|false
+$issuer = Oidc::issuer();                             // issuer URL
+```
 
 ## Extension contracts
 

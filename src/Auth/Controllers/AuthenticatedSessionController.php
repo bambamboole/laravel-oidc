@@ -49,22 +49,6 @@ class AuthenticatedSessionController
         return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));
     }
 
-    public function destroy(Request $request): JsonResponse|RedirectResponse
-    {
-        Auth::guard($this->guard())->logout();
-
-        if ($request->hasSession()) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-        }
-
-        if ($request->wantsJson()) {
-            return new JsonResponse('', 204);
-        }
-
-        return redirect('/');
-    }
-
     private function guard(): string
     {
         return (string) config('oidc.auth.guard', 'web');

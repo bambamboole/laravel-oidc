@@ -99,12 +99,7 @@ class OidcServiceProvider extends ServiceProvider
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
 
-        $this->loadRoutesFrom(__DIR__.'/../routes/passport.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
-
-        if (config('oidc.auth.enabled', true)) {
-            $this->loadRoutesFrom(__DIR__.'/../routes/auth.php');
-        }
 
         $this->publishes([
             __DIR__.'/../config/oidc.php' => config_path('oidc.php'),
