@@ -7,3 +7,8 @@ composer.lock
 CLAUDE.md
 AGENTS.md
 .ai/guidelines/boost.blade.php
+.agents
+.claude
+.codex
+.superpowers
+docs/superpowers
