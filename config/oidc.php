@@ -1,15 +1,25 @@
 <?php
+
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Controllers\AuthenticatedSessionController;
 use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmablePasswordController;
 use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmedPasswordStatusController;
+use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmedTwoFactorAuthenticationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationNotificationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationPromptController;
 use Bambamboole\LaravelOidc\Auth\Controllers\NewPasswordController;
 use Bambamboole\LaravelOidc\Auth\Controllers\PasswordResetLinkController;
+use Bambamboole\LaravelOidc\Auth\Controllers\RecoveryCodeController;
 use Bambamboole\LaravelOidc\Auth\Controllers\RegisteredUserController;
+use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorAuthenticationController;
+use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorChallengeController;
+use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorQrCodeController;
+use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorSecretKeyController;
 use Bambamboole\LaravelOidc\Auth\Controllers\VerifyEmailController;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -60,6 +70,18 @@ return [
         'guard' => env('OIDC_AUTH_GUARD', 'web'),
         'home' => env('OIDC_AUTH_HOME', '/dashboard'),
         'username' => env('OIDC_AUTH_USERNAME', 'email'),
+        'two_factor' => [
+            'requires_password_confirmation' => env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true),
+            'throttle' => env('OIDC_AUTH_2FA_THROTTLE', '5,1'),
+            'secret_length' => 16,
+            'window' => 1,
+            'recovery_codes' => 8,
+        ],
+        'factors' => [
+            TotpFactorProvider::class,
+            RecoveryCodeProvider::class,
+            WebAuthnFactorProvider::class,
+        ],
     ],
 
     /*
@@ -145,6 +167,51 @@ return [
             'route' => 'email/verification-notification',
             'controller' => [EmailVerificationNotificationController::class, 'store'],
             'middleware' => ['web', 'auth:web', 'throttle:6,1'],
+        ],
+        Handler::TwoFactorLogin->value => [
+            'route' => 'two-factor-challenge',
+            'controller' => [TwoFactorChallengeController::class, 'create'],
+            'middleware' => ['web', 'guest:web'],
+        ],
+        Handler::TwoFactorLoginStore->value => [
+            'route' => 'two-factor-challenge',
+            'controller' => [TwoFactorChallengeController::class, 'store'],
+            'middleware' => ['web', 'guest:web', 'throttle:'.env('OIDC_AUTH_2FA_THROTTLE', '5,1')],
+        ],
+        Handler::TwoFactorEnable->value => [
+            'route' => 'user/two-factor-authentication',
+            'controller' => [TwoFactorAuthenticationController::class, 'store'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorConfirm->value => [
+            'route' => 'user/confirmed-two-factor-authentication',
+            'controller' => [ConfirmedTwoFactorAuthenticationController::class, 'store'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorDisable->value => [
+            'route' => 'user/two-factor-authentication',
+            'controller' => [TwoFactorAuthenticationController::class, 'destroy'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorQrCode->value => [
+            'route' => 'user/two-factor-qr-code',
+            'controller' => [TwoFactorQrCodeController::class, 'show'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorSecretKey->value => [
+            'route' => 'user/two-factor-secret-key',
+            'controller' => [TwoFactorSecretKeyController::class, 'show'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorRecoveryCodes->value => [
+            'route' => 'user/two-factor-recovery-codes',
+            'controller' => [RecoveryCodeController::class, 'index'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
+        ],
+        Handler::TwoFactorRegenerateRecoveryCodes->value => [
+            'route' => 'user/two-factor-recovery-codes',
+            'controller' => [RecoveryCodeController::class, 'store'],
+            'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
         ],
 
         // OIDC / OAuth protocol

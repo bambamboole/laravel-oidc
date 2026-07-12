@@ -5,6 +5,7 @@ namespace Bambamboole\LaravelOidc\Tests;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\ParallelTesting;
+use Laravel\Passkeys\Passkeys;
 use Laravel\Passport\Passport;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -49,6 +50,7 @@ abstract class TestCase extends BaseTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(dirname(__DIR__).'/vendor/laravel/passport/database/migrations');
+        $this->loadMigrationsFrom(Passkeys::migrationPath());
         $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
     }
 }
