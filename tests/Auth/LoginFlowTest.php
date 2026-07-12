@@ -70,3 +70,15 @@ it('throttles repeated login attempts', function () {
     $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'wrong-password'])
         ->assertStatus(429);
 });
+
+it('records the pwd method on a successful password login', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
+
+    $this->post(route('identity.login.store'), [
+        'email' => 'm@example.com',
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticatedAs($user, 'identity');
+    expect(session()->get('oidc.amr'))->toBe(['pwd']);
+});
