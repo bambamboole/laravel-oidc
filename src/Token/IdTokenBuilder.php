@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Hooks\Artifact;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
@@ -70,7 +70,7 @@ class IdTokenBuilder
             $amr = array_values($amr);
             $builder = $builder->withClaim('amr', $amr);
 
-            $acr = AuthenticationContext::deriveAcr($amr);
+            $acr = AuthenticationMethods::deriveAcr($amr);
             if ($acr !== null) {
                 $builder = $builder->withClaim('acr', $acr);
             }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth;
 
-final class AuthenticationContext
+final class AuthenticationMethods
 {
     public const string SESSION_KEY = 'oidc.amr';
 

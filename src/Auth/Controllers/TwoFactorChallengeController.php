@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
@@ -24,7 +24,7 @@ class TwoFactorChallengeController
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
-        private readonly AuthenticationContext $context,
+        private readonly AuthenticationMethods $context,
     ) {}
 
     public function create(Request $request): mixed
