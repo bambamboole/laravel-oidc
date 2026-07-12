@@ -100,7 +100,6 @@ return [
     |
     */
     'handlers' => [
-        // Authentication
         Handler::Login->value => [
             'route' => 'login',
             'controller' => [AuthenticatedSessionController::class, 'create'],
@@ -217,7 +216,6 @@ return [
             'middleware' => array_values(array_filter(['web', 'auth:web', env('OIDC_AUTH_2FA_PASSWORD_CONFIRMATION', true) ? 'password.confirm' : null])),
         ],
 
-        // OIDC / OAuth protocol
         Handler::Jwks->value => [
             'route' => '.well-known/jwks.json',
             'controller' => JwksController::class,

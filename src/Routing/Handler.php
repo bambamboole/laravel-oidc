@@ -19,7 +19,6 @@ namespace Bambamboole\LaravelOidc\Routing;
  */
 enum Handler: string
 {
-    // Auth UI
     case Login = 'login';
     case LoginStore = 'login.store';
     case Register = 'register';
@@ -44,7 +43,6 @@ enum Handler: string
     case TwoFactorRecoveryCodes = 'two-factor.recovery-codes';
     case TwoFactorRegenerateRecoveryCodes = 'two-factor.regenerate-recovery-codes';
 
-    // OIDC / OAuth protocol
     case Jwks = 'oidc.jwks';
     case Discovery = 'oidc.discovery';
     case Userinfo = 'oidc.userinfo';
