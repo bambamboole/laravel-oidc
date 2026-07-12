@@ -95,7 +95,7 @@ single `HandlerRegistrar`:
 ```php
 use Bambamboole\LaravelOidc\Routing\Handler;
 
-Handler::OidcUserinfo->value => [
+Handler::Userinfo->value => [
     'route' => 'oauth/userinfo',                 // URI path (literal)
     'controller' => UserinfoController::class,   // invokable class, or [Class::class, 'method']
     'middleware' => [],
@@ -116,7 +116,7 @@ it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Routing\Handler;
 
-$config = Oidc::handlerConfig(Handler::OidcUserinfo); // HandlerConfig|false
+$config = Oidc::handlerConfig(Handler::Userinfo); // HandlerConfig|false
 $issuer = Oidc::issuer();                             // issuer URL
 ```
 

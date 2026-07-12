@@ -170,11 +170,11 @@ it('rejects an authorization request without PKCE even for a confidential client
 it('owns the oauth routes with package controllers', function () {
     $routes = app('router')->getRoutes();
 
-    expect($routes->getByName('passport.authorizations.authorize')->getControllerClass())
+    expect($routes->getByName('oidc.authorize')->getControllerClass())
         ->toBe(AuthorizationController::class)
-        ->and($routes->getByName('passport.authorizations.approve')->getControllerClass())
+        ->and($routes->getByName('oidc.approve')->getControllerClass())
         ->toBe(ApproveAuthorizationController::class)
-        ->and($routes->getByName('passport.authorizations.deny')->getControllerClass())
+        ->and($routes->getByName('oidc.deny')->getControllerClass())
         ->toBe(DenyAuthorizationController::class);
 
     expect(collect($routes->getRoutes())->filter(

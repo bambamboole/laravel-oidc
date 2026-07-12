@@ -10,9 +10,16 @@ namespace Bambamboole\LaravelOidc\Routing;
  * Each case's value is the endpoint's route name and the key into the
  * `oidc.handlers` config. The HTTP verb is intrinsic to the endpoint and lives
  * on {@see self::method()} rather than in config.
+ *
+ * The auth-UI routes keep their conventional Laravel names (`login`,
+ * `password.reset`, ...) because the framework resolves them by name — the auth
+ * middleware redirects to `route('login')`, the password broker to
+ * `route('password.reset')`, and so on. The protocol endpoints are namespaced
+ * under `oidc.*`.
  */
 enum Handler: string
 {
+    // Auth UI
     case Login = 'login';
     case LoginStore = 'login.store';
     case Register = 'register';
@@ -21,24 +28,25 @@ enum Handler: string
     case PasswordEmail = 'password.email';
     case PasswordReset = 'password.reset';
     case PasswordUpdate = 'password.update';
-    case Logout = 'logout';
     case PasswordConfirm = 'password.confirm';
     case PasswordConfirmStore = 'password.confirm.store';
     case PasswordConfirmation = 'password.confirmation';
     case VerificationNotice = 'verification.notice';
     case VerificationVerify = 'verification.verify';
     case VerificationSend = 'verification.send';
-    case OidcJwks = 'oidc.jwks';
-    case OidcDiscovery = 'oidc.discovery';
-    case OidcUserinfo = 'oidc.userinfo';
-    case OidcLogout = 'oidc.logout';
-    case OidcIntrospect = 'oidc.introspect';
-    case OidcRevoke = 'oidc.revoke';
-    case PassportAuthorize = 'passport.authorizations.authorize';
-    case PassportToken = 'passport.token';
-    case PassportTokenRefresh = 'passport.token.refresh';
-    case PassportApprove = 'passport.authorizations.approve';
-    case PassportDeny = 'passport.authorizations.deny';
+
+    // OIDC / OAuth protocol
+    case Jwks = 'oidc.jwks';
+    case Discovery = 'oidc.discovery';
+    case Userinfo = 'oidc.userinfo';
+    case Logout = 'oidc.logout';
+    case Introspect = 'oidc.introspect';
+    case Revoke = 'oidc.revoke';
+    case Authorize = 'oidc.authorize';
+    case IssueToken = 'oidc.token';
+    case TokenRefresh = 'oidc.token.refresh';
+    case Approve = 'oidc.approve';
+    case Deny = 'oidc.deny';
 
     /**
      * Resolve this handler's configuration, or `false` when it is disabled (or
@@ -73,16 +81,15 @@ enum Handler: string
             self::RegisterStore,
             self::PasswordEmail,
             self::PasswordUpdate,
-            self::Logout,
             self::PasswordConfirmStore,
             self::VerificationSend,
-            self::OidcIntrospect,
-            self::OidcRevoke,
-            self::PassportToken,
-            self::PassportTokenRefresh,
-            self::PassportApprove => 'post',
-            self::PassportDeny => 'delete',
-            self::OidcUserinfo, self::OidcLogout => ['get', 'post'],
+            self::Introspect,
+            self::Revoke,
+            self::IssueToken,
+            self::TokenRefresh,
+            self::Approve => 'post',
+            self::Deny => 'delete',
+            self::Userinfo, self::Logout => ['get', 'post'],
             default => 'get',
         };
     }

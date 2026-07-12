@@ -27,9 +27,9 @@ class DiscoveryController
 
         $document = [
             'issuer' => Oidc::issuer(),
-            'authorization_endpoint' => $this->endpoint(Handler::PassportAuthorize),
-            'token_endpoint' => $this->endpoint(Handler::PassportToken),
-            'jwks_uri' => $this->endpoint(Handler::OidcJwks),
+            'authorization_endpoint' => $this->endpoint(Handler::Authorize),
+            'token_endpoint' => $this->endpoint(Handler::IssueToken),
+            'jwks_uri' => $this->endpoint(Handler::Jwks),
             'response_types_supported' => ['code'],
             'response_modes_supported' => ['query'],
             'grant_types_supported' => $grantTypes,
@@ -48,21 +48,21 @@ class DiscoveryController
             'token_endpoint_auth_methods_supported' => ['client_secret_basic', 'client_secret_post', 'none'],
         ];
 
-        if (Oidc::handlerConfig(Handler::OidcUserinfo) !== false) {
-            $document['userinfo_endpoint'] = $this->endpoint(Handler::OidcUserinfo);
+        if (Oidc::handlerConfig(Handler::Userinfo) !== false) {
+            $document['userinfo_endpoint'] = $this->endpoint(Handler::Userinfo);
         }
 
-        if (Oidc::handlerConfig(Handler::OidcLogout) !== false) {
-            $document['end_session_endpoint'] = $this->endpoint(Handler::OidcLogout);
+        if (Oidc::handlerConfig(Handler::Logout) !== false) {
+            $document['end_session_endpoint'] = $this->endpoint(Handler::Logout);
         }
 
-        if (Oidc::handlerConfig(Handler::OidcIntrospect) !== false) {
-            $document['introspection_endpoint'] = $this->endpoint(Handler::OidcIntrospect);
+        if (Oidc::handlerConfig(Handler::Introspect) !== false) {
+            $document['introspection_endpoint'] = $this->endpoint(Handler::Introspect);
             $document['introspection_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 
-        if (Oidc::handlerConfig(Handler::OidcRevoke) !== false) {
-            $document['revocation_endpoint'] = $this->endpoint(Handler::OidcRevoke);
+        if (Oidc::handlerConfig(Handler::Revoke) !== false) {
+            $document['revocation_endpoint'] = $this->endpoint(Handler::Revoke);
             $document['revocation_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 

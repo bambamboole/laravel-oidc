@@ -116,11 +116,6 @@ return [
             'controller' => [NewPasswordController::class, 'store'],
             'middleware' => ['web', 'guest:web'],
         ],
-        Handler::Logout->value => [
-            'route' => 'logout',
-            'controller' => [AuthenticatedSessionController::class, 'destroy'],
-            'middleware' => ['web', 'auth:web'],
-        ],
         Handler::PasswordConfirm->value => [
             'route' => 'user/confirm-password',
             'controller' => [ConfirmablePasswordController::class, 'show'],
@@ -152,60 +147,58 @@ return [
             'middleware' => ['web', 'auth:web', 'throttle:6,1'],
         ],
 
-        // OpenID Connect
-        Handler::OidcJwks->value => [
+        // OIDC / OAuth protocol
+        Handler::Jwks->value => [
             'route' => '.well-known/jwks.json',
             'controller' => JwksController::class,
             'middleware' => [],
         ],
-        Handler::OidcDiscovery->value => [
+        Handler::Discovery->value => [
             'route' => '.well-known/openid-configuration',
             'controller' => DiscoveryController::class,
             'middleware' => [],
         ],
-        Handler::OidcUserinfo->value => [
+        Handler::Userinfo->value => [
             'route' => 'oauth/userinfo',
             'controller' => UserinfoController::class,
             'middleware' => [],
         ],
-        Handler::OidcLogout->value => [
+        Handler::Logout->value => [
             'route' => 'oauth/logout',
             'controller' => EndSessionController::class,
             'middleware' => ['web'],
         ],
-        Handler::OidcIntrospect->value => [
+        Handler::Introspect->value => [
             'route' => 'oauth/introspect',
             'controller' => IntrospectionController::class,
             'middleware' => ['throttle'],
         ],
-        Handler::OidcRevoke->value => [
+        Handler::Revoke->value => [
             'route' => 'oauth/revoke',
             'controller' => RevocationController::class,
             'middleware' => ['throttle'],
         ],
-
-        // OAuth authorization + token endpoints
-        Handler::PassportAuthorize->value => [
+        Handler::Authorize->value => [
             'route' => 'oauth/authorize',
             'controller' => [AuthorizationController::class, 'authorize'],
             'middleware' => ['web'],
         ],
-        Handler::PassportToken->value => [
+        Handler::IssueToken->value => [
             'route' => 'oauth/token',
             'controller' => [AccessTokenController::class, 'issueToken'],
             'middleware' => ['throttle'],
         ],
-        Handler::PassportTokenRefresh->value => [
+        Handler::TokenRefresh->value => [
             'route' => 'oauth/token/refresh',
             'controller' => [TransientTokenController::class, 'refresh'],
             'middleware' => ['web', 'auth'],
         ],
-        Handler::PassportApprove->value => [
+        Handler::Approve->value => [
             'route' => 'oauth/authorize',
             'controller' => [ApproveAuthorizationController::class, 'approve'],
             'middleware' => ['web', 'auth'],
         ],
-        Handler::PassportDeny->value => [
+        Handler::Deny->value => [
             'route' => 'oauth/authorize',
             'controller' => [DenyAuthorizationController::class, 'deny'],
             'middleware' => ['web', 'auth'],
