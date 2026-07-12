@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static void createUsersUsing(callable|string $action)
  * @method static void resetUserPasswordsUsing(callable|string $action)
  * @method static \Bambamboole\LaravelOidc\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
+ * @method static string issuer()
+ * @method static \Bambamboole\LaravelOidc\Routing\HandlerConfig|false handlerConfig(\Bambamboole\LaravelOidc\Routing\Handler $handler)
  *
  * @see OidcManager
  */

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
-use Bambamboole\LaravelOidc\Issuer;
+use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Routing\Handler;
 use Bambamboole\LaravelOidc\Scopes\Scope;
 use Illuminate\Http\JsonResponse;
 use Laravel\Passport\Passport;
@@ -25,10 +26,10 @@ class DiscoveryController
         }
 
         $document = [
-            'issuer' => Issuer::url(),
-            'authorization_endpoint' => $this->endpoint('passport.authorizations.authorize'),
-            'token_endpoint' => $this->endpoint('passport.token'),
-            'jwks_uri' => $this->endpoint('oidc.jwks'),
+            'issuer' => Oidc::issuer(),
+            'authorization_endpoint' => $this->endpoint(Handler::PassportAuthorize),
+            'token_endpoint' => $this->endpoint(Handler::PassportToken),
+            'jwks_uri' => $this->endpoint(Handler::OidcJwks),
             'response_types_supported' => ['code'],
             'response_modes_supported' => ['query'],
             'grant_types_supported' => $grantTypes,
@@ -47,31 +48,31 @@ class DiscoveryController
             'token_endpoint_auth_methods_supported' => ['client_secret_basic', 'client_secret_post', 'none'],
         ];
 
-        if (config('oidc.endpoints.userinfo')) {
-            $document['userinfo_endpoint'] = $this->endpoint('oidc.userinfo');
+        if (Oidc::handlerConfig(Handler::OidcUserinfo) !== false) {
+            $document['userinfo_endpoint'] = $this->endpoint(Handler::OidcUserinfo);
         }
 
-        if (config('oidc.endpoints.end_session')) {
-            $document['end_session_endpoint'] = $this->endpoint('oidc.logout');
+        if (Oidc::handlerConfig(Handler::OidcLogout) !== false) {
+            $document['end_session_endpoint'] = $this->endpoint(Handler::OidcLogout);
         }
 
-        if (config('oidc.endpoints.introspection')) {
-            $document['introspection_endpoint'] = $this->endpoint('oidc.introspect');
+        if (Oidc::handlerConfig(Handler::OidcIntrospect) !== false) {
+            $document['introspection_endpoint'] = $this->endpoint(Handler::OidcIntrospect);
             $document['introspection_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 
-        if (config('oidc.endpoints.revocation')) {
-            $document['revocation_endpoint'] = $this->endpoint('oidc.revoke');
+        if (Oidc::handlerConfig(Handler::OidcRevoke) !== false) {
+            $document['revocation_endpoint'] = $this->endpoint(Handler::OidcRevoke);
             $document['revocation_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 
         return response()->json($document)->header('Cache-Control', 'max-age=3600, public');
     }
 
-    private function endpoint(string $routeName): string
+    private function endpoint(Handler $handler): string
     {
-        $path = parse_url(route($routeName), PHP_URL_PATH);
+        $path = parse_url(route($handler->value), PHP_URL_PATH);
 
-        return rtrim(Issuer::url(), '/').($path ?? '');
+        return rtrim(Oidc::issuer(), '/').($path ?? '');
     }
 }

@@ -36,7 +36,9 @@ it('honours a configured issuer and strips trailing slashes', function () {
 });
 
 it('omits toggled-off endpoints', function () {
-    config(['oidc.endpoints.introspection' => false]);
+    $handlers = config('oidc.handlers');
+    $handlers['oidc.introspect'] = false;
+    config(['oidc.handlers' => $handlers]);
 
     $this->getJson('/.well-known/openid-configuration')
         ->assertJsonMissingPath('introspection_endpoint');
