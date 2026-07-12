@@ -178,10 +178,21 @@ it('rejects invalid provisioning input before writing', function (
     'audience invalid scheme' => ['App', ['https://app.test/callback'], ['1abc:orders'], 'absolute URI'],
     'audience incomplete https URI' => ['App', ['https://app.test/callback'], ['https://'], 'absolute URI'],
     'audience incomplete URN' => ['App', ['https://app.test/callback'], ['urn:example:'], 'absolute URI'],
+    'audience one-character URN NID' => ['App', ['https://app.test/callback'], ['urn:a:orders'], 'absolute URI'],
+    'audience leading-hyphen URN NID' => ['App', ['https://app.test/callback'], ['urn:-example:orders'], 'absolute URI'],
+    'audience trailing-hyphen URN NID' => ['App', ['https://app.test/callback'], ['urn:example-:orders'], 'absolute URI'],
+    'audience excessive-length URN NID' => ['App', ['https://app.test/callback'], ['urn:'.str_repeat('a', 33).':orders'], 'absolute URI'],
     'audience raw pipe' => ['App', ['https://app.test/callback'], ['urn:example:ord|ers'], 'absolute URI'],
     'audience raw quote' => ['App', ['https://app.test/callback'], ['urn:example:"orders'], 'absolute URI'],
     'audience unmatched bracket' => ['App', ['https://app.test/callback'], ['urn:example:[orders'], 'absolute URI'],
 ]);
+
+it('does not require the optional scheme-specific League URN parser', function () {
+    $source = file_get_contents(dirname(__DIR__, 2).'/src/Clients/FirstPartyClientProvisioner.php');
+
+    expect($source)->toBeString()
+        ->not->toContain('League\\Uri\\Urn');
+});
 
 it('accepts absolute URI audience identifiers with hierarchical and non-hierarchical schemes', function () {
     $result = app(FirstPartyClientProvisioner::class)->provision(
