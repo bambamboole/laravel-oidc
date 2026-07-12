@@ -11,6 +11,8 @@ class OidcClientServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/oidc-client.php', 'oidc-client');
+
+        $this->app->singleton(OidcClientManager::class);
     }
 
     public function boot(): void
