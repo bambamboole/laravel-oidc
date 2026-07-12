@@ -174,7 +174,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         }
 
         return app(AuthenticationContextStore::class)->create([
-            'user_id' => (string) $this->sessionUserId(),
+            'user_id' => $this->sessionUserId(),
             'amr' => $amr,
             'acr' => AuthenticationMethods::deriveAcr($amr),
             'auth_time' => $this->currentAuthTime(),
