@@ -7,6 +7,9 @@ namespace Bambamboole\LaravelOidc;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
@@ -27,6 +30,8 @@ class OidcManager
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
+        private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
+        private readonly FirstPartyClientConfig $firstPartyClient,
     ) {}
 
     /**
@@ -91,6 +96,29 @@ class OidcManager
         $this->userActions->resetUserPasswordsUsing($action);
     }
 
+    /**
+     * @param  string[]  $redirectUris
+     * @param  string[]  $postLogoutRedirectUris
+     * @param  string[]  $allowedExchangeAudiences
+     */
+    public function provisionFirstPartyClient(
+        string $name,
+        array $redirectUris,
+        array $postLogoutRedirectUris = [],
+        array $allowedExchangeAudiences = [],
+        ?string $adoptClientId = null,
+        bool $rotateSecret = false,
+    ): FirstPartyClientProvisioningResult {
+        return $this->firstPartyClientProvisioner->provision(
+            $name,
+            $redirectUris,
+            $postLogoutRedirectUris,
+            $allowedExchangeAudiences,
+            $adoptClientId,
+            $rotateSecret,
+        );
+    }
+
     public function onPostLogin(Closure $hook): void
     {
         $this->hooks->register(Trigger::PostLogin, $hook);
@@ -132,10 +160,10 @@ class OidcManager
             throw new RuntimeException('No session token is available for the current user.');
         }
 
-        $client = Passport::client()->newQuery()->find(config('oidc.first_party_client'));
+        $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
 
         if ($client === null) {
-            throw new RuntimeException('The oidc.first_party_client is not configured or does not exist.');
+            throw new RuntimeException('The oidc.first_party.client_id is not configured or does not exist.');
         }
 
         $token = $this->exchanger->exchange($subject, $client, $audience, $scopes);
