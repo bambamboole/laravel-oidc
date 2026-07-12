@@ -10,9 +10,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class EmailVerificationNotificationController
+class SendEmailVerificationNotificationController
 {
-    public function store(Request $request): JsonResponse|RedirectResponse
+    public function __invoke(Request $request): JsonResponse|RedirectResponse
     {
         $user = $request->user((string) config('oidc.auth.guard', 'web'));
 

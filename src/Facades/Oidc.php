@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void requestPasswordResetLinkView(Closure $view)
  * @method static void resetPasswordView(Closure $view)
  * @method static void verifyEmailView(Closure $view)
+ * @method static void twoFactorChallengeView(Closure $view)
  * @method static void createUsersUsing(callable|string $action)
  * @method static void resetUserPasswordsUsing(callable|string $action)
  * @method static \Bambamboole\LaravelOidc\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
