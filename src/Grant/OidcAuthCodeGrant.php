@@ -48,6 +48,12 @@ class OidcAuthCodeGrant extends AuthCodeGrant
             $authorizationRequest->setNonce($this->getQueryStringParameter('nonce', $request));
         }
 
+        // OAuth 2.1 §4.1.1 / §7.6: PKCE is REQUIRED for every client, not only public ones
+        // (league's default only mandates it for public clients).
+        if ($authorizationRequest->getCodeChallenge() === null) {
+            throw OAuthServerException::invalidRequest('code_challenge', 'Code challenge required.');
+        }
+
         return $authorizationRequest;
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Http\ClientCredentials;
+use Bambamboole\LaravelOidc\Http\OAuthError;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ class IntrospectionController
         $clientId = $credentials->validate($request);
 
         if ($clientId === null) {
-            return response()->json(['error' => 'invalid_client'], 401, ['WWW-Authenticate' => 'Basic']);
+            OAuthError::client();
         }
 
         $tokenValue = (string) $request->input('token');

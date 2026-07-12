@@ -64,6 +64,13 @@ class TokenInspector
         return $parsed;
     }
 
+    public function tokenForParsed(Plain $parsed): ?Token
+    {
+        $jti = $parsed->claims()->get('jti');
+
+        return is_string($jti) ? Passport::token()->newQuery()->find($jti) : null;
+    }
+
     public function refreshTokenPayload(string $encrypted): ?object
     {
         try {

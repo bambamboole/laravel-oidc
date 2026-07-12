@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Http\ClientCredentials;
+use Bambamboole\LaravelOidc\Http\OAuthError;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,7 +19,7 @@ class RevocationController
         $clientId = $credentials->validate($request);
 
         if ($clientId === null) {
-            return response('invalid_client', 401, ['WWW-Authenticate' => 'Basic']);
+            OAuthError::client();
         }
 
         $tokenValue = (string) $request->input('token');

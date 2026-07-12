@@ -7,6 +7,48 @@ breaking changes).
 
 ## [Unreleased]
 
+### Added
+
+- **Discovery document completeness:** `/.well-known/openid-configuration` now advertises
+  `client_credentials` in `grant_types_supported`, `response_modes_supported: ["query"]`,
+  `claims_parameter_supported: false`, `request_parameter_supported: false`,
+  `request_uri_parameter_supported: false`, and
+  `introspection_endpoint_auth_methods_supported` / `revocation_endpoint_auth_methods_supported`.
+  All advertised endpoint URLs are now derived from the configured `issuer` origin rather than
+  the incoming request.
+- **Configurable route prefix:** the `/oauth/*` routes this package registers now honour
+  `config('passport.path', 'oauth')` instead of hardcoding `oauth`.
+- **`oidc.api_guard` config** (`OIDC_API_GUARD`, default `api`): the guard the userinfo
+  endpoint authenticates against, previously hardcoded to `api`.
+- **`oidc:rotate-keys` command:** generates a new RSA signing keypair and writes
+  `PASSPORT_PRIVATE_KEY`, `PASSPORT_PUBLIC_KEY`, and `OIDC_PREVIOUS_PUBLIC_KEY` into `.env`
+  (or, with `--print`, to stdout for a secrets manager), rolling the current public key into
+  `OIDC_PREVIOUS_PUBLIC_KEY`. That previous key is served in JWKS via
+  `config('oidc.additional_public_keys')` (deduplicated by `kid`) so tokens signed before the
+  rotation keep validating until they expire; remove it once they have. Keys live entirely in
+  env variables — no key files, no database.
+
+### Fixed
+
+- **PKCE required for all clients** (OAuth 2.1 §4.1.1/§7.6): the authorization endpoint now
+  rejects any authorization request missing a `code_challenge`, for confidential clients too,
+  not only public ones.
+- **RFC-shaped error responses:** the userinfo endpoint and the `CheckAudience` middleware now
+  return RFC 6750 bearer-token errors (`WWW-Authenticate: Bearer error="..."` plus a JSON
+  `{"error": "invalid_token"}` / `{"error": "insufficient_scope"}` body) instead of bare
+  `401`/`403` aborts; introspection and revocation now return RFC 6749 §5.2-shaped
+  `{"error": "invalid_client"}` JSON bodies (still `401` with `WWW-Authenticate: Basic`) instead
+  of a bare string/no body.
+- **Chained token exchange nests `act`** (RFC 8693 §4.1): exchanging an already-exchanged token
+  now nests the prior `act` claim (`act.act`) instead of overwriting it, preserving the full
+  actor chain.
+
+### Changed
+
+- Internal dedup: `AccessTokenHookRunner` and `IdTokenResponse` now share a single
+  `ResolvesRequestGrantType` trait, and `CheckAudience` verifies the token's signature once
+  and reuses the parsed result instead of re-parsing it to look up the token record.
+
 ## [0.1.0]
 
 Initial release — an OpenID Connect provider layer on top of Laravel Passport 13.

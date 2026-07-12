@@ -41,3 +41,27 @@ it('omits toggled-off endpoints', function () {
     $this->getJson('/.well-known/openid-configuration')
         ->assertJsonMissingPath('introspection_endpoint');
 });
+
+it('advertises the OAuth 2.1 / RFC 8414 metadata fields', function () {
+    $doc = $this->getJson('/.well-known/openid-configuration')->assertOk();
+
+    expect($doc->json('grant_types_supported'))->toContain('client_credentials')
+        ->and($doc->json('response_modes_supported'))->toBe(['query'])
+        ->and($doc->json('claims_parameter_supported'))->toBeFalse()
+        ->and($doc->json('request_parameter_supported'))->toBeFalse()
+        ->and($doc->json('request_uri_parameter_supported'))->toBeFalse()
+        ->and($doc->json('introspection_endpoint_auth_methods_supported'))->toBe(['client_secret_basic', 'client_secret_post'])
+        ->and($doc->json('revocation_endpoint_auth_methods_supported'))->toBe(['client_secret_basic', 'client_secret_post']);
+});
+
+it('builds endpoint URLs from the configured issuer host', function () {
+    config(['oidc.issuer' => 'https://id.example.com', 'app.url' => 'https://app.internal']);
+
+    $doc = $this->getJson('/.well-known/openid-configuration')->assertOk();
+
+    expect($doc->json('issuer'))->toBe('https://id.example.com')
+        ->and($doc->json('authorization_endpoint'))->toStartWith('https://id.example.com/')
+        ->and($doc->json('token_endpoint'))->toStartWith('https://id.example.com/')
+        ->and($doc->json('jwks_uri'))->toStartWith('https://id.example.com/')
+        ->and($doc->json('userinfo_endpoint'))->toStartWith('https://id.example.com/');
+});
