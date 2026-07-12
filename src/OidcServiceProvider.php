@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
@@ -55,6 +56,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
         $this->app->singleton(ClaimHooks::class);
         $this->app->singleton(AuthViewManager::class);
+        $this->app->singleton(UserActionManager::class);
         $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
@@ -21,6 +22,7 @@ class OidcManager
         private readonly SessionTokenProvider $sessionTokens,
         private readonly TokenExchanger $exchanger,
         private readonly AuthViewManager $authViews,
+        private readonly UserActionManager $userActions,
     ) {}
 
     public function registerView(Closure $view): void
@@ -41,6 +43,11 @@ class OidcManager
     public function verifyEmailView(Closure $view): void
     {
         $this->authViews->bind(AuthViewManager::VerifyEmail, $view);
+    }
+
+    public function createUsersUsing(callable|string $action): void
+    {
+        $this->userActions->createUsersUsing($action);
     }
 
     public function onPostLogin(Closure $hook): void
