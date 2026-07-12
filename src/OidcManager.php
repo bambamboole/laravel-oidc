@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
@@ -25,6 +26,7 @@ class OidcManager
         private readonly TokenExchanger $exchanger,
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
+        private readonly PostLoginPipeline $pipeline,
     ) {}
 
     /**
@@ -112,6 +114,11 @@ class OidcManager
     public function onUserinfo(Closure $hook): void
     {
         $this->hooks->register(Trigger::Userinfo, $hook);
+    }
+
+    public function postLogin(Closure $hook): void
+    {
+        $this->pipeline->register($hook);
     }
 
     /**

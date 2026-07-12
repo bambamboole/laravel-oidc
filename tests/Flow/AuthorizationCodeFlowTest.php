@@ -194,6 +194,18 @@ it('rejects an authorization request without PKCE even for a confidential client
     expect($response->json('error'))->toBe('invalid_request');
 });
 
+it('emits postLogin-buffered id_token claims via the context store', function () {
+    $response = completeAuthorization($this, [], [
+        'oidc.amr' => ['pwd', 'otp'],
+        'oidc.id_token_claims' => ['groups' => ['admin']],
+    ])->assertOk();
+
+    $idToken = parseIdToken($response->json('id_token'));
+    expect($idToken->claims()->get('amr'))->toBe(['pwd', 'otp'])
+        ->and($idToken->claims()->get('acr'))->toBe('2')
+        ->and($idToken->claims()->get('groups'))->toBe(['admin']);
+});
+
 it('owns the oauth routes with package controllers', function () {
     $routes = app('router')->getRoutes();
 

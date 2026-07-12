@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
+use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
+use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use League\OAuth2\Server\Entities\ClientEntityInterface;
+use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
 use RuntimeException;
 
 class AuthenticatedSessionController
@@ -21,7 +27,9 @@ class AuthenticatedSessionController
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
-        private readonly AuthenticationContext $context,
+        private readonly AuthenticationMethods $context,
+        private readonly PostLoginPipeline $pipeline,
+        private readonly DeviceRecognizer $deviceRecognizer,
     ) {}
 
     public function create(Request $request): mixed
@@ -62,11 +70,40 @@ class AuthenticatedSessionController
 
         $this->context->start('pwd');
 
+        $api = $this->pipeline->run(new LoginEvent(
+            user: $user,
+            client: $this->pendingClient($request),
+            scopes: $this->pendingScopes($request),
+            requestedAcrValues: [],
+            ip: $request->ip(),
+            userAgent: $request->userAgent(),
+            amr: ['pwd'],
+            authTime: null,
+            recognizer: $this->deviceRecognizer,
+            request: $request,
+        ));
+
+        if ($api->isDenied()) {
+            Log::warning('oidc: login denied by postLogin', ['reason' => $api->denyReason()]);
+            $this->context->forget();
+
+            throw ValidationException::withMessages([$username => __('auth.failed')]);
+        }
+
+        $request->session()->put('oidc.id_token_claims', $api->idTokenClaims());
+
         $challengeProviders = array_values(array_filter(
             (array) config('oidc.auth.two_factor.challenge_providers', ['totp']),
             is_string(...),
         ));
         $enrollments = $this->factors->challengeableEnrollments($user, $challengeProviders);
+
+        if ($api->mfaRequired() && $enrollments === []) {
+            Log::warning('oidc: login denied, MFA required but no challengeable factor');
+            $this->context->forget();
+
+            throw ValidationException::withMessages([$username => __('auth.failed')]);
+        }
 
         if ($enrollments !== []) {
             $request->session()->put([
@@ -99,5 +136,27 @@ class AuthenticatedSessionController
     private function guard(): string
     {
         return (string) config('oidc.auth.guard', 'identity');
+    }
+
+    private function pendingClient(Request $request): ?ClientEntityInterface
+    {
+        $authRequest = $request->session()->get('authRequest');
+
+        return $authRequest instanceof AuthorizationRequestInterface ? $authRequest->getClient() : null;
+    }
+
+    /** @return list<string> */
+    private function pendingScopes(Request $request): array
+    {
+        $authRequest = $request->session()->get('authRequest');
+
+        if (! $authRequest instanceof AuthorizationRequestInterface) {
+            return [];
+        }
+
+        return array_values(array_map(
+            fn ($scope): string => $scope->getIdentifier(),
+            $authRequest->getScopes(),
+        ));
     }
 }
