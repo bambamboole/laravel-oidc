@@ -7,6 +7,8 @@ namespace Bambamboole\LaravelOidc;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
+use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
@@ -27,6 +29,7 @@ class OidcManager
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
+        private readonly FirstPartyClientProvisioner $firstPartyClients,
     ) {}
 
     /**
@@ -89,6 +92,29 @@ class OidcManager
     public function resetUserPasswordsUsing(callable|string $action): void
     {
         $this->userActions->resetUserPasswordsUsing($action);
+    }
+
+    /**
+     * @param  string[]  $redirectUris
+     * @param  string[]  $postLogoutRedirectUris
+     * @param  string[]  $allowedExchangeAudiences
+     */
+    public function provisionFirstPartyClient(
+        string $name,
+        array $redirectUris,
+        array $postLogoutRedirectUris = [],
+        array $allowedExchangeAudiences = [],
+        ?string $adoptClientId = null,
+        bool $rotateSecret = false,
+    ): FirstPartyClientProvisioningResult {
+        return $this->firstPartyClients->provision(
+            $name,
+            $redirectUris,
+            $postLogoutRedirectUris,
+            $allowedExchangeAudiences,
+            $adoptClientId,
+            $rotateSecret,
+        );
     }
 
     public function onPostLogin(Closure $hook): void
