@@ -20,6 +20,13 @@ breaking changes).
   `config('passport.path', 'oauth')` instead of hardcoding `oauth`.
 - **`oidc.api_guard` config** (`OIDC_API_GUARD`, default `api`): the guard the userinfo
   endpoint authenticates against, previously hardcoded to `api`.
+- **`oidc:rotate-keys` command:** generates a new RSA signing keypair and writes
+  `PASSPORT_PRIVATE_KEY`, `PASSPORT_PUBLIC_KEY`, and `OIDC_PREVIOUS_PUBLIC_KEY` into `.env`
+  (or, with `--print`, to stdout for a secrets manager), rolling the current public key into
+  `OIDC_PREVIOUS_PUBLIC_KEY`. That previous key is served in JWKS via
+  `config('oidc.additional_public_keys')` (deduplicated by `kid`) so tokens signed before the
+  rotation keep validating until they expire; remove it once they have. Keys live entirely in
+  env variables — no key files, no database.
 
 ### Fixed
 
