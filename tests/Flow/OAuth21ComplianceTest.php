@@ -53,7 +53,7 @@ function completeComplianceAuthorization(TestCase $test, array $overrides = []):
         'code_challenge_method' => 'S256',
     ], $overrides);
 
-    $view = $test->actingAs($test->user)
+    $view = $test->actingAs($test->user, 'identity')
         ->withSession(['oidc.auth_time' => time() - 60])
         ->get('/oauth/authorize?'.http_build_query($query))
         ->assertOk();
@@ -79,7 +79,7 @@ it('rejects an authorization request whose redirect_uri is not an exact register
     // AbstractGrant::validateRedirectUri(), which throws
     // OAuthServerException::invalidClient() — a 401 `invalid_client`,
     // not a 400. It still never redirects to the unvalidated URI.
-    $response = $this->actingAs($this->user)->get('/oauth/authorize?'.http_build_query([
+    $response = $this->actingAs($this->user, 'identity')->get('/oauth/authorize?'.http_build_query([
         'client_id' => $this->client->id,
         'redirect_uri' => 'https://rp.test/callback/extra',
         'response_type' => 'code',

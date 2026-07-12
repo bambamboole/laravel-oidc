@@ -18,7 +18,7 @@ class ConfirmTwoFactorAuthenticationController
     {
         $request->validate(['code' => ['required', 'string']]);
 
-        if (! $this->twoFactor->confirm($request->user((string) config('oidc.auth.guard', 'web')), $request->string('code')->value())) {
+        if (! $this->twoFactor->confirm($request->user((string) config('oidc.auth.guard', 'identity')), $request->string('code')->value())) {
             throw ValidationException::withMessages([
                 'code' => __('The provided two factor authentication code was invalid.'),
             ])->errorBag('confirmTwoFactorAuthentication');

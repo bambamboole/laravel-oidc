@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;
@@ -57,7 +58,7 @@ class NewPasswordController
 
                 event(new PasswordReset($user));
 
-                Auth::guard((string) config('oidc.auth.guard', 'web'))->login($user);
+                Auth::guard((string) config('oidc.auth.guard', 'identity'))->login($user);
             },
         );
 
@@ -66,7 +67,7 @@ class NewPasswordController
 
             return $request->wantsJson()
                 ? new JsonResponse(['status' => __($status)], 200)
-                : redirect()->route('login')->with('status', __($status));
+                : redirect()->route(Handler::Login->value)->with('status', __($status));
         }
 
         if ($request->wantsJson()) {

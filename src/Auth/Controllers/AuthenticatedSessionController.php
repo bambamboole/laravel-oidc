@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -75,7 +76,7 @@ class AuthenticatedSessionController
                 return new JsonResponse(['two_factor' => true]);
             }
 
-            return redirect()->route('two-factor.login');
+            return redirect()->route(Handler::TwoFactorLogin->value);
         }
 
         $guard->login($user, $request->boolean('remember'));
@@ -93,6 +94,6 @@ class AuthenticatedSessionController
 
     private function guard(): string
     {
-        return (string) config('oidc.auth.guard', 'web');
+        return (string) config('oidc.auth.guard', 'identity');
     }
 }

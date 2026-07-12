@@ -99,9 +99,9 @@ it('exposes a handler config DTO through the facade', function () {
     $config = Oidc::handlerConfig(Handler::Login);
 
     expect($config)->toBeInstanceOf(HandlerConfig::class)
-        ->and($config->route)->toBe('login')
+        ->and($config->route)->toBe('auth/login')
         ->and($config->controller)->toBe([AuthenticatedSessionController::class, 'create'])
-        ->and($config->middleware)->toBe(['web', 'guest:web']);
+        ->and($config->middleware)->toBe(['web', 'guest:identity']);
 });
 
 it('returns false from the facade for a disabled handler', function () {

@@ -14,7 +14,7 @@ class SendEmailVerificationNotificationController
 {
     public function __invoke(Request $request): JsonResponse|RedirectResponse
     {
-        $user = $request->user((string) config('oidc.auth.guard', 'web'));
+        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
 
         if (! $user instanceof MustVerifyEmail) {
             throw new HttpException(403);

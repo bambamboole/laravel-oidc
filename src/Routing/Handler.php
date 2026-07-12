@@ -11,37 +11,42 @@ namespace Bambamboole\LaravelOidc\Routing;
  * `oidc.handlers` config. The HTTP verb is intrinsic to the endpoint and lives
  * on {@see self::method()} rather than in config.
  *
- * The auth-UI routes keep their conventional Laravel names (`login`,
- * `password.reset`, ...) because the framework resolves them by name — the auth
- * middleware redirects to `route('login')`, the password broker to
- * `route('password.reset')`, and so on. The protocol endpoints are namespaced
- * under `oidc.*`.
+ * Identity routes are namespaced under `identity.*`; protocol endpoints are
+ * namespaced under `oidc.*`. The relying party remains free to own Laravel's
+ * conventional `login` and `logout` route names.
  */
 enum Handler: string
 {
-    case Login = 'login';
-    case LoginStore = 'login.store';
-    case Register = 'register';
-    case RegisterStore = 'register.store';
-    case PasswordRequest = 'password.request';
-    case PasswordEmail = 'password.email';
-    case PasswordReset = 'password.reset';
-    case PasswordUpdate = 'password.update';
-    case PasswordConfirm = 'password.confirm';
-    case PasswordConfirmStore = 'password.confirm.store';
-    case PasswordConfirmation = 'password.confirmation';
-    case VerificationNotice = 'verification.notice';
-    case VerificationVerify = 'verification.verify';
-    case VerificationSend = 'verification.send';
-    case TwoFactorLogin = 'two-factor.login';
-    case TwoFactorLoginStore = 'two-factor.login.store';
-    case TwoFactorEnable = 'two-factor.enable';
-    case TwoFactorConfirm = 'two-factor.confirm';
-    case TwoFactorDisable = 'two-factor.disable';
-    case TwoFactorQrCode = 'two-factor.qr-code';
-    case TwoFactorSecretKey = 'two-factor.secret-key';
-    case TwoFactorRecoveryCodes = 'two-factor.recovery-codes';
-    case TwoFactorRegenerateRecoveryCodes = 'two-factor.regenerate-recovery-codes';
+    case Login = 'identity.login';
+    case LoginStore = 'identity.login.store';
+    case Register = 'identity.register';
+    case RegisterStore = 'identity.register.store';
+    case PasswordRequest = 'identity.password.request';
+    case PasswordEmail = 'identity.password.email';
+    case PasswordReset = 'identity.password.reset';
+    case PasswordUpdate = 'identity.password.update';
+    case PasswordConfirm = 'identity.password.confirm';
+    case PasswordConfirmStore = 'identity.password.confirm.store';
+    case PasswordConfirmation = 'identity.password.confirmation';
+    case VerificationNotice = 'identity.verification.notice';
+    case VerificationVerify = 'identity.verification.verify';
+    case VerificationSend = 'identity.verification.send';
+    case TwoFactorLogin = 'identity.two-factor.login';
+    case TwoFactorLoginStore = 'identity.two-factor.login.store';
+    case TwoFactorEnable = 'identity.two-factor.enable';
+    case TwoFactorConfirm = 'identity.two-factor.confirm';
+    case TwoFactorDisable = 'identity.two-factor.disable';
+    case TwoFactorQrCode = 'identity.two-factor.qr-code';
+    case TwoFactorSecretKey = 'identity.two-factor.secret-key';
+    case TwoFactorRecoveryCodes = 'identity.two-factor.recovery-codes';
+    case TwoFactorRegenerateRecoveryCodes = 'identity.two-factor.regenerate-recovery-codes';
+    case PasskeyLoginOptions = 'identity.passkey.login-options';
+    case PasskeyLogin = 'identity.passkey.login';
+    case PasskeyConfirmOptions = 'identity.passkey.confirm-options';
+    case PasskeyConfirm = 'identity.passkey.confirm';
+    case PasskeyRegistrationOptions = 'identity.passkey.registration-options';
+    case PasskeyStore = 'identity.passkey.store';
+    case PasskeyDestroy = 'identity.passkey.destroy';
 
     case Jwks = 'oidc.jwks';
     case Discovery = 'oidc.discovery';
@@ -94,12 +99,15 @@ enum Handler: string
             self::TwoFactorEnable,
             self::TwoFactorConfirm,
             self::TwoFactorRegenerateRecoveryCodes,
+            self::PasskeyLogin,
+            self::PasskeyConfirm,
+            self::PasskeyStore,
             self::Introspect,
             self::Revoke,
             self::IssueToken,
             self::TokenRefresh,
             self::Approve => 'post',
-            self::Deny, self::TwoFactorDisable => 'delete',
+            self::Deny, self::TwoFactorDisable, self::PasskeyDestroy => 'delete',
             self::Userinfo, self::Logout => ['get', 'post'],
             default => 'get',
         };

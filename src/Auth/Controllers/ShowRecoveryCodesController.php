@@ -17,7 +17,7 @@ class ShowRecoveryCodesController
      */
     public function __invoke(Request $request): JsonResponse|array
     {
-        $user = $request->user((string) config('oidc.auth.guard', 'web'));
+        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
 
         if ($this->twoFactor->currentFactor($user) === null) {
             return [];
