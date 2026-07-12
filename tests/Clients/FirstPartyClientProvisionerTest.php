@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningOutcome;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -204,4 +205,39 @@ it('normalizes metadata and removes exchange capability when audiences become em
     expect($result->client->getAttribute('redirect_uris'))->toBe(['https://app.test/callback'])
         ->and($result->client->getAttribute('grant_types'))->toBe(['authorization_code', 'refresh_token'])
         ->and(json_decode((string) $result->client->getRawOriginal('allowed_exchange_audiences'), true, flags: JSON_THROW_ON_ERROR))->toBe([]);
+});
+
+it('preserves an explicit adoption target when recovering from a provisioning key race', function () {
+    $clients = app(ClientRepository::class);
+    $winner = $clients->createAuthorizationCodeGrantClient('Winner', ['https://winner.test/callback']);
+    $loser = $clients->createAuthorizationCodeGrantClient('Loser', ['https://loser.test/callback']);
+    $winner->forceFill(['oidc_provisioning_key' => 'first-party'])->save();
+
+    $clientModel = Passport::client();
+    $clientModelClass = $clientModel::class;
+    $scopeApplications = 0;
+
+    $clientModelClass::addGlobalScope(
+        'simulate-provisioning-key-race',
+        function (Builder $query) use (&$scopeApplications, $winner): void {
+            $scopeApplications++;
+
+            if ($scopeApplications === 1) {
+                $query->where($query->getModel()->getQualifiedKeyName(), '!=', $winner->getKey());
+            }
+        },
+    );
+
+    try {
+        expect(fn () => app(FirstPartyClientProvisioner::class)->provision(
+            'Losing adoption',
+            ['https://loser.test/callback'],
+            adoptClientId: (string) $loser->getKey(),
+        ))->toThrow(FirstPartyClientProvisioningException::class, 'different client');
+
+        expect($winner->refresh()->getAttribute('name'))->toBe('Winner')
+            ->and($loser->refresh()->getRawOriginal('oidc_provisioning_key'))->toBeNull();
+    } finally {
+        $clientModelClass::clearBootedModels();
+    }
 });
