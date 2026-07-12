@@ -25,6 +25,16 @@ class OidcManager
         private readonly UserActionManager $userActions,
     ) {}
 
+    public function loginView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::Login, $view);
+    }
+
+    public function confirmPasswordView(Closure $view): void
+    {
+        $this->authViews->bind(AuthViewManager::ConfirmPassword, $view);
+    }
+
     public function registerView(Closure $view): void
     {
         $this->authViews->bind(AuthViewManager::Register, $view);
