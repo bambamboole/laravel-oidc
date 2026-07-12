@@ -33,9 +33,9 @@ it('does not throw when the configured client id is stale, establishing no token
     expect(session('oidc.session_token'))->toBeNull();
 });
 
-it('establishes a token on login when a valid first_party_client is configured', function () {
+it('establishes a token on login when a valid first-party client is configured', function () {
     $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
-    config(['oidc.first_party_client' => $client->id]);
+    config(['oidc.first_party.client_id' => (string) $client->id]);
 
     event(new Login('web', $this->user, false));
 
@@ -44,7 +44,7 @@ it('establishes a token on login when a valid first_party_client is configured',
 
 it('revokes and clears the token on logout', function () {
     $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
-    config(['oidc.first_party_client' => $client->id]);
+    config(['oidc.first_party.client_id' => (string) $client->id]);
     app(SessionTokenProvider::class)->establish($this->user);
     $jwt = session('oidc.session_token')['jwt'];
 

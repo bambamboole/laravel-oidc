@@ -32,7 +32,7 @@ function parseSessionToken(string $jwt): UnencryptedToken
 
 beforeEach(function () {
     $this->appClient = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://app.test/cb']);
-    config(['oidc.first_party_client' => $this->appClient->id]);
+    config(['oidc.first_party.client_id' => (string) $this->appClient->id]);
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
     $this->startSession();
 });
