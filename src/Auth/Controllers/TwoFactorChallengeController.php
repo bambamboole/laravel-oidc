@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationContext;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
@@ -23,6 +24,7 @@ class TwoFactorChallengeController
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
+        private readonly AuthenticationContext $context,
     ) {}
 
     public function create(Request $request): mixed
@@ -66,6 +68,8 @@ class TwoFactorChallengeController
 
             throw ValidationException::withMessages([$field => __('The provided two factor authentication code was invalid.')]);
         }
+
+        $this->context->add(...$verification->amr);
 
         $remember = (bool) $request->session()->pull('login.remember', false);
         $request->session()->forget(['login.id', 'login.factor', 'login.factor_id']);

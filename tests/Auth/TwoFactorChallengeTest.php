@@ -102,6 +102,29 @@ it('consumes one recovery code and logs the challenged user in', function () {
         ->assertSessionHasErrors('recovery_code');
 });
 
+it('appends the otp method after a successful totp challenge', function () {
+    [$user, $factor] = confirmedTotpUser();
+
+    $code = app(Google2FA::class)->getCurrentOtp($factor->secret);
+
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'oidc.amr' => ['pwd']])
+        ->post(route('identity.two-factor.login.store'), ['code' => $code])
+        ->assertRedirect('/dashboard');
+
+    expect(session()->get('oidc.amr'))->toBe(['pwd', 'otp']);
+});
+
+it('appends the otp method after a successful recovery code challenge', function () {
+    [$user] = confirmedTotpUser();
+    $recoveryCode = $user->recoveryCodes()->firstOrFail()->code;
+
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'oidc.amr' => ['pwd']])
+        ->post(route('identity.two-factor.login.store'), ['recovery_code' => $recoveryCode])
+        ->assertRedirect('/dashboard');
+
+    expect(session()->get('oidc.amr'))->toBe(['pwd', 'otp']);
+});
+
 it('redirects challenge requests without a pending user to login', function () {
     $this->get(route('identity.two-factor.login'))->assertRedirect(route('identity.login'));
 });
