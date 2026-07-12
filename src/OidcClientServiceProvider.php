@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidcClient;
 
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
+use Bambamboole\LaravelOidcClient\Token\JwksKeyResolver;
 use Illuminate\Support\ServiceProvider;
 
 class OidcClientServiceProvider extends ServiceProvider
@@ -15,6 +17,8 @@ class OidcClientServiceProvider extends ServiceProvider
 
         $this->app->singleton(OidcClientManager::class);
         $this->app->singleton(OidcDiscovery::class);
+        $this->app->singleton(JwksKeyResolver::class);
+        $this->app->singleton(IdTokenValidator::class);
     }
 
     public function boot(): void
