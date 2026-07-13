@@ -22,7 +22,7 @@ final class AuthenticationMethods
 
     public function forget(): void
     {
-        session()->forget([self::SESSION_KEY, 'oidc.id_token_claims']);
+        session()->forget([self::SESSION_KEY, 'oidc.id_token_claims', 'oidc.access_token_claims']);
     }
 
     /**
