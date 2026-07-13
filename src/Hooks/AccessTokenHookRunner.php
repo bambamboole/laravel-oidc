@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Hooks;
 
 use Bambamboole\LaravelOidc\Hooks\Context\ClientCredentialsContext;
-use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
-use Bambamboole\LaravelOidc\Hooks\Context\RefreshContext;
 use Bambamboole\LaravelOidc\Hooks\Context\TokenExchangeContext;
 use Bambamboole\LaravelOidc\Support\ResolvesRequestGrantType;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
@@ -34,14 +32,6 @@ class AccessTokenHookRunner
         $user = $this->resolveUser($token->getUserIdentifier() === null ? null : (string) $token->getUserIdentifier());
 
         [$trigger, $context] = match ($grantType) {
-            'authorization_code' => $user === null ? [null, null] : [
-                Trigger::PostLogin,
-                new PostLoginContext($user, $client, $scopes, null, null, new ClaimsBag(Artifact::IdToken), $bag),
-            ],
-            'refresh_token' => $user === null ? [null, null] : [
-                Trigger::Refresh,
-                new RefreshContext($user, $client, $scopes, new ClaimsBag(Artifact::IdToken), $bag),
-            ],
             'client_credentials' => [
                 Trigger::ClientCredentials,
                 new ClientCredentialsContext($client, $scopes, $bag),

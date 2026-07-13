@@ -119,16 +119,6 @@ class OidcManager
         );
     }
 
-    public function onPostLogin(Closure $hook): void
-    {
-        $this->hooks->register(Trigger::PostLogin, $hook);
-    }
-
-    public function onRefresh(Closure $hook): void
-    {
-        $this->hooks->register(Trigger::Refresh, $hook);
-    }
-
     public function onClientCredentials(Closure $hook): void
     {
         $this->hooks->register(Trigger::ClientCredentials, $hook);
