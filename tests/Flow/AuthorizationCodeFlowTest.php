@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -408,4 +410,16 @@ it('issues a short-lived access token matching the configured lifetime', functio
     // expires_in reflects the interactive access-token TTL, not Passport's long default
     expect($response->json('expires_in'))->toBeLessThanOrEqual(900)
         ->and($response->json('expires_in'))->toBeGreaterThan(600);
+});
+
+it('pins the context to the login session and its expires_at', function () {
+    // seed an oidc session + sid (completeAuthorization acts as the logged-in user)
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+    $session = OidcSession::query()->find($sid);
+
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+
+    $context = AuthenticationContext::query()->sole();
+    expect($context->sid)->toBe($sid)
+        ->and($context->expires_at->getTimestamp())->toBe($session->expires_at->getTimestamp());
 });
