@@ -19,7 +19,7 @@ class StartOidcSession
 
         $sid = $this->registry->start((string) $event->user->getAuthIdentifier());
 
-        if (app()->bound('session.store')) {
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
             session()->put('oidc.sid', $sid);
         }
     }

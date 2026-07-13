@@ -22,8 +22,7 @@ class DispatchExpiredSessionLogoutsCommand extends Command
             ->where('expires_at', '<', now())
             ->whereNull('revoked_at')
             ->whereNull('logout_notified_at')
-            ->orderBy('expires_at')
-            ->each(function (OidcSession $session) use ($notifier, &$count): void {
+            ->eachById(function (OidcSession $session) use ($notifier, &$count): void {
                 $notifier->notify($session->sid);
                 $count++;
             });

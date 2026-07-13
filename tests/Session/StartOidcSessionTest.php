@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\Login;
 use Workbench\App\Models\User;
 
 it('creates a session and stores the sid on an oidc-guard login', function () {
+    $this->startSession();
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'email_verified_at' => now(), 'password' => 'x']);
 
     app(StartOidcSession::class)->handle(new Login(config('passport.guard'), $user, false));

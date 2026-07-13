@@ -21,7 +21,7 @@ class EndOidcSession
             return;
         }
 
-        if (! app()->bound('session.store')) {
+        if (! app()->bound('session.store') || ! app('session.store')->isStarted()) {
             return;
         }
 

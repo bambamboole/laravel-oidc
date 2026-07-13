@@ -17,6 +17,7 @@ use Workbench\App\Models\User;
 
 it('revokes the session and fans out on the Logout event', function () {
     Bus::fake();
+    $this->startSession();
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'email_verified_at' => now(), 'password' => 'x']);
     $sid = app(SessionRegistry::class)->start((string) $user->id);
     session()->put('oidc.sid', $sid);
