@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
+use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
@@ -108,7 +109,9 @@ class OidcAccessToken extends AccessToken
         }
 
         foreach ($this->extra as $name => $value) {
-            $builder = $builder->withClaim($name, $value);
+            if (! ProtocolClaims::isReserved($name)) {
+                $builder = $builder->withClaim($name, $value);
+            }
         }
 
         return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());

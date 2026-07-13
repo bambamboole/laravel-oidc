@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Grant;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
@@ -23,6 +24,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class OidcAuthCodeGrant extends AuthCodeGrant
 {
+    use HasAuthenticationContextIssuance;
+
     /**
      * league v9 declares AuthCodeGrant::$authCodeTTL private, so the forked
      * completeAuthorizationRequest() below cannot read the parent's copy; mirror it here.
@@ -76,6 +79,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
 
                     $context = $this->context(app(AuthenticationContextStore::class), $payload->context_id ?? null);
                     if ($context !== null) {
+                        $this->pendingContext = $context;
                         $responseType->setAmr($context->amr);
                         $responseType->setIdTokenClaims($context->id_token_claims);
                     }
