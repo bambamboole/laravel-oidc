@@ -141,6 +141,11 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                 'context_id' => $this->finalizeContext($authorizationRequest->getUser()->getIdentifier()),
             ];
 
+            $sid = $this->currentSid();
+            if ($sid !== null) {
+                app(SessionRegistry::class)->recordParticipant($sid, $authorizationRequest->getClient()->getIdentifier());
+            }
+
             $jsonPayload = json_encode($payload);
 
             if ($jsonPayload === false) {

@@ -81,13 +81,20 @@ function completeAuthorization(TestCase $test, array $overrides = [], array $ses
         'code_challenge_method' => 'S256',
     ], $overrides);
 
-    $view = $test->actingAs($test->user, 'identity')
+    $authorize = $test->actingAs($test->user, 'identity')
         ->withSession(array_merge(['oidc.auth_time' => time() - 60], $session))
-        ->get('/oauth/authorize?'.http_build_query($query))
-        ->assertOk();
+        ->get('/oauth/authorize?'.http_build_query($query));
 
-    $approve = $test->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])
-        ->assertRedirect();
+    // Passport skips the consent screen (redirecting straight back with a code)
+    // once the user already granted this client the requested scopes.
+    if ($authorize->isRedirect()) {
+        $approve = $authorize;
+    } else {
+        $view = $authorize->assertOk();
+
+        $approve = $test->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])
+            ->assertRedirect();
+    }
 
     parse_str(parse_url($approve->headers->get('Location'), PHP_URL_QUERY), $params);
 
@@ -437,4 +444,14 @@ it('emits the sid claim on fresh issuance and on refresh', function () {
         'refresh_token' => $response->json('refresh_token'),
     ])->assertOk();
     expect(parseIdToken($refreshed->json('id_token'))->claims()->get('sid'))->toBe($sid);
+});
+
+it('records one participant per session-client on authorization', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk(); // same client again
+
+    expect(app(SessionRegistry::class)->participantClientIds($sid))
+        ->toBe([$this->client->id]);
 });
