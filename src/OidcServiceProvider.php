@@ -20,6 +20,7 @@ use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
+use Bambamboole\LaravelOidc\Console\DispatchExpiredSessionLogoutsCommand;
 use Bambamboole\LaravelOidc\Console\ProvisionClientCommand;
 use Bambamboole\LaravelOidc\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
@@ -217,6 +218,7 @@ class OidcServiceProvider extends ServiceProvider
             $this->commands([
                 ProvisionClientCommand::class,
                 PruneAuthenticationContextsCommand::class,
+                DispatchExpiredSessionLogoutsCommand::class,
                 RotateKeysCommand::class,
             ]);
         }
