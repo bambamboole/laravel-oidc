@@ -124,7 +124,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     ? $authorizationRequest->getNonce()
                     : null,
                 'auth_time' => $this->currentAuthTime(),
-                'context_id' => $this->finalizeContext(),
+                'context_id' => $this->finalizeContext($authorizationRequest->getUser()->getIdentifier()),
             ];
 
             $jsonPayload = json_encode($payload);
@@ -165,21 +165,33 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         return time();
     }
 
-    private function finalizeContext(): ?string
+    private function finalizeContext(string $userId): string
     {
         $amr = $this->currentAmr();
 
-        if ($amr === [] && $this->currentIdTokenClaims() === []) {
-            return null;
-        }
-
         return app(AuthenticationContextStore::class)->create([
-            'user_id' => $this->sessionUserId(),
+            'user_id' => $userId,
             'amr' => $amr,
             'acr' => AuthenticationMethods::deriveAcr($amr),
             'auth_time' => $this->currentAuthTime(),
             'id_token_claims' => $this->currentIdTokenClaims(),
+            'access_token_claims' => $this->currentAccessTokenClaims(),
+            'expires_at' => (new DateTimeImmutable)->add(
+                new DateInterval('PT'.(int) config('oidc.session.absolute_lifetime').'S'),
+            ),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function currentAccessTokenClaims(): array
+    {
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
+            $claims = app('session.store')->get('oidc.access_token_claims', []);
+
+            return is_array($claims) ? $claims : [];
+        }
+
+        return [];
     }
 
     private function context(AuthenticationContextStore $store, mixed $id): ?AuthenticationContext
@@ -209,10 +221,5 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         }
 
         return [];
-    }
-
-    private function sessionUserId(): string
-    {
-        return (string) (app('auth')->guard((string) config('oidc.auth.guard', 'identity'))->id() ?? '');
     }
 }
