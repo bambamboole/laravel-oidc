@@ -81,3 +81,16 @@ it('memoizes serialization', function () {
     $token = makeOidcAccessToken();
     expect($token->toString())->toBe($token->toString());
 });
+
+it('does not let an extra claim override the structural access-token claims', function () {
+    $token = makeOidcAccessToken();
+    $token->addExtraClaim('scope', 'forged');
+    $token->addExtraClaim('scopes', ['forged']);
+    $token->addExtraClaim('client_id', 'forged-client');
+
+    $parsed = parseAccessToken($token->toString());
+
+    expect($parsed->claims()->get('scope'))->toBe('openid email')
+        ->and($parsed->claims()->get('scopes'))->toBe(['openid', 'email'])
+        ->and($parsed->claims()->get('client_id'))->toBe('client-uuid');
+});

@@ -25,6 +25,16 @@ class OidcAccessToken extends AccessToken
 {
     use AccessTokenTrait;
 
+    /**
+     * Access-token-structural claims that carry the authorization decision itself.
+     * These are not part of ProtocolClaims::RESERVED (which is universal OIDC/id_token
+     * protocol claims) because id_token emission is unaffected by them, but a resource
+     * server trusts them for authorization, so custom `$extra` claims must never override them.
+     *
+     * @var list<string>
+     */
+    private const array STRUCTURAL = ['client_id', 'scope', 'scopes'];
+
     private ?string $serialized = null;
 
     /** @var string[] */
@@ -109,7 +119,7 @@ class OidcAccessToken extends AccessToken
         }
 
         foreach ($this->extra as $name => $value) {
-            if (! ProtocolClaims::isReserved($name)) {
+            if (! ProtocolClaims::isReserved($name) && ! in_array($name, self::STRUCTURAL, true)) {
                 $builder = $builder->withClaim($name, $value);
             }
         }
