@@ -237,6 +237,84 @@ it('emits postLogin access-token claims onto the access token and links it', fun
     expect(AccessTokenContext::query()->count())->toBe(1);
 });
 
+// Octane safety: AuthorizationServer (and thus its grants) is a container singleton.
+// A stale pendingContext left behind by a *failed* token exchange must never leak
+// into a later token request handled by the same grant instance.
+it('does not leak a stale pendingContext into a later token request on the same grant instance', function () {
+    // First flow: seed a distinguishing access-token claim, then fail the token
+    // exchange with a wrong code_verifier so league throws (PKCE mismatch) before
+    // issueAccessToken() ever runs — the only place that clears pendingContext.
+    [$verifier1, $challenge1] = pkcePair();
+
+    $view1 = $this->actingAs($this->user, 'identity')
+        ->withSession([
+            'oidc.auth_time' => time() - 60,
+            'oidc.access_token_claims' => ['leaked' => true],
+        ])
+        ->get('/oauth/authorize?'.http_build_query([
+            'client_id' => $this->client->id,
+            'redirect_uri' => 'https://rp.test/callback',
+            'response_type' => 'code',
+            'scope' => 'openid email',
+            'state' => 'st4te',
+            'nonce' => 'n0nce',
+            'code_challenge' => $challenge1,
+            'code_challenge_method' => 'S256',
+        ]))
+        ->assertOk();
+
+    $approve1 = $this->post('/oauth/authorize', ['auth_token' => $view1->json('authToken')])
+        ->assertRedirect();
+    parse_str(parse_url($approve1->headers->get('Location'), PHP_URL_QUERY), $params1);
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'authorization_code',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'redirect_uri' => 'https://rp.test/callback',
+        'code' => $params1['code'],
+        'code_verifier' => str_repeat('x', 64), // wrong verifier -> PKCE failure
+    ])->assertStatus(400);
+
+    // Second, clean flow: no access_token_claims in session at all.
+    [$verifier2, $challenge2] = pkcePair();
+
+    $view2 = $this->actingAs($this->user, 'identity')
+        ->withSession(['oidc.auth_time' => time() - 60])
+        ->get('/oauth/authorize?'.http_build_query([
+            'client_id' => $this->client->id,
+            'redirect_uri' => 'https://rp.test/callback',
+            'response_type' => 'code',
+            'scope' => 'openid email',
+            'state' => 'st4te',
+            'nonce' => 'n0nce2',
+            'code_challenge' => $challenge2,
+            'code_challenge_method' => 'S256',
+        ]))
+        ->assertOk();
+
+    $approve2 = $this->post('/oauth/authorize', ['auth_token' => $view2->json('authToken')])
+        ->assertRedirect();
+    parse_str(parse_url($approve2->headers->get('Location'), PHP_URL_QUERY), $params2);
+
+    // Force this request's own context lookup to miss, so the
+    // `if ($context !== null)` guard in the grant skips reassigning
+    // pendingContext — exactly the condition under which a stale value survives.
+    AuthenticationContext::query()->delete();
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => 'authorization_code',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'redirect_uri' => 'https://rp.test/callback',
+        'code' => $params2['code'],
+        'code_verifier' => $verifier2,
+    ])->assertOk();
+
+    $accessToken = parseIdToken($response->json('access_token'));
+    expect($accessToken->claims()->has('leaked'))->toBeFalse();
+});
+
 it('owns the oauth routes with package controllers', function () {
     $routes = app('router')->getRoutes();
 
