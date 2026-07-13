@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Token;
 
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
-use Bambamboole\LaravelOidc\Hooks\Artifact;
-use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
-use Bambamboole\LaravelOidc\Hooks\ClaimsBag;
-use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
-use Bambamboole\LaravelOidc\Hooks\Context\RefreshContext;
-use Bambamboole\LaravelOidc\Hooks\Trigger;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
@@ -27,7 +22,6 @@ class IdTokenBuilder
 
     public function __construct(
         private readonly ClaimsResolver $claims,
-        private readonly ClaimHooks $hooks,
     ) {}
 
     /**
@@ -55,7 +49,7 @@ class IdTokenBuilder
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())
             ->issuedAt($now)
-            ->expiresAt($now->modify('+'.config('oidc.id_token_ttl').' seconds'))
+            ->expiresAt($now->modify('+'.config('oidc.token_lifetimes.id_token').' seconds'))
             ->withClaim('azp', $clientId)
             ->withClaim('at_hash', $this->atHash($accessToken->toString()));
 
@@ -78,7 +72,9 @@ class IdTokenBuilder
         }
 
         foreach ($idTokenClaims as $name => $value) {
-            $builder = $builder->withClaim($name, $value);
+            if (! ProtocolClaims::isReserved($name)) {
+                $builder = $builder->withClaim($name, $value);
+            }
         }
 
         $user = $this->resolveUser((string) $accessToken->getUserIdentifier())
@@ -88,24 +84,6 @@ class IdTokenBuilder
 
         foreach ($this->claims->resolve($user)->forScopes($scopes) as $name => $value) {
             $builder = $builder->withClaim($name, $value);
-        }
-
-        $trigger = match ($grantType) {
-            'authorization_code' => Trigger::PostLogin,
-            'refresh_token' => Trigger::Refresh,
-            default => null,
-        };
-
-        if ($trigger !== null) {
-            $bag = new ClaimsBag(Artifact::IdToken);
-            $context = $trigger === Trigger::PostLogin
-                ? new PostLoginContext($user, $accessToken->getClient(), $scopes, $nonce, $authTime, $bag, new ClaimsBag(Artifact::AccessToken))
-                : new RefreshContext($user, $accessToken->getClient(), $scopes, $bag, new ClaimsBag(Artifact::AccessToken));
-            $this->hooks->run($trigger, $context);
-
-            foreach ($bag->all() as $name => $value) {
-                $builder = $builder->withClaim($name, $value);
-            }
         }
 
         return $builder->getToken($config->signer(), $config->signingKey())->toString();

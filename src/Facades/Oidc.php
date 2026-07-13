@@ -9,8 +9,6 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static void onPostLogin(Closure $hook)
- * @method static void onRefresh(Closure $hook)
  * @method static void onClientCredentials(Closure $hook)
  * @method static void onTokenExchange(Closure $hook)
  * @method static void onUserinfo(Closure $hook)

@@ -30,6 +30,14 @@ it('buffers postLogin id_token claims into the session', function () {
     expect(session()->get('oidc.id_token_claims'))->toBe(['groups' => ['admin']]);
 });
 
+it('buffers postLogin access_token claims into the session', function () {
+    Oidc::postLogin(fn (LoginEvent $e, LoginApi $api) => $api->setAccessTokenClaim('tier', 'gold'));
+
+    $this->post(route(Handler::LoginStore->value), ['email' => 'm@example.com', 'password' => 'secret-password']);
+
+    expect(session()->get('oidc.access_token_claims'))->toBe(['tier' => 'gold']);
+});
+
 it('denies when requireMfa is requested but the user has no factor', function () {
     Oidc::postLogin(fn (LoginEvent $e, LoginApi $api) => $api->requireMfa());
 

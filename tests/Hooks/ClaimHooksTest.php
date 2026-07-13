@@ -24,7 +24,7 @@ it('runs registered hooks in order and lets later hooks override earlier ones', 
 });
 
 it('isolates triggers from each other', function () {
-    Oidc::onRefresh(fn ($c) => $c->accessToken->set('should_not_run', true));
+    Oidc::onTokenExchange(fn ($c) => $c->accessToken->set('should_not_run', true));
 
     $bag = new ClaimsBag(Artifact::AccessToken);
     $context = new ClientCredentialsContext(new Client('cid', 'n', ['https://x/cb']), [], $bag);

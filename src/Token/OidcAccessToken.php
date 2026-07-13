@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Token;
 
+use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
@@ -23,6 +24,16 @@ use League\OAuth2\Server\Entities\Traits\AccessTokenTrait;
 class OidcAccessToken extends AccessToken
 {
     use AccessTokenTrait;
+
+    /**
+     * Access-token-structural claims that carry the authorization decision itself.
+     * These are not part of ProtocolClaims::RESERVED (which is universal OIDC/id_token
+     * protocol claims) because id_token emission is unaffected by them, but a resource
+     * server trusts them for authorization, so custom `$extra` claims must never override them.
+     *
+     * @var list<string>
+     */
+    private const array STRUCTURAL = ['client_id', 'scope', 'scopes'];
 
     private ?string $serialized = null;
 
@@ -108,7 +119,9 @@ class OidcAccessToken extends AccessToken
         }
 
         foreach ($this->extra as $name => $value) {
-            $builder = $builder->withClaim($name, $value);
+            if (! ProtocolClaims::isReserved($name) && ! in_array($name, self::STRUCTURAL, true)) {
+                $builder = $builder->withClaim($name, $value);
+            }
         }
 
         return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());

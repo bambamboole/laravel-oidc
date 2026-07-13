@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Hooks\Context\ClientCredentialsContext;
-use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Bridge\Scope;
@@ -12,7 +11,6 @@ use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\UnencryptedToken;
 use League\OAuth2\Server\CryptKey;
-use Workbench\App\Models\User;
 
 /** @param  string[]  $scopeIds */
 function accessTokenFor(string $grantType, array $scopeIds = ['openid']): OidcAccessToken
@@ -45,13 +43,10 @@ it('runs the client-credentials hook and merges custom access-token claims', fun
     expect($parsed->claims()->get('org'))->toBe('acme');
 });
 
-it('routes the authorization_code grant to the post-login trigger', function () {
-    User::create(['id' => 42, 'name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
-    Oidc::onPostLogin(fn (PostLoginContext $c) => $c->accessToken->set('via', 'post_login'));
-
+it('runs no hook for the authorization_code grant (claims flow through the context store instead)', function () {
     $parsed = parseHookedToken(accessTokenFor('authorization_code')->toString());
 
-    expect($parsed->claims()->get('via'))->toBe('post_login');
+    expect($parsed->claims()->has('via'))->toBeFalse();
 });
 
 it('does not let a hook override a protected access-token claim', function () {
@@ -64,7 +59,7 @@ it('does not let a hook override a protected access-token claim', function () {
 });
 
 it('adds only base claims when the grant type is unresolved', function () {
-    Oidc::onPostLogin(fn (PostLoginContext $c) => $c->accessToken->set('x', 1));
+    Oidc::onClientCredentials(fn (ClientCredentialsContext $c) => $c->accessToken->set('x', 1));
 
     $token = accessTokenFor('client_credentials');
     $token->setGrantType(null);

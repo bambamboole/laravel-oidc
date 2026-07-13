@@ -91,6 +91,7 @@ class AuthenticatedSessionController
         }
 
         $request->session()->put('oidc.id_token_claims', $api->idTokenClaims());
+        $request->session()->put('oidc.access_token_claims', $api->accessTokenClaims());
 
         $challengeProviders = array_values(array_filter(
             (array) config('oidc.auth.two_factor.challenge_providers', ['totp']),
