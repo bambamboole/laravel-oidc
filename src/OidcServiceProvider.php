@@ -42,6 +42,7 @@ use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
 use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
 use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
 use Bambamboole\LaravelOidc\Session\SessionMintTokenProvider;
+use Bambamboole\LaravelOidc\Session\StartOidcSession;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
@@ -183,6 +184,7 @@ class OidcServiceProvider extends ServiceProvider
 
         Event::listen(Login::class, RecordAuthTime::class);
         Event::listen(Login::class, EstablishSessionToken::class);
+        Event::listen(Login::class, StartOidcSession::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
 
         ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => url(route(
