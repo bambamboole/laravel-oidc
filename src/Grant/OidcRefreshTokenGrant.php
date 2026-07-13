@@ -108,6 +108,7 @@ class OidcRefreshTokenGrant extends RefreshTokenGrant
             $responseType->setAmr($context->amr);
             $responseType->setIdTokenClaims($context->id_token_claims);
             $responseType->setAuthTime($context->auth_time);
+            $responseType->setSid($context->sid);
         }
     }
 }

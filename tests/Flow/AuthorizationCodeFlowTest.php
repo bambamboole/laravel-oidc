@@ -423,3 +423,18 @@ it('pins the context to the login session and its expires_at', function () {
     expect($context->sid)->toBe($sid)
         ->and($context->expires_at->getTimestamp())->toBe($session->expires_at->getTimestamp());
 });
+
+it('emits the sid claim on fresh issuance and on refresh', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+
+    $response = completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+    expect(parseIdToken($response->json('id_token'))->claims()->get('sid'))->toBe($sid);
+
+    $refreshed = $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $response->json('refresh_token'),
+    ])->assertOk();
+    expect(parseIdToken($refreshed->json('id_token'))->claims()->get('sid'))->toBe($sid);
+});

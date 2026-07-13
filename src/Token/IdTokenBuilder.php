@@ -28,7 +28,7 @@ class IdTokenBuilder
      * @param  array<int, string>  $amr
      * @param  array<string, mixed>  $idTokenClaims
      */
-    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = [], array $idTokenClaims = []): string
+    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = [], array $idTokenClaims = [], ?string $sid = null): string
     {
         $config = Configuration::forAsymmetricSigner(
             new Sha256,
@@ -59,6 +59,10 @@ class IdTokenBuilder
 
         if ($authTime !== null) {
             $builder = $builder->withClaim('auth_time', $authTime);
+        }
+
+        if ($sid !== null && $sid !== '') {
+            $builder = $builder->withClaim('sid', $sid);
         }
 
         if ($amr !== []) {
