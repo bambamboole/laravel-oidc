@@ -91,6 +91,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                         $this->pendingContext = $context;
                         $responseType->setAmr($context->amr);
                         $responseType->setIdTokenClaims($context->id_token_claims);
+                        $responseType->setSid($context->sid);
                     }
                 } catch (\Throwable) {
                     // Parent will reject the malformed code with a proper OAuth error.
