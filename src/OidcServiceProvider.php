@@ -19,6 +19,7 @@ use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Console\ProvisionClientCommand;
+use Bambamboole\LaravelOidc\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
@@ -207,6 +208,7 @@ class OidcServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ProvisionClientCommand::class,
+                PruneAuthenticationContextsCommand::class,
                 RotateKeysCommand::class,
             ]);
         }
