@@ -137,9 +137,13 @@ it('omits the id_token without the openid scope', function () {
         ->and($response->json())->not->toHaveKey('id_token');
 });
 
-// OAuth 2.1 §4.3 (refresh) + OIDC Core §12.2 (refreshed id_token)
-it('issues an id_token without nonce or auth_time on refresh', function () {
-    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd', 'otp']])->json('refresh_token');
+// OAuth 2.1 §4.3 (refresh) + OIDC Core §12.2 — refresh REISSUES the persisted context
+it('reissues amr/acr and claims on refresh, without a fresh nonce', function () {
+    $refreshToken = completeAuthorization($this, [], [
+        'oidc.amr' => ['pwd', 'otp'],
+        'oidc.id_token_claims' => ['groups' => ['admin']],
+        'oidc.access_token_claims' => ['tier' => 'gold'],
+    ])->json('refresh_token');
 
     $response = $this->post('/oauth/token', [
         'grant_type' => 'refresh_token',
@@ -149,10 +153,76 @@ it('issues an id_token without nonce or auth_time on refresh', function () {
     ])->assertOk();
 
     $idToken = parseIdToken($response->json('id_token'));
+    $accessToken = parseIdToken($response->json('access_token'));
+
     expect($idToken->claims()->has('nonce'))->toBeFalse()
-        ->and($idToken->claims()->has('auth_time'))->toBeFalse()
-        ->and($idToken->claims()->has('amr'))->toBeFalse()
-        ->and($idToken->claims()->has('acr'))->toBeFalse();
+        ->and($idToken->claims()->get('amr'))->toBe(['pwd', 'otp'])
+        ->and($idToken->claims()->get('acr'))->toBe('2')
+        ->and($idToken->claims()->get('groups'))->toBe(['admin'])
+        ->and($accessToken->claims()->get('tier'))->toBe('gold');
+});
+
+it('denies refresh once the context is gone', function () {
+    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd']])->json('refresh_token');
+
+    AuthenticationContext::query()->delete();
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $refreshToken,
+    ])->assertStatus(400);
+});
+
+it('denies refresh once the session absolute lifetime is exceeded', function () {
+    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd']])->json('refresh_token');
+
+    AuthenticationContext::query()->update(['expires_at' => now()->subMinute()]);
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $refreshToken,
+    ])->assertStatus(400);
+});
+
+it('does not leak a denied refresh context into the next refresh on the same grant instance', function () {
+    // Octane-safety: the grant is a container singleton, so a stale pendingContext from one
+    // request must never survive into the next. Deny one refresh, then reissue a different
+    // one on the same AuthorizationServer/grant instance and assert its claims are its own.
+    $deniedRefreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd']])->json('refresh_token');
+
+    AuthenticationContext::query()->delete();
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $deniedRefreshToken,
+    ])->assertStatus(400);
+
+    // A different user avoids Passport's "already granted these scopes" consent skip,
+    // which would otherwise short-circuit completeAuthorization() with a redirect.
+    $this->user = User::create(['name' => 'N', 'email' => 'n@example.com', 'email_verified_at' => now(), 'password' => 'x']);
+
+    $validRefreshToken = completeAuthorization($this, [], [
+        'oidc.amr' => ['pwd', 'otp'],
+        'oidc.id_token_claims' => ['groups' => ['ops']],
+    ])->json('refresh_token');
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $validRefreshToken,
+    ])->assertOk();
+
+    $idToken = parseIdToken($response->json('id_token'));
+
+    expect($idToken->claims()->get('amr'))->toBe(['pwd', 'otp'])
+        ->and($idToken->claims()->get('groups'))->toBe(['ops']);
 });
 
 // OIDC Core §3.1.3.6 / RFC 8176 (amr) + §2 (acr derived from amr method count)
