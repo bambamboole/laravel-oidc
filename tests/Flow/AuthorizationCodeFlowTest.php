@@ -455,3 +455,17 @@ it('records one participant per session-client on authorization', function () {
     expect(app(SessionRegistry::class)->participantClientIds($sid))
         ->toBe([$this->client->id]);
 });
+
+it('denies refresh after the session is revoked', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->json('refresh_token');
+
+    app(SessionRegistry::class)->revoke($sid);
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $refreshToken,
+    ])->assertStatus(400);
+});

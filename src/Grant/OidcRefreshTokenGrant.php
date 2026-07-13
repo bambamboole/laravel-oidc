@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Grant;
 
 use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
@@ -98,7 +99,17 @@ class OidcRefreshTokenGrant extends RefreshTokenGrant
 
         $context = app(AuthenticationContextStore::class)->find($contextId);
 
-        if ($context === null || ($context->expires_at !== null && $context->expires_at->isPast())) {
+        if ($context === null) {
+            throw OAuthServerException::invalidRefreshToken('The authentication session has expired; re-authentication is required.');
+        }
+
+        if ($context->sid !== null) {
+            $session = app(SessionRegistry::class)->find($context->sid);
+            if ($session === null || ! $session->isActive()) {
+                throw OAuthServerException::invalidRefreshToken('The authentication session has ended; re-authentication is required.');
+            }
+        } elseif ($context->expires_at !== null && $context->expires_at->isPast()) {
+            // Pre-session context (no sid): fall back to the 2a-2 per-context cap.
             throw OAuthServerException::invalidRefreshToken('The authentication session has expired; re-authentication is required.');
         }
 
