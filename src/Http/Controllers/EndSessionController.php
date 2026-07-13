@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Issuer;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +30,16 @@ class EndSessionController
         $redirectUri = $this->validatedPostLogoutUri($request, $hint);
 
         if ($this->shouldLogout($request, $hint)) {
+            $sid = $hint?->claims()->get('sid');
+            if (! is_string($sid) || $sid === '') {
+                $sid = $request->hasSession() ? $request->session()->get('oidc.sid') : null;
+            }
+
+            if (is_string($sid) && $sid !== '') {
+                app(SessionRegistry::class)->revoke($sid);
+                app(BackChannelLogoutNotifier::class)->notify($sid);
+            }
+
             Auth::guard(config('passport.guard', null))->logout();
 
             if ($request->hasSession()) {
