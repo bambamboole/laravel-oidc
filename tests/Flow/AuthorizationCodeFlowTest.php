@@ -399,3 +399,13 @@ it('owns the oauth routes with package controllers', function () {
         fn ($route) => $route->uri() === 'oauth/token' && in_array('POST', $route->methods(), true)
     )->count())->toBe(1);
 });
+
+it('issues a short-lived access token matching the configured lifetime', function () {
+    config(['oidc.token_lifetimes.access_token' => 900]);
+
+    $response = completeAuthorization($this)->assertOk();
+
+    // expires_in reflects the interactive access-token TTL, not Passport's long default
+    expect($response->json('expires_in'))->toBeLessThanOrEqual(900)
+        ->and($response->json('expires_in'))->toBeGreaterThan(600);
+});
