@@ -16,6 +16,7 @@ use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
@@ -125,6 +126,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
         $this->app->singleton(SessionRegistry::class);
+        $this->app->singleton(BackChannelLogoutNotifier::class);
         $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
