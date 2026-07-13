@@ -19,6 +19,7 @@ return new class extends Migration
             $table->json('id_token_claims');
             $table->json('access_token_claims');
             $table->timestamp('created_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
         });
     }
 

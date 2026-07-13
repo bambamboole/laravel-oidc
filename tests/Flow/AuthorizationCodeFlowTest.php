@@ -5,6 +5,7 @@ declare(strict_types=1);
  * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
  */
 
+use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -204,6 +205,20 @@ it('emits postLogin-buffered id_token claims via the context store', function ()
     expect($idToken->claims()->get('amr'))->toBe(['pwd', 'otp'])
         ->and($idToken->claims()->get('acr'))->toBe('2')
         ->and($idToken->claims()->get('groups'))->toBe(['admin']);
+});
+
+// §8.3 — every interactive session is capped
+it('always persists a context row with a future expires_at', function () {
+    completeAuthorization($this, [], [
+        'oidc.amr' => ['pwd'],
+        'oidc.access_token_claims' => ['tier' => 'gold'],
+    ])->assertOk();
+
+    $context = AuthenticationContext::query()->sole();
+    expect($context->user_id)->toBe((string) $this->user->id)
+        ->and($context->amr)->toBe(['pwd'])
+        ->and($context->access_token_claims)->toBe(['tier' => 'gold'])
+        ->and($context->expires_at->isFuture())->toBeTrue();
 });
 
 it('owns the oauth routes with package controllers', function () {
