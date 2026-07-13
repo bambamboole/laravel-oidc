@@ -55,7 +55,7 @@ class IdTokenBuilder
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())
             ->issuedAt($now)
-            ->expiresAt($now->modify('+'.config('oidc.id_token_ttl').' seconds'))
+            ->expiresAt($now->modify('+'.config('oidc.token_lifetimes.id_token').' seconds'))
             ->withClaim('azp', $clientId)
             ->withClaim('at_hash', $this->atHash($accessToken->toString()));
 
