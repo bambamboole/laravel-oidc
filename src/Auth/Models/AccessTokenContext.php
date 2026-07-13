@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
  * @property string $access_token_id
  * @property string $context_id
  * @property ?Carbon $created_at
@@ -15,12 +16,6 @@ use Illuminate\Support\Carbon;
 class AccessTokenContext extends Model
 {
     public $timestamps = false;
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
-
-    protected $primaryKey = 'access_token_id';
 
     protected $table = 'oidc_access_token_contexts';
 

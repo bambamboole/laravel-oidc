@@ -19,6 +19,10 @@ class AccessTokenContextLink
 
     public function contextIdFor(string $accessTokenId): ?string
     {
-        return AccessTokenContext::query()->find($accessTokenId)?->context_id;
+        $contextId = AccessTokenContext::query()
+            ->where('access_token_id', $accessTokenId)
+            ->value('context_id');
+
+        return is_string($contextId) ? $contextId : null;
     }
 }
