@@ -668,14 +668,23 @@ their pruning yourself:
   `oidc_access_token_contexts` (one row per access-token issuance). Prune them with
   `oidc:prune-authentication-contexts`.
 
-Schedule **both** — running only one leaves the other growing unbounded. In `routes/console.php`:
+Schedule **all three** — running only some leaves tables growing unbounded, or leaves relying parties
+unnotified of expired sessions. In `routes/console.php`:
 
 ```php
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('passport:purge')->daily();
+Schedule::command('oidc:dispatch-expired-session-logouts')->hourly();
 Schedule::command('oidc:prune-authentication-contexts')->daily();
 ```
+
+`oidc:dispatch-expired-session-logouts` sends OIDC back-channel logout to a session's relying-party
+participants once the session hits its absolute lifetime. It must run **ahead of**
+`oidc:prune-authentication-contexts`, which deletes `oidc_sessions` rows only after a grace window —
+scheduling it first (and more frequently) ensures every expired session is announced before its row is
+removed. Back-channel logout is opt-in per relying-party client: a client only receives it if it has
+registered a `backchannel_logout_uri`.
 
 `oidc:prune-authentication-contexts` deletes:
 
