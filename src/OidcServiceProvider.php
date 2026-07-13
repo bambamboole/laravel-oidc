@@ -40,6 +40,7 @@ use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Session\EndOidcSession;
 use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
 use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
 use Bambamboole\LaravelOidc\Session\SessionMintTokenProvider;
@@ -188,6 +189,7 @@ class OidcServiceProvider extends ServiceProvider
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Login::class, StartOidcSession::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
+        Event::listen(Logout::class, EndOidcSession::class);
 
         ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => url(route(
             'identity.password.reset',
