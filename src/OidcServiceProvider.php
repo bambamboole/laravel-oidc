@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
@@ -18,6 +19,7 @@ use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Console\ProvisionClientCommand;
+use Bambamboole\LaravelOidc\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
@@ -27,6 +29,7 @@ use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Grant\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
@@ -59,6 +62,7 @@ use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\ClientCredentialsGrant;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -118,6 +122,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
+        $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
         config()->set('passkeys.guard', $identityGuard);
@@ -137,6 +142,8 @@ class OidcServiceProvider extends ServiceProvider
             ->give(fn () => Auth::guard(config('passport.guard', null)));
 
         $this->app->extend(AuthorizationServer::class, function (AuthorizationServer $server, Application $app): AuthorizationServer {
+            $accessTokenTtl = new DateInterval('PT'.(int) config('oidc.token_lifetimes.access_token').'S');
+
             $grant = new OidcAuthCodeGrant(
                 $app->make(AuthCodeRepository::class),
                 $app->make(RefreshTokenRepository::class),
@@ -144,7 +151,16 @@ class OidcServiceProvider extends ServiceProvider
             );
             $grant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
 
-            $server->enableGrantType($grant, Passport::tokensExpireIn());
+            $server->enableGrantType($grant, $accessTokenTtl);
+
+            $refreshGrant = new OidcRefreshTokenGrant($app->make(RefreshTokenRepository::class));
+            $refreshGrant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
+            $server->enableGrantType($refreshGrant, $accessTokenTtl);
+
+            $server->enableGrantType(
+                new ClientCredentialsGrant,
+                new DateInterval('PT'.(int) config('oidc.token_lifetimes.client_credentials').'S'),
+            );
 
             if (config('oidc.token_exchange.enabled', true)) {
                 $server->enableGrantType(
@@ -192,6 +208,7 @@ class OidcServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ProvisionClientCommand::class,
+                PruneAuthenticationContextsCommand::class,
                 RotateKeysCommand::class,
             ]);
         }

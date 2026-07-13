@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Grant;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
@@ -23,6 +24,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class OidcAuthCodeGrant extends AuthCodeGrant
 {
+    use HasAuthenticationContextIssuance;
+
     /**
      * league v9 declares AuthCodeGrant::$authCodeTTL private, so the forked
      * completeAuthorizationRequest() below cannot read the parent's copy; mirror it here.
@@ -65,6 +68,14 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         ResponseTypeInterface $responseType,
         DateInterval $accessTokenTTL
     ): ResponseTypeInterface {
+        // Defense-in-depth: AuthorizationServer (and this grant) is a container singleton,
+        // so under Octane it persists across requests. League's parent validates the
+        // client, auth code, scopes, and PKCE *before* ever calling issueAccessToken() —
+        // the only place pendingContext is normally cleared. If any of that validation
+        // throws, a pendingContext set below would otherwise survive into the next
+        // request. Clear it unconditionally at entry so a stale value never leaks.
+        $this->pendingContext = null;
+
         if ($responseType instanceof IdTokenResponse) {
             $encryptedAuthCode = $this->getRequestParameter('code', $request);
 
@@ -76,6 +87,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
 
                     $context = $this->context(app(AuthenticationContextStore::class), $payload->context_id ?? null);
                     if ($context !== null) {
+                        $this->pendingContext = $context;
                         $responseType->setAmr($context->amr);
                         $responseType->setIdTokenClaims($context->id_token_claims);
                     }
@@ -124,7 +136,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                     ? $authorizationRequest->getNonce()
                     : null,
                 'auth_time' => $this->currentAuthTime(),
-                'context_id' => $this->finalizeContext(),
+                'context_id' => $this->finalizeContext($authorizationRequest->getUser()->getIdentifier()),
             ];
 
             $jsonPayload = json_encode($payload);
@@ -165,21 +177,33 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         return time();
     }
 
-    private function finalizeContext(): ?string
+    private function finalizeContext(string $userId): string
     {
         $amr = $this->currentAmr();
 
-        if ($amr === [] && $this->currentIdTokenClaims() === []) {
-            return null;
-        }
-
         return app(AuthenticationContextStore::class)->create([
-            'user_id' => $this->sessionUserId(),
+            'user_id' => $userId,
             'amr' => $amr,
             'acr' => AuthenticationMethods::deriveAcr($amr),
             'auth_time' => $this->currentAuthTime(),
             'id_token_claims' => $this->currentIdTokenClaims(),
+            'access_token_claims' => $this->currentAccessTokenClaims(),
+            'expires_at' => (new DateTimeImmutable)->add(
+                new DateInterval('PT'.(int) config('oidc.session.absolute_lifetime').'S'),
+            ),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function currentAccessTokenClaims(): array
+    {
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
+            $claims = app('session.store')->get('oidc.access_token_claims', []);
+
+            return is_array($claims) ? $claims : [];
+        }
+
+        return [];
     }
 
     private function context(AuthenticationContextStore $store, mixed $id): ?AuthenticationContext
@@ -209,10 +233,5 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         }
 
         return [];
-    }
-
-    private function sessionUserId(): string
-    {
-        return (string) (app('auth')->guard((string) config('oidc.auth.guard', 'identity'))->id() ?? '');
     }
 }

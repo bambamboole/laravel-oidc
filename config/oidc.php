@@ -43,7 +43,20 @@ use Laravel\Passport\Http\Controllers\TransientTokenController;
 return [
     'issuer' => env('OIDC_ISSUER'),
 
-    'id_token_ttl' => (int) env('OIDC_ID_TOKEN_TTL', 3600),
+    'token_lifetimes' => [
+        // Interactive access token (authorization_code) + refreshed access tokens. Short, per industry.
+        'access_token' => (int) env('OIDC_ACCESS_TOKEN_TTL', 900),
+        'id_token' => (int) env('OIDC_ID_TOKEN_TTL', 3600),
+        // Machine-to-machine (client_credentials): no refresh, no session; client re-requests. Own TTL.
+        'client_credentials' => (int) env('OIDC_M2M_ACCESS_TOKEN_TTL', 3600),
+    ],
+
+    'session' => [
+        // Absolute cap on an interactive session, from login. Refresh is denied past this and the user
+        // must re-authenticate; refresh-token rotation cannot extend it. Drives context.expires_at,
+        // the refresh deny-check, and context pruning. Idle cap = Passport::refreshTokensExpireIn().
+        'absolute_lifetime' => (int) env('OIDC_SESSION_ABSOLUTE_LIFETIME', 2592000),
+    ],
 
     'api_guard' => env('OIDC_API_GUARD', 'api'),
 
