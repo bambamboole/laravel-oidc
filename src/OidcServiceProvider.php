@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc;
 
+use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
@@ -118,6 +119,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
+        $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
         config()->set('passkeys.guard', $identityGuard);
