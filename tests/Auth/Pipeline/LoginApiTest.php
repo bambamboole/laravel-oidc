@@ -33,3 +33,12 @@ it('refuses to set a protected id_token claim', function () {
 
     expect($api->idTokenClaims())->toBe([]);
 });
+
+it('buffers access-token claims and refuses protocol-reserved names', function () {
+    $api = new LoginApi;
+
+    $api->setAccessTokenClaim('tier', 'gold');
+    $api->setAccessTokenClaim('amr', ['hax']); // reserved → refused
+
+    expect($api->accessTokenClaims())->toBe(['tier' => 'gold']);
+});
