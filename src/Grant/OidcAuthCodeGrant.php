@@ -68,6 +68,14 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         ResponseTypeInterface $responseType,
         DateInterval $accessTokenTTL
     ): ResponseTypeInterface {
+        // Defense-in-depth: AuthorizationServer (and this grant) is a container singleton,
+        // so under Octane it persists across requests. League's parent validates the
+        // client, auth code, scopes, and PKCE *before* ever calling issueAccessToken() —
+        // the only place pendingContext is normally cleared. If any of that validation
+        // throws, a pendingContext set below would otherwise survive into the next
+        // request. Clear it unconditionally at entry so a stale value never leaks.
+        $this->pendingContext = null;
+
         if ($responseType instanceof IdTokenResponse) {
             $encryptedAuthCode = $this->getRequestParameter('code', $request);
 
