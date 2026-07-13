@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Token;
 
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Hooks\Artifact;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
@@ -78,7 +79,9 @@ class IdTokenBuilder
         }
 
         foreach ($idTokenClaims as $name => $value) {
-            $builder = $builder->withClaim($name, $value);
+            if (! ProtocolClaims::isReserved($name)) {
+                $builder = $builder->withClaim($name, $value);
+            }
         }
 
         $user = $this->resolveUser((string) $accessToken->getUserIdentifier())

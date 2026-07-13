@@ -5,6 +5,7 @@ declare(strict_types=1);
  * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
  */
 
+use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
@@ -219,6 +220,21 @@ it('always persists a context row with a future expires_at', function () {
         ->and($context->amr)->toBe(['pwd'])
         ->and($context->access_token_claims)->toBe(['tier' => 'gold'])
         ->and($context->expires_at->isFuture())->toBeTrue();
+});
+
+// §5/§7 — access-token custom claims on fresh issuance
+it('emits postLogin access-token claims onto the access token and links it', function () {
+    $response = completeAuthorization($this, [], [
+        'oidc.amr' => ['pwd'],
+        'oidc.access_token_claims' => ['tier' => 'gold', 'amr' => ['hax']],
+    ])->assertOk();
+
+    $accessToken = parseIdToken($response->json('access_token')); // parses any JWT
+    expect($accessToken->claims()->get('tier'))->toBe('gold')
+        ->and($accessToken->claims()->has('amr'))->toBeFalse(); // reserved name skipped
+
+    // the issued access token is linked to a context
+    expect(AccessTokenContext::query()->count())->toBe(1);
 });
 
 it('owns the oauth routes with package controllers', function () {
