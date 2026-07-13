@@ -28,7 +28,7 @@ it('revokes the session and fans out on the Logout event', function () {
     app(EndOidcSession::class)->handle(new Logout(config('passport.guard'), $user));
 
     expect(app(SessionRegistry::class)->find($sid)->revoked_at)->not->toBeNull();
-    Bus::assertDispatched(SendBackChannelLogout::class);
+    Bus::assertDispatchedTimes(SendBackChannelLogout::class, 1);
 });
 
 /**
@@ -93,6 +93,6 @@ describe('via /oauth/logout', function () {
             ->assertRedirect();
 
         expect(app(SessionRegistry::class)->find($sid)->revoked_at)->not->toBeNull();
-        Bus::assertDispatched(SendBackChannelLogout::class);
+        Bus::assertDispatchedTimes(SendBackChannelLogout::class, 1);
     });
 });
