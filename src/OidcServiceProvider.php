@@ -14,6 +14,7 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
@@ -122,6 +123,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
+        $this->app->singleton(SessionRegistry::class);
         $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
