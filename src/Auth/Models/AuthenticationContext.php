@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $user_id
+ * @property ?string $sid
  * @property list<string> $amr
  * @property ?string $acr
  * @property ?int $auth_time
