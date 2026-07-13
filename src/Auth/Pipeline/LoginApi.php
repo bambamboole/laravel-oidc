@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Pipeline;
 
+use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Illuminate\Support\Facades\Log;
 
 class LoginApi
 {
-    private const array PROTECTED = [
-        'iss', 'sub', 'aud', 'exp', 'iat', 'nbf', 'jti',
-        'nonce', 'at_hash', 'c_hash', 'auth_time', 'azp', 'acr', 'amr',
-    ];
-
     private bool $denied = false;
 
     private ?string $denyReason = null;
@@ -21,6 +17,9 @@ class LoginApi
 
     /** @var array<string, mixed> */
     private array $idTokenClaims = [];
+
+    /** @var array<string, mixed> */
+    private array $accessTokenClaims = [];
 
     public function deny(string $reason): void
     {
@@ -35,13 +34,24 @@ class LoginApi
 
     public function setIdTokenClaim(string $name, mixed $value): void
     {
-        if (in_array($name, self::PROTECTED, true)) {
+        if (ProtocolClaims::isReserved($name)) {
             Log::warning("oidc: postLogin refused to set protected id_token claim [{$name}]");
 
             return;
         }
 
         $this->idTokenClaims[$name] = $value;
+    }
+
+    public function setAccessTokenClaim(string $name, mixed $value): void
+    {
+        if (ProtocolClaims::isReserved($name)) {
+            Log::warning("oidc: postLogin refused to set protected access_token claim [{$name}]");
+
+            return;
+        }
+
+        $this->accessTokenClaims[$name] = $value;
     }
 
     public function isDenied(): bool
@@ -63,5 +73,11 @@ class LoginApi
     public function idTokenClaims(): array
     {
         return $this->idTokenClaims;
+    }
+
+    /** @return array<string, mixed> */
+    public function accessTokenClaims(): array
+    {
+        return $this->accessTokenClaims;
     }
 }
