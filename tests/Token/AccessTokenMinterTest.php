@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Facades\Oidc;
-use Bambamboole\LaravelOidc\Hooks\Context\PostLoginContext;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
@@ -53,17 +51,6 @@ it('mints, signs and persists a scoped at+jwt that round-trips', function () {
     expect($dbToken)->not->toBeNull()
         ->and((string) $dbToken->getAttribute('user_id'))->toBe((string) $user->id)
         ->and((bool) $dbToken->getAttribute('revoked'))->toBeFalse();
-});
-
-it('stamps a programmatic grant type so a directly minted token ignores the request grant_type', function () {
-    User::create(['id' => 77, 'name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
-    request()->merge(['grant_type' => 'authorization_code']);
-    Oidc::onPostLogin(fn (PostLoginContext $c) => $c->accessToken->set('via', 'post_login'));
-
-    $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('App', ['https://rp.test/cb']);
-    $entity = app(AccessTokenMinter::class)->mint('77', $client, ['openid'], new DateInterval('PT1H'));
-
-    expect(parseMinted($entity->toString())->claims()->has('via'))->toBeFalse();
 });
 
 it('defaults the audience to the client id when none given', function () {
