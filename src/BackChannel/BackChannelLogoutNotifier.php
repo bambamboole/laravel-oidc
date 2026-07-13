@@ -13,19 +13,25 @@ class BackChannelLogoutNotifier
 
     public function notify(string $sid): void
     {
-        $clientIds = $this->registry->participantClientIds($sid);
+        $session = $this->registry->find($sid);
 
-        if ($clientIds === []) {
+        if ($session === null || $session->logout_notified_at !== null) {
             return;
         }
 
-        $notifiable = Passport::client()->newQuery()
-            ->whereIn('id', $clientIds)
-            ->whereNotNull('backchannel_logout_uri')
-            ->pluck('id');
+        $clientIds = $this->registry->participantClientIds($sid);
 
-        foreach ($notifiable as $clientId) {
-            SendBackChannelLogout::dispatch($sid, (string) $clientId);
+        if ($clientIds !== []) {
+            $notifiable = Passport::client()->newQuery()
+                ->whereIn('id', $clientIds)
+                ->whereNotNull('backchannel_logout_uri')
+                ->pluck('id');
+
+            foreach ($notifiable as $clientId) {
+                SendBackChannelLogout::dispatch($sid, (string) $clientId);
+            }
         }
+
+        $this->registry->markNotified($sid);
     }
 }
