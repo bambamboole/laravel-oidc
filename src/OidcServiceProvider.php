@@ -61,6 +61,7 @@ use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\ClientCredentialsGrant;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -140,6 +141,8 @@ class OidcServiceProvider extends ServiceProvider
             ->give(fn () => Auth::guard(config('passport.guard', null)));
 
         $this->app->extend(AuthorizationServer::class, function (AuthorizationServer $server, Application $app): AuthorizationServer {
+            $accessTokenTtl = new DateInterval('PT'.(int) config('oidc.token_lifetimes.access_token').'S');
+
             $grant = new OidcAuthCodeGrant(
                 $app->make(AuthCodeRepository::class),
                 $app->make(RefreshTokenRepository::class),
@@ -147,11 +150,16 @@ class OidcServiceProvider extends ServiceProvider
             );
             $grant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
 
-            $server->enableGrantType($grant, Passport::tokensExpireIn());
+            $server->enableGrantType($grant, $accessTokenTtl);
 
             $refreshGrant = new OidcRefreshTokenGrant($app->make(RefreshTokenRepository::class));
             $refreshGrant->setRefreshTokenTTL(Passport::refreshTokensExpireIn());
-            $server->enableGrantType($refreshGrant, Passport::tokensExpireIn());
+            $server->enableGrantType($refreshGrant, $accessTokenTtl);
+
+            $server->enableGrantType(
+                new ClientCredentialsGrant,
+                new DateInterval('PT'.(int) config('oidc.token_lifetimes.client_credentials').'S'),
+            );
 
             if (config('oidc.token_exchange.enabled', true)) {
                 $server->enableGrantType(
