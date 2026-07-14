@@ -5,7 +5,10 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningOutcome;
+use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -130,6 +133,126 @@ it('adopts an explicit eligible client and then rotates only when requested', fu
         ->and($rotated->outcome)->toBe(FirstPartyClientProvisioningOutcome::Rotated)
         ->and($rotated->clientSecret)->toBeString()->not->toBeEmpty()
         ->and($rotated->client->getRawOriginal('secret'))->not->toBe($oldHash);
+});
+
+it('adopts an explicit eligible client after verifying its credential', function () {
+    $legacy = app(ClientRepository::class)
+        ->createAuthorizationCodeGrantClient('Legacy', ['https://legacy.test/callback']);
+    $storedSecret = $legacy->getRawOriginal('secret');
+
+    $result = app(FirstPartyClientProvisioner::class)->provision(
+        name: 'Adopted',
+        redirectUris: ['https://app.test/login/callback'],
+        adoptClientId: (string) $legacy->getKey(),
+        existingClientSecret: $legacy->plainSecret,
+    );
+
+    expect($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Reconciled)
+        ->and($result->clientId)->toBe((string) $legacy->getKey())
+        ->and($result->clientSecret)->toBe($legacy->plainSecret)
+        ->and($result->client->getRawOriginal('secret'))->toBe($storedSecret)
+        ->and($result->client->getRawOriginal('oidc_provisioning_key'))->toBe('first-party');
+});
+
+it('rejects a mismatched adoption credential without mutating the client', function () {
+    $legacy = app(ClientRepository::class)
+        ->createAuthorizationCodeGrantClient('Legacy', ['https://legacy.test/callback']);
+    $originalAttributes = $legacy->refresh()->getRawOriginal();
+
+    expect(fn () => app(FirstPartyClientProvisioner::class)->provision(
+        name: 'Adopted',
+        redirectUris: ['https://app.test/login/callback'],
+        adoptClientId: (string) $legacy->getKey(),
+        existingClientSecret: 'wrong-secret',
+    ))->toThrow(FirstPartyClientProvisioningException::class, 'secret does not match');
+
+    expect($legacy->refresh()->getRawOriginal())->toBe($originalAttributes);
+});
+
+it('verifies the existing credential before rotating it', function () {
+    $provisioner = app(FirstPartyClientProvisioner::class);
+    $created = $provisioner->provision('Original name', ['https://original.test/callback']);
+    $originalHash = $created->client->getRawOriginal('secret');
+
+    expect(fn () => $provisioner->provision(
+        name: 'Changed name',
+        redirectUris: ['https://changed.test/callback'],
+        rotateSecret: true,
+        existingClientSecret: 'wrong-secret',
+    ))->toThrow(FirstPartyClientProvisioningException::class, 'secret does not match');
+
+    expect($created->client->refresh()->getAttribute('name'))->toBe('Original name')
+        ->and($created->client->getRawOriginal('secret'))->toBe($originalHash);
+
+    $rotated = $provisioner->provision(
+        name: 'Changed name',
+        redirectUris: ['https://changed.test/callback'],
+        rotateSecret: true,
+        existingClientSecret: $created->clientSecret,
+    );
+
+    expect($rotated->outcome)->toBe(FirstPartyClientProvisioningOutcome::Rotated)
+        ->and($rotated->clientSecret)->toBeString()->not->toBeEmpty()->not->toBe($created->clientSecret)
+        ->and(Hash::check($rotated->clientSecret, (string) $rotated->client->getRawOriginal('secret')))->toBeTrue();
+});
+
+it('verifies the existing credential inside the passport transaction', function () {
+    $provisioner = app(FirstPartyClientProvisioner::class);
+    $created = $provisioner->provision('Original name', ['https://original.test/callback']);
+    $storedHash = (string) $created->client->getRawOriginal('secret');
+    $connectionName = config('passport.connection');
+    $connection = DB::connection(is_string($connectionName) ? $connectionName : null);
+    $delegate = app(Hasher::class);
+    $spy = new class($delegate, $connection) implements Hasher
+    {
+        public bool $checkedInsideTransaction = false;
+
+        public ?string $checkedHash = null;
+
+        public function __construct(
+            private readonly Hasher $delegate,
+            private readonly ConnectionInterface $connection,
+        ) {}
+
+        /** @return array<string, mixed> */
+        public function info(mixed $hashedValue): array
+        {
+            return $this->delegate->info($hashedValue);
+        }
+
+        /** @param array<string, mixed> $options */
+        public function make(#[SensitiveParameter] mixed $value, array $options = []): string
+        {
+            return $this->delegate->make($value, $options);
+        }
+
+        /** @param array<string, mixed> $options */
+        public function check(#[SensitiveParameter] mixed $value, mixed $hashedValue, array $options = []): bool
+        {
+            $this->checkedInsideTransaction = $this->connection->transactionLevel() > 0;
+            $this->checkedHash = $hashedValue;
+
+            return $this->delegate->check($value, $hashedValue, $options);
+        }
+
+        /** @param array<string, mixed> $options */
+        public function needsRehash(mixed $hashedValue, array $options = []): bool
+        {
+            return $this->delegate->needsRehash($hashedValue, $options);
+        }
+    };
+
+    app()->instance(Hasher::class, $spy);
+    app()->forgetInstance(FirstPartyClientProvisioner::class);
+
+    app(FirstPartyClientProvisioner::class)->provision(
+        name: 'Changed name',
+        redirectUris: ['https://changed.test/callback'],
+        existingClientSecret: $created->clientSecret,
+    );
+
+    expect($spy->checkedInsideTransaction)->toBeTrue()
+        ->and($spy->checkedHash)->toBe($storedHash);
 });
 
 it('rejects unsafe adoption targets', function (Closure $mutate, string $message) {
@@ -349,6 +472,44 @@ it('preserves an explicit adoption target when recovering from a provisioning ke
 
         expect($winner->refresh()->getAttribute('name'))->toBe('Winner')
             ->and($loser->refresh()->getRawOriginal('oidc_provisioning_key'))->toBeNull();
+    } finally {
+        $clientModelClass::clearBootedModels();
+    }
+});
+
+it('revalidates the winning credential when recovering from a provisioning key race', function () {
+    $winner = app(ClientRepository::class)
+        ->createAuthorizationCodeGrantClient('Winner', ['https://winner.test/callback']);
+    $winningSecret = $winner->plainSecret;
+    $winner->forceFill(['oidc_provisioning_key' => 'first-party'])->save();
+
+    $clientModel = Passport::client();
+    $clientModelClass = $clientModel::class;
+    $scopeApplications = 0;
+
+    $clientModelClass::addGlobalScope(
+        'simulate-credential-provisioning-key-race',
+        function (Builder $query) use (&$scopeApplications, $winner): void {
+            $scopeApplications++;
+
+            if ($scopeApplications === 1) {
+                $query->where($query->getModel()->getQualifiedKeyName(), '!=', $winner->getKey());
+            }
+        },
+    );
+
+    try {
+        $result = app(FirstPartyClientProvisioner::class)->provision(
+            name: 'Reconciled winner',
+            redirectUris: ['https://winner.test/new-callback'],
+            existingClientSecret: $winningSecret,
+        );
+
+        expect($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Reconciled)
+            ->and($result->clientId)->toBe((string) $winner->getKey())
+            ->and($result->clientSecret)->toBe($winningSecret)
+            ->and($winner->refresh()->getAttribute('name'))->toBe('Reconciled winner')
+            ->and($winner->getAttribute('redirect_uris'))->toBe(['https://winner.test/new-callback']);
     } finally {
         $clientModelClass::clearBootedModels();
     }
