@@ -36,6 +36,10 @@ class LogoutTokenValidator
             throw new OidcClientException('The logout token is not a signed JWT.');
         }
 
+        if ($token->headers()->get('typ') !== 'logout+jwt') {
+            throw new OidcClientException('The logout token has an invalid typ header.');
+        }
+
         $kid = $token->headers()->get('kid');
         if (! is_string($kid)) {
             throw new OidcClientException('The logout token has no kid header.');
@@ -81,6 +85,10 @@ class LogoutTokenValidator
         $iat = $claims->get('iat');
         if (! ($iat instanceof DateTimeInterface) && ! is_numeric($iat)) {
             throw new OidcClientException('The logout token is missing an iat claim.');
+        }
+        $iatTs = $iat instanceof DateTimeInterface ? $iat->getTimestamp() : (int) $iat;
+        if ($now - $iatTs > $leeway + 300) {
+            throw new OidcClientException('The logout token was issued too long ago.');
         }
 
         $sid = $claims->get('sid');

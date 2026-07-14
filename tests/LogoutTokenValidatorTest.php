@@ -75,3 +75,24 @@ it('rejects an expired token', function () {
     $jwt = $this->provider->logoutToken(fakeLogoutClaims(['exp' => time() - 3600, 'iat' => time() - 3700]), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
+
+it('rejects a token that is missing the logout+jwt typ header', function () {
+    $jwt = $this->provider->idToken(fakeLogoutClaims(), 'key-1');
+    app(LogoutTokenValidator::class)->validate($jwt);
+})->throws(OidcClientException::class, 'typ');
+
+it('rejects a logout token issued implausibly far in the past', function () {
+    $jwt = $this->provider->logoutToken(fakeLogoutClaims(['iat' => time() - 3600, 'exp' => time() + 3600]), 'key-1');
+    app(LogoutTokenValidator::class)->validate($jwt);
+})->throws(OidcClientException::class);
+
+it('rejects a token signed with an untrusted key', function () {
+    $otherProvider = new FakeOidcProvider;
+    $jwt = $otherProvider->logoutToken(fakeLogoutClaims(), 'key-1');
+    app(LogoutTokenValidator::class)->validate($jwt);
+})->throws(OidcClientException::class);
+
+it('rejects a token with the wrong issuer', function () {
+    $jwt = $this->provider->logoutToken(fakeLogoutClaims(['iss' => 'https://someone-else.example.com']), 'key-1');
+    app(LogoutTokenValidator::class)->validate($jwt);
+})->throws(OidcClientException::class, 'issuer');
