@@ -51,6 +51,63 @@ it('reconciles the managed client without rotating its secret', function () {
         ->and($result->client->getAttribute('grant_types'))->toBe(['authorization_code', 'refresh_token']);
 });
 
+it('reconciles the managed client with a matching credential and returns the verified secret', function () {
+    $provisioner = app(FirstPartyClientProvisioner::class);
+    $created = $provisioner->provision('Old name', ['https://old.test/callback']);
+    $storedSecret = $created->client->getRawOriginal('secret');
+
+    $result = $provisioner->provision(
+        name: 'New name',
+        redirectUris: ['https://new.test/callback'],
+        postLogoutRedirectUris: ['https://new.test'],
+        allowedExchangeAudiences: ['https://api.test/orders'],
+        existingClientSecret: $created->clientSecret,
+    );
+
+    expect($created->clientSecret)->toBeString()->not->toBeEmpty()
+        ->and($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Reconciled)
+        ->and($result->clientId)->toBe($created->clientId)
+        ->and($result->clientSecret)->toBe($created->clientSecret)
+        ->and($result->client->getAttribute('name'))->toBe('New name')
+        ->and($result->client->getAttribute('redirect_uris'))->toBe(['https://new.test/callback'])
+        ->and($result->client->getRawOriginal('secret'))->toBe($storedSecret)
+        ->and($result->client->getAttribute('grant_types'))->toBe(['authorization_code', 'refresh_token', TOKEN_EXCHANGE_GRANT]);
+});
+
+it('rejects a mismatched managed client credential without mutating the client', function (string $existingClientSecret) {
+    $provisioner = app(FirstPartyClientProvisioner::class);
+    $created = $provisioner->provision('Original name', ['https://original.test/callback']);
+    $originalAttributes = $created->client->getRawOriginal();
+
+    expect(fn () => $provisioner->provision(
+        name: 'Changed name',
+        redirectUris: ['https://changed.test/callback'],
+        postLogoutRedirectUris: ['https://changed.test'],
+        allowedExchangeAudiences: ['https://api.test/changed'],
+        existingClientSecret: $existingClientSecret,
+    ))->toThrow(
+        FirstPartyClientProvisioningException::class,
+        'The existing first-party client secret does not match.',
+    );
+
+    expect($created->client->refresh()->getRawOriginal())->toBe($originalAttributes);
+})->with([
+    'wrong secret' => 'wrong-secret',
+    'empty secret' => '',
+]);
+
+it('creates a managed client with a new credential when a stale existing credential is supplied', function () {
+    $result = app(FirstPartyClientProvisioner::class)->provision(
+        name: 'First-party app',
+        redirectUris: ['https://app.test/login/callback'],
+        existingClientSecret: 'stale-secret',
+    );
+
+    expect($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Created)
+        ->and($result->clientSecret)->toBeString()->not->toBeEmpty()->not->toBe('stale-secret')
+        ->and(Hash::check($result->clientSecret, (string) $result->client->getRawOriginal('secret')))->toBeTrue();
+});
+
 it('adopts an explicit eligible client and then rotates only when requested', function () {
     $legacy = app(ClientRepository::class)
         ->createAuthorizationCodeGrantClient('Legacy', ['https://legacy.test/callback']);
