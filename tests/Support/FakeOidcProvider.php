@@ -68,6 +68,22 @@ class FakeOidcProvider
         return $builder->getToken(new Sha256, InMemory::plainText($pem))->toString();
     }
 
+    /**
+     * @param  array<string, mixed>  $claims
+     */
+    public function rawIdToken(array $claims, string $kid): string
+    {
+        $header = $this->base64Url((string) json_encode(['alg' => 'RS256', 'typ' => 'JWT', 'kid' => $kid], JSON_THROW_ON_ERROR));
+        $payload = $this->base64Url((string) json_encode($claims, JSON_THROW_ON_ERROR));
+        $encoded = $header.'.'.$payload;
+        $signature = $this->privateKey
+            ->withHash('sha256')
+            ->withPadding(RSA::SIGNATURE_PKCS1)
+            ->sign($encoded);
+
+        return $encoded.'.'.$this->base64Url($signature);
+    }
+
     private function base64Url(string $bytes): string
     {
         return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');

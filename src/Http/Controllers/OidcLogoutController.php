@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidcClient\Http\Controllers;
 
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +22,11 @@ class OidcLogoutController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $endSession = $discovery->metadata()->endSessionEndpoint;
+        try {
+            $endSession = $discovery->metadata()->endSessionEndpoint;
+        } catch (ConnectionException|RequestException|OidcClientException) {
+            return redirect('/');
+        }
 
         if ($endSession === null) {
             return redirect('/');

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 beforeEach(function () {
+    Cache::clear();
     config()->set('oidc-client.enabled', true);
     config()->set('oidc-client.issuer', 'https://id.example.com');
 
@@ -60,4 +63,24 @@ it('omits id_token_hint when no id_token was stored in the session', function ()
     $response->assertRedirectContains('https://id.example.com/oauth/logout');
     $location = $response->headers->get('Location');
     expect($location)->not->toContain('id_token_hint');
+});
+
+it('persists local logout when provider discovery fails', function () {
+    config()->set('oidc-client.issuer', 'https://unavailable.example.com');
+
+    Http::fake([
+        'https://unavailable.example.com/.well-known/openid-configuration' => Http::response([], 503),
+    ]);
+
+    Route::get('/session-status', fn () => auth()->check() ? 'authenticated' : 'guest');
+
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->withSession(['oidc-client.tokens' => ['id_token' => 'the-id-token']])
+        ->post(route('logout'))
+        ->assertRedirect('/');
+
+    $this->get('/session-status')->assertSeeText('guest');
+    $this->assertGuest();
 });

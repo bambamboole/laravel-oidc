@@ -86,28 +86,40 @@ class IdTokenValidator
             throw new OidcClientException('The id_token nonce does not match.');
         }
 
-        $exp = $this->timestamp($claims->get('exp'));
-        if ($exp !== null && $now > $exp + $leeway) {
+        $exp = $this->timestamp($claims->get('exp'), 'exp', true);
+        if ($now > $exp + $leeway) {
             throw new OidcClientException('The id_token has expired.');
         }
 
-        $nbf = $this->timestamp($claims->get('nbf'));
+        $nbf = $this->timestamp($claims->get('nbf'), 'nbf');
         if ($nbf !== null && $now + $leeway < $nbf) {
             throw new OidcClientException('The id_token is not yet valid.');
         }
 
-        $iat = $this->timestamp($claims->get('iat'));
-        if ($iat !== null && $now + $leeway < $iat) {
+        $iat = $this->timestamp($claims->get('iat'), 'iat', true);
+        if ($now + $leeway < $iat) {
             throw new OidcClientException('The id_token was issued in the future.');
         }
     }
 
-    private function timestamp(mixed $value): ?int
+    private function timestamp(mixed $value, string $claim, bool $required = false): ?int
     {
         if ($value instanceof DateTimeInterface) {
             return $value->getTimestamp();
         }
 
-        return is_numeric($value) ? (int) $value : null;
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        if ($required) {
+            throw new OidcClientException("The id_token is missing or invalid {$claim} timestamp.");
+        }
+
+        if ($value !== null) {
+            throw new OidcClientException("The id_token {$claim} timestamp is invalid.");
+        }
+
+        return null;
     }
 }

@@ -52,14 +52,18 @@ class RelyingParty
     public function handleCallback(Request $request): RedirectResponse
     {
         $state = session()->pull('oidc-client.state');
-        $nonce = (string) session()->pull('oidc-client.nonce');
-        $verifier = (string) session()->pull('oidc-client.code_verifier');
+        $nonce = session()->pull('oidc-client.nonce');
+        $verifier = session()->pull('oidc-client.code_verifier');
+
+        if (! is_string($state) || $state === '' || ! is_string($nonce) || $nonce === '' || ! is_string($verifier) || $verifier === '') {
+            throw new OidcClientException('The OIDC callback session context is missing or has already been used.');
+        }
 
         if ($request->query('error') !== null) {
             throw new OidcClientException('The provider returned an authorization error.');
         }
 
-        if (! is_string($state) || ! is_string($request->query('state')) || ! hash_equals($state, $request->query('state'))) {
+        if (! is_string($request->query('state')) || ! hash_equals($state, $request->query('state'))) {
             throw new OidcClientException('The OIDC state parameter did not match.');
         }
 

@@ -87,3 +87,28 @@ it('rejects a token missing a subject', function () {
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'missing a subject');
+
+it('rejects a token missing exp', function () {
+    $jwt = $this->provider->idToken(array_diff_key(fakeProviderClaims(), ['exp' => true]), 'key-1');
+
+    app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
+})->throws(OidcClientException::class, 'missing or invalid exp');
+
+it('rejects a token missing iat', function () {
+    $jwt = $this->provider->idToken(array_diff_key(fakeProviderClaims(), ['iat' => true]), 'key-1');
+
+    app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
+})->throws(OidcClientException::class, 'missing or invalid iat');
+
+it('rejects invalid timestamp claim shapes', function (string $claim) {
+    $jwt = $this->provider->rawIdToken(fakeProviderClaims([$claim => 'not-a-timestamp']), 'key-1');
+
+    app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
+})->with(['exp', 'iat', 'nbf'])->throws(OidcClientException::class);
+
+it('rejects a token issued in the future outside leeway', function () {
+    config()->set('oidc-client.leeway', 60);
+    $jwt = $this->provider->idToken(fakeProviderClaims(['iat' => time() + 61]), 'key-1');
+
+    app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
+})->throws(OidcClientException::class, 'issued in the future');
