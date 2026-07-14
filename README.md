@@ -37,6 +37,34 @@ See `config/oidc-client.php`. Set the provider `issuer`, your registered
 `client_id` / `client_secret` / `redirect_uri`, the `scopes` you request, and the
 `login_guard` the resolved user is logged into.
 
+## Back-channel logout
+
+Back-channel logout is **opt-in**. Set `OIDC_RP_BACKCHANNEL_LOGOUT_ENABLED=true` to
+register a `POST /oidc/backchannel-logout` endpoint that accepts
+[OIDC back-channel logout tokens](https://openid.net/specs/openid-connect-backchannel-1_0.html)
+pushed by the provider and tears down the matching local session.
+
+You must register this endpoint as the RP's `backchannel_logout_uri`
+(`<your-app-url>/oidc/backchannel-logout`) on the client at the provider — providers
+only POST to URIs they know about.
+
+For *immediate* teardown, back-channel logout needs:
+
+- a **persistent cache store** (redis, database, or file — not `array`), because the
+  endpoint records a session pointer and a revocation marker in cache; and
+- a **server-side session driver** (database, redis, or file), so the endpoint can
+  destroy the session directly through its handler.
+
+With the cookie session driver there's no server-side session to destroy directly, so
+teardown falls back to the revocation marker: the next request from that browser is
+caught and logged out by the `EnforceBackchannelLogout` middleware instead of being
+torn down immediately.
+
+That middleware is auto-appended to the `web` middleware group whenever back-channel
+logout is enabled. Set `oidc-client.backchannel_logout.auto_middleware` to `false` if
+you'd rather register `oidc-client.enforce-logout` yourself (e.g. on a subset of
+routes).
+
 ## Development
 
 ```bash
