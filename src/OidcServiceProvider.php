@@ -14,10 +14,13 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
+use Bambamboole\LaravelOidc\Console\DispatchExpiredSessionLogoutsCommand;
 use Bambamboole\LaravelOidc\Console\ProvisionClientCommand;
 use Bambamboole\LaravelOidc\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
@@ -38,9 +41,11 @@ use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Session\EndOidcSession;
 use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
 use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
 use Bambamboole\LaravelOidc\Session\SessionMintTokenProvider;
+use Bambamboole\LaravelOidc\Session\StartOidcSession;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
@@ -122,6 +127,8 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
+        $this->app->singleton(SessionRegistry::class);
+        $this->app->singleton(BackChannelLogoutNotifier::class);
         $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
 
@@ -181,7 +188,9 @@ class OidcServiceProvider extends ServiceProvider
 
         Event::listen(Login::class, RecordAuthTime::class);
         Event::listen(Login::class, EstablishSessionToken::class);
+        Event::listen(Login::class, StartOidcSession::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
+        Event::listen(Logout::class, EndOidcSession::class);
 
         ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => url(route(
             'identity.password.reset',
@@ -209,6 +218,7 @@ class OidcServiceProvider extends ServiceProvider
             $this->commands([
                 ProvisionClientCommand::class,
                 PruneAuthenticationContextsCommand::class,
+                DispatchExpiredSessionLogoutsCommand::class,
                 RotateKeysCommand::class,
             ]);
         }

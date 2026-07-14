@@ -45,6 +45,8 @@ class DiscoveryController
             'request_parameter_supported' => false,
             'request_uri_parameter_supported' => false,
             'code_challenge_methods_supported' => ['S256'],
+            'backchannel_logout_supported' => true,
+            'backchannel_logout_session_supported' => true,
             'token_endpoint_auth_methods_supported' => ['client_secret_basic', 'client_secret_post', 'none'],
         ];
 

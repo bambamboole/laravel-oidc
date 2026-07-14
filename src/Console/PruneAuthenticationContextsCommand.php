@@ -6,6 +6,8 @@ namespace Bambamboole\LaravelOidc\Console;
 
 use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Auth\Models\SessionParticipant;
 use DateTimeImmutable;
 use Illuminate\Console\Command;
 use Laravel\Passport\Passport;
@@ -27,7 +29,14 @@ class PruneAuthenticationContextsCommand extends Command
         $horizon = now()->subSeconds((int) config('oidc.session.absolute_lifetime') + $idleSeconds);
         $links = AccessTokenContext::query()->where('created_at', '<', $horizon)->delete();
 
-        $this->info("Pruned {$contexts} context(s) and {$links} link(s).");
+        // Sessions are deleted only well after their expiry so the expiry sweep has
+        // announced them first (notify-before-delete).
+        $sessionGrace = now()->subSeconds(86400);
+        $sessions = OidcSession::query()->where('expires_at', '<', $sessionGrace)->pluck('sid');
+        $sessionCount = OidcSession::query()->whereIn('sid', $sessions)->delete();
+        SessionParticipant::query()->whereIn('sid', $sessions)->delete();
+
+        $this->info("Pruned {$contexts} context(s), {$links} link(s), and {$sessionCount} session(s).");
 
         return self::SUCCESS;
     }
