@@ -56,6 +56,13 @@ it('advertises the OAuth 2.1 / RFC 8414 metadata fields', function () {
         ->and($doc->json('revocation_endpoint_auth_methods_supported'))->toBe(['client_secret_basic', 'client_secret_post']);
 });
 
+it('advertises back-channel logout support', function () {
+    $doc = $this->getJson('/.well-known/openid-configuration')->assertOk()->json();
+
+    expect($doc['backchannel_logout_supported'])->toBeTrue()
+        ->and($doc['backchannel_logout_session_supported'])->toBeTrue();
+});
+
 it('builds endpoint URLs from the configured issuer host', function () {
     config(['oidc.issuer' => 'https://id.example.com', 'app.url' => 'https://app.internal']);
 

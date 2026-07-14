@@ -11,6 +11,7 @@ it('persists and reloads an authentication context', function () {
 
     $id = $store->create([
         'user_id' => '42',
+        'sid' => null,
         'amr' => ['pwd', 'otp'],
         'acr' => '2',
         'auth_time' => 1700000000,
@@ -24,6 +25,7 @@ it('persists and reloads an authentication context', function () {
     $row = $store->find($id);
     expect($row)->not->toBeNull()
         ->and($row->user_id)->toBe('42')
+        ->and($row->sid)->toBeNull()
         ->and($row->amr)->toBe(['pwd', 'otp'])
         ->and($row->acr)->toBe('2')
         ->and($row->auth_time)->toBe(1700000000)

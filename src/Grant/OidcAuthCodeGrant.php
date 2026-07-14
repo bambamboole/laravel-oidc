@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Grant;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use DateInterval;
@@ -90,6 +91,7 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                         $this->pendingContext = $context;
                         $responseType->setAmr($context->amr);
                         $responseType->setIdTokenClaims($context->id_token_claims);
+                        $responseType->setSid($context->sid);
                     }
                 } catch (\Throwable) {
                     // Parent will reject the malformed code with a proper OAuth error.
@@ -139,6 +141,11 @@ class OidcAuthCodeGrant extends AuthCodeGrant
                 'context_id' => $this->finalizeContext($authorizationRequest->getUser()->getIdentifier()),
             ];
 
+            $sid = $this->currentSid();
+            if ($sid !== null) {
+                app(SessionRegistry::class)->recordParticipant($sid, $authorizationRequest->getClient()->getIdentifier());
+            }
+
             $jsonPayload = json_encode($payload);
 
             if ($jsonPayload === false) {
@@ -180,18 +187,35 @@ class OidcAuthCodeGrant extends AuthCodeGrant
     private function finalizeContext(string $userId): string
     {
         $amr = $this->currentAmr();
+        $sid = $this->currentSid();
+        $session = is_string($sid) ? app(SessionRegistry::class)->find($sid) : null;
+
+        $expiresAt = $session?->expires_at?->toDateTimeImmutable()
+            ?? (new DateTimeImmutable)->add(
+                new DateInterval('PT'.(int) config('oidc.session.absolute_lifetime').'S'),
+            );
 
         return app(AuthenticationContextStore::class)->create([
             'user_id' => $userId,
+            'sid' => $sid,
             'amr' => $amr,
             'acr' => AuthenticationMethods::deriveAcr($amr),
             'auth_time' => $this->currentAuthTime(),
             'id_token_claims' => $this->currentIdTokenClaims(),
             'access_token_claims' => $this->currentAccessTokenClaims(),
-            'expires_at' => (new DateTimeImmutable)->add(
-                new DateInterval('PT'.(int) config('oidc.session.absolute_lifetime').'S'),
-            ),
+            'expires_at' => $expiresAt,
         ]);
+    }
+
+    private function currentSid(): ?string
+    {
+        if (app()->bound('session.store') && app('session.store')->isStarted()) {
+            $sid = app('session.store')->get('oidc.sid');
+
+            return is_string($sid) && $sid !== '' ? $sid : null;
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed> */

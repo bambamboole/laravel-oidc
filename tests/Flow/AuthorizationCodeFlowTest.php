@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -79,13 +81,20 @@ function completeAuthorization(TestCase $test, array $overrides = [], array $ses
         'code_challenge_method' => 'S256',
     ], $overrides);
 
-    $view = $test->actingAs($test->user, 'identity')
+    $authorize = $test->actingAs($test->user, 'identity')
         ->withSession(array_merge(['oidc.auth_time' => time() - 60], $session))
-        ->get('/oauth/authorize?'.http_build_query($query))
-        ->assertOk();
+        ->get('/oauth/authorize?'.http_build_query($query));
 
-    $approve = $test->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])
-        ->assertRedirect();
+    // Passport skips the consent screen (redirecting straight back with a code)
+    // once the user already granted this client the requested scopes.
+    if ($authorize->isRedirect()) {
+        $approve = $authorize;
+    } else {
+        $view = $authorize->assertOk();
+
+        $approve = $test->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])
+            ->assertRedirect();
+    }
 
     parse_str(parse_url($approve->headers->get('Location'), PHP_URL_QUERY), $params);
 
@@ -408,4 +417,55 @@ it('issues a short-lived access token matching the configured lifetime', functio
     // expires_in reflects the interactive access-token TTL, not Passport's long default
     expect($response->json('expires_in'))->toBeLessThanOrEqual(900)
         ->and($response->json('expires_in'))->toBeGreaterThan(600);
+});
+
+it('pins the context to the login session and its expires_at', function () {
+    // seed an oidc session + sid (completeAuthorization acts as the logged-in user)
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+    $session = OidcSession::query()->find($sid);
+
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+
+    $context = AuthenticationContext::query()->sole();
+    expect($context->sid)->toBe($sid)
+        ->and($context->expires_at->getTimestamp())->toBe($session->expires_at->getTimestamp());
+});
+
+it('emits the sid claim on fresh issuance and on refresh', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+
+    $response = completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+    expect(parseIdToken($response->json('id_token'))->claims()->get('sid'))->toBe($sid);
+
+    $refreshed = $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $response->json('refresh_token'),
+    ])->assertOk();
+    expect(parseIdToken($refreshed->json('id_token'))->claims()->get('sid'))->toBe($sid);
+});
+
+it('records one participant per session-client on authorization', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk();
+    completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->assertOk(); // same client again
+
+    expect(app(SessionRegistry::class)->participantClientIds($sid))
+        ->toBe([$this->client->id]);
+});
+
+it('denies refresh after the session is revoked', function () {
+    $sid = app(SessionRegistry::class)->start((string) $this->user->id);
+    $refreshToken = completeAuthorization($this, [], ['oidc.amr' => ['pwd'], 'oidc.sid' => $sid])->json('refresh_token');
+
+    app(SessionRegistry::class)->revoke($sid);
+
+    $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $refreshToken,
+    ])->assertStatus(400);
 });

@@ -10,12 +10,13 @@ use Illuminate\Support\Carbon;
 class AuthenticationContextStore
 {
     /**
-     * @param  array{user_id: string, amr: list<string>, acr: ?string, auth_time: ?int, id_token_claims: array<string, mixed>, access_token_claims: array<string, mixed>, expires_at: \DateTimeInterface}  $attributes
+     * @param  array{user_id: string, sid: ?string, amr: list<string>, acr: ?string, auth_time: ?int, id_token_claims: array<string, mixed>, access_token_claims: array<string, mixed>, expires_at: \DateTimeInterface}  $attributes
      */
     public function create(array $attributes): string
     {
         $context = new AuthenticationContext;
         $context->user_id = $attributes['user_id'];
+        $context->sid = $attributes['sid'];
         $context->amr = $attributes['amr'];
         $context->acr = $attributes['acr'];
         $context->auth_time = $attributes['auth_time'];
