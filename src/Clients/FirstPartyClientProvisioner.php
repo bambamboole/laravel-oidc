@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Clients;
 
+use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Client;
@@ -19,7 +20,10 @@ final readonly class FirstPartyClientProvisioner
 
     private const TokenExchangeGrant = 'urn:ietf:params:oauth:grant-type:token-exchange';
 
-    public function __construct(private ClientRepository $clients) {}
+    public function __construct(
+        private ClientRepository $clients,
+        private Hasher $hasher,
+    ) {}
 
     /**
      * @param  string[]  $redirectUris
@@ -33,6 +37,7 @@ final readonly class FirstPartyClientProvisioner
         array $allowedExchangeAudiences = [],
         ?string $adoptClientId = null,
         bool $rotateSecret = false,
+        ?string $existingClientSecret = null,
     ): FirstPartyClientProvisioningResult {
         $name = trim($name);
         $redirectUris = $this->normalizeUris($redirectUris, 'redirect URI');
@@ -59,6 +64,7 @@ final readonly class FirstPartyClientProvisioner
                 $allowedExchangeAudiences,
                 $adoptClientId,
                 $rotateSecret,
+                $existingClientSecret,
             );
         } catch (QueryException $exception) {
             if ($this->isUniqueConstraint($exception)
@@ -70,6 +76,7 @@ final readonly class FirstPartyClientProvisioner
                     $allowedExchangeAudiences,
                     $adoptClientId,
                     $rotateSecret,
+                    $existingClientSecret,
                 );
             }
 
@@ -89,6 +96,7 @@ final readonly class FirstPartyClientProvisioner
         array $allowedExchangeAudiences,
         ?string $adoptClientId,
         bool $rotateSecret,
+        ?string $existingClientSecret,
     ): FirstPartyClientProvisioningResult {
         $connection = config('passport.connection');
 
@@ -99,6 +107,7 @@ final readonly class FirstPartyClientProvisioner
             $allowedExchangeAudiences,
             $adoptClientId,
             $rotateSecret,
+            $existingClientSecret,
         ): FirstPartyClientProvisioningResult {
             $client = Passport::client()->newQuery()
                 ->where('oidc_provisioning_key', self::ProvisioningKey)
@@ -127,6 +136,12 @@ final readonly class FirstPartyClientProvisioner
 
             $this->assertEligible($client);
 
+            if (! $created
+                && $existingClientSecret !== null
+                && ! $this->hasher->check($existingClientSecret, (string) $client->getRawOriginal('secret'))) {
+                throw new FirstPartyClientProvisioningException('The existing first-party client secret does not match.');
+            }
+
             $grantTypes = ['authorization_code', 'refresh_token'];
 
             if ($allowedExchangeAudiences !== []) {
@@ -145,7 +160,7 @@ final readonly class FirstPartyClientProvisioner
             $outcome = $created
                 ? FirstPartyClientProvisioningOutcome::Created
                 : FirstPartyClientProvisioningOutcome::Reconciled;
-            $secret = $created ? $client->plainSecret : null;
+            $secret = $created ? $client->plainSecret : $existingClientSecret;
 
             if ($rotateSecret) {
                 $this->clients->regenerateSecret($client);
