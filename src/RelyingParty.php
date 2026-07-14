@@ -11,6 +11,7 @@ use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class RelyingParty
@@ -113,6 +114,19 @@ class RelyingParty
         ]);
 
         $request->session()->regenerate();
+
+        if (config('oidc-client.backchannel_logout.enabled', false)) {
+            $sid = $claims['sid'] ?? null;
+
+            if (is_string($sid) && $sid !== '') {
+                $request->session()->put('oidc-client.sid', $sid);
+                Cache::put(
+                    "oidc-client:bclo:session:{$sid}",
+                    $request->session()->getId(),
+                    now()->addMinutes((int) config('oidc-client.backchannel_logout.retention_minutes', 120)),
+                );
+            }
+        }
 
         return redirect()->intended((string) config('oidc-client.redirect_after_login', '/dashboard'));
     }

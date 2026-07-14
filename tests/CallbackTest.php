@@ -26,6 +26,7 @@ beforeEach(function () {
         'aud' => 'client-123',
         'sub' => (string) $this->user->getKey(),
         'nonce' => 'the-nonce',
+        'sid' => 'the-sid',
         'iat' => time(),
         'nbf' => time(),
         'exp' => time() + 300,
@@ -64,6 +65,21 @@ it('completes the callback and logs the user into the web guard', function () {
         && $request['grant_type'] === 'authorization_code'
         && $request['code_verifier'] === 'the-verifier'
         && $request['client_secret'] === 'secret-xyz');
+});
+
+it('records the sid and a session pointer when backchannel logout is enabled', function () {
+    config()->set('oidc-client.backchannel_logout.enabled', true);
+
+    $this->withSession([
+        'oidc-client.state' => 'the-state',
+        'oidc-client.nonce' => 'the-nonce',
+        'oidc-client.code_verifier' => 'the-verifier',
+    ])->get('/login/callback?code=auth-code&state=the-state')
+        ->assertRedirect('/dashboard');
+
+    $this->assertAuthenticatedAs($this->user);
+    expect(session('oidc-client.sid'))->toBe('the-sid');
+    expect(Cache::has('oidc-client:bclo:session:the-sid'))->toBeTrue();
 });
 
 it('rejects a tampered state and does not log in', function () {
