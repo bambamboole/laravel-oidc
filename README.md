@@ -494,11 +494,48 @@ servers without ever holding a long-lived, broadly-scoped credential:
 > cookie sent to the browser; a server-side session driver (e.g. `database`,
 > `redis`) is recommended so the root token stays server-side.
 
+### Provisioning the first-party client
+
+Create or reconcile the single managed first-party Passport client through the
+facade:
+
+```php
+use Bambamboole\LaravelOidc\Facades\Oidc;
+
+$result = Oidc::provisionFirstPartyClient(
+    name: 'Web application',
+    redirectUris: ['https://app.example.com/auth/callback'],
+    postLogoutRedirectUris: ['https://app.example.com'],
+    allowedExchangeAudiences: ['https://api.example.com'],
+    existingClientSecret: $knownClientSecret,
+);
+
+$clientId = $result->clientId;
+$clientSecret = $result->clientSecret;
+```
+
+The first call creates the client and returns its generated plaintext secret. If
+the managed client already exists and `existingClientSecret` is supplied, the
+package verifies it against that client inside the row-locked reconciliation
+transaction before changing any metadata. A successful reconciliation returns the
+same verified plaintext and the authoritative client ID, so an application can
+recover a missing ID without rotating a still-usable secret.
+
+Omitting `existingClientSecret` preserves the original behavior: the client is
+reconciled, but `clientSecret` is `null`. An empty or mismatched supplied secret
+fails without modifying the client. A legacy client can be adopted with
+`adoptClientId`, and its supplied credential is verified before adoption. Set
+`rotateSecret: true` to rotate explicitly; when an existing credential is supplied,
+it must verify first and the result contains only the newly generated secret.
+
+Credential recovery only considers the client marked with the unique
+`oidc_provisioning_key`; the package never scans unrelated OAuth clients by secret.
+
 ### Config
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `oidc.first_party_client` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](#token-exchange-rfc-8693)) gates which audiences `issueScopedToken()` may mint for. |
+| `oidc.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](#token-exchange-rfc-8693)) gates which audiences `issueScopedToken()` may mint for. |
 | `oidc.session_token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
 | `oidc.session_token.session_key` | `oidc.session_token` | Session key the root token (JWT, `jti`, `expires_at`) is stored under. |
 | `oidc.session_token.refresh_skew` | `60` | Seconds before expiry at which `currentToken()` re-mints instead of reusing the stored token. |
@@ -544,7 +581,7 @@ final readonly class IssuedToken
 ```
 
 It throws a `RuntimeException` if there is no session root token for the current
-user, or if `oidc.first_party_client` is unset or does not resolve to a client. The
+user, or if `oidc.first_party.client_id` is unset or does not resolve to a client. The
 usual `DefaultExchangePolicy` rules apply — the requested audience must be in the
 first-party client's `allowed_exchange_audiences`, and requested scopes must be a
 subset of the root token's scopes.
