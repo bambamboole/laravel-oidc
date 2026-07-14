@@ -108,6 +108,7 @@ class OidcManager
         array $allowedExchangeAudiences = [],
         ?string $adoptClientId = null,
         bool $rotateSecret = false,
+        ?string $existingClientSecret = null,
     ): FirstPartyClientProvisioningResult {
         return $this->firstPartyClientProvisioner->provision(
             $name,
@@ -116,6 +117,7 @@ class OidcManager
             $allowedExchangeAudiences,
             $adoptClientId,
             $rotateSecret,
+            $existingClientSecret,
         );
     }
 
