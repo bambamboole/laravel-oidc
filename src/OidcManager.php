@@ -20,6 +20,7 @@ use Bambamboole\LaravelOidc\Routing\HandlerConfig;
 use Closure;
 use Laravel\Passport\Passport;
 use RuntimeException;
+use SensitiveParameter;
 
 class OidcManager
 {
@@ -108,7 +109,7 @@ class OidcManager
         array $allowedExchangeAudiences = [],
         ?string $adoptClientId = null,
         bool $rotateSecret = false,
-        ?string $existingClientSecret = null,
+        #[SensitiveParameter] ?string $existingClientSecret = null,
     ): FirstPartyClientProvisioningResult {
         return $this->firstPartyClientProvisioner->provision(
             $name,

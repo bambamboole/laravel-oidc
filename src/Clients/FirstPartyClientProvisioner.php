@@ -12,6 +12,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use League\Uri\Http;
 use League\Uri\Uri;
+use SensitiveParameter;
 use Throwable;
 
 final readonly class FirstPartyClientProvisioner
@@ -37,7 +38,7 @@ final readonly class FirstPartyClientProvisioner
         array $allowedExchangeAudiences = [],
         ?string $adoptClientId = null,
         bool $rotateSecret = false,
-        ?string $existingClientSecret = null,
+        #[SensitiveParameter] ?string $existingClientSecret = null,
     ): FirstPartyClientProvisioningResult {
         $name = trim($name);
         $redirectUris = $this->normalizeUris($redirectUris, 'redirect URI');
@@ -96,7 +97,7 @@ final readonly class FirstPartyClientProvisioner
         array $allowedExchangeAudiences,
         ?string $adoptClientId,
         bool $rotateSecret,
-        ?string $existingClientSecret,
+        #[SensitiveParameter] ?string $existingClientSecret,
     ): FirstPartyClientProvisioningResult {
         $connection = config('passport.connection');
 
