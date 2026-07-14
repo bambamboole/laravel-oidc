@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidcClient;
 
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidcClient\Http\Middleware\EnforceBackchannelLogout;
 use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
 use Bambamboole\LaravelOidcClient\Token\JwksKeyResolver;
 use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
@@ -28,6 +29,18 @@ class OidcClientServiceProvider extends ServiceProvider
     {
         if (config('oidc-client.enabled', false)) {
             $this->loadRoutesFrom(__DIR__.'/../routes/oidc-client.php');
+        }
+
+        if (config('oidc-client.backchannel_logout.enabled', false)) {
+            $router = $this->app['router'];
+            $router->aliasMiddleware('oidc-client.enforce-logout', EnforceBackchannelLogout::class);
+
+            if (config('oidc-client.backchannel_logout.auto_middleware', true)) {
+                $router->pushMiddlewareToGroup(
+                    (string) config('oidc-client.backchannel_logout.middleware_group', 'web'),
+                    EnforceBackchannelLogout::class,
+                );
+            }
         }
 
         $this->publishes([
