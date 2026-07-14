@@ -17,3 +17,20 @@ it('provisions through the public facade', function () {
         ->and($result->clientId)->toBe((string) $result->client->getKey())
         ->and($result->clientSecret)->toBeString();
 });
+
+it('reconciles a verified client credential through the public facade', function () {
+    $created = Oidc::provisionFirstPartyClient(
+        name: 'Old name',
+        redirectUris: ['https://old.test/login/callback'],
+    );
+
+    $result = Oidc::provisionFirstPartyClient(
+        name: 'New name',
+        redirectUris: ['https://new.test/login/callback'],
+        existingClientSecret: $created->clientSecret,
+    );
+
+    expect($result->outcome)->toBe(FirstPartyClientProvisioningOutcome::Reconciled)
+        ->and($result->clientId)->toBe($created->clientId)
+        ->and($result->clientSecret)->toBe($created->clientSecret);
+});
