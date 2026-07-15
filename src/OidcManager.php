@@ -6,6 +6,8 @@ namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
+use Bambamboole\LaravelOidc\Auth\Social\Contracts\SocialProvider;
+use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
@@ -33,6 +35,7 @@ class OidcManager
         private readonly PostLoginPipeline $pipeline,
         private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
         private readonly FirstPartyClientConfig $firstPartyClient,
+        private readonly SocialProviderRegistry $socialProviders,
     ) {}
 
     /**
@@ -95,6 +98,27 @@ class OidcManager
     public function resetUserPasswordsUsing(callable|string $action): void
     {
         $this->userActions->resetUserPasswordsUsing($action);
+    }
+
+    public function createUsersFromSocialUsing(callable|string $action): void
+    {
+        $this->userActions->createUsersFromSocialUsing($action);
+    }
+
+    /**
+     * The social providers that are configured and credentialed, keyed by
+     * provider key — for rendering login buttons.
+     *
+     * @return array<string, SocialProvider>
+     */
+    public function socialProviders(): array
+    {
+        return $this->socialProviders->enabled();
+    }
+
+    public function extendSocialProvider(string $driver, Closure $creator): void
+    {
+        $this->socialProviders->extend($driver, $creator);
     }
 
     /**
