@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesPendingAuthorization;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
+use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\Social\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Auth\Social\InvalidStateException;
 use Bambamboole\LaravelOidc\Auth\Social\PendingAuthorization;
+use Bambamboole\LaravelOidc\Auth\Social\SocialAccountManager;
 use Bambamboole\LaravelOidc\Auth\Social\SocialAuthenticationException;
 use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +26,15 @@ use Illuminate\Support\Facades\Log;
 class SocialAuthenticationController
 {
     use ResolvesIdentityGuard;
+    use ResolvesPendingAuthorization;
 
     public function __construct(
         private readonly SocialProviderRegistry $providers,
+        private readonly SocialAccountManager $accounts,
+        private readonly FactorRegistry $factors,
+        private readonly AuthenticationMethods $context,
+        private readonly PostLoginPipeline $pipeline,
+        private readonly DeviceRecognizer $deviceRecognizer,
     ) {}
 
     public function redirect(Request $request, string $provider): RedirectResponse
@@ -70,7 +83,71 @@ class SocialAuthenticationController
 
     private function completeLogin(Request $request, string $providerKey, SocialUser $socialUser): RedirectResponse
     {
-        return $this->failed($request, __('Social login is not yet available.'));
+        $guard = $this->sessionGuard();
+
+        if ($guard->check()) {
+            return redirect()->intended($this->homeUrl());
+        }
+
+        $user = $this->accounts->resolveUser($providerKey, $socialUser, $guard->getProvider());
+
+        if ($user === null) {
+            return $this->failed($request, __('We could not sign you in with this account.'));
+        }
+
+        $this->context->start($providerKey);
+
+        $api = $this->pipeline->run(new LoginEvent(
+            user: $user,
+            client: $this->pendingClient($request),
+            scopes: $this->pendingScopes($request),
+            requestedAcrValues: [],
+            ip: $request->ip(),
+            userAgent: $request->userAgent(),
+            amr: [$providerKey],
+            authTime: null,
+            recognizer: $this->deviceRecognizer,
+            request: $request,
+        ));
+
+        if ($api->isDenied()) {
+            Log::warning('oidc: social login denied by postLogin', ['reason' => $api->denyReason()]);
+            $this->context->forget();
+
+            return $this->failed($request, __('We could not sign you in with this account.'));
+        }
+
+        $request->session()->put('oidc.id_token_claims', $api->idTokenClaims());
+        $request->session()->put('oidc.access_token_claims', $api->accessTokenClaims());
+
+        $challengeProviders = array_values(array_filter(
+            (array) config('oidc.auth.two_factor.challenge_providers', ['totp']),
+            is_string(...),
+        ));
+        $enrollments = $this->factors->challengeableEnrollments($user, $challengeProviders);
+
+        if ($api->mfaRequired() && $enrollments === []) {
+            Log::warning('oidc: social login denied, MFA required but no challengeable factor');
+            $this->context->forget();
+
+            return $this->failed($request, __('We could not sign you in with this account.'));
+        }
+
+        if ($enrollments !== []) {
+            $request->session()->put([
+                'login.id' => $user->getAuthIdentifier(),
+                'login.remember' => false,
+                'login.factor' => $enrollments[0]->providerKey,
+                'login.factor_id' => $enrollments[0]->id,
+            ]);
+
+            return redirect()->route(Handler::TwoFactorLogin->value);
+        }
+
+        $guard->login($user);
+        $request->session()->regenerate();
+
+        return redirect()->intended($this->homeUrl());
     }
 
     private function completeLink(Request $request, string $providerKey, SocialUser $socialUser): RedirectResponse

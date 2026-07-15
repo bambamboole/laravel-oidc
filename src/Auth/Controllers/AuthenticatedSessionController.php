@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Auth\Controllers;
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesPendingAuthorization;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
@@ -17,12 +18,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use League\OAuth2\Server\Entities\ClientEntityInterface;
-use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
 
 class AuthenticatedSessionController
 {
     use ResolvesIdentityGuard;
+    use ResolvesPendingAuthorization;
 
     public function __construct(
         private readonly AuthViewManager $views,
@@ -128,27 +128,5 @@ class AuthenticatedSessionController
         }
 
         return redirect()->intended($this->homeUrl());
-    }
-
-    private function pendingClient(Request $request): ?ClientEntityInterface
-    {
-        $authRequest = $request->session()->get('authRequest');
-
-        return $authRequest instanceof AuthorizationRequestInterface ? $authRequest->getClient() : null;
-    }
-
-    /** @return list<string> */
-    private function pendingScopes(Request $request): array
-    {
-        $authRequest = $request->session()->get('authRequest');
-
-        if (! $authRequest instanceof AuthorizationRequestInterface) {
-            return [];
-        }
-
-        return array_values(array_map(
-            fn ($scope): string => $scope->getIdentifier(),
-            $authRequest->getScopes(),
-        ));
     }
 }
