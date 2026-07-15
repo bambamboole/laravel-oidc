@@ -54,6 +54,7 @@ $result = Oidc::provisionFirstPartyClient(
     allowedExchangeAudiences: ['https://api.orders.test'],
     adoptClientId: null,
     rotateSecret: false,
+    existingClientSecret: null,
 );
 ```
 
@@ -76,6 +77,42 @@ final readonly class FirstPartyClientProvisioningResult
 | `Created` | A new client was created; `clientSecret` holds its plaintext secret. |
 | `Reconciled` | An existing first-party client's metadata was updated in place; `clientSecret` is `null`. |
 | `Rotated` | `rotateSecret: true` was passed; the secret was regenerated and `clientSecret` holds the new plaintext value. |
+
+## Credential-aware reconciliation
+
+By default a reconciliation returns `clientSecret: null` — the package never re-reads an
+existing client's secret, so a caller that only has the client id cannot recover the
+plaintext. Passing `existingClientSecret` changes that: the package **verifies** the
+supplied secret against the managed client, inside the same row-locked reconciliation
+transaction, before touching any metadata.
+
+```php
+$result = Oidc::provisionFirstPartyClient(
+    name: 'My App',
+    redirectUris: ['https://app.test/callback'],
+    existingClientSecret: $knownClientSecret,
+);
+
+// On success: $result->clientId is authoritative, and $result->clientSecret
+// echoes back the verified plaintext — an app can recover a lost id without
+// rotating a still-usable secret.
+```
+
+The behavior:
+
+- **Supplied and correct** → reconciliation proceeds and the result returns the verified
+  plaintext secret (`Reconciled`).
+- **Supplied but empty or mismatched** → the operation fails **without modifying the
+  client**.
+- **Omitted** → original behavior: the client is reconciled but `clientSecret` is `null`.
+- **With `adoptClientId`** → the supplied credential is verified before the legacy client
+  is adopted.
+- **With `rotateSecret: true`** → any supplied credential must verify first; the result
+  then contains only the newly generated secret (`Rotated`).
+
+Credential recovery only ever considers the client marked with the unique
+`oidc_provisioning_key` — the package never scans unrelated OAuth clients by secret. The
+parameter is marked `#[\SensitiveParameter]` so it is redacted from stack traces.
 
 ## Eligibility and validation
 
