@@ -6,8 +6,8 @@ description: Install laravel-oidc, publish its migrations, and generate signing 
 ## Requirements
 
 - PHP `^8.4`
-- `laravel/passport` `^13.4`
-- RS256 signing keys (Passport's `passport:keys`)
+- Laravel 11, 12, or 13
+- `laravel/passport` `^13.4` — the OAuth2 core the package builds on (installed as a dependency)
 
 ## Install
 
@@ -31,18 +31,21 @@ php artisan migrate
 
 ## Generate signing keys
 
-Tokens are signed with RS256. Generate a keypair with Passport:
-
-```bash
-php artisan passport:keys
-```
-
-Or use the package's env-based key command, which keeps keys out of the filesystem and manages
-rotation for you — see [Key rotation](/provider/key-rotation/):
+Tokens are signed with RS256. Generate an env-based keypair — it keeps keys out of the
+filesystem and manages rotation for you (see [Key rotation](/provider/key-rotation/)):
 
 ```bash
 php artisan oidc:rotate-keys
 ```
+
+This writes `OIDC_PRIVATE_KEY` and `OIDC_PUBLIC_KEY` to your `.env` (pass `--print` to emit
+them to stdout for a secrets manager instead).
+
+:::note
+File-based keys work too: keys generated with Passport's `php artisan passport:keys` (or set
+via `PASSPORT_PRIVATE_KEY`/`PASSPORT_PUBLIC_KEY`) are picked up as a fallback whenever the
+`OIDC_*` variables are unset.
+:::
 
 ## Publish the config (optional)
 
@@ -64,8 +67,7 @@ OIDC_ISSUER=https://id.example.com
 
 ## Next steps
 
-- If you only want the **OIDC provider**, register a consent view with
-  `Passport::authorizationView()` (see [Endpoints & discovery](/provider/endpoints/)) and you
-  are ready to authorize clients.
+- If you only want the **OIDC provider**, register a consent view
+  (see [Endpoints & discovery](/provider/endpoints/)) and you are ready to authorize clients.
 - If you want the **auth engine** too, bind your login/registration views and a create-user
   action — see [Auth engine overview](/auth/overview/).

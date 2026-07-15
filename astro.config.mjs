@@ -2,6 +2,7 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLlmsTxt from "starlight-llms-txt";
+import mermaid from "astro-mermaid";
 
 const site = process.env.SITE_URL || "https://bambamboole.github.io/laravel-oidc";
 // GitHub Pages serves this project site under /laravel-oidc. Override with DOCS_BASE="/"
@@ -16,18 +17,21 @@ export default defineConfig({
   publicDir: "./docs/public",
   devToolbar: { enabled: false },
   integrations: [
+    // Must come before starlight so its remark plugin sees the raw ```mermaid blocks.
+    mermaid({ autoTheme: true }),
     starlight({
       title: "laravel-oidc",
       description:
-        "An OpenID Connect identity-provider layer for Laravel, built on Laravel Passport.",
+        "An OIDC-capable auth server for Laravel — turn your app into a full OpenID Connect identity provider.",
       lastUpdated: true,
+      customCss: ["./docs/styles/custom.css"],
       plugins: [
         starlightLlmsTxt({
           projectName: "laravel-oidc",
           description:
-            "laravel-oidc is an OpenID Connect provider and identity layer for Laravel, built on top of Laravel Passport. It adds signed id_tokens, discovery, JWKS, userinfo, RP-initiated and back-channel logout, RFC 7662 introspection, RFC 7009 revocation, RFC 9068 access tokens, RFC 8693 token exchange, and a Fortify-equivalent auth engine (login, registration, password reset, email verification, TOTP/recovery/passkey multi-factor) with a post-login pipeline emitting acr/amr.",
+            "laravel-oidc turns a Laravel application into an OIDC-capable auth server: signed id_tokens, discovery, JWKS, userinfo, RP-initiated and back-channel logout, RFC 7662 introspection, RFC 7009 revocation, RFC 9068 access tokens, RFC 8693 token exchange, and a complete auth engine (login, registration, password reset, email verification, TOTP/recovery/passkey multi-factor) with a post-login pipeline emitting acr/amr.",
           details:
-            "Targets PHP 8.4 and Laravel Passport 13. Open source under the MIT license. Source: https://github.com/bambamboole/laravel-oidc",
+            "Targets PHP 8.4. The OAuth2 core is Laravel Passport 13, which the package extends and reconfigures. Open source under the MIT license. Source: https://github.com/bambamboole/laravel-oidc",
         }),
       ],
       social: [

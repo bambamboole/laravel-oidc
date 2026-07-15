@@ -14,13 +14,13 @@ class LogoutTokenBuilder
 
     public function build(OidcSession $session, string $clientId): string
     {
-        $config = PassportKeys::signingConfiguration();
+        $config = SigningKeys::signingConfiguration();
 
         $now = new DateTimeImmutable;
 
         $token = $config->builder()
             ->withHeader('typ', 'logout+jwt')
-            ->withHeader('kid', PassportKeys::signingKid())
+            ->withHeader('kid', SigningKeys::signingKid())
             ->issuedBy(Issuer::url())
             ->permittedFor($clientId)
             ->identifiedBy(bin2hex(random_bytes(16)))

@@ -28,9 +28,10 @@ interface ScopeRepository
 }
 ```
 
-The default `PassportScopeRepository` merges the OIDC scopes (`openid`, `profile`,
-`email`, `address`, `phone`) over `Passport::$scopes`, and applies the wildcard (`*`)
-parity rules during `finalize()`. Bind your own to change the catalogue:
+The default `DefaultScopeRepository` merges the OIDC scopes (`openid`, `profile`,
+`email`, `address`, `phone`) over any scopes your app registered via `Passport::$scopes`,
+and applies the wildcard (`*`) parity rules during `finalize()`. Bind your own to change
+the catalogue:
 
 ```php
 $this->app->singleton(

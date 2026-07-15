@@ -1,11 +1,12 @@
 # laravel-oidc
 
-An **OpenID Connect (OIDC) identity-provider layer** for Laravel, built on top of
-**Laravel Passport 13**.
+An **OIDC-capable auth server built as a Laravel package** — turn your Laravel app into a
+full OpenID Connect identity provider that other applications authenticate their users
+against.
 
-Passport gives you OAuth2. This package adds the OIDC identity layer on top of it — and,
-optionally, a Fortify-equivalent authentication engine — so a Laravel app can act as a full
-identity provider. It does not replace Passport; it extends and reconfigures it.
+The package provides the complete protocol surface of an identity provider and, optionally,
+a complete authentication engine (login, registration, MFA) that your app fills with its own
+views and actions.
 
 📖 **[Read the documentation →](https://bambamboole.github.io/laravel-oidc)**
 
@@ -20,9 +21,10 @@ identity provider. It does not replace Passport; it extends and reconfigures it.
 - **RFC 9068** structured `at+jwt` access tokens.
 - **RFC 8693** token exchange, with a self-contained `CheckAudience` resource-server middleware.
 - Per-grant claim hooks and a swappable `ClaimsResolver` / `ScopeRepository` / `ExchangePolicy`.
-- Env-based signing keys with a built-in rotation command.
+- Env-based signing keys (`OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY`) with a built-in rotation
+  command.
 
-**Auth engine** (optional, Fortify-equivalent)
+**Auth engine** (optional)
 
 - Package-owned login, registration, password reset, email verification, and password
   confirmation, driven by view and action *seams* your app fills.
@@ -33,8 +35,8 @@ identity provider. It does not replace Passport; it extends and reconfigures it.
 ## Requirements
 
 - PHP `^8.4`
-- `laravel/passport` `^13.4`
-- RS256 signing keys (Passport's `passport:keys`)
+- Laravel 11, 12, or 13
+- `laravel/passport` `^13.4` — the OAuth2 core the package builds on
 
 ## Installation
 
@@ -45,8 +47,8 @@ composer require bambamboole/laravel-oidc
 php artisan vendor:publish --tag=oidc-migrations
 php artisan migrate
 
-# Generate RSA signing keys (or use oidc:rotate-keys for env-based, rotatable keys)
-php artisan passport:keys
+# Generate env-based, rotatable RSA signing keys (OIDC_PRIVATE_KEY / OIDC_PUBLIC_KEY)
+php artisan oidc:rotate-keys
 
 # Optional: publish the config
 php artisan vendor:publish --tag=oidc-config
@@ -59,10 +61,11 @@ See the **[Installation guide](https://bambamboole.github.io/laravel-oidc/introd
 for the full walkthrough, and **[Configuration](https://bambamboole.github.io/laravel-oidc/introduction/configuration/)**
 for every `config/oidc.php` key.
 
-## What it takes over
+## Built on Passport
 
-On registration the package calls `Passport::ignoreRoutes()` and registers the full `/oauth/*`
-route surface itself, so that:
+Under the hood, the OAuth2 core is **Laravel Passport 13** — the package extends and
+reconfigures it rather than reimplementing an authorization server. On registration it calls
+`Passport::ignoreRoutes()` and registers the full `/oauth/*` route surface itself, so that:
 
 - OIDC scopes, `max_age`, and the `id_token` response type are wired in.
 - **PKCE is required on every authorization request** (OAuth 2.1 §4.1.1/§7.6), for confidential

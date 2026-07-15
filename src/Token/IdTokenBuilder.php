@@ -27,7 +27,7 @@ class IdTokenBuilder
      */
     public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, array $amr = [], array $idTokenClaims = [], ?string $sid = null): string
     {
-        $config = PassportKeys::signingConfiguration();
+        $config = SigningKeys::signingConfiguration();
 
         $clientId = $accessToken->getClient()->getIdentifier();
         $scopes = array_map(
@@ -37,7 +37,7 @@ class IdTokenBuilder
         $now = new DateTimeImmutable;
 
         $builder = $config->builder()
-            ->withHeader('kid', PassportKeys::signingKid())
+            ->withHeader('kid', SigningKeys::signingKid())
             ->issuedBy(Issuer::url())
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())

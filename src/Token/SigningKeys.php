@@ -10,7 +10,7 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use RuntimeException;
 
-final class PassportKeys
+final class SigningKeys
 {
     /** @var array<string, string> */
     private static array $kidCache = [];
@@ -43,10 +43,12 @@ final class PassportKeys
 
     private static function key(string $type): string
     {
-        $key = str_replace('\n', "\n", (string) config("passport.{$type}_key"));
+        foreach (["oidc.{$type}_key", "passport.{$type}_key"] as $configKey) {
+            $key = str_replace('\n', "\n", (string) config($configKey));
 
-        if ($key !== '') {
-            return $key;
+            if ($key !== '') {
+                return $key;
+            }
         }
 
         $path = Passport::keyPath("oauth-{$type}.key");
@@ -54,7 +56,7 @@ final class PassportKeys
 
         if ($contents === false) {
             throw new RuntimeException(
-                "Unable to read the OAuth {$type} key from [{$path}]. Run `php artisan passport:keys` or set PASSPORT_".strtoupper($type).'_KEY.',
+                "Unable to read the OIDC {$type} signing key from [{$path}]. Run `php artisan oidc:rotate-keys` or set OIDC_".strtoupper($type).'_KEY.',
             );
         }
 

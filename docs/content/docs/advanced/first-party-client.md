@@ -32,7 +32,7 @@ php artisan oidc:client --first-party \
 | `--post-logout-redirect-uri=*` | Registered post-logout redirect URI. Repeatable. |
 | `--audience=*` | Allowed token-exchange audience. Repeatable. Adding any enables the token-exchange grant on the client. |
 | `--trusted` | Mark the first-party client as trusted (skips consent). |
-| `--adopt=` | Adopt an existing Passport client id under the first-party provisioning key. |
+| `--adopt=` | Adopt an existing OAuth client id under the first-party provisioning key. |
 | `--rotate` | Rotate the client secret explicitly. |
 | `--write-env` | Write `OIDC_FIRST_PARTY_CLIENT` and `OIDC_FIRST_PARTY_TRUSTED` to `.env`. |
 
@@ -63,7 +63,7 @@ It returns a `FirstPartyClientProvisioningResult`:
 ```php
 final readonly class FirstPartyClientProvisioningResult
 {
-    public Client $client;                             // the Passport client model
+    public Client $client;                             // the oauth_clients model (Laravel\Passport\Client)
     public string $clientId;
     public ?string $clientSecret;                      // plaintext, only when newly created or rotated
     public FirstPartyClientProvisioningOutcome $outcome;

@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Token\Jwk;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Support\Facades\File;
 use Laravel\Passport\Passport;
 
@@ -25,13 +25,13 @@ function decodeEnvKey(string $envContents, string $name): string
 
 it('writes a new keypair and the previous public key to .env', function () {
     $env = tempEnv();
-    $currentKid = Jwk::fromPem(PassportKeys::publicKey())['kid'];
+    $currentKid = Jwk::fromPem(SigningKeys::publicKey())['kid'];
 
     $this->artisan('oidc:rotate-keys', ['--force' => true])->assertSuccessful();
 
     $contents = (string) file_get_contents($env);
-    $newPrivate = decodeEnvKey($contents, 'PASSPORT_PRIVATE_KEY');
-    $newPublic = decodeEnvKey($contents, 'PASSPORT_PUBLIC_KEY');
+    $newPrivate = decodeEnvKey($contents, 'OIDC_PRIVATE_KEY');
+    $newPublic = decodeEnvKey($contents, 'OIDC_PUBLIC_KEY');
     $previousPublic = decodeEnvKey($contents, 'OIDC_PREVIOUS_PUBLIC_KEY');
 
     expect($newPrivate)->toContain('BEGIN PRIVATE KEY')
@@ -40,15 +40,15 @@ it('writes a new keypair and the previous public key to .env', function () {
 });
 
 it('upserts existing keys instead of duplicating them', function () {
-    $env = tempEnv("APP_NAME=Testing\nPASSPORT_PRIVATE_KEY=\"stale\"\nOTHER=keep\n");
+    $env = tempEnv("APP_NAME=Testing\nOIDC_PRIVATE_KEY=\"stale\"\nOTHER=keep\n");
 
     $this->artisan('oidc:rotate-keys', ['--force' => true])->assertSuccessful();
 
     $contents = (string) file_get_contents($env);
 
-    expect(substr_count($contents, 'PASSPORT_PRIVATE_KEY='))->toBe(1)
+    expect(substr_count($contents, 'OIDC_PRIVATE_KEY='))->toBe(1)
         ->and($contents)->toContain('OTHER=keep')
-        ->and(decodeEnvKey($contents, 'PASSPORT_PRIVATE_KEY'))->not->toContain('stale');
+        ->and(decodeEnvKey($contents, 'OIDC_PRIVATE_KEY'))->not->toContain('stale');
 });
 
 it('prints the env variables without touching .env when --print is given', function () {
@@ -56,7 +56,7 @@ it('prints the env variables without touching .env when --print is given', funct
     $before = (string) file_get_contents($env);
 
     $this->artisan('oidc:rotate-keys', ['--print' => true])
-        ->expectsOutputToContain('PASSPORT_PRIVATE_KEY=')
+        ->expectsOutputToContain('OIDC_PRIVATE_KEY=')
         ->expectsOutputToContain('OIDC_PREVIOUS_PUBLIC_KEY=')
         ->assertSuccessful();
 
@@ -83,6 +83,6 @@ it('omits the previous key on a first-time generation with no current key', func
 
     $contents = (string) file_get_contents($env);
 
-    expect($contents)->toContain('PASSPORT_PRIVATE_KEY=')
+    expect($contents)->toContain('OIDC_PRIVATE_KEY=')
         ->and($contents)->not->toContain('OIDC_PREVIOUS_PUBLIC_KEY=');
 });

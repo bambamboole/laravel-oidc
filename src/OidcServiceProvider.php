@@ -40,7 +40,7 @@ use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
-use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Scopes\DefaultScopeRepository;
 use Bambamboole\LaravelOidc\Session\EndOidcSession;
 use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
 use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
@@ -75,6 +75,16 @@ class OidcServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/oidc.php', 'oidc');
 
+        // Feed the OIDC signing keys into Passport's config so its token guard
+        // verifies with the same keypair the package signs with.
+        foreach (['private', 'public'] as $type) {
+            $key = (string) config("oidc.{$type}_key");
+
+            if ($key !== '') {
+                config()->set("passport.{$type}_key", $key);
+            }
+        }
+
         $identityGuard = (string) config('oidc.auth.guard', 'identity');
 
         if (! config()->has("auth.guards.{$identityGuard}")) {
@@ -90,7 +100,7 @@ class OidcServiceProvider extends ServiceProvider
         Passport::useAccessTokenEntity(OidcAccessToken::class);
         Passkeys::ignoreRoutes();
 
-        $this->app->singleton(ScopeRepository::class, PassportScopeRepository::class);
+        $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
         $this->app->singleton(ClaimHooks::class);

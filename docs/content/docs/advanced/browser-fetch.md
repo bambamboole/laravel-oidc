@@ -15,6 +15,22 @@ servers without ever holding a long-lived, broadly-scoped credential:
    one per resource server the browser needs to call. These are the only tokens handed
    to the client.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant App as Laravel app (OP + first party)
+    participant RS as Resource server
+
+    B->>App: Login
+    App->>App: Mint session root token<br/>(kept server-side in the session)
+    B->>App: Ask for an API token
+    App->>App: Oidc::issueScopedToken()<br/>exchanges the root token (RFC 8693)
+    App->>B: Short-lived browser token<br/>(aud = the resource server)
+    B->>RS: fetch() with Bearer browser token
+    RS->>B: Response
+```
+
 :::caution[Use a server-side session driver]
 With `SESSION_DRIVER=cookie` the root token rides inside the encrypted session cookie
 sent to the browser. A server-side session driver (e.g. `database`, `redis`) is

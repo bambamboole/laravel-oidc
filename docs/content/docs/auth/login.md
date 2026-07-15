@@ -38,6 +38,23 @@ The store action is throttled to **5 requests per minute** and runs the followin
    `id_token`/`access_token` claims from the pipeline are stored on the session.
 6. **Branch on MFA** (below).
 
+```mermaid
+flowchart TD
+    A["POST identity.login.store"] --> B["Validate + lowercase username"]
+    B --> C{"Credentials valid?"}
+    C -- no --> F["Generic auth.failed error"]
+    C -- yes --> D["Record pwd factor"]
+    D --> E["Post-login pipeline"]
+    E -- "deny()" --> F
+    E -- ok --> G{"Challengeable factor enrolled?"}
+    G -- "no, but requireMfa()" --> F
+    G -- no --> H["Log in + regenerate session"]
+    G -- yes --> I["Stash pending login,<br/>redirect to two-factor challenge"]
+    I --> J["Verify factor (adds its amr)"]
+    J --> H
+    H --> K["Redirect to intended / home"]
+```
+
 ### Success response
 
 When no challengeable factor is enrolled, the user is logged in on the `identity` guard (honouring

@@ -1,0 +1,20 @@
+/* Widen the content column — the config/route tables need more room than
+   Starlight's 45rem default. */
+:root {
+  --sl-content-width: 56rem;
+}
+
+/* Let tables use the full column instead of shrink-wrapping their content. */
+.sl-markdown-content table {
+  width: 100%;
+  display: table;
+}
+
+/* Center mermaid diagrams and keep them inside the column. */
+.sl-markdown-content pre.mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  background: none;
+  border: none;
+}

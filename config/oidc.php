@@ -43,6 +43,12 @@ use Laravel\Passport\Http\Controllers\TransientTokenController;
 return [
     'issuer' => env('OIDC_ISSUER'),
 
+    // RS256 signing keypair as PEM strings (\n-escaped single lines are fine).
+    // When unset, resolution falls back to passport.{private,public}_key and
+    // finally Passport's oauth-{private,public}.key files.
+    'private_key' => env('OIDC_PRIVATE_KEY'),
+    'public_key' => env('OIDC_PUBLIC_KEY'),
+
     'token_lifetimes' => [
         // Interactive access token (authorization_code) + refreshed access tokens. Short, per industry.
         'access_token' => (int) env('OIDC_ACCESS_TOKEN_TTL', 900),
