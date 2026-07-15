@@ -7,7 +7,8 @@
   "scripts": {
     "docs:dev": "astro dev",
     "docs:build": "astro build",
-    "docs:preview": "astro preview"
+    "docs:preview": "astro preview",
+    "docs:fetch-client": "sh scripts/fetch-client-docs.sh"
   },
   "devDependencies": {
     "@astrojs/starlight": "^0.41.3",

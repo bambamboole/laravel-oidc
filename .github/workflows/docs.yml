@@ -36,6 +36,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch client docs
+        run: npm run docs:fetch-client
+
       - name: Build docs
         run: npm run docs:build
 
