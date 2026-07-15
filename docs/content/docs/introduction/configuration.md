@@ -11,6 +11,8 @@ below with its default and the environment variable that overrides it.
 | Key | Default | Description |
 | --- | --- | --- |
 | `issuer` | `env('OIDC_ISSUER')` | Issuer URL. Falls back to `app.url` when null. All endpoint URLs advertised in discovery are derived from this origin. |
+| `private_key` | `env('OIDC_PRIVATE_KEY')` | RS256 private signing key as a PEM string (`\n`-escaped single lines are fine). See [Key rotation](/provider/key-rotation/). |
+| `public_key` | `env('OIDC_PUBLIC_KEY')` | The matching public key, published in JWKS. |
 | `token_lifetimes.access_token` | `900` (`OIDC_ACCESS_TOKEN_TTL`) | Interactive (`authorization_code`) and refreshed access-token lifetime in seconds. |
 | `token_lifetimes.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
 | `token_lifetimes.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
@@ -31,7 +33,7 @@ below with its default and the environment variable that overrides it.
 | --- | --- | --- |
 | `token_exchange.enabled` | `true` (`OIDC_TOKEN_EXCHANGE_ENABLED`) | Enables the RFC 8693 token-exchange grant. |
 | `key_size` | `2048` (`OIDC_KEY_SIZE`) | RSA key size `oidc:rotate-keys` generates. |
-| `additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys published in JWKS; defaults to the previous signing key during rotation. |
+| `additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys published in JWKS; defaults to the previous signing key during rotation — see [Key rotation](/provider/key-rotation/). |
 
 ## Session token (browser-fetch)
 
@@ -64,8 +66,8 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 
 ## Assumptions
 
-- The `api` guard uses Passport's `passport` driver.
-- `config('passport.guard')` (set to the `identity` guard by this package) identifies the web
-  session used for the interactive authorization and logout flows.
-- Signing keys are RS256 (`passport:keys`). Token headers carry a `kid` derived from the RFC
-  7638 thumbprint, matched by the JWKS endpoint.
+- The `api` guard uses the `passport` driver (the OAuth2 token guard).
+- The interactive authorization and logout flows run through the `identity` guard the package
+  registers (`oidc.auth.guard`).
+- Signing keys are RS256 — see [Key rotation](/provider/key-rotation/). Token headers carry a
+  `kid` derived from the RFC 7638 thumbprint, matched by the JWKS endpoint.

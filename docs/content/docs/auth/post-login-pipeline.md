@@ -3,9 +3,9 @@ title: The post-login pipeline
 description: The Oidc::postLogin() decision hook that runs once per login, its read/write API, fail-closed behavior, and how it emits acr/amr onto the id_token.
 ---
 
-`Oidc::postLogin()` is a **decision hook**, not a claim writer. Unlike the five OIDC claim hooks
-(`Oidc::onPostLogin()`, `onRefresh()`, and friends — see [Claim hooks](/provider/claim-hooks/)),
-it participates in the interactive login decision itself. Register it in a service provider's
+`Oidc::postLogin()` is a **decision hook**, not a claim writer. Unlike the
+[claim hooks](/provider/claim-hooks/) (`Oidc::onClientCredentials()`, `onTokenExchange()`,
+`onUserinfo()`), it participates in the interactive login decision itself. Register it in a service provider's
 `boot()`. It runs **exactly once** per login attempt — after the primary factor (password) succeeds
 and **before** the [MFA challenge](/auth/multi-factor/) is presented — so it is safe to perform side
 effects such as audit logging from inside it.

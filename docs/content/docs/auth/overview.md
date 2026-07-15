@@ -15,8 +15,8 @@ provides the page and the user-facing decisions.
 
 The engine authenticates against a dedicated session guard, `identity` (configurable via
 `oidc.auth.guard`). The package registers it automatically if your app hasn't defined it, backed
-by the `users` provider, and points `passport.guard` at it so the OIDC authorization flow and
-the auth engine share one guard.
+by the `users` provider, and routes the OIDC authorization flow through the same guard, so the
+provider and the auth engine share one session.
 
 ## View seams
 

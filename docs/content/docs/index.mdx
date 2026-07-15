@@ -1,9 +1,9 @@
 ---
 title: laravel-oidc
-description: An OpenID Connect identity-provider layer for Laravel, built on Laravel Passport.
+description: An OIDC-capable auth server for Laravel — turn your app into a full OpenID Connect identity provider.
 template: splash
 hero:
-  tagline: Turn Laravel Passport into a full OpenID Connect identity provider — signed id_tokens, discovery, JWKS, userinfo, token exchange, and a Fortify-equivalent auth engine.
+  tagline: Turn your Laravel app into a full OpenID Connect identity provider — signed id_tokens, discovery, JWKS, userinfo, token exchange, and a complete authentication engine.
   actions:
     - text: Get started
       # Hero action links are used verbatim (Starlight does not prepend the site `base`),
@@ -23,15 +23,15 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 <CardGrid>
   <Card title="OIDC provider" icon="approve-check">
     Signed RS256 `id_token`s, a discovery document, JWKS, `userinfo`, RP-initiated and
-    back-channel logout, RFC 7662 introspection, and RFC 7009 revocation — layered on top of
-    Passport's OAuth2.
+    back-channel logout, RFC 7662 introspection, and RFC 7009 revocation — the full
+    protocol surface of an identity provider.
   </Card>
   <Card title="RFC 9068 + RFC 8693" icon="random">
     Structured `at+jwt` access tokens, and optional token exchange so a client can trade a
     token for a narrowly-scoped one aimed at a downstream resource server.
   </Card>
   <Card title="Auth engine" icon="seti:lock">
-    A Fortify-equivalent set of package-owned flows — login, registration, password reset,
+    A complete set of package-owned flows — login, registration, password reset,
     email verification, password confirmation, and multi-factor (TOTP, recovery codes,
     passkeys) — that your app fills with its own views and actions.
   </Card>
@@ -44,8 +44,5 @@ import { Card, CardGrid } from "@astrojs/starlight/components";
 ## Requirements
 
 - PHP `^8.4`
-- `laravel/passport` `^13.4`
-- RS256 signing keys (Passport's `passport:keys`)
-
-Passport gives you OAuth2. This package adds the OIDC identity layer on top of it — it does
-not replace Passport, it extends and reconfigures it.
+- Laravel 11, 12, or 13
+- `laravel/passport` `^13.4` — the OAuth2 core the package builds on

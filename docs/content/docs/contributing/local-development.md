@@ -38,11 +38,10 @@ Run `composer check` before opening a pull request — it mirrors what CI enforc
 
 ## The docs site
 
-The documentation is an [Astro Starlight](https://starlight.astro.build/) site under `docs/`, with
-its own Node toolchain:
+The documentation is an [Astro Starlight](https://starlight.astro.build/) site — content lives
+under `docs/`, and the Node toolchain runs from the repository root:
 
 ```bash
-cd docs
 npm install
 npm run docs:dev     # local dev server with hot reload
 npm run docs:build   # production build

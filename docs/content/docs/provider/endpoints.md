@@ -25,6 +25,33 @@ handler to `false` in `config('oidc.handlers')` (`oidc.userinfo`, `oidc.logout`,
 `oidc.introspect`, `oidc.revoke`). When an endpoint is disabled it is also dropped from the
 discovery document.
 
+## The authorization code flow
+
+How the endpoints fit together for an interactive login:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant RP as Relying party
+    participant OP as laravel-oidc (OP)
+
+    RP->>B: Redirect to /oauth/authorize (PKCE S256, scope openid)
+    B->>OP: GET /oauth/authorize
+    alt no identity session
+        OP->>B: Redirect to login
+        B->>OP: Authenticate (password, MFA, ...)
+    end
+    OP->>B: Consent view (skipped for trusted clients)
+    B->>OP: POST /oauth/authorize (approve)
+    OP->>B: Redirect to redirect_uri?code=...
+    B->>RP: Authorization code
+    RP->>OP: POST /oauth/token (code + code_verifier)
+    OP->>RP: access_token (at+jwt), id_token, refresh_token
+    RP->>OP: GET /oauth/userinfo (Bearer access_token)
+    OP->>RP: Claims for the granted scopes
+```
+
 ## The UserInfo endpoint
 
 UserInfo authenticates the bearer token against the guard named by `config('oidc.api_guard')`
@@ -62,8 +89,9 @@ introspection and revocation entries each also advertise an
 
 ## Consent view (required)
 
-The authorization endpoint renders Passport's consent view. You must register one via
-`Passport::authorizationView()`, typically in a service provider `boot()`:
+The authorization endpoint needs a consent view to render. Registration goes through
+Passport (which owns the authorization view seam) via `Passport::authorizationView()`,
+typically in a service provider `boot()`:
 
 ```php
 use Laravel\Passport\Passport;

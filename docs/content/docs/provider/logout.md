@@ -32,6 +32,21 @@ The provider **does** implement OIDC back-channel logout. When a session is dest
 end-session endpoint, or when a session hits its absolute lifetime, the OP notifies every relying
 party that participated in that session.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant OP as laravel-oidc (OP)
+    participant RP1 as RP with backchannel_logout_uri
+    participant RP2 as RP without one
+
+    B->>OP: GET/POST /oauth/logout (id_token_hint)
+    OP->>OP: Verify hint, resolve sid,<br/>revoke the session
+    OP-->>RP1: POST logout token (back-channel)
+    Note over RP2: not notified — never registered a URI
+    OP->>B: Redirect to post_logout_redirect_uri
+```
+
 - Back-channel logout is **opt-in per relying-party client**: a client only receives it if it has
   registered a `backchannel_logout_uri`.
 - On logout at `/oauth/logout`, the session's `sid` is resolved (from the hint's `sid` claim or the

@@ -13,6 +13,21 @@ in discovery's `grant_types_supported` when enabled, and registered under the gr
 urn:ietf:params:oauth:grant-type:token-exchange
 ```
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Confidential client
+    participant OP as laravel-oidc (OP)
+    participant RS as Resource server
+
+    C->>OP: POST /oauth/token<br/>grant_type=token-exchange<br/>subject_token + audience
+    OP->>OP: ExchangePolicy: reciprocity, allowlist,<br/>scope narrowing, lifetime cap
+    OP->>C: access_token (at+jwt, aud = audience, act = client)
+    C->>RS: Request with Bearer token
+    RS->>RS: Validate signature (JWKS), iss, aud, exp, typ
+    RS->>C: Response
+```
+
 ## Enabling it per client
 
 A client must opt in on two columns of `oauth_clients` (added by this package's migration):
