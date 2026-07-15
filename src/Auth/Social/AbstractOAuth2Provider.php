@@ -56,13 +56,15 @@ abstract class AbstractOAuth2Provider implements SocialProvider
 
     public function user(Request $request, PendingAuthorization $pending): SocialUser
     {
-        $state = (string) $request->input('state');
+        $state = $request->input('state');
+        $state = is_string($state) ? $state : '';
 
         if ($pending->provider !== $this->key || $state === '' || ! hash_equals($pending->state, $state)) {
             throw new InvalidStateException('The social callback state does not match the pending authorization.');
         }
 
-        $code = (string) $request->input('code');
+        $code = $request->input('code');
+        $code = is_string($code) ? $code : '';
 
         if ($code === '') {
             throw new SocialAuthenticationException('The social callback is missing the authorization code.');
