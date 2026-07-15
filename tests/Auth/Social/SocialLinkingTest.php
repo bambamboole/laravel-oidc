@@ -107,6 +107,24 @@ it('refuses to link an identity already attached to another user', function () {
     expect(SocialAccount::query()->sole()->authenticatable->is($other))->toBeTrue();
 });
 
+it('rejects a link-intent callback when the identity session is gone', function () {
+    enableCorpForLinking();
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user, 'identity')
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->get(route(Handler::SocialLink->value, ['provider' => 'corp']))
+        ->assertRedirect();
+
+    auth('identity')->logout();
+
+    linkCallbackFor($this)
+        ->assertRedirect(route(Handler::Login->value))
+        ->assertSessionHasErrors('social');
+
+    expect(SocialAccount::query()->count())->toBe(0);
+});
+
 it('requires authentication to start linking', function () {
     enableCorpForLinking();
 
