@@ -78,6 +78,7 @@ export default defineConfig({
             { label: "Password reset & confirmation", link: "/auth/passwords/" },
             { label: "Email verification", link: "/auth/email-verification/" },
             { label: "Multi-factor authentication", link: "/auth/multi-factor/" },
+            { label: "Social login", link: "/auth/social-login/" },
             { label: "The post-login pipeline", link: "/auth/post-login-pipeline/" },
           ],
         },
