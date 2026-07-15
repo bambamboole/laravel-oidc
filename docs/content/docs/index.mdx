@@ -6,7 +6,9 @@ hero:
   tagline: Turn Laravel Passport into a full OpenID Connect identity provider — signed id_tokens, discovery, JWKS, userinfo, token exchange, and a Fortify-equivalent auth engine.
   actions:
     - text: Get started
-      link: /introduction/what-is-laravel-oidc/
+      # Hero action links are used verbatim (Starlight does not prepend the site `base`),
+      # so this must include the /laravel-oidc base. Update if DOCS_BASE changes.
+      link: /laravel-oidc/introduction/what-is-laravel-oidc/
       icon: right-arrow
     - text: View on GitHub
       link: https://github.com/bambamboole/laravel-oidc
