@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Social\GitHubProvider;
 use Bambamboole\LaravelOidc\Auth\Social\PendingAuthorization;
+use Bambamboole\LaravelOidc\Auth\Social\SocialAuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -58,6 +59,17 @@ it('builds the user from the profile and the verified primary email', function (
         ->and($user->emailVerified)->toBeTrue()
         ->and($user->avatar)->toBe('https://avatars.github.test/mona');
 });
+
+it('wraps profile fetch failures in a social authentication exception', function () {
+    Http::fake([
+        'https://github.com/login/oauth/access_token' => Http::response(['access_token' => 'gh-at', 'token_type' => 'bearer']),
+        'https://api.github.com/user' => Http::response([], 500),
+    ]);
+
+    $pending = new PendingAuthorization('github', 'login', 'state-1', null, null);
+
+    githubProvider()->user(githubCallback(), $pending);
+})->throws(SocialAuthenticationException::class);
 
 it('reports no verified email when GitHub has none', function () {
     Http::fake([

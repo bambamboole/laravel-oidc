@@ -42,11 +42,15 @@ class GitHubProvider extends AbstractOAuth2Provider
             throw new SocialAuthenticationException('The [github] token response did not include an access_token.');
         }
 
-        $profile = (array) Http::withToken($tokens->accessToken)
+        $response = Http::withToken($tokens->accessToken)
             ->acceptJson()
-            ->get('https://api.github.com/user')
-            ->throw()
-            ->json();
+            ->get('https://api.github.com/user');
+
+        if ($response->failed()) {
+            throw new SocialAuthenticationException("The [github] user endpoint responded with HTTP {$response->status()}.");
+        }
+
+        $profile = (array) $response->json();
 
         [$email, $emailVerified] = $this->primaryVerifiedEmail($tokens->accessToken);
 
