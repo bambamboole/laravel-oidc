@@ -6,24 +6,24 @@ namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Routing\Handler;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequestInterface;
-use RuntimeException;
 
 class AuthenticatedSessionController
 {
+    use ResolvesIdentityGuard;
+
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
@@ -51,11 +51,7 @@ class AuthenticatedSessionController
             'password' => $request->string('password')->value(),
         ];
 
-        $guard = Auth::guard($this->guard());
-
-        if (! $guard instanceof SessionGuard) {
-            throw new RuntimeException('OIDC authentication requires a session guard.');
-        }
+        $guard = $this->sessionGuard();
 
         $provider = $guard->getProvider();
         $user = $provider->retrieveByCredentials($credentials);
@@ -131,12 +127,7 @@ class AuthenticatedSessionController
             return new JsonResponse('', 200);
         }
 
-        return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));
-    }
-
-    private function guard(): string
-    {
-        return (string) config('oidc.auth.guard', 'identity');
+        return redirect()->intended($this->homeUrl());
     }
 
     private function pendingClient(Request $request): ?ClientEntityInterface

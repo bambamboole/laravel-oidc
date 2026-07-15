@@ -175,13 +175,18 @@ class OidcAuthCodeGrant extends AuthCodeGrant
         );
     }
 
-    private function currentAuthTime(): int
+    private function sessionValue(string $key, mixed $default): mixed
     {
         if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            return (int) app('session.store')->get('oidc.auth_time', time());
+            return app('session.store')->get($key, $default);
         }
 
-        return time();
+        return $default;
+    }
+
+    private function currentAuthTime(): int
+    {
+        return (int) $this->sessionValue('oidc.auth_time', time());
     }
 
     private function finalizeContext(string $userId): string
@@ -209,25 +214,17 @@ class OidcAuthCodeGrant extends AuthCodeGrant
 
     private function currentSid(): ?string
     {
-        if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            $sid = app('session.store')->get('oidc.sid');
+        $sid = $this->sessionValue('oidc.sid', null);
 
-            return is_string($sid) && $sid !== '' ? $sid : null;
-        }
-
-        return null;
+        return is_string($sid) && $sid !== '' ? $sid : null;
     }
 
     /** @return array<string, mixed> */
     private function currentAccessTokenClaims(): array
     {
-        if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            $claims = app('session.store')->get('oidc.access_token_claims', []);
+        $claims = $this->sessionValue('oidc.access_token_claims', []);
 
-            return is_array($claims) ? $claims : [];
-        }
-
-        return [];
+        return is_array($claims) ? $claims : [];
     }
 
     private function context(AuthenticationContextStore $store, mixed $id): ?AuthenticationContext
@@ -238,24 +235,16 @@ class OidcAuthCodeGrant extends AuthCodeGrant
     /** @return list<string> */
     private function currentAmr(): array
     {
-        if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            $amr = app('session.store')->get(AuthenticationMethods::SESSION_KEY, []);
+        $amr = $this->sessionValue(AuthenticationMethods::SESSION_KEY, []);
 
-            return is_array($amr) ? array_values(array_filter($amr, is_string(...))) : [];
-        }
-
-        return [];
+        return is_array($amr) ? array_values(array_filter($amr, is_string(...))) : [];
     }
 
     /** @return array<string, mixed> */
     private function currentIdTokenClaims(): array
     {
-        if (app()->bound('session.store') && app('session.store')->isStarted()) {
-            $claims = app('session.store')->get('oidc.id_token_claims', []);
+        $claims = $this->sessionValue('oidc.id_token_claims', []);
 
-            return is_array($claims) ? $claims : [];
-        }
-
-        return [];
+        return is_array($claims) ? $claims : [];
     }
 }

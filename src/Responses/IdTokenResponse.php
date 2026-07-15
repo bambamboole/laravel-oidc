@@ -66,8 +66,8 @@ class IdTokenResponse extends BearerTokenResponse
     protected function getExtraParams(AccessTokenEntityInterface $accessToken): array
     {
         // Read-and-clear: this response type is resolved once and reused across
-        // requests on long-lived workers (Octane), so nonce/auth_time must never
-        // leak into a subsequent token issuance.
+        // requests on long-lived workers (Octane), so nonce/auth_time/amr/
+        // idTokenClaims/sid must never leak into a subsequent token issuance.
         $nonce = $this->nonce;
         $authTime = $this->authTime;
         $amr = $this->amr;
@@ -89,7 +89,7 @@ class IdTokenResponse extends BearerTokenResponse
         $isExchange = $grantType === self::EXCHANGE_URN;
 
         if (! $isExchange && in_array('openid', $scopes, true) && $accessToken->getUserIdentifier() !== null) {
-            $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $grantType, $amr, $idTokenClaims, $sid);
+            $params['id_token'] = $this->builder->build($accessToken, $nonce, $authTime, $amr, $idTokenClaims, $sid);
         }
 
         if ($isExchange) {

@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\MultiFactor;
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use LogicException;
 
 class RecoveryCodeProvider implements FactorProvider
 {
+    use InteractsWithFactorUser;
+
     public function key(): string
     {
         return 'recovery_code';
@@ -94,14 +95,5 @@ class RecoveryCodeProvider implements FactorProvider
         });
 
         return new FactorVerification($verified, $verified ? ['otp'] : [], ['backup' => true]);
-    }
-
-    private function factorUser(Authenticatable $user): FactorAuthenticatable
-    {
-        if (! $user instanceof FactorAuthenticatable) {
-            throw new LogicException('The authenticatable model must implement the FactorAuthenticatable contract.');
-        }
-
-        return $user;
     }
 }

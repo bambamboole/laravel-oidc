@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Console;
 
+use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
 use Bambamboole\LaravelOidc\Token\Jwk;
 use Bambamboole\LaravelOidc\Token\PassportKeys;
 use Illuminate\Console\Command;
@@ -12,6 +13,8 @@ use Throwable;
 
 class RotateKeysCommand extends Command
 {
+    use WritesEnvFile;
+
     protected $signature = 'oidc:rotate-keys {--print : Print the env variables instead of writing them to .env} {--force : Skip the confirmation prompt}';
 
     protected $description = 'Generate a new OIDC signing keypair as env variables, rolling the current public key into OIDC_PREVIOUS_PUBLIC_KEY';
@@ -42,7 +45,7 @@ class RotateKeysCommand extends Command
 
         if ($this->option('print')) {
             $this->printVars($vars);
-        } elseif (! $this->writeEnv($vars)) {
+        } elseif (! $this->writeEnv($vars, $this->encode(...))) {
             return self::FAILURE;
         }
 
@@ -76,43 +79,6 @@ class RotateKeysCommand extends Command
         foreach ($vars as $name => $pem) {
             $this->line($name.'='.$this->encode($pem));
         }
-    }
-
-    /** @param array<string, string> $vars */
-    private function writeEnv(array $vars): bool
-    {
-        $path = $this->laravel->environmentFilePath();
-        $contents = @file_get_contents($path);
-
-        if ($contents === false) {
-            $this->error("Unable to read the environment file at [{$path}].");
-
-            return false;
-        }
-
-        foreach ($vars as $name => $pem) {
-            $contents = $this->upsert($contents, $name, $this->encode($pem));
-        }
-
-        if (@file_put_contents($path, $contents) === false) {
-            $this->error("Unable to write the environment file at [{$path}].");
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function upsert(string $contents, string $name, string $value): string
-    {
-        $line = $name.'='.$value;
-        $pattern = '/^'.preg_quote($name, '/').'=.*$/m';
-
-        if (preg_match($pattern, $contents) === 1) {
-            return (string) preg_replace($pattern, $line, $contents, 1);
-        }
-
-        return rtrim($contents, "\n")."\n".$line."\n";
     }
 
     private function encode(string $pem): string

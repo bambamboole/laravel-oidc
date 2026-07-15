@@ -99,7 +99,7 @@ class OidcAccessToken extends AccessToken
 
         $builder = $this->jwtConfiguration->builder()
             ->withHeader('typ', 'at+jwt')
-            ->withHeader('kid', Jwk::fromPem(PassportKeys::publicKey())['kid'])
+            ->withHeader('kid', PassportKeys::signingKid())
             ->issuedBy(Issuer::url())
             ->identifiedBy($this->getIdentifier())
             ->issuedAt($now)

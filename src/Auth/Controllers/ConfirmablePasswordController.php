@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class ConfirmablePasswordController
 {
+    use ResolvesIdentityGuard;
+
     public function __construct(private readonly AuthViewManager $views) {}
 
     public function show(Request $request): mixed
@@ -24,7 +27,7 @@ class ConfirmablePasswordController
     {
         $request->validate(['password' => ['required', 'string']]);
 
-        $user = $request->user((string) config('oidc.auth.guard', 'identity'));
+        $user = $this->currentUser($request);
 
         if ($user === null || ! Hash::check($request->string('password')->value(), (string) $user->getAuthPassword())) {
             throw ValidationException::withMessages(['password' => __('auth.password')]);
@@ -36,6 +39,6 @@ class ConfirmablePasswordController
             return new JsonResponse('', 201);
         }
 
-        return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));
+        return redirect()->intended($this->homeUrl());
     }
 }
