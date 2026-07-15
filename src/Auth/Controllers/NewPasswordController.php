@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\Events\PasswordReset;
@@ -21,6 +22,8 @@ use RuntimeException;
 
 class NewPasswordController
 {
+    use ResolvesIdentityGuard;
+
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly UserActionManager $actions,
@@ -58,12 +61,14 @@ class NewPasswordController
 
                 event(new PasswordReset($user));
 
-                Auth::guard((string) config('oidc.auth.guard', 'identity'))->login($user);
+                Auth::guard($this->guardName())->login($user);
             },
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            $request->session()->regenerate();
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
 
             return $request->wantsJson()
                 ? new JsonResponse(['status' => __($status)], 200)

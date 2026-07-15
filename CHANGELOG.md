@@ -9,6 +9,24 @@ breaking changes).
 
 ### Added
 
+- **Auth engine (Fortify-equivalent):** package-owned login, registration, password reset,
+  email verification, and password confirmation, driven by view seams (`Oidc::loginView()`,
+  `registerView()`, …) and action seams (`Oidc::createUsersUsing()`,
+  `resetUserPasswordsUsing()`). All routes are named `identity.*` and run through a dedicated
+  `identity` session guard.
+- **Multi-factor authentication:** a `FactorProvider` registry shipping TOTP
+  (`pragmarx/google2fa`), recovery codes, and passkeys (`laravel/passkeys`), with challenge and
+  management flows.
+- **Post-login pipeline:** `Oidc::postLogin()` decision hook (`requireMfa()` / `deny()` /
+  `setIdTokenClaim()`), fail-closed, plus `acr` / `amr` emission on the `id_token`.
+- **OIDC back-channel logout:** relying parties that register a `backchannel_logout_uri` are
+  notified when a session ends or hits its absolute lifetime, dispatched by
+  `oidc:dispatch-expired-session-logouts`. Advertised in discovery.
+- **First-party client provisioning:** `oidc:client --first-party` and
+  `Oidc::provisionFirstPartyClient()` for idempotent provisioning of the confidential client
+  used by the browser-fetch flow.
+- **Documentation site** built with Starlight (`npm run docs:dev`), covering the OIDC provider,
+  the auth engine, and advanced topics.
 - **Discovery document completeness:** `/.well-known/openid-configuration` now advertises
   `client_credentials` in `grant_types_supported`, `response_modes_supported: ["query"]`,
   `claims_parameter_supported: false`, `request_parameter_supported: false`,
@@ -48,6 +66,12 @@ breaking changes).
 - Internal dedup: `AccessTokenHookRunner` and `IdTokenResponse` now share a single
   `ResolvesRequestGrantType` trait, and `CheckAudience` verifies the token's signature once
   and reuses the parsed result instead of re-parsing it to look up the token record.
+- Internal cleanup pass: removed dead hook scaffolding (the unused `PostLogin`/`Refresh`
+  triggers and their context classes — per-login claims are written via the post-login
+  pipeline instead), and extracted shared helpers to remove duplication across the auth
+  controllers (guard/home resolution), the token emitters (JWT signing config + `kid`), the
+  factor providers, the introspection/revocation endpoints, and the `.env`-writing console
+  commands. No behavior change.
 
 ## [0.1.0]
 

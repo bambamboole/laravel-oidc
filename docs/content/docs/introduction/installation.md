@@ -1,0 +1,71 @@
+---
+title: Installation
+description: Install laravel-oidc, publish its migrations, and generate signing keys.
+---
+
+## Requirements
+
+- PHP `^8.4`
+- `laravel/passport` `^13.4`
+- RS256 signing keys (Passport's `passport:keys`)
+
+## Install
+
+```bash
+composer require bambamboole/laravel-oidc
+```
+
+The service provider is auto-discovered.
+
+## Publish and run the migrations
+
+The package ships migrations that extend `oauth_clients` (post-logout redirect URIs, exchange
+audiences, provisioning key, back-channel logout) and add its own tables (authentication
+contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants).
+The publish tag also includes the `laravel/passkeys` migration.
+
+```bash
+php artisan vendor:publish --tag=oidc-migrations
+php artisan migrate
+```
+
+## Generate signing keys
+
+Tokens are signed with RS256. Generate a keypair with Passport:
+
+```bash
+php artisan passport:keys
+```
+
+Or use the package's env-based key command, which keeps keys out of the filesystem and manages
+rotation for you — see [Key rotation](/provider/key-rotation/):
+
+```bash
+php artisan oidc:rotate-keys
+```
+
+## Publish the config (optional)
+
+```bash
+php artisan vendor:publish --tag=oidc-config
+```
+
+This writes `config/oidc.php`. See [Configuration](/introduction/configuration/) for every key.
+
+## Set the issuer
+
+Set `OIDC_ISSUER` to the public origin of your provider (it falls back to `app.url` when unset).
+Every URL advertised in the discovery document is derived from this origin, not the incoming
+request's host:
+
+```dotenv
+OIDC_ISSUER=https://id.example.com
+```
+
+## Next steps
+
+- If you only want the **OIDC provider**, register a consent view with
+  `Passport::authorizationView()` (see [Endpoints & discovery](/provider/endpoints/)) and you
+  are ready to authorize clients.
+- If you want the **auth engine** too, bind your login/registration views and a create-user
+  action — see [Auth engine overview](/auth/overview/).

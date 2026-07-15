@@ -9,9 +9,6 @@ use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
-use Lcobucci\JWT\Configuration;
-use Lcobucci\JWT\Signer\Key\InMemory;
-use Lcobucci\JWT\Signer\Rsa\Sha256;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use RuntimeException;
@@ -28,13 +25,9 @@ class IdTokenBuilder
      * @param  array<int, string>  $amr
      * @param  array<string, mixed>  $idTokenClaims
      */
-    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, ?string $grantType = null, array $amr = [], array $idTokenClaims = [], ?string $sid = null): string
+    public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, array $amr = [], array $idTokenClaims = [], ?string $sid = null): string
     {
-        $config = Configuration::forAsymmetricSigner(
-            new Sha256,
-            InMemory::plainText(PassportKeys::privateKey()),
-            InMemory::plainText(PassportKeys::publicKey()),
-        );
+        $config = PassportKeys::signingConfiguration();
 
         $clientId = $accessToken->getClient()->getIdentifier();
         $scopes = array_map(
@@ -44,7 +37,7 @@ class IdTokenBuilder
         $now = new DateTimeImmutable;
 
         $builder = $config->builder()
-            ->withHeader('kid', Jwk::fromPem(PassportKeys::publicKey())['kid'])
+            ->withHeader('kid', PassportKeys::signingKid())
             ->issuedBy(Issuer::url())
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())

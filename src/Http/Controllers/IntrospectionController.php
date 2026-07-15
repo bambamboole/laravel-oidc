@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Http\ClientCredentials;
-use Bambamboole\LaravelOidc\Http\OAuthError;
+use Bambamboole\LaravelOidc\Http\Controllers\Concerns\AuthenticatesConfidentialClient;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
@@ -16,17 +16,13 @@ use Laravel\Passport\Token;
 
 class IntrospectionController
 {
+    use AuthenticatesConfidentialClient;
+
     public function __invoke(Request $request, ClientCredentials $credentials, TokenInspector $inspector): JsonResponse
     {
-        $clientId = $credentials->validate($request);
+        [$clientId, $tokenValue] = $this->authenticateConfidentialClient($request, $credentials);
 
-        if ($clientId === null) {
-            OAuthError::client();
-        }
-
-        $tokenValue = (string) $request->input('token');
-
-        if ($request->input('token_type_hint') === 'refresh_token') {
+        if ($this->isRefreshTokenHint($request)) {
             return $this->introspectRefreshToken($tokenValue, $clientId, $inspector);
         }
 

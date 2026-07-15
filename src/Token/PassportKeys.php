@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Token;
 
 use Laravel\Passport\Passport;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
 use RuntimeException;
 
 final class PassportKeys
 {
+    /** @var array<string, string> */
+    private static array $kidCache = [];
+
     public static function publicKey(): string
     {
         return self::key('public');
@@ -17,6 +23,22 @@ final class PassportKeys
     public static function privateKey(): string
     {
         return self::key('private');
+    }
+
+    public static function signingConfiguration(): Configuration
+    {
+        return Configuration::forAsymmetricSigner(
+            new Sha256,
+            InMemory::plainText(self::privateKey()),
+            InMemory::plainText(self::publicKey()),
+        );
+    }
+
+    public static function signingKid(): string
+    {
+        $publicKey = self::publicKey();
+
+        return self::$kidCache[$publicKey] ??= Jwk::fromPem($publicKey)['kid'];
     }
 
     private static function key(string $type): string

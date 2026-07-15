@@ -94,7 +94,7 @@ it('omits nonce and auth_time when not provided', function () {
 it('emits amr and derived acr when methods are supplied', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
 
-    $jwt = app(IdTokenBuilder::class)->build(makeAccessToken($user), null, null, 'authorization_code', ['pwd', 'otp']);
+    $jwt = app(IdTokenBuilder::class)->build(makeAccessToken($user), null, null, ['pwd', 'otp']);
 
     $parsed = parseUnencrypted($jwt);
     expect($parsed->claims()->get('amr'))->toBe(['pwd', 'otp'])
@@ -104,7 +104,7 @@ it('emits amr and derived acr when methods are supplied', function () {
 it('emits acr "1" for a single method', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
 
-    $jwt = app(IdTokenBuilder::class)->build(makeAccessToken($user), null, null, 'authorization_code', ['pwd']);
+    $jwt = app(IdTokenBuilder::class)->build(makeAccessToken($user), null, null, ['pwd']);
 
     expect(parseUnencrypted($jwt)->claims()->get('acr'))->toBe('1');
 });

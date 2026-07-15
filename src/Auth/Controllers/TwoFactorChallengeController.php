@@ -6,21 +6,21 @@ namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorResponse;
 use Bambamboole\LaravelOidc\Routing\Handler;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 
 class TwoFactorChallengeController
 {
+    use ResolvesIdentityGuard;
+
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly FactorRegistry $factors,
@@ -73,32 +73,24 @@ class TwoFactorChallengeController
 
         $remember = (bool) $request->session()->pull('login.remember', false);
         $request->session()->forget(['login.id', 'login.factor', 'login.factor_id']);
-        $this->guard()->login($user, $remember);
-        $request->session()->regenerate();
+        $this->sessionGuard()->login($user, $remember);
+
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
 
         if ($request->wantsJson()) {
             return new JsonResponse('', 204);
         }
 
-        return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));
+        return redirect()->intended($this->homeUrl());
     }
 
     private function challengedUser(Request $request): ?Authenticatable
     {
         $id = $request->session()->get('login.id');
 
-        return $id === null ? null : $this->guard()->getProvider()->retrieveById($id);
-    }
-
-    private function guard(): SessionGuard
-    {
-        $guard = Auth::guard((string) config('oidc.auth.guard', 'identity'));
-
-        if (! $guard instanceof SessionGuard) {
-            throw new RuntimeException('OIDC authentication requires a session guard.');
-        }
-
-        return $guard;
+        return $id === null ? null : $this->sessionGuard()->getProvider()->retrieveById($id);
     }
 
     private function pendingEnrollment(Authenticatable $user, string $providerKey, string $id): ?FactorEnrollment

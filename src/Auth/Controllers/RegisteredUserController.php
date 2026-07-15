@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 
 class RegisteredUserController
 {
+    use ResolvesIdentityGuard;
+
     public function __construct(
         private readonly AuthViewManager $views,
         private readonly UserActionManager $actions,
@@ -32,7 +35,7 @@ class RegisteredUserController
 
         event(new Registered($user = $this->actions->createUser($input)));
 
-        Auth::guard((string) config('oidc.auth.guard', 'identity'))->login($user);
+        Auth::guard($this->guardName())->login($user);
 
         if ($request->hasSession()) {
             $request->session()->regenerate();
@@ -42,6 +45,6 @@ class RegisteredUserController
             return new JsonResponse('', 201);
         }
 
-        return redirect()->intended((string) config('oidc.auth.home', '/dashboard'));
+        return redirect()->intended($this->homeUrl());
     }
 }

@@ -7,9 +7,6 @@ namespace Bambamboole\LaravelOidc\Token;
 use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
-use Lcobucci\JWT\Configuration;
-use Lcobucci\JWT\Signer\Key\InMemory;
-use Lcobucci\JWT\Signer\Rsa\Sha256;
 
 class LogoutTokenBuilder
 {
@@ -17,17 +14,13 @@ class LogoutTokenBuilder
 
     public function build(OidcSession $session, string $clientId): string
     {
-        $config = Configuration::forAsymmetricSigner(
-            new Sha256,
-            InMemory::plainText(PassportKeys::privateKey()),
-            InMemory::plainText(PassportKeys::publicKey()),
-        );
+        $config = PassportKeys::signingConfiguration();
 
         $now = new DateTimeImmutable;
 
         $token = $config->builder()
             ->withHeader('typ', 'logout+jwt')
-            ->withHeader('kid', Jwk::fromPem(PassportKeys::publicKey())['kid'])
+            ->withHeader('kid', PassportKeys::signingKid())
             ->issuedBy(Issuer::url())
             ->permittedFor($clientId)
             ->identifiedBy(bin2hex(random_bytes(16)))

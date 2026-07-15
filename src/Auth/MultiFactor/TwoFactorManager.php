@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Auth\MultiFactor;
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Models\TotpFactor;
 use Illuminate\Contracts\Auth\Authenticatable;
-use LogicException;
 
 class TwoFactorManager
 {
+    use InteractsWithFactorUser;
+
     public function __construct(
         private readonly TotpFactorProvider $totp,
         private readonly RecoveryCodeProvider $recoveryCodes,
@@ -72,14 +73,5 @@ class TwoFactorManager
     public function currentFactor(Authenticatable $user): ?TotpFactor
     {
         return $this->factorUser($user)->totpFactors()->latest('id')->first();
-    }
-
-    private function factorUser(Authenticatable $user): FactorAuthenticatable
-    {
-        if (! $user instanceof FactorAuthenticatable) {
-            throw new LogicException('The authenticatable model must implement the FactorAuthenticatable contract.');
-        }
-
-        return $user;
     }
 }
