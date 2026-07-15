@@ -99,10 +99,15 @@ class OidcProvider extends AbstractOAuth2Provider
         return Cache::remember(
             "oidc.social.discovery.{$this->key}",
             self::METADATA_CACHE_TTL,
-            fn (): array => (array) Http::acceptJson()
-                ->get($this->issuer().'/.well-known/openid-configuration')
-                ->throw()
-                ->json(),
+            function (): array {
+                $response = Http::acceptJson()->get($this->issuer().'/.well-known/openid-configuration');
+
+                if ($response->failed()) {
+                    throw new SocialAuthenticationException("The [{$this->key}] discovery document could not be fetched (HTTP {$response->status()}).");
+                }
+
+                return (array) $response->json();
+            },
         );
     }
 
@@ -148,10 +153,15 @@ class OidcProvider extends AbstractOAuth2Provider
         $keys = Cache::remember(
             "oidc.social.jwks.{$this->key}",
             self::METADATA_CACHE_TTL,
-            fn (): array => (array) Http::acceptJson()
-                ->get((string) $this->discovery()['jwks_uri'])
-                ->throw()
-                ->json('keys', []),
+            function (): array {
+                $response = Http::acceptJson()->get((string) $this->discovery()['jwks_uri']);
+
+                if ($response->failed()) {
+                    throw new SocialAuthenticationException("The [{$this->key}] JWKS could not be fetched (HTTP {$response->status()}).");
+                }
+
+                return (array) $response->json('keys', []);
+            },
         );
 
         foreach ($keys as $jwk) {

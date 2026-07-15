@@ -41,22 +41,24 @@ function fakeDiscovery(array $overrides = []): void
  * Signs an upstream id_token with the test fixture keypair so JWKS
  * verification runs for real.
  */
-function upstreamIdToken(array $claims = [], ?string $nonce = null, string $issuer = 'https://idp.test', string $audience = 'client-1'): string
+function upstreamIdToken(array $claims = [], ?string $nonce = null, string $issuer = 'https://idp.test', string $audience = 'client-1', ?string $kid = null, ?string $signWithPem = null, bool $expired = false): string
 {
     $config = Configuration::forAsymmetricSigner(
         new Sha256,
-        InMemory::file(__DIR__.'/../../fixtures/oauth-private.key'),
+        $signWithPem !== null
+            ? InMemory::plainText($signWithPem)
+            : InMemory::file(__DIR__.'/../../fixtures/oauth-private.key'),
         InMemory::file(__DIR__.'/../../fixtures/oauth-public.key'),
     );
 
     $now = new DateTimeImmutable;
     $builder = $config->builder()
-        ->withHeader('kid', Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))['kid'])
+        ->withHeader('kid', $kid ?? Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))['kid'])
         ->issuedBy($issuer)
         ->permittedFor($audience)
         ->relatedTo((string) ($claims['sub'] ?? 'upstream-1'))
-        ->issuedAt($now)
-        ->expiresAt($now->modify('+1 hour'));
+        ->issuedAt($expired ? $now->modify('-2 hours') : $now)
+        ->expiresAt($expired ? $now->modify('-1 hour') : $now->modify('+1 hour'));
 
     if ($nonce !== null) {
         $builder = $builder->withClaim('nonce', $nonce);
@@ -149,6 +151,42 @@ it('rejects an id_token from a different issuer', function () {
     $pending = new PendingAuthorization('corp', 'login', 'state-1', null, 'nonce-1');
     oidcTestProvider()->user(oidcCallback($idToken), $pending);
 })->throws(SocialAuthenticationException::class);
+
+it('rejects a malformed id_token', function () {
+    fakeDiscovery();
+
+    $pending = new PendingAuthorization('corp', 'login', 'state-1', null, 'nonce-1');
+    oidcTestProvider()->user(oidcCallback('not-a-jwt'), $pending);
+})->throws(SocialAuthenticationException::class);
+
+it('rejects an id_token signed by a key not in the JWKS', function () {
+    fakeDiscovery();
+
+    $resource = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+    openssl_pkey_export($resource, $otherPrivatePem);
+
+    // Same kid as the JWKS key so key selection succeeds but the signature does not verify.
+    $idToken = upstreamIdToken(nonce: 'nonce-1', signWithPem: $otherPrivatePem);
+
+    $pending = new PendingAuthorization('corp', 'login', 'state-1', null, 'nonce-1');
+    oidcTestProvider()->user(oidcCallback($idToken), $pending);
+})->throws(SocialAuthenticationException::class);
+
+it('rejects an expired id_token', function () {
+    fakeDiscovery();
+    $idToken = upstreamIdToken(nonce: 'nonce-1', expired: true);
+
+    $pending = new PendingAuthorization('corp', 'login', 'state-1', null, 'nonce-1');
+    oidcTestProvider()->user(oidcCallback($idToken), $pending);
+})->throws(SocialAuthenticationException::class);
+
+it('rejects an id_token whose kid matches no JWKS key', function () {
+    fakeDiscovery();
+    $idToken = upstreamIdToken(nonce: 'nonce-1', kid: 'unknown-kid');
+
+    $pending = new PendingAuthorization('corp', 'login', 'state-1', null, 'nonce-1');
+    oidcTestProvider()->user(oidcCallback($idToken), $pending);
+})->throws(SocialAuthenticationException::class, 'No JWKS key matches the [corp] id_token.');
 
 it('falls back to userinfo for profile claims missing from the id_token', function () {
     fakeDiscovery();
