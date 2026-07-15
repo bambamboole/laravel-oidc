@@ -1,8 +1,14 @@
 // @ts-check
+import { existsSync } from "node:fs";
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightLlmsTxt from "starlight-llms-txt";
 import mermaid from "astro-mermaid";
+
+// The relying-party docs are maintained in bambamboole/laravel-oidc-client and
+// fetched into docs/content/docs/client on deployment (npm run docs:fetch-client).
+// The sidebar group only appears when they are present.
+const hasClientDocs = existsSync("./docs/content/docs/client");
 
 const site = process.env.SITE_URL || "https://bambamboole.github.io/laravel-oidc";
 // GitHub Pages serves this project site under /laravel-oidc. Override with DOCS_BASE="/"
@@ -81,6 +87,15 @@ export default defineConfig({
             { label: "The post-login pipeline", link: "/auth/post-login-pipeline/" },
           ],
         },
+        ...(hasClientDocs
+          ? [
+              {
+                label: "Client (relying party)",
+                collapsed: true,
+                items: [{ autogenerate: { directory: "client" } }],
+              },
+            ]
+          : []),
         {
           label: "Advanced",
           collapsed: true,
