@@ -75,7 +75,7 @@ final readonly class FirstPartyClientProvisioningResult
 | Outcome | Meaning |
 | --- | --- |
 | `Created` | A new client was created; `clientSecret` holds its plaintext secret. |
-| `Reconciled` | An existing first-party client's metadata was updated in place; `clientSecret` is `null`. |
+| `Reconciled` | An existing first-party client's metadata was updated in place; `clientSecret` is `null` unless a verified `existingClientSecret` was supplied (see below). |
 | `Rotated` | `rotateSecret: true` was passed; the secret was regenerated and `clientSecret` holds the new plaintext value. |
 
 ## Credential-aware reconciliation
