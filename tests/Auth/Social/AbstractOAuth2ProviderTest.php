@@ -10,6 +10,9 @@ use Bambamboole\LaravelOidc\Auth\Social\TokenResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+/**
+ * @param  array<string, mixed>  $config
+ */
 function fakeOAuth2Provider(array $config = []): AbstractOAuth2Provider
 {
     return new class('fake', $config + ['client_id' => 'client-1', 'client_secret' => 'shhh']) extends AbstractOAuth2Provider
@@ -44,6 +47,9 @@ function fakeOAuth2Provider(array $config = []): AbstractOAuth2Provider
     };
 }
 
+/**
+ * @param  array<string, mixed>  $query
+ */
 function requestWithSession(string $uri = '/auth/social/fake/callback', array $query = []): Request
 {
     $request = Request::create($uri, 'GET', $query);

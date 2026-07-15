@@ -10,6 +10,7 @@ use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256 as Es256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token\Parser;
+use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Validator;
 
@@ -69,6 +70,7 @@ it('signs the client secret as an ES256 JWT with Apple claims', function () {
     }
 
     Http::assertSent(function ($httpRequest) use ($publicPem): bool {
+        /** @var UnencryptedToken $secret */
         $secret = (new Parser(new JoseEncoder))->parse($httpRequest['client_secret']);
 
         return (new Validator)->validate($secret, new SignedWith(new Es256, InMemory::plainText($publicPem)))

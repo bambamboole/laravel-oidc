@@ -21,6 +21,9 @@ function oidcTestProvider(): OidcProvider
     ]);
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function fakeDiscovery(array $overrides = []): void
 {
     Http::fake([
@@ -40,6 +43,8 @@ function fakeDiscovery(array $overrides = []): void
 /**
  * Signs an upstream id_token with the test fixture keypair so JWKS
  * verification runs for real.
+ *
+ * @param  array<string, mixed>  $claims
  */
 function upstreamIdToken(array $claims = [], ?string $nonce = null, string $issuer = 'https://idp.test', string $audience = 'client-1', ?string $kid = null, ?string $signWithPem = null, bool $expired = false): string
 {
