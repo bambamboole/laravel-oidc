@@ -19,9 +19,11 @@ use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\Social\SocialUser;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Routing\Handler;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class SocialAuthenticationController
 {
@@ -152,7 +154,25 @@ class SocialAuthenticationController
 
     private function completeLink(Request $request, string $providerKey, SocialUser $socialUser): RedirectResponse
     {
-        return $this->failed($request, __('Social login is not yet available.'));
+        $user = $this->currentUser($request);
+
+        if ($user === null) {
+            return $this->failed($request, __('Please log in before linking an account.'));
+        }
+
+        if (! $user instanceof Model) {
+            throw new RuntimeException('Social accounts require an Eloquent user model.');
+        }
+
+        $existing = $this->accounts->findAccount($providerKey, $socialUser->id);
+
+        if ($existing !== null && ! $existing->authenticatable->is($user)) {
+            return redirect($this->homeUrl())->withErrors(['social' => __('This account is already linked to another user.')]);
+        }
+
+        $this->accounts->link($user, $providerKey, $socialUser);
+
+        return redirect($this->homeUrl())->with('status', 'social-account-linked');
     }
 
     private function provider(string $key): SocialProvider
