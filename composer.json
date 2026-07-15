@@ -16,6 +16,7 @@
         "bacon/bacon-qr-code": "^3.1",
         "laravel/passkeys": "^0.2",
         "laravel/passport": "^13.4",
+        "lcobucci/clock": "^3.2",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15",
         "pragmarx/google2fa": "^9.0"
