@@ -109,6 +109,13 @@ The action receives the normalized `SocialUser` and the provider key, and must r
 `Authenticatable`. There is no password the user knows — `Str::random(40)` is a placeholder value,
 not a credential to communicate.
 
+The package's verified-email gate (see [Resolution order](#resolution-order)) only protects its own
+linking step in `SocialAccountManager`. If the provision action itself does
+`User::firstOrCreate(['email' => $socialUser->email])`, it re-attaches an unverified upstream email
+to an existing local account, reopening the account-takeover path the gate exists to close. Provision
+actions should always create a fresh user and let the package's verified-email linking handle matches
+on subsequent logins.
+
 ## Login buttons
 
 `Oidc::socialProviders()` returns the configured and credentialed providers, keyed by provider key,
