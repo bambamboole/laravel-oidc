@@ -157,8 +157,8 @@ back with a `social` error ("This account is already linked to another user."); 
 account is linked (or its stored fields refreshed, if already linked to the current user).
 
 `identity.social.destroy` deletes the `SocialAccount` (403 if it does not belong to the current
-user) and returns an empty status response — **`200`** with a status key (JSON) or a `back()`
-redirect flashing the status (browser).
+user) and returns an empty **`200`** response (JSON) or a `back()` redirect flashing the status
+(browser).
 
 ## Custom drivers
 
