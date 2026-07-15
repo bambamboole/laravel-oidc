@@ -40,7 +40,7 @@ class TokenExchanger
         ?DateInterval $accessTokenTTL = null,
     ): OidcAccessToken {
         $parsed = $this->inspector->parse($subjectToken);
-        $dbToken = $this->inspector->accessToken($subjectToken);
+        $dbToken = $parsed !== null ? $this->inspector->tokenForParsed($parsed) : null;
 
         if ($parsed === null || $dbToken === null || (bool) $dbToken->getAttribute('revoked')) {
             throw OAuthServerException::invalidGrant('The subject token is invalid.');
@@ -86,8 +86,7 @@ class TokenExchanger
 
         $ttl = $this->cappedTtl($accessTokenTTL ?? Passport::tokensExpireIn(), $result->expiresAt);
 
-        $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience);
-        $token->setGrantType(self::GRANT_URN);
+        $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience, self::GRANT_URN);
         $token->setSubjectClaims($claims);
 
         $act = ['client_id' => (string) $requestingClient->getKey()];

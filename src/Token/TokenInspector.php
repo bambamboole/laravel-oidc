@@ -28,22 +28,9 @@ class TokenInspector
 
     public function accessToken(string $jwt): ?Token
     {
-        try {
-            $parsed = (new Parser(new JoseEncoder))->parse($jwt);
-        } catch (Throwable) {
-            return null;
-        }
+        $parsed = $this->parse($jwt);
 
-        if (! $parsed instanceof Plain || ! (new Validator)->validate(
-            $parsed,
-            new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey())),
-        )) {
-            return null;
-        }
-
-        $jti = $parsed->claims()->get('jti');
-
-        return is_string($jti) ? Passport::token()->newQuery()->find($jti) : null;
+        return $parsed !== null ? $this->tokenForParsed($parsed) : null;
     }
 
     public function parse(string $jwt): ?Plain

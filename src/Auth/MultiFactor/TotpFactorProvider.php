@@ -8,6 +8,7 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Bambamboole\LaravelOidc\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Models\TotpFactor;
@@ -18,6 +19,8 @@ use PragmaRX\Google2FA\Google2FA;
 
 class TotpFactorProvider implements EnrollableFactorProvider
 {
+    use InteractsWithFactorUser;
+
     public function __construct(private readonly Google2FA $engine) {}
 
     public function key(): string
@@ -146,15 +149,6 @@ class TotpFactorProvider implements EnrollableFactorProvider
     private function window(): int
     {
         return (int) config('oidc.auth.two_factor.window', 1);
-    }
-
-    private function factorUser(Authenticatable $user): FactorAuthenticatable
-    {
-        if (! $user instanceof FactorAuthenticatable) {
-            throw new LogicException('The authenticatable model must implement the FactorAuthenticatable contract.');
-        }
-
-        return $user;
     }
 
     private function factorFor(FactorAuthenticatable $user, FactorEnrollment $enrollment): TotpFactor

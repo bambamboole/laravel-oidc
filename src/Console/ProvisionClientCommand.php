@@ -6,10 +6,13 @@ namespace Bambamboole\LaravelOidc\Console;
 
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
+use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
 use Illuminate\Console\Command;
 
 class ProvisionClientCommand extends Command
 {
+    use WritesEnvFile;
+
     protected $signature = 'oidc:client
         {--first-party : Provision the package-managed first-party client}
         {--name= : Client display name}
@@ -124,42 +127,5 @@ class ProvisionClientCommand extends Command
             array_map(trim(...), explode(',', $value)),
             static fn (string $item): bool => $item !== '',
         ));
-    }
-
-    /** @param array<string, string> $variables */
-    private function writeEnv(array $variables): bool
-    {
-        $path = $this->laravel->environmentFilePath();
-        $contents = @file_get_contents($path);
-
-        if ($contents === false) {
-            $this->error("Unable to read the environment file at [{$path}].");
-
-            return false;
-        }
-
-        foreach ($variables as $name => $value) {
-            $contents = $this->upsert($contents, $name, $value);
-        }
-
-        if (@file_put_contents($path, $contents) === false) {
-            $this->error("Unable to write the environment file at [{$path}].");
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private function upsert(string $contents, string $name, string $value): string
-    {
-        $line = $name.'='.$value;
-        $pattern = '/^'.preg_quote($name, '/').'=.*$/m';
-
-        if (preg_match($pattern, $contents) === 1) {
-            return (string) preg_replace($pattern, $line, $contents, 1);
-        }
-
-        return rtrim($contents, "\n")."\n".$line."\n";
     }
 }

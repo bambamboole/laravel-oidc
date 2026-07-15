@@ -6,8 +6,6 @@ namespace Bambamboole\LaravelOidc\Hooks;
 
 enum Trigger
 {
-    case PostLogin;
-    case Refresh;
     case ClientCredentials;
     case TokenExchange;
     case Userinfo;

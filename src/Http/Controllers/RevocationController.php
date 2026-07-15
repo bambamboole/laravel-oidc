@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Http\ClientCredentials;
-use Bambamboole\LaravelOidc\Http\OAuthError;
+use Bambamboole\LaravelOidc\Http\Controllers\Concerns\AuthenticatesConfidentialClient;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,17 +14,13 @@ use Laravel\Passport\Token;
 
 class RevocationController
 {
+    use AuthenticatesConfidentialClient;
+
     public function __invoke(Request $request, ClientCredentials $credentials, TokenInspector $inspector): Response
     {
-        $clientId = $credentials->validate($request);
+        [$clientId, $tokenValue] = $this->authenticateConfidentialClient($request, $credentials);
 
-        if ($clientId === null) {
-            OAuthError::client();
-        }
-
-        $tokenValue = (string) $request->input('token');
-
-        if ($request->input('token_type_hint') === 'refresh_token') {
+        if ($this->isRefreshTokenHint($request)) {
             $payload = $inspector->refreshTokenPayload($tokenValue);
 
             if ($payload !== null && (string) ($payload->client_id ?? '') === $clientId) {
