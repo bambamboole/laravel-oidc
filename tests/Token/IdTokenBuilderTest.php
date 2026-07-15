@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Token\IdTokenBuilder;
 use Bambamboole\LaravelOidc\Token\Jwk;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Laravel\Passport\Bridge\AccessToken;
 use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Bridge\Scope;
@@ -60,7 +60,7 @@ it('builds a signed id_token with the required claims', function () {
     $parsed = parseUnencrypted($jwt);
 
     expect($parsed->headers()->get('alg'))->toBe('RS256')
-        ->and($parsed->headers()->get('kid'))->toBe(Jwk::fromPem(PassportKeys::publicKey())['kid'])
+        ->and($parsed->headers()->get('kid'))->toBe(Jwk::fromPem(SigningKeys::publicKey())['kid'])
         ->and($parsed->claims()->get('iss'))->toBe('https://op.test')
         ->and($parsed->claims()->get('sub'))->toBe((string) $user->id)
         ->and($parsed->claims()->get('aud'))->toBe(['client-uuid'])
@@ -76,7 +76,7 @@ it('builds a signed id_token with the required claims', function () {
     expect($parsed->claims()->get('at_hash'))->toBe($expectedAtHash);
 
     $valid = (new Validator)->validate($parsed, new SignedWith(
-        new Sha256, InMemory::plainText(PassportKeys::publicKey()),
+        new Sha256, InMemory::plainText(SigningKeys::publicKey()),
     ));
     expect($valid)->toBeTrue();
 });

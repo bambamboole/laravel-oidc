@@ -5,7 +5,7 @@ namespace Bambamboole\LaravelOidc\Console;
 
 use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
 use Bambamboole\LaravelOidc\Token\Jwk;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Console\Command;
 use phpseclib3\Crypt\RSA;
 use phpseclib3\Crypt\RSA\PrivateKey;
@@ -35,8 +35,8 @@ class RotateKeysCommand extends Command
         $newPublic = (string) $key->getPublicKey();
 
         $vars = [
-            'PASSPORT_PRIVATE_KEY' => $newPrivate,
-            'PASSPORT_PUBLIC_KEY' => $newPublic,
+            'OIDC_PRIVATE_KEY' => $newPrivate,
+            'OIDC_PUBLIC_KEY' => $newPublic,
         ];
 
         if ($current !== null) {
@@ -65,7 +65,7 @@ class RotateKeysCommand extends Command
     private function currentPublicKey(): ?string
     {
         try {
-            return PassportKeys::publicKey();
+            return SigningKeys::publicKey();
         } catch (Throwable) {
             return null;
         }

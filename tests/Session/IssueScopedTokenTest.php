@@ -6,7 +6,7 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Facades\Oidc;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Laravel\Passport\ClientRepository;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
@@ -43,7 +43,7 @@ it('issues an audience-scoped token for the session user', function () {
     expect($parsed->headers()->get('typ'))->toBe('at+jwt')
         ->and($parsed->claims()->get('aud'))->toBe(['https://api.orders.test'])
         ->and($parsed->claims()->get('sub'))->toBe((string) $this->user->id);
-    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey()))))->toBeTrue();
+    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(SigningKeys::publicKey()))))->toBeTrue();
 });
 
 it('throws when there is no session token (unauthenticated)', function () {

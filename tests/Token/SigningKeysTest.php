@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Token\IdTokenBuilder;
 use Bambamboole\LaravelOidc\Token\Jwk;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Laravel\Passport\Bridge\AccessToken;
 use Laravel\Passport\Bridge\Client as BridgeClient;
 use Laravel\Passport\Bridge\Scope as BridgeScope;
@@ -22,31 +22,51 @@ function escapedFixtureKey(string $file): string
     return str_replace("\n", '\n', trim((string) file_get_contents(__DIR__.'/../fixtures/'.$file)));
 }
 
-it('resolves keys from passport config with escaped newlines', function () {
-    config(['passport.public_key' => escapedFixtureKey('oauth-public.key')]);
+it('resolves keys from oidc config with escaped newlines', function () {
+    config(['oidc.public_key' => escapedFixtureKey('oauth-public.key')]);
 
-    expect(PassportKeys::publicKey())
+    expect(SigningKeys::publicKey())
+        ->toBe(trim((string) file_get_contents(__DIR__.'/../fixtures/oauth-public.key')));
+});
+
+it('prefers the oidc config key over the passport config key', function () {
+    config([
+        'oidc.public_key' => escapedFixtureKey('oauth-public.key'),
+        'passport.public_key' => 'stale-passport-key',
+    ]);
+
+    expect(SigningKeys::publicKey())
+        ->toBe(trim((string) file_get_contents(__DIR__.'/../fixtures/oauth-public.key')));
+});
+
+it('falls back to the passport config key when no oidc key is set', function () {
+    config([
+        'oidc.public_key' => null,
+        'passport.public_key' => escapedFixtureKey('oauth-public.key'),
+    ]);
+
+    expect(SigningKeys::publicKey())
         ->toBe(trim((string) file_get_contents(__DIR__.'/../fixtures/oauth-public.key')));
 });
 
 it('falls back to key files when no config key is set', function () {
-    config(['passport.public_key' => null]);
+    config(['oidc.public_key' => null, 'passport.public_key' => null]);
 
-    expect(PassportKeys::publicKey())
+    expect(SigningKeys::publicKey())
         ->toBe(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'));
 });
 
 it('fails loud when neither config key nor key file exists', function () {
-    config(['passport.private_key' => null]);
+    config(['oidc.private_key' => null, 'passport.private_key' => null]);
     Passport::loadKeysFrom('/nonexistent');
 
-    PassportKeys::privateKey();
-})->throws(RuntimeException::class, 'PASSPORT_PRIVATE_KEY');
+    SigningKeys::privateKey();
+})->throws(RuntimeException::class, 'OIDC_PRIVATE_KEY');
 
 it('serves the same jwks from an env-provided key', function () {
     $fromFile = Jwk::fromPem((string) file_get_contents(__DIR__.'/../fixtures/oauth-public.key'));
 
-    config(['passport.public_key' => escapedFixtureKey('oauth-public.key')]);
+    config(['oidc.public_key' => escapedFixtureKey('oauth-public.key')]);
 
     $this->getJson('/.well-known/jwks.json')
         ->assertOk()
@@ -55,8 +75,8 @@ it('serves the same jwks from an env-provided key', function () {
 
 it('signs id_tokens with env-provided keys', function () {
     config([
-        'passport.private_key' => escapedFixtureKey('oauth-private.key'),
-        'passport.public_key' => escapedFixtureKey('oauth-public.key'),
+        'oidc.private_key' => escapedFixtureKey('oauth-private.key'),
+        'oidc.public_key' => escapedFixtureKey('oauth-public.key'),
     ]);
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
@@ -71,10 +91,10 @@ it('signs id_tokens with env-provided keys', function () {
     $parsed = (new Parser(new JoseEncoder))->parse($jwt);
     $valid = (new Validator)->validate($parsed, new SignedWith(
         new Sha256,
-        InMemory::plainText(PassportKeys::publicKey()),
+        InMemory::plainText(SigningKeys::publicKey()),
     ));
 
     expect($valid)->toBeTrue()
         ->and($parsed->headers()->get('kid'))
-        ->toBe(Jwk::fromPem(PassportKeys::publicKey())['kid']);
+        ->toBe(Jwk::fromPem(SigningKeys::publicKey())['kid']);
 });

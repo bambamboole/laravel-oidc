@@ -5,7 +5,7 @@ use Bambamboole\LaravelOidc\Issuer;
 use Bambamboole\LaravelOidc\Tests\TestCase;
 use Bambamboole\LaravelOidc\Token\Jwk;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Contracts\Encryption\Encrypter as EncrypterContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -180,12 +180,12 @@ function persistedIdTokenAsBearer(mixed $test): string
 
     $config = Configuration::forAsymmetricSigner(
         new Sha256,
-        InMemory::plainText(PassportKeys::privateKey()),
-        InMemory::plainText(PassportKeys::publicKey()),
+        InMemory::plainText(SigningKeys::privateKey()),
+        InMemory::plainText(SigningKeys::publicKey()),
     );
 
     $jwt = $config->builder()
-        ->withHeader('kid', Jwk::fromPem(PassportKeys::publicKey())['kid'])
+        ->withHeader('kid', Jwk::fromPem(SigningKeys::publicKey())['kid'])
         ->issuedBy(Issuer::url())
         ->identifiedBy($tokenId)
         ->issuedAt($now)

@@ -28,7 +28,7 @@ class AccessTokenMinter
         $token = new OidcAccessToken($userId, $scopes, $bridgeClient);
         $token->setIdentifier(bin2hex(random_bytes(40)));
         $token->setExpiryDateTime((new DateTimeImmutable)->add($ttl));
-        $token->setPrivateKey(new CryptKey(PassportKeys::privateKey(), null, false));
+        $token->setPrivateKey(new CryptKey(SigningKeys::privateKey(), null, false));
         $token->setGrantType($grantType ?? 'programmatic');
 
         if ($audiences !== []) {

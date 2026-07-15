@@ -43,7 +43,7 @@ class TokenInspector
 
         if (! $parsed instanceof Plain || ! (new Validator)->validate(
             $parsed,
-            new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey())),
+            new SignedWith(new Sha256, InMemory::plainText(SigningKeys::publicKey())),
         )) {
             return null;
         }

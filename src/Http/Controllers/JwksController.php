@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Token\Jwk;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Http\JsonResponse;
 
 class JwksController
@@ -14,7 +14,7 @@ class JwksController
     {
         $keys = [];
 
-        foreach ([PassportKeys::publicKey(), ...config('oidc.additional_public_keys', [])] as $pem) {
+        foreach ([SigningKeys::publicKey(), ...config('oidc.additional_public_keys', [])] as $pem) {
             $jwk = Jwk::fromPem($pem);
             $keys[$jwk['kid']] = $jwk;
         }

@@ -6,7 +6,7 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -49,7 +49,7 @@ it('establishes a persisted root token for the user, stored in the session', fun
         ->and($parsed->claims()->get('client_id'))->toBe($this->appClient->id)
         ->and($parsed->claims()->get('aud'))->toBe([$this->appClient->id]);
 
-    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey()))))->toBeTrue();
+    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(SigningKeys::publicKey()))))->toBeTrue();
     expect(app(TokenInspector::class)->accessToken($jwt))->not->toBeNull();
 });
 

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Scopes\PassportScopeRepository;
+use Bambamboole\LaravelOidc\Scopes\DefaultScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\Scope;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 
-beforeEach(fn () => $this->repository = new PassportScopeRepository);
+beforeEach(fn () => $this->repository = new DefaultScopeRepository);
 
 it('exposes passport scopes plus the oidc standard scopes', function () {
     Passport::tokensCan(['project:update' => 'Update projects']);

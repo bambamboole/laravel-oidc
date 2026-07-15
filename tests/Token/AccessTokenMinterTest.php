@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Laravel\Passport\ClientRepository;
 use Lcobucci\JWT\Encoding\JoseEncoder;
@@ -45,7 +45,7 @@ it('mints, signs and persists a scoped at+jwt that round-trips', function () {
         ->and($parsed->claims()->get('aud'))->toBe(['https://api.test'])
         ->and($parsed->claims()->get('scope'))->toBe('openid email');
 
-    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey()))))->toBeTrue();
+    expect((new Validator)->validate($parsed, new SignedWith(new Sha256, InMemory::plainText(SigningKeys::publicKey()))))->toBeTrue();
 
     $dbToken = app(TokenInspector::class)->accessToken($jwt);
     expect($dbToken)->not->toBeNull()

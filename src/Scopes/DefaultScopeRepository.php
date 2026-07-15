@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 
-class PassportScopeRepository implements ScopeRepository
+class DefaultScopeRepository implements ScopeRepository
 {
     private const array OIDC_SCOPES = [
         'openid' => 'Authenticate with your account',

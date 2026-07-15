@@ -7,7 +7,7 @@ namespace Bambamboole\LaravelOidc\Http\Controllers;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Issuer;
-use Bambamboole\LaravelOidc\Token\PassportKeys;
+use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -108,7 +108,7 @@ class EndSessionController
 
         $valid = (new Validator)->validate(
             $token,
-            new SignedWith(new Sha256, InMemory::plainText(PassportKeys::publicKey())),
+            new SignedWith(new Sha256, InMemory::plainText(SigningKeys::publicKey())),
             new IssuedBy(Issuer::url()),
         );
 
