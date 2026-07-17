@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Auth\Controllers\ConfirmTwoFactorAuthenticationContr
 use Bambamboole\LaravelOidc\Auth\Controllers\DisableTwoFactorAuthenticationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationPromptController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EnableTwoFactorAuthenticationController;
+use Bambamboole\LaravelOidc\Auth\Controllers\LinkedAccountController;
 use Bambamboole\LaravelOidc\Auth\Controllers\NewPasswordController;
 use Bambamboole\LaravelOidc\Auth\Controllers\PasswordResetLinkController;
 use Bambamboole\LaravelOidc\Auth\Controllers\RegenerateRecoveryCodesController;
@@ -17,6 +18,7 @@ use Bambamboole\LaravelOidc\Auth\Controllers\ShowConfirmedPasswordStatusControll
 use Bambamboole\LaravelOidc\Auth\Controllers\ShowRecoveryCodesController;
 use Bambamboole\LaravelOidc\Auth\Controllers\ShowTwoFactorQrCodeController;
 use Bambamboole\LaravelOidc\Auth\Controllers\ShowTwoFactorSecretKeyController;
+use Bambamboole\LaravelOidc\Auth\Controllers\SocialAuthenticationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\TwoFactorChallengeController;
 use Bambamboole\LaravelOidc\Auth\Controllers\VerifyEmailController;
 use Bambamboole\LaravelOidc\Auth\Middleware\AuthenticateIdentity;
@@ -34,6 +36,10 @@ use Bambamboole\LaravelOidc\Http\Controllers\RevocationController;
 use Bambamboole\LaravelOidc\Http\Controllers\UserinfoController;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Auth\Middleware\RequirePassword;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
@@ -114,6 +120,47 @@ return [
             TotpFactorProvider::class,
             RecoveryCodeProvider::class,
             WebAuthnFactorProvider::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Social login
+    |--------------------------------------------------------------------------
+    |
+    | Upstream identity providers users can authenticate with. A provider is
+    | active only when its client_id is configured. `driver` selects the
+    | implementation: google, apple, github, or the generic `oidc` driver for
+    | any OIDC-compliant IdP (requires `issuer`). Register custom drivers via
+    | Oidc::extendSocialProvider().
+    |
+    */
+    'social' => [
+        // Attach an upstream identity to an existing local user when the
+        // provider reports a verified email that matches.
+        'link_by_verified_email' => true,
+        // Create a local user on first social login via the action registered
+        // with Oidc::createUsersFromSocialUsing(). Without a registered
+        // action, provisioning is effectively disabled.
+        'auto_provision' => true,
+        'providers' => [
+            'google' => [
+                'driver' => 'google',
+                'client_id' => env('OIDC_SOCIAL_GOOGLE_CLIENT_ID'),
+                'client_secret' => env('OIDC_SOCIAL_GOOGLE_CLIENT_SECRET'),
+            ],
+            'apple' => [
+                'driver' => 'apple',
+                'client_id' => env('OIDC_SOCIAL_APPLE_CLIENT_ID'),
+                'team_id' => env('OIDC_SOCIAL_APPLE_TEAM_ID'),
+                'key_id' => env('OIDC_SOCIAL_APPLE_KEY_ID'),
+                'private_key' => env('OIDC_SOCIAL_APPLE_PRIVATE_KEY'),
+            ],
+            'github' => [
+                'driver' => 'github',
+                'client_id' => env('OIDC_SOCIAL_GITHUB_CLIENT_ID'),
+                'client_secret' => env('OIDC_SOCIAL_GITHUB_CLIENT_SECRET'),
+            ],
         ],
     ],
 
@@ -316,6 +363,43 @@ return [
         Handler::PasskeyDestroy->value => [
             'route' => 'auth/user/passkeys/{passkey}',
             'controller' => [PasskeyRegistrationController::class, 'destroy'],
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
+        ],
+        Handler::SocialRedirect->value => [
+            'route' => 'auth/social/{provider}',
+            'controller' => [SocialAuthenticationController::class, 'redirect'],
+            'middleware' => ['web', 'guest:'.env('OIDC_AUTH_GUARD', 'identity')],
+        ],
+        Handler::SocialCallback->value => [
+            // The `web` group minus CSRF verification: Apple's form_post
+            // callback is a cross-site POST that cannot carry a CSRF token;
+            // the OAuth `state` parameter is the CSRF defense. No `guest`
+            // middleware — the link intent arrives authenticated.
+            'route' => 'auth/social/{provider}/callback',
+            'controller' => [SocialAuthenticationController::class, 'callback'],
+            'middleware' => [
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                ShareErrorsFromSession::class,
+            ],
+        ],
+        Handler::SocialLink->value => [
+            'route' => 'auth/user/social/{provider}',
+            'controller' => [LinkedAccountController::class, 'link'],
+            'middleware' => [
+                'web',
+                AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),
+                RequirePassword::using(Handler::PasswordConfirm->value),
+            ],
+        ],
+        Handler::SocialDestroy->value => [
+            'route' => 'auth/user/social/{socialAccount}',
+            'controller' => [LinkedAccountController::class, 'destroy'],
             'middleware' => [
                 'web',
                 AuthenticateIdentity::class.':'.env('OIDC_AUTH_GUARD', 'identity'),

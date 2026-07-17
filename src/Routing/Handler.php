@@ -48,6 +48,11 @@ enum Handler: string
     case PasskeyStore = 'identity.passkey.store';
     case PasskeyDestroy = 'identity.passkey.destroy';
 
+    case SocialRedirect = 'identity.social.redirect';
+    case SocialCallback = 'identity.social.callback';
+    case SocialLink = 'identity.social.link';
+    case SocialDestroy = 'identity.social.destroy';
+
     case Jwks = 'oidc.jwks';
     case Discovery = 'oidc.discovery';
     case Userinfo = 'oidc.userinfo';
@@ -107,8 +112,8 @@ enum Handler: string
             self::IssueToken,
             self::TokenRefresh,
             self::Approve => 'post',
-            self::Deny, self::TwoFactorDisable, self::PasskeyDestroy => 'delete',
-            self::Userinfo, self::Logout => ['get', 'post'],
+            self::Deny, self::TwoFactorDisable, self::PasskeyDestroy, self::SocialDestroy => 'delete',
+            self::Userinfo, self::Logout, self::SocialCallback => ['get', 'post'],
             default => 'get',
         };
     }

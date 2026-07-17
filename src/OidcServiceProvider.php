@@ -15,6 +15,7 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
@@ -109,6 +110,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(TotpFactorProvider::class);
         $this->app->singleton(RecoveryCodeProvider::class);
         $this->app->singleton(WebAuthnFactorProvider::class);
+        $this->app->singleton(SocialProviderRegistry::class);
         $this->app->singleton(FactorRegistry::class, function (Application $app): FactorRegistry {
             $registry = new FactorRegistry;
 
