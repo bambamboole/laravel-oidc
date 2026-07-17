@@ -94,10 +94,3 @@ minimal JSON authorization view unless the test already registered one via
 
 The CSRF exemption applied by `authorizeAndApprove()` persists for the
 remainder of the calling test method.
-
-## Keyless boot
-
-Registering views and actions through the `Oidc` facade in a service
-provider's `boot()` requires no `APP_KEY`. Keyless artisan runs —
-`package:discover` during `composer install`, fresh-clone setup scripts —
-work without workarounds.
