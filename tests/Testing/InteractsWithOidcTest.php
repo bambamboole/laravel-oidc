@@ -7,6 +7,10 @@ use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Testing\PkcePair;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
+use Lcobucci\JWT\Encoding\JoseEncoder;
+use Lcobucci\JWT\Token\Parser;
+use Lcobucci\JWT\UnencryptedToken;
+use PHPUnit\Framework\Assert;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
@@ -94,4 +98,49 @@ it('memoizes one default client across issueTokenFor calls', function () {
     $inspector = app(TokenInspector::class);
 
     expect($inspector->accessToken($first)->getAttribute('client_id'))->toBe($inspector->accessToken($second)->getAttribute('client_id'));
+});
+
+it('drives the full authorize-approve-token dance', function () {
+    $result = $this->authorizeAndApprove($this->user, scopes: 'openid email');
+
+    $result->response->assertOk();
+    expect($result->accessToken)->toBeString()
+        ->and($result->idToken)->toBeString()
+        ->and($result->refreshToken)->toBeString();
+});
+
+it('honors authorize parameter overrides', function () {
+    $result = $this->authorizeAndApprove($this->user, params: ['nonce' => 'fixed-nonce']);
+
+    $token = (new Parser(new JoseEncoder))
+        ->parse((string) $result->idToken);
+
+    // parse() is typed to the Token interface; narrow to the concrete
+    // UnencryptedToken so ->claims() resolves for PHPStan.
+    Assert::assertInstanceOf(UnencryptedToken::class, $token);
+
+    expect($token->claims()->get('nonce'))->toBe('fixed-nonce');
+});
+
+it('handles the skip-consent redirect for already-approved clients', function () {
+    $client = $this->createOidcClient();
+
+    $this->authorizeAndApprove($this->user, $client);
+    $second = $this->authorizeAndApprove($this->user, $client);
+
+    expect($second->accessToken)->toBeString();
+});
+
+it('returns the raw token error response for a broken token leg', function () {
+    $confidential = $this->createOidcClient();
+    // Corrupt the plaintext secret so the token leg fails client auth. An
+    // *empty* secret makes league throw invalid_request (400) instead
+    // (see AbstractGrant::validateClient), so this has to be a wrong value.
+    $confidential->plainSecret = 'wrong-secret';
+
+    $result = $this->authorizeAndApprove($this->user, $confidential);
+
+    $result->response->assertStatus(401);
+    expect($result->accessToken)->toBeNull()
+        ->and($result->json('error'))->toBe('invalid_client');
 });
