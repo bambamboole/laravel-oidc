@@ -27,6 +27,7 @@ use Bambamboole\LaravelOidc\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Contracts\DeviceRecognizer;
+use Bambamboole\LaravelOidc\Contracts\EnvironmentStore;
 use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
@@ -47,6 +48,7 @@ use Bambamboole\LaravelOidc\Session\EstablishSessionToken;
 use Bambamboole\LaravelOidc\Session\ForgetSessionToken;
 use Bambamboole\LaravelOidc\Session\SessionMintTokenProvider;
 use Bambamboole\LaravelOidc\Session\StartOidcSession;
+use Bambamboole\LaravelOidc\Support\EnvironmentFile;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
@@ -132,6 +134,7 @@ class OidcServiceProvider extends ServiceProvider
             fn (): FirstPartyClientConfig => FirstPartyClientConfig::fromConfig(),
         );
         $this->app->singleton(FirstPartyClientProvisioner::class);
+        $this->app->singleton(EnvironmentStore::class, EnvironmentFile::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
