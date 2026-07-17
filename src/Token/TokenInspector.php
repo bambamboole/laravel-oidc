@@ -21,11 +21,6 @@ class TokenInspector
 {
     use CryptTrait;
 
-    public function __construct(Encrypter $encrypter)
-    {
-        $this->setEncryptionKey(Passport::tokenEncryptionKey($encrypter));
-    }
-
     public function accessToken(string $jwt): ?Token
     {
         $parsed = $this->parse($jwt);
@@ -60,6 +55,8 @@ class TokenInspector
 
     public function refreshTokenPayload(string $encrypted): ?object
     {
+        $this->encryptionKey ??= Passport::tokenEncryptionKey(app(Encrypter::class));
+
         try {
             $payload = json_decode($this->decrypt($encrypted));
         } catch (Throwable) {
