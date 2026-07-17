@@ -71,6 +71,10 @@ use Bambamboole\LaravelOidc\Facades\Oidc;
 Oidc::createUsersUsing(App\Actions\CreateNewUser::class);
 ```
 
+Facade registration in `boot()` is keyless-safe: it never resolves the
+encrypter, so `package:discover` and other artisan runs work before an
+`APP_KEY` exists.
+
 ## After registration
 
 When your user model implements `MustVerifyEmail`, the `Registered` event sends the verification

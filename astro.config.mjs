@@ -91,6 +91,7 @@ export default defineConfig({
             { label: "First-party client provisioning", link: "/advanced/first-party-client/" },
             { label: "Extension contracts", link: "/advanced/extension-contracts/" },
             { label: "Octane", link: "/advanced/octane/" },
+            { label: "Testing", link: "/advanced/testing/" },
           ],
         },
         {

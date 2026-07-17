@@ -9,6 +9,10 @@ the package owns validation, credential checks, rate limiting, event dispatch, s
 regeneration, and the hand-off to the [post-login pipeline](/auth/post-login-pipeline/) and
 [multi-factor challenge](/auth/multi-factor/).
 
+Facade registration in `boot()` is keyless-safe: it never resolves the
+encrypter, so `package:discover` and other artisan runs work before an
+`APP_KEY` exists.
+
 ## Routes
 
 | Route name | Verb | Path | Middleware |
