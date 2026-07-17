@@ -39,3 +39,20 @@ parameters:
             identifier: argument.templateType
             message: '#Unable to resolve the template type TValue in call to function expect#'
             path: tests/Testing/InteractsWithOidcTest.php
+        # These three files compose InteractsWithOidc via a file-local uses() call (Pest's dynamic
+        # trait composition), so actingAsIdentity()/authorizeAndApprove()/pkce() are genuinely
+        # available on $this and on the `TestCase $test` helper parameter at runtime. Unlike
+        # tests/Testing/, tests/Flow/ mostly holds files that do NOT use the trait, so a directory-wide
+        # Pest.php shim (the mechanism tests/Testing/Pest.php uses) is the wrong fix here: peststan
+        # would then resolve `$this` as the TestCase&InteractsWithOidc intersection for every file in
+        # the directory, and that intersection triggers PHPStan's *NEVER*-collapse bug (see the
+        # argument.templateType entry above) on ordinary Pest matcher chains in sibling files that never
+        # touch the trait (confirmed against tests/Flow/TokenExchangeFlowTest.php). Scoped ignores are
+        # the narrower, correct fix.
+        -
+            identifier: method.notFound
+            message: '#Call to an undefined method Bambamboole\\LaravelOidc\\Tests\\TestCase::(actingAsIdentity|authorizeAndApprove|pkce)\(\)#'
+            paths:
+                - tests/Flow/AuthorizationCodeFlowTest.php
+                - tests/Flow/Rfc9068FlowTest.php
+                - tests/Flow/MaxAgeTest.php

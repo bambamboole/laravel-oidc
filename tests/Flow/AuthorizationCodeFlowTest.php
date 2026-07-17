@@ -5,6 +5,7 @@ declare(strict_types=1);
  * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
  */
 
+use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
@@ -12,6 +13,7 @@ use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
+use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Tests\TestCase;
 use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -28,6 +30,8 @@ use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Validator;
 use Workbench\App\Models\User;
 
+uses(InteractsWithOidc::class);
+
 beforeEach(function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
     Passport::authorizationView(fn (array $parameters) => response()->json([
@@ -38,17 +42,6 @@ beforeEach(function () {
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'email_verified_at' => now(), 'password' => 'x']);
     $this->client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('RP', ['https://rp.test/callback']);
 });
-
-/**
- * @return array{0: string, 1: string}
- */
-function pkcePair(): array
-{
-    $verifier = str_repeat('v', 64);
-    $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
-
-    return [$verifier, $challenge];
-}
 
 function parseIdToken(string $jwt): UnencryptedToken
 {
@@ -68,44 +61,21 @@ function parseIdToken(string $jwt): UnencryptedToken
  */
 function completeAuthorization(TestCase $test, array $overrides = [], array $session = []): TestResponse
 {
-    [$verifier, $challenge] = pkcePair();
+    $test->actingAsIdentity(
+        $test->user,
+        amr: $session[AuthenticationMethods::SESSION_KEY] ?? [],
+        authTime: $session['oidc.auth_time'] ?? time() - 60,
+    );
 
-    $query = array_merge([
-        'client_id' => $test->client->id,
-        'redirect_uri' => 'https://rp.test/callback',
-        'response_type' => 'code',
-        'scope' => 'openid email',
-        'state' => 'st4te',
-        'nonce' => 'n0nce',
-        'code_challenge' => $challenge,
-        'code_challenge_method' => 'S256',
-    ], $overrides);
+    $extra = array_diff_key($session, array_flip(['oidc.auth_time', AuthenticationMethods::SESSION_KEY]));
 
-    $authorize = $test->actingAs($test->user, 'identity')
-        ->withSession(array_merge(['oidc.auth_time' => time() - 60], $session))
-        ->get('/oauth/authorize?'.http_build_query($query));
-
-    // Passport skips the consent screen (redirecting straight back with a code)
-    // once the user already granted this client the requested scopes.
-    if ($authorize->isRedirect()) {
-        $approve = $authorize;
-    } else {
-        $view = $authorize->assertOk();
-
-        $approve = $test->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])
-            ->assertRedirect();
+    if ($extra !== []) {
+        $test->withSession($extra);
     }
 
-    parse_str(parse_url($approve->headers->get('Location'), PHP_URL_QUERY), $params);
+    $params = array_merge(['state' => 'st4te', 'nonce' => 'n0nce'], $overrides);
 
-    return $test->post('/oauth/token', [
-        'grant_type' => 'authorization_code',
-        'client_id' => $test->client->id,
-        'client_secret' => $test->client->plainSecret,
-        'redirect_uri' => 'https://rp.test/callback',
-        'code' => $params['code'],
-        'code_verifier' => $verifier,
-    ]);
+    return $test->authorizeAndApprove($test->user, $test->client, scopes: 'openid email', params: $params)->response;
 }
 
 // OIDC Core §3.1.3.6 (at_hash)
@@ -323,13 +293,9 @@ it('does not leak a stale pendingContext into a later token request on the same 
     // First flow: seed a distinguishing access-token claim, then fail the token
     // exchange with a wrong code_verifier so league throws (PKCE mismatch) before
     // issueAccessToken() ever runs — the only place that clears pendingContext.
-    [$verifier1, $challenge1] = pkcePair();
+    $pkce1 = $this->pkce();
 
-    $view1 = $this->actingAs($this->user, 'identity')
-        ->withSession([
-            'oidc.auth_time' => time() - 60,
-            'oidc.access_token_claims' => ['leaked' => true],
-        ])
+    $view1 = $this->actingAsIdentity($this->user, accessTokenClaims: ['leaked' => true], authTime: time() - 60)
         ->get('/oauth/authorize?'.http_build_query([
             'client_id' => $this->client->id,
             'redirect_uri' => 'https://rp.test/callback',
@@ -337,7 +303,7 @@ it('does not leak a stale pendingContext into a later token request on the same 
             'scope' => 'openid email',
             'state' => 'st4te',
             'nonce' => 'n0nce',
-            'code_challenge' => $challenge1,
+            'code_challenge' => $pkce1->challenge,
             'code_challenge_method' => 'S256',
         ]))
         ->assertOk();
@@ -356,10 +322,9 @@ it('does not leak a stale pendingContext into a later token request on the same 
     ])->assertStatus(400);
 
     // Second, clean flow: no access_token_claims in session at all.
-    [$verifier2, $challenge2] = pkcePair();
+    $pkce2 = $this->pkce();
 
-    $view2 = $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time() - 60])
+    $view2 = $this->actingAsIdentity($this->user, authTime: time() - 60)
         ->get('/oauth/authorize?'.http_build_query([
             'client_id' => $this->client->id,
             'redirect_uri' => 'https://rp.test/callback',
@@ -367,7 +332,7 @@ it('does not leak a stale pendingContext into a later token request on the same 
             'scope' => 'openid email',
             'state' => 'st4te',
             'nonce' => 'n0nce2',
-            'code_challenge' => $challenge2,
+            'code_challenge' => $pkce2->challenge,
             'code_challenge_method' => 'S256',
         ]))
         ->assertOk();
@@ -387,7 +352,7 @@ it('does not leak a stale pendingContext into a later token request on the same 
         'client_secret' => $this->client->plainSecret,
         'redirect_uri' => 'https://rp.test/callback',
         'code' => $params2['code'],
-        'code_verifier' => $verifier2,
+        'code_verifier' => $pkce2->verifier,
     ])->assertOk();
 
     $accessToken = parseIdToken($response->json('access_token'));

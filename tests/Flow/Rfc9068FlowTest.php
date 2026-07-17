@@ -5,6 +5,7 @@ declare(strict_types=1);
  * RFC 9068 (JWT profile for OAuth 2.0 access tokens); RFC 6750 §2.1 (bearer usage)
  */
 
+use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -12,6 +13,8 @@ use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\UnencryptedToken;
 use Workbench\App\Models\User;
+
+uses(InteractsWithOidc::class);
 
 beforeEach(function () {
     $this->withoutMiddleware(ValidateCsrfToken::class);
@@ -35,19 +38,15 @@ function parseRfc9068AccessToken(string $jwt): UnencryptedToken
 it('issues an RFC 9068 access token through the real flow with context-store claims', function () {
     config(['app.url' => 'https://op.test']);
 
-    [$verifier, $challenge] = [str_repeat('v', 64), rtrim(strtr(base64_encode(hash('sha256', str_repeat('v', 64), true)), '+/', '-_'), '=')];
-    $view = $this->actingAs($this->user, 'identity')->withSession(['oidc.auth_time' => time(), 'oidc.access_token_claims' => ['tenant' => 'acme']])->get('/oauth/authorize?'.http_build_query([
-        'client_id' => $this->client->id, 'redirect_uri' => 'https://rp.test/callback', 'response_type' => 'code',
-        'scope' => 'openid email', 'state' => 's', 'nonce' => 'n', 'code_challenge' => $challenge, 'code_challenge_method' => 'S256',
-    ]))->assertOk();
-    $approve = $this->post('/oauth/authorize', ['auth_token' => $view->json('authToken')])->assertRedirect();
-    parse_str(parse_url($approve->headers->get('Location'), PHP_URL_QUERY), $params);
-    $response = $this->post('/oauth/token', [
-        'grant_type' => 'authorization_code', 'client_id' => $this->client->id, 'client_secret' => $this->client->plainSecret,
-        'redirect_uri' => 'https://rp.test/callback', 'code' => $params['code'], 'code_verifier' => $verifier,
-    ])->assertOk();
+    $this->actingAsIdentity($this->user, accessTokenClaims: ['tenant' => 'acme']);
 
-    $at = parseRfc9068AccessToken($response->json('access_token'));
+    $result = $this->authorizeAndApprove($this->user, $this->client, scopes: 'openid email', params: [
+        'state' => 's',
+        'nonce' => 'n',
+    ]);
+    $result->response->assertOk();
+
+    $at = parseRfc9068AccessToken($result->accessToken);
     expect($at->headers()->get('typ'))->toBe('at+jwt')
         ->and($at->claims()->get('iss'))->toBe('https://op.test')
         ->and($at->claims()->get('scope'))->toBe('openid email')

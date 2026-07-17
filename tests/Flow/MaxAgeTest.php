@@ -5,10 +5,13 @@ declare(strict_types=1);
  * OpenID Connect Core 1.0 §3.1.2.1 (max_age, prompt), §2 (auth_time), §3.1.2.6 (login_required/consent_required)
  */
 
+use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Illuminate\Auth\Events\Login;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
+
+uses(InteractsWithOidc::class);
 
 beforeEach(function () {
     Passport::authorizationView(fn (array $parameters) => response()->json(['authToken' => $parameters['authToken']]));
@@ -29,8 +32,7 @@ beforeEach(function () {
 });
 
 it('forces re-authentication when the session is older than max_age', function () {
-    $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time() - 3600])
+    $this->actingAsIdentity($this->user, authTime: time() - 3600)
         ->get('/oauth/authorize?'.$this->query.'&max_age=300')
         ->assertRedirect();
 
@@ -38,8 +40,7 @@ it('forces re-authentication when the session is older than max_age', function (
 });
 
 it('proceeds when the session is fresh enough for max_age', function () {
-    $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time() - 60])
+    $this->actingAsIdentity($this->user, authTime: time() - 60)
         ->get('/oauth/authorize?'.$this->query.'&max_age=300')
         ->assertOk();
 });
@@ -58,8 +59,7 @@ it('does not log out when max_age references an unknown client', function () {
         'scope' => 'openid',
     ]);
 
-    $response = $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time() - 3600])
+    $response = $this->actingAsIdentity($this->user, authTime: time() - 3600)
         ->get('/oauth/authorize?'.$query.'&max_age=1');
 
     expect($response->getStatusCode())->toBeGreaterThanOrEqual(400)
@@ -67,8 +67,7 @@ it('does not log out when max_age references an unknown client', function () {
 });
 
 it('forces re-authentication when max_age is zero', function () {
-    $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time()])
+    $this->actingAsIdentity($this->user)
         ->get('/oauth/authorize?'.$this->query.'&max_age=0')
         ->assertRedirect();
 
@@ -91,8 +90,7 @@ it('returns login_required for prompt=none guests', function () {
 });
 
 it('returns consent_required for prompt=none without prior grant', function () {
-    $response = $this->actingAs($this->user, 'identity')
-        ->withSession(['oidc.auth_time' => time()])
+    $response = $this->actingAsIdentity($this->user)
         ->get('/oauth/authorize?'.$this->query.'&prompt=none');
 
     $response->assertRedirect();
