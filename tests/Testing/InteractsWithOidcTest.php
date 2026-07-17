@@ -6,6 +6,7 @@ use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Testing\PkcePair;
+use Bambamboole\LaravelOidc\Token\TokenInspector;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
@@ -65,4 +66,32 @@ it('generates an RFC 7636 S256 pkce pair', function () {
     expect($pair)->toBeInstanceOf(PkcePair::class)
         ->and(strlen($pair->verifier))->toBe(64)
         ->and($pair->challenge)->toBe(rtrim(strtr(base64_encode(hash('sha256', $pair->verifier, true)), '+/', '-_'), '='));
+});
+
+it('mints a real signed access token with a persisted row', function () {
+    $jwt = $this->issueTokenFor($this->user, scopes: ['openid', 'email'], audience: ['https://api.orders.test']);
+
+    $token = app(TokenInspector::class)->accessToken($jwt);
+
+    expect($token)->not->toBeNull()
+        ->and((string) $token->getAttribute('user_id'))->toBe((string) $this->user->id)
+        ->and($token->getAttribute('scopes'))->toBe(['openid', 'email'])
+        ->and($token->getAttribute('revoked'))->toBeFalse();
+
+    // Passport's TokenGuard resolves the requesting client from aud[0] (see
+    // League's BearerTokenValidator), so a custom resource audience isn't
+    // valid for this server's own protected routes — mint a second,
+    // default-audience token for the /oauth/userinfo round trip.
+    $bearerJwt = $this->issueTokenFor($this->user, scopes: ['openid', 'email']);
+    $bearer = $this->withHeader('Authorization', 'Bearer '.$bearerJwt)->get('/oauth/userinfo');
+    $bearer->assertOk()->assertJsonPath('sub', (string) $this->user->id);
+});
+
+it('memoizes one default client across issueTokenFor calls', function () {
+    $first = $this->issueTokenFor($this->user);
+    $second = $this->issueTokenFor($this->user);
+
+    $inspector = app(TokenInspector::class);
+
+    expect($inspector->accessToken($first)->getAttribute('client_id'))->toBe($inspector->accessToken($second)->getAttribute('client_id'));
 });

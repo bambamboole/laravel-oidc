@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Testing;
 
 use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
+use DateInterval;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
@@ -102,5 +104,31 @@ trait InteractsWithOidc
     public function pkce(): PkcePair
     {
         return PkcePair::generate();
+    }
+
+    /**
+     * Mint a real signed access token (with a persisted Passport token row)
+     * without driving the HTTP authorization flow. Creates and memoizes a
+     * default client when none is given.
+     *
+     * @param  string[]  $scopes
+     * @param  string[]  $audience
+     */
+    public function issueTokenFor(
+        Authenticatable $user,
+        ?Client $client = null,
+        array $scopes = ['openid'],
+        array $audience = [],
+        ?DateInterval $ttl = null,
+    ): string {
+        $client ??= $this->oidcDefaultClient ??= $this->createOidcClient();
+
+        return app(AccessTokenMinter::class)->mint(
+            (string) $user->getAuthIdentifier(),
+            $client,
+            $scopes,
+            $ttl ?? new DateInterval('PT1H'),
+            $audience,
+        )->toString();
     }
 }
