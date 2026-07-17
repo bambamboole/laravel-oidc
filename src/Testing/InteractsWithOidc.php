@@ -225,7 +225,11 @@ trait InteractsWithOidc
         } else {
             $authorize->assertOk();
 
-            $authToken = $authorize->json('authToken');
+            // Decode defensively: json() would throw Laravel's generic
+            // "Invalid JSON was returned from the route" on an HTML
+            // authorization view before the actionable failure below runs.
+            $decoded = json_decode((string) $authorize->getContent(), true);
+            $authToken = is_array($decoded) ? ($decoded['authToken'] ?? null) : null;
 
             if (! is_string($authToken) || $authToken === '') {
                 Assert::fail('The authorization view did not return an authToken. If your app binds a custom authorization view, register a JSON view for this test via Passport::authorizationView() before calling authorizeAndApprove().');
