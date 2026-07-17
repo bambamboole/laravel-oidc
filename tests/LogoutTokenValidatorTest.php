@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Tests\Support\FakeOidcProvider;
+use Bambamboole\LaravelOidcClient\Testing\FakeOidcProvider;
 use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
 use Illuminate\Support\Facades\Http;
 

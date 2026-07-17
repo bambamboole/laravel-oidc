@@ -6,8 +6,8 @@ namespace Bambamboole\LaravelOidcClient\Tests;
 
 use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
 use Bambamboole\LaravelOidcClient\Http\Controllers\BackchannelLogoutController;
+use Bambamboole\LaravelOidcClient\Testing\FakeOidcProvider;
 use Bambamboole\LaravelOidcClient\Tests\Support\BackchannelLogoutEnabledTestCase;
-use Bambamboole\LaravelOidcClient\Tests\Support\FakeOidcProvider;
 use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
