@@ -17,16 +17,16 @@ use Laravel\Passport\Passport;
 use RuntimeException;
 
 /**
- * This is a singleton, so the session and auth stores must never be injected via the
- * constructor — that would capture request-scoped state on first resolution and leak
- * it across requests. Instead they are resolved lazily, per call, inside each method.
+ * This is a singleton, so the session/auth stores and the first-party client
+ * config must never be injected via the constructor — that would capture
+ * request-scoped (or test-mutated) state on first resolution and leak it
+ * across requests. They are resolved lazily, per call, inside each method.
  */
 class SessionMintTokenProvider implements SessionTokenProvider
 {
     public function __construct(
         private readonly AccessTokenMinter $minter,
         private readonly ScopeRepository $scopes,
-        private readonly FirstPartyClientConfig $firstPartyClient,
     ) {}
 
     public function currentToken(): ?string
@@ -54,7 +54,7 @@ class SessionMintTokenProvider implements SessionTokenProvider
 
     public function establish(Authenticatable $user): void
     {
-        $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
+        $client = Passport::client()->newQuery()->find(app(FirstPartyClientConfig::class)->clientId());
 
         if ($client === null) {
             throw new RuntimeException('The oidc.first_party.client_id is not configured or does not exist.');

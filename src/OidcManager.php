@@ -34,7 +34,6 @@ class OidcManager
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
         private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
-        private readonly FirstPartyClientConfig $firstPartyClient,
         private readonly SocialProviderRegistry $socialProviders,
     ) {}
 
@@ -177,7 +176,7 @@ class OidcManager
             throw new RuntimeException('No session token is available for the current user.');
         }
 
-        $client = Passport::client()->newQuery()->find($this->firstPartyClient->clientId());
+        $client = Passport::client()->newQuery()->find(app(FirstPartyClientConfig::class)->clientId());
 
         if ($client === null) {
             throw new RuntimeException('The oidc.first_party.client_id is not configured or does not exist.');
