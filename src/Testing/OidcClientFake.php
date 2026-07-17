@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidcClient\Testing;
 
+use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidcClient\Facades\OidcClient;
 use Bambamboole\LaravelOidcClient\RelyingParty;
@@ -13,8 +14,13 @@ use Bambamboole\LaravelOidcClient\Token\JwksKeyResolver;
 use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Assert;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * A fake OpenID provider for relying-party tests. Install with
@@ -257,5 +263,54 @@ class OidcClientFake
             $this->issuer.'/oauth/token' => $token,
             $this->issuer.'/oauth/logout' => Http::response('', 200),
         ]);
+    }
+
+    /**
+     * @param  TestResponse<Response>  $response
+     */
+    public function assertRedirectedToProvider(TestResponse $response): static
+    {
+        $location = (string) $response->headers->get('Location');
+
+        Assert::assertStringStartsWith($this->issuer.'/oauth/authorize', $location);
+        Assert::assertStringContainsString('response_type=code', $location);
+        Assert::assertStringContainsString('code_challenge_method=S256', $location);
+        Assert::assertStringContainsString('client_id='.rawurlencode($this->clientId), $location);
+
+        return $this;
+    }
+
+    public function assertLoggedIn(Authenticatable $user): static
+    {
+        $guard = Auth::guard((string) config('oidc-client.login_guard', 'web'));
+
+        Assert::assertTrue($guard->check(), 'The login guard is not authenticated.');
+        Assert::assertSame((string) $user->getAuthIdentifier(), (string) $guard->id());
+
+        return $this;
+    }
+
+    public function assertBackchannelLogoutProcessed(string $sid): static
+    {
+        Assert::assertTrue(
+            app(BackchannelLogoutStore::class)->isRevoked($sid),
+            "No back-channel logout was processed for sid [{$sid}].",
+        );
+
+        return $this;
+    }
+
+    public function assertCodeExchanged(): static
+    {
+        Http::assertSent(fn (Request $request): bool => $request->url() === $this->issuer.'/oauth/token');
+
+        return $this;
+    }
+
+    public function assertCodeNotExchanged(): static
+    {
+        Http::assertNotSent(fn (Request $request): bool => $request->url() === $this->issuer.'/oauth/token');
+
+        return $this;
     }
 }

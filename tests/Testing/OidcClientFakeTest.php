@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
 use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidcClient\Facades\OidcClient;
@@ -109,4 +110,45 @@ it('drops the end_session_endpoint so logout falls back home', function () {
 
     $this->actingAs($user)->post(route('logout'))->assertRedirect('/');
     $this->assertGuest();
+});
+
+it('asserts the login redirect went to the provider', function () {
+    $fake = OidcClient::fake();
+
+    $fake->assertRedirectedToProvider($this->get(route('login')));
+});
+
+it('asserts a user is logged in on the configured guard', function () {
+    $fake = OidcClient::fake();
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->withSession($fake->callbackContext())->get($fake->loginAs($user));
+
+    $fake->assertLoggedIn($user);
+});
+
+it('asserts the code exchange fired after a successful callback', function () {
+    $fake = OidcClient::fake();
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->withSession($fake->callbackContext())->get($fake->loginAs($user));
+
+    $fake->assertCodeExchanged();
+});
+
+it('asserts the code exchange did not fire on a tampered state', function () {
+    $fake = OidcClient::fake();
+
+    $this->withSession($fake->callbackContext())
+        ->get($fake->callbackUrl(['state' => 'WRONG']))
+        ->assertRedirect(route('login'));
+
+    $fake->assertCodeNotExchanged();
+});
+
+it('asserts a back-channel logout was processed for a sid', function () {
+    $fake = OidcClient::fake();
+    app(BackchannelLogoutStore::class)->markRevoked('s-proc');
+
+    $fake->assertBackchannelLogoutProcessed('s-proc');
 });
