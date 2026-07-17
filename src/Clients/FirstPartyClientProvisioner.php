@@ -174,6 +174,7 @@ final readonly class FirstPartyClientProvisioner
                 clientId: (string) $client->getKey(),
                 clientSecret: $secret,
                 outcome: $outcome,
+                created: $created,
             );
         });
     }
