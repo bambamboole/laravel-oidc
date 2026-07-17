@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.0](https://github.com/bambamboole/laravel-oidc-client/compare/v0.2.0...v0.3.0) (2026-07-17)
+
+
+### Features
+
+* add callback flow helpers and failure-path customizers to the fake ([75ad05e](https://github.com/bambamboole/laravel-oidc-client/commit/75ad05ee69ad57c38cd3d3f8301b2b0162b24104))
+* add flow assertions to OidcClientFake ([347670c](https://github.com/bambamboole/laravel-oidc-client/commit/347670c3f76ccf6b4028fb0fe50b4480e663fe84))
+* add OidcClient::fake() with token minting and lifecycle reset ([33627d9](https://github.com/bambamboole/laravel-oidc-client/commit/33627d943995efaf5753184d450ffedbfc19e0ab))
+* OidcClient::fake() testing kit ([b14b32f](https://github.com/bambamboole/laravel-oidc-client/commit/b14b32fca2cbc39e376bff01a266b5b3b6ee82e0))
+
+
+### Bug Fixes
+
+* stub the fake provider with one live closure so post-request customizers take effect ([da16c45](https://github.com/bambamboole/laravel-oidc-client/commit/da16c45baa0b2a3f085a02010b01b83a4d797240))
+
+
+### Refactoring
+
+* promote FakeOidcProvider into the shipped Testing namespace ([44d5037](https://github.com/bambamboole/laravel-oidc-client/commit/44d50372f5cc05c4fa84c2e69a80f22aa99649cf))
+
+
+### Documentation
+
+* document the OidcClient::fake() testing kit ([93fcb90](https://github.com/bambamboole/laravel-oidc-client/commit/93fcb90db45bbfd330f6c9484c0b3e6eb8924df4))
+
 ## [0.2.0](https://github.com/bambamboole/laravel-oidc-client/compare/v0.1.0...v0.2.0) (2026-07-15)
 
 
