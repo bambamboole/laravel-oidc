@@ -29,11 +29,19 @@ final readonly class AuthorizationCodeResult
      */
     public static function fromResponse(TestResponse $response): self
     {
+        // The token leg is intentionally unasserted (see the trait docblock),
+        // so a broken consumer app can return a non-JSON body (e.g. an HTML
+        // 500 page). Guard the decode so constructing the DTO never throws —
+        // callers assert on `$response` / `json()` for the error case, and
+        // that contract must hold even when the body isn't decodable JSON.
+        $decoded = json_decode($response->getContent(), true);
+        $isJsonObject = is_array($decoded);
+
         return new self(
             $response,
-            $response->json('access_token'),
-            $response->json('id_token'),
-            $response->json('refresh_token'),
+            $isJsonObject ? $response->json('access_token') : null,
+            $isJsonObject ? $response->json('id_token') : null,
+            $isJsonObject ? $response->json('refresh_token') : null,
         );
     }
 

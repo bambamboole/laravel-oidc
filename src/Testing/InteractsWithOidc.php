@@ -193,7 +193,7 @@ trait InteractsWithOidc
             );
         }
 
-        // Laravel 12+ binds PreventRequestForgery in the `web` group and keeps
+        // Laravel 13+ binds PreventRequestForgery in the `web` group and keeps
         // ValidateCsrfToken only as a deprecated alias; older versions bind
         // ValidateCsrfToken itself — exempt both so the approve POST passes
         // everywhere the package supports.
@@ -225,7 +225,13 @@ trait InteractsWithOidc
         } else {
             $authorize->assertOk();
 
-            $approve = $this->post(route('oidc.approve'), ['auth_token' => $authorize->json('authToken')]);
+            $authToken = $authorize->json('authToken');
+
+            if (! is_string($authToken) || $authToken === '') {
+                Assert::fail('The authorization view did not return an authToken. If your app binds a custom authorization view, register a JSON view for this test via Passport::authorizationView() before calling authorizeAndApprove().');
+            }
+
+            $approve = $this->post(route('oidc.approve'), ['auth_token' => $authToken]);
             $approve->assertRedirect();
         }
 
