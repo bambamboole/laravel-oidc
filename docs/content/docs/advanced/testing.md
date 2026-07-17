@@ -44,6 +44,11 @@ $this->withHeader('Authorization', 'Bearer '.$jwt)->get('/api/orders');
 When no client is given, a default authorization-code client is created once
 per test and reused.
 
+A token minted with a custom `audience:` does not authenticate on plain
+`auth:api` routes — Passport resolves the client from `aud[0]`, not from the
+audience — it is for routes guarded by the package's audience middleware; see
+[Resource servers (CheckAudience)](/advanced/resource-servers/).
+
 ## Clients
 
 ```php
@@ -54,6 +59,10 @@ $client = $this->withFirstPartyClient();             // + sets oidc.first_party.
 Config mutated in a test takes effect immediately — the package reads
 `oidc.first_party.*` at call time, so no `forgetInstance()` ceremony is
 needed after `config([...])` changes.
+
+`withFirstPartyClient()` sets `oidc.first_party.trusted = true`, so consent
+is skipped for that client; register a client via `createOidcClient()`
+instead when a test asserts consent behavior.
 
 ## The full authorization-code flow
 
@@ -82,6 +91,9 @@ $result->json('error'); // invalid_client
 `PkcePair` when the test needs the verifier later. The helper registers a
 minimal JSON authorization view unless the test already registered one via
 `Passport::authorizationView()`.
+
+The CSRF exemption applied by `authorizeAndApprove()` persists for the
+remainder of the calling test method.
 
 ## Keyless boot
 
