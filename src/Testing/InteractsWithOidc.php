@@ -193,10 +193,8 @@ trait InteractsWithOidc
             );
         }
 
-        // Laravel 13+ binds PreventRequestForgery in the `web` group and keeps
-        // ValidateCsrfToken only as a deprecated alias; older versions bind
-        // ValidateCsrfToken itself — exempt both so the approve POST passes
-        // everywhere the package supports.
+        // The `web` group binds PreventRequestForgery on Laravel 13+ but
+        // ValidateCsrfToken on older versions — both must be exempted.
         $this->withoutMiddleware([ValidateCsrfToken::class, PreventRequestForgery::class]);
 
         $guard = (string) config('oidc.auth.guard', 'identity');
@@ -218,16 +216,13 @@ trait InteractsWithOidc
 
         $authorize = $this->get(route('oidc.authorize').'?'.http_build_query($query));
 
-        // Consent is skipped (immediate redirect with a code) for trusted
-        // clients and for scopes the user already granted.
+        // Trusted clients and already-granted scopes skip consent entirely.
         if ($authorize->isRedirect()) {
             $approve = $authorize;
         } else {
             $authorize->assertOk();
 
-            // Decode defensively: json() would throw Laravel's generic
-            // "Invalid JSON was returned from the route" on an HTML
-            // authorization view before the actionable failure below runs.
+            // json() would throw on a non-JSON view before the failure below can fire.
             $decoded = json_decode((string) $authorize->getContent(), true);
             $authToken = is_array($decoded) ? ($decoded['authToken'] ?? null) : null;
 

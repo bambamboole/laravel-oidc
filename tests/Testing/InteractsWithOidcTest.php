@@ -55,7 +55,7 @@ it('creates an authorization-code grant client with sane defaults', function () 
 });
 
 it('configures a first-party client without any singleton busting', function () {
-    // Resolve the manager first to prove no forgetInstance ceremony is needed.
+    // The manager must already be resolved for this to prove anything.
     Oidc::issuer();
 
     $client = $this->withFirstPartyClient();
@@ -82,10 +82,8 @@ it('mints a real signed access token with a persisted row', function () {
         ->and($token->getAttribute('scopes'))->toBe(['openid', 'email'])
         ->and($token->getAttribute('revoked'))->toBeFalse();
 
-    // Passport's TokenGuard resolves the requesting client from aud[0] (see
-    // League's BearerTokenValidator), so a custom resource audience isn't
-    // valid for this server's own protected routes — mint a second,
-    // default-audience token for the /oauth/userinfo round trip.
+    // Passport resolves the requesting client from aud[0], so only a
+    // default-audience token can authenticate against this server's own routes.
     $bearerJwt = $this->issueTokenFor($this->user, scopes: ['openid', 'email']);
     $bearer = $this->withHeader('Authorization', 'Bearer '.$bearerJwt)->get('/oauth/userinfo');
     $bearer->assertOk()->assertJsonPath('sub', (string) $this->user->id);
@@ -115,8 +113,6 @@ it('honors authorize parameter overrides', function () {
     $token = (new Parser(new JoseEncoder))
         ->parse((string) $result->idToken);
 
-    // parse() is typed to the Token interface; narrow to the concrete
-    // UnencryptedToken so ->claims() resolves for PHPStan.
     Assert::assertInstanceOf(UnencryptedToken::class, $token);
 
     expect($token->claims()->get('nonce'))->toBe('fixed-nonce');
@@ -133,9 +129,8 @@ it('handles the skip-consent redirect for already-approved clients', function ()
 
 it('returns the raw token error response for a broken token leg', function () {
     $confidential = $this->createOidcClient();
-    // Corrupt the plaintext secret so the token leg fails client auth. An
-    // *empty* secret makes league throw invalid_request (400) instead
-    // (see AbstractGrant::validateClient), so this has to be a wrong value.
+    // Must be a wrong value, not an empty one — an empty secret is
+    // invalid_request (400) rather than invalid_client (401).
     $confidential->plainSecret = 'wrong-secret';
 
     $result = $this->authorizeAndApprove($this->user, $confidential);

@@ -8,9 +8,7 @@ use Laravel\Passport\ClientRepository;
 use Workbench\App\Models\User;
 
 it('honors first-party config mutated after the singletons were resolved', function () {
-    // Resolve both singletons BEFORE any first-party config exists — the old
-    // constructor snapshot made every later config mutation invisible until
-    // consumers ran the forgetInstance/clearResolvedInstance ceremony.
+    // Both singletons must exist before the config lands for this to prove anything.
     $provider = app(SessionTokenProvider::class);
     Oidc::issuer();
 
