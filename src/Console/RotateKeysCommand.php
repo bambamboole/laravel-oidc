@@ -4,11 +4,9 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Console;
 
 use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
-use Bambamboole\LaravelOidc\Token\Jwk;
+use Bambamboole\LaravelOidc\Token\SigningKeyGenerator;
 use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Console\Command;
-use phpseclib3\Crypt\RSA;
-use phpseclib3\Crypt\RSA\PrivateKey;
 use Throwable;
 
 class RotateKeysCommand extends Command
@@ -18,6 +16,11 @@ class RotateKeysCommand extends Command
     protected $signature = 'oidc:rotate-keys {--print : Print the env variables instead of writing them to .env} {--force : Skip the confirmation prompt}';
 
     protected $description = 'Generate a new OIDC signing keypair as env variables, rolling the current public key into OIDC_PREVIOUS_PUBLIC_KEY';
+
+    public function __construct(private readonly SigningKeyGenerator $keys)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -29,14 +32,11 @@ class RotateKeysCommand extends Command
             return self::SUCCESS;
         }
 
-        /** @var PrivateKey $key */
-        $key = RSA::createKey((int) config('oidc.key_size', 2048));
-        $newPrivate = (string) $key;
-        $newPublic = (string) $key->getPublicKey();
+        $generated = $this->keys->generate();
 
         $vars = [
-            'OIDC_PRIVATE_KEY' => $newPrivate,
-            'OIDC_PUBLIC_KEY' => $newPublic,
+            'OIDC_PRIVATE_KEY' => $generated->privateKeyPem,
+            'OIDC_PUBLIC_KEY' => $generated->publicKeyPem,
         ];
 
         if ($current !== null) {
@@ -49,7 +49,7 @@ class RotateKeysCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info('New signing key generated. New kid: '.Jwk::fromPem($newPublic)['kid']);
+        $this->info('New signing key generated. New kid: '.$generated->kid);
 
         if ($current !== null) {
             $this->line('The previous public key stays in JWKS via OIDC_PREVIOUS_PUBLIC_KEY. Remove it once every token signed by it has expired.');
