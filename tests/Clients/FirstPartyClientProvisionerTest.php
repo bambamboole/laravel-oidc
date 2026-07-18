@@ -32,6 +32,8 @@ it('creates a confidential managed client and returns its plain secret once', fu
         ->and(json_decode((string) $result->client->getRawOriginal('post_logout_redirect_uris'), true, flags: JSON_THROW_ON_ERROR))->toBe(['https://app.test'])
         ->and(json_decode((string) $result->client->getRawOriginal('allowed_exchange_audiences'), true, flags: JSON_THROW_ON_ERROR))->toBe(['https://api.test/orders'])
         ->and($result->client->getAttribute('grant_types'))->toBe(['authorization_code', 'refresh_token', TOKEN_EXCHANGE_GRANT]);
+
+    expect($result->created)->toBeTrue();
 });
 
 it('reconciles the managed client without rotating its secret', function () {
@@ -52,6 +54,8 @@ it('reconciles the managed client without rotating its secret', function () {
         ->and($result->client->getAttribute('redirect_uris'))->toBe(['https://new.test/callback'])
         ->and($result->client->getRawOriginal('secret'))->toBe($storedSecret)
         ->and($result->client->getAttribute('grant_types'))->toBe(['authorization_code', 'refresh_token']);
+
+    expect($result->created)->toBeFalse();
 });
 
 it('reconciles the managed client with a matching credential and returns the verified secret', function () {
