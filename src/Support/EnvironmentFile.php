@@ -23,6 +23,7 @@ final class EnvironmentFile implements EnvironmentStore
             $contents = $this->upsert($contents, $name, $encoder !== null ? $encoder($value) : $value);
         }
 
+        $mode = is_file($path) ? (fileperms($path) & 0777) : 0600;
         $temp = $path.'.'.bin2hex(random_bytes(6)).'.tmp';
 
         if (@file_put_contents($temp, $contents, LOCK_EX) === false) {
@@ -30,6 +31,8 @@ final class EnvironmentFile implements EnvironmentStore
 
             throw new EnvironmentWriteException("Unable to write the environment file at [{$path}].");
         }
+
+        @chmod($temp, $mode);
 
         if (! @rename($temp, $path)) {
             @unlink($temp);

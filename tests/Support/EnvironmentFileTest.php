@@ -53,6 +53,15 @@ it('replaces the target atomically without leaving a temp file behind', function
         ->and((string) file_get_contents($path))->toContain('OIDC_FIRST_PARTY_CLIENT=abc-123');
 });
 
+it('preserves the target file permissions across the atomic write', function () {
+    $path = envFixture("APP_NAME=Testing\n");
+    chmod($path, 0600);
+
+    (new EnvironmentFile($path))->write(['OIDC_PRIVATE_KEY' => 'secret']);
+
+    expect(fileperms($path) & 0777)->toBe(0600);
+});
+
 it('throws when the environment file cannot be read', function () {
     (new EnvironmentFile('/nonexistent/dir/.env'))->write(['A' => 'b']);
 })->throws(EnvironmentWriteException::class);
