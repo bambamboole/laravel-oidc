@@ -5,6 +5,63 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.3.0](https://github.com/bambamboole/laravel-oidc/compare/v0.2.0...v0.3.0) (2026-07-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* the eleven incremental migrations are replaced by seven consolidated ones (one create per oidc_* table plus a single oauth_clients alter migration). Existing installs must delete previously published oidc_* package migrations and re-publish; the resulting schema is identical.
+
+### Features
+
+* add Apple social provider with ES256 client secret and form_post ([7d1ae4a](https://github.com/bambamboole/laravel-oidc/commit/7d1ae4a7cd48f6800192ac3afd6649fd077237ac))
+* add authorizeAndApprove flow helper with PKCE and result DTO ([fd65f72](https://github.com/bambamboole/laravel-oidc/commit/fd65f72c0ee34e5c778450e621739beb44abc56c))
+* add generic OIDC social provider with discovery and id_token verification ([c022165](https://github.com/bambamboole/laravel-oidc/commit/c022165f0e42a817c5345681fd2e16a9c8776382))
+* add Google and GitHub social providers ([98936e0](https://github.com/bambamboole/laravel-oidc/commit/98936e0e6fe0240505b8f76a90b8bbb3eb95f7e1))
+* add InteractsWithOidc testing trait with identity and client helpers ([0139e48](https://github.com/bambamboole/laravel-oidc/commit/0139e4856faa149c7b1b91420061939fa5433897))
+* add issueTokenFor test helper minting real signed tokens ([68d72f7](https://github.com/bambamboole/laravel-oidc/commit/68d72f777cbb1a0fca5043af0f9df4f43ca34121))
+* add oidc_social_accounts table and SocialAccount model ([0ac31c2](https://github.com/bambamboole/laravel-oidc/commit/0ac31c20d4be88050f544d41760517d23bd4b8db))
+* add public atomic env-writer service ([edf1869](https://github.com/bambamboole/laravel-oidc/commit/edf18693e356d626b634714ba6d1a62250e3a518))
+* add rollback and provider env accessors to provisioning result ([bc21ee7](https://github.com/bambamboole/laravel-oidc/commit/bc21ee7ba70aa0f76c7713cc2f9125acf91a5618))
+* add social account linking and unlinking ([dcd9ba8](https://github.com/bambamboole/laravel-oidc/commit/dcd9ba80f81eb7091e085aa88e31782c83818cfb))
+* add social account resolution (linked, link-by-email, JIT provisioning) ([40bd95c](https://github.com/bambamboole/laravel-oidc/commit/40bd95cddda85f3b2f70813f7140a4d666c864d7))
+* add social login core (contract, OAuth2 base provider, routes scaffold) ([7dc36f6](https://github.com/bambamboole/laravel-oidc/commit/7dc36f6e4f0783983368452401a8c6f4c8e09282))
+* add social provider registry with config wiring and facade seams ([5cbe167](https://github.com/bambamboole/laravel-oidc/commit/5cbe1671e3f017060056e2fb57037efb0eeb9778))
+* add social redirect endpoint and form_post callback bounce ([71fe29b](https://github.com/bambamboole/laravel-oidc/commit/71fe29bc36be52183414634adedeb0b1a08c5068))
+* complete social login callback with pipeline, MFA parity, and session claims ([36c590e](https://github.com/bambamboole/laravel-oidc/commit/36c590ecdd0f37e2076a6171dfd90f6011706e50))
+* composable installer primitives (provisioning + env writing as services) ([84b04b1](https://github.com/bambamboole/laravel-oidc/commit/84b04b1224013790f1350f33f816c60e7855de91))
+* consolidate package migrations into one per table ([48fa807](https://github.com/bambamboole/laravel-oidc/commit/48fa80782e1102ed014db7e96967b50a4da1cfc8))
+* extract signing-key generation primitive ([8fd4192](https://github.com/bambamboole/laravel-oidc/commit/8fd41923d2e151fbe948ee51c48e973278fb4222))
+* testing kit + keyless-boot safety ([5e6c3ca](https://github.com/bambamboole/laravel-oidc/commit/5e6c3caf63f499c48d21a2544459c8c3f47e85b0))
+
+
+### Bug Fixes
+
+* fail actionably when the authorization view returns non-JSON ([4ed5f29](https://github.com/bambamboole/laravel-oidc/commit/4ed5f29511b3b12231ff0d4b64bea96478329867))
+* harden testing kit failure affordances ([76f9c24](https://github.com/bambamboole/laravel-oidc/commit/76f9c24e984aa08b2526ad38fd8830a448517464))
+* preserve .env file permissions across atomic write ([8b57ec6](https://github.com/bambamboole/laravel-oidc/commit/8b57ec636bb03d7fa21f98b2082edf7512a61407))
+* read first-party client config at call time instead of construction ([48d5a18](https://github.com/bambamboole/laravel-oidc/commit/48d5a189c6a67a7271c5894327aa2a9ec9a8ddb1))
+* reject non-string state and code callback parameters without warnings ([fd8bffc](https://github.com/bambamboole/laravel-oidc/commit/fd8bffc25b9ec3f7929c53b2abb6b848ba6b7a97))
+* resolve the token encrypter lazily so keyless boots survive ([5f89f39](https://github.com/bambamboole/laravel-oidc/commit/5f89f39eaeea11014c88de8ed41625a4dd1dfe1e))
+* wrap GitHub profile fetch failures in the social auth exception ([1fcd61a](https://github.com/bambamboole/laravel-oidc/commit/1fcd61ad0014a7451cee27eb7b4db04294c0c9b1))
+* wrap OIDC metadata transport failures and cover fail-closed verification paths ([a479caa](https://github.com/bambamboole/laravel-oidc/commit/a479caa85c0906efaf3fc5a70a913bb39a409d05))
+
+
+### Refactoring
+
+* consume env-writer service and drop WritesEnvFile trait ([679d0f6](https://github.com/bambamboole/laravel-oidc/commit/679d0f6f1958bcb3c73af9d18916825b9d73b9ad))
+* tighten testing kit comments to repo guidelines ([1150457](https://github.com/bambamboole/laravel-oidc/commit/11504575dabe4529625cb6003e0039d852ac935c))
+
+
+### Documentation
+
+* add social login documentation ([9e8b77d](https://github.com/bambamboole/laravel-oidc/commit/9e8b77d5a28ccf3149613eadc7b40e0960d5003e))
+* correct the unlink JSON response description ([2a5e39b](https://github.com/bambamboole/laravel-oidc/commit/2a5e39b12cd117fd43544bb6adad733a2cc46faa))
+* document testing kit side effects and audience-token scope ([8eae818](https://github.com/bambamboole/laravel-oidc/commit/8eae818de344787d5d885116b0e4d1567e739899))
+* document the testing kit and keyless-boot guarantee ([38ec079](https://github.com/bambamboole/laravel-oidc/commit/38ec079b5b57fc9d651a066e47992f2166479997))
+* drop keyless-safety callouts ([b77083c](https://github.com/bambamboole/laravel-oidc/commit/b77083c3bb678ff4647486eb69e13a49b70e172f))
+* warn against firstOrCreate in social provisioning actions ([4841288](https://github.com/bambamboole/laravel-oidc/commit/4841288d7b483fe4c07365c2ebcd3a6a8452dc2e))
+
 ## [0.2.0](https://github.com/bambamboole/laravel-oidc/compare/v0.1.0...v0.2.0) (2026-07-15)
 
 
