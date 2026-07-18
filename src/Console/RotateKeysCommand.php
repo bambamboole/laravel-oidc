@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Console;
 
-use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
+use Bambamboole\LaravelOidc\Contracts\EnvironmentStore;
+use Bambamboole\LaravelOidc\Support\EnvironmentWriteException;
 use Bambamboole\LaravelOidc\Token\SigningKeyGenerator;
 use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Illuminate\Console\Command;
@@ -11,14 +12,14 @@ use Throwable;
 
 class RotateKeysCommand extends Command
 {
-    use WritesEnvFile;
-
     protected $signature = 'oidc:rotate-keys {--print : Print the env variables instead of writing them to .env} {--force : Skip the confirmation prompt}';
 
     protected $description = 'Generate a new OIDC signing keypair as env variables, rolling the current public key into OIDC_PREVIOUS_PUBLIC_KEY';
 
-    public function __construct(private readonly SigningKeyGenerator $keys)
-    {
+    public function __construct(
+        private readonly SigningKeyGenerator $keys,
+        private readonly EnvironmentStore $environment,
+    ) {
         parent::__construct();
     }
 
@@ -45,8 +46,14 @@ class RotateKeysCommand extends Command
 
         if ($this->option('print')) {
             $this->printVars($vars);
-        } elseif (! $this->writeEnv($vars, $this->encode(...))) {
-            return self::FAILURE;
+        } else {
+            try {
+                $this->environment->write($vars, $this->encode(...));
+            } catch (EnvironmentWriteException $exception) {
+                $this->error($exception->getMessage());
+
+                return self::FAILURE;
+            }
         }
 
         $this->info('New signing key generated. New kid: '.$generated->kid);

@@ -6,13 +6,12 @@ namespace Bambamboole\LaravelOidc\Console;
 
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
-use Bambamboole\LaravelOidc\Console\Concerns\WritesEnvFile;
+use Bambamboole\LaravelOidc\Contracts\EnvironmentStore;
+use Bambamboole\LaravelOidc\Support\EnvironmentWriteException;
 use Illuminate\Console\Command;
 
 class ProvisionClientCommand extends Command
 {
-    use WritesEnvFile;
-
     protected $signature = 'oidc:client
         {--first-party : Provision the package-managed first-party client}
         {--name= : Client display name}
@@ -26,8 +25,10 @@ class ProvisionClientCommand extends Command
 
     protected $description = 'Provision the package-managed first-party OIDC client';
 
-    public function __construct(private readonly FirstPartyClientProvisioner $provisioner)
-    {
+    public function __construct(
+        private readonly FirstPartyClientProvisioner $provisioner,
+        private readonly EnvironmentStore $environment,
+    ) {
         parent::__construct();
     }
 
@@ -99,10 +100,15 @@ class ProvisionClientCommand extends Command
             return self::SUCCESS;
         }
 
-        return $this->writeEnv([
-            'OIDC_FIRST_PARTY_CLIENT' => $result->clientId,
-            'OIDC_FIRST_PARTY_TRUSTED' => $trusted ? 'true' : 'false',
-        ]) ? self::SUCCESS : self::FAILURE;
+        try {
+            $this->environment->write($result->providerEnvVariables($trusted));
+        } catch (EnvironmentWriteException $exception) {
+            $this->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
+
+        return self::SUCCESS;
     }
 
     private function stringOption(string $name): ?string
