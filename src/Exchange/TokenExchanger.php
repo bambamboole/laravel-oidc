@@ -95,7 +95,7 @@ class TokenExchanger
             $act['act'] = $claims['act'];
         }
 
-        $token->addExtraClaim('act', $act);
+        $token->setActor($act);
 
         return $token;
     }

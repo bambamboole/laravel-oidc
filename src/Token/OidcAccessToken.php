@@ -25,16 +25,6 @@ class OidcAccessToken extends AccessToken
 {
     use AccessTokenTrait;
 
-    /**
-     * Access-token-structural claims that carry the authorization decision itself.
-     * These are not part of ProtocolClaims::RESERVED (which is universal OIDC/id_token
-     * protocol claims) because id_token emission is unaffected by them, but a resource
-     * server trusts them for authorization, so custom `$extra` claims must never override them.
-     *
-     * @var list<string>
-     */
-    private const array STRUCTURAL = ['client_id', 'scope', 'scopes'];
-
     private ?string $serialized = null;
 
     /** @var string[] */
@@ -47,6 +37,9 @@ class OidcAccessToken extends AccessToken
 
     /** @var array<string, mixed> */
     private array $extra = [];
+
+    /** @var array<string, mixed>|null */
+    private ?array $actor = null;
 
     public function setAudience(string ...$audience): void
     {
@@ -85,6 +78,12 @@ class OidcAccessToken extends AccessToken
         $this->extra[$name] = $value;
     }
 
+    /** @param array<string, mixed> $actor */
+    public function setActor(array $actor): void
+    {
+        $this->actor = $actor;
+    }
+
     public function convertToJWT(): Token
     {
         $this->initJwtConfiguration();
@@ -119,9 +118,13 @@ class OidcAccessToken extends AccessToken
         }
 
         foreach ($this->extra as $name => $value) {
-            if (! ProtocolClaims::isReserved($name) && ! in_array($name, self::STRUCTURAL, true)) {
+            if (! ProtocolClaims::isAccessTokenReserved($name)) {
                 $builder = $builder->withClaim($name, $value);
             }
+        }
+
+        if ($this->actor !== null) {
+            $builder = $builder->withClaim('act', $this->actor);
         }
 
         return $builder->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());

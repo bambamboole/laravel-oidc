@@ -68,15 +68,28 @@ it('memoizes serialization', function () {
     expect($token->toString())->toBe($token->toString());
 });
 
-it('does not let an extra claim override the structural access-token claims', function () {
+it('does not let extra claims override protected access-token claims', function () {
     $token = makeOidcAccessToken();
     $token->addExtraClaim('scope', 'forged');
     $token->addExtraClaim('scopes', ['forged']);
     $token->addExtraClaim('client_id', 'forged-client');
+    $token->addExtraClaim('cnf', ['jkt' => 'forged']);
+    $token->addExtraClaim('act', ['client_id' => 'forged-client']);
 
     $parsed = parseAccessToken($token->toString());
 
     expect($parsed->claims()->get('scope'))->toBe('openid email')
         ->and($parsed->claims()->get('scopes'))->toBe(['openid', 'email'])
-        ->and($parsed->claims()->get('client_id'))->toBe('client-uuid');
+        ->and($parsed->claims()->get('client_id'))->toBe('client-uuid')
+        ->and($parsed->claims()->has('cnf'))->toBeFalse()
+        ->and($parsed->claims()->has('act'))->toBeFalse();
+});
+
+it('emits a package-owned actor claim', function () {
+    $token = makeOidcAccessToken();
+    $token->setActor(['client_id' => 'trusted']);
+
+    $parsed = parseAccessToken($token->toString());
+
+    expect($parsed->claims()->get('act'))->toBe(['client_id' => 'trusted']);
 });
