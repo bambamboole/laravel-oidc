@@ -52,6 +52,15 @@ return [
     'first_party' => [
         'client_id' => env('OIDC_FIRST_PARTY_CLIENT') ?: null,
         'trusted' => env('OIDC_FIRST_PARTY_TRUSTED', false),
+
+        // Extra provisioning metadata applied by `oidc:install-self` on top of
+        // the APP_URL-derived defaults. Token exchange is only enabled on the
+        // client when at least one audience is listed.
+        'provision' => [
+            'redirect_uris' => [],
+            'post_logout_redirect_uris' => [],
+            'allowed_exchange_audiences' => [],
+        ],
     ],
 
     'trusted_clients' => [],

@@ -61,8 +61,9 @@ class InstallSelfCommand extends Command
         try {
             $result = $this->provisioner->provision(
                 name: $name,
-                redirectUris: [$redirectUri],
-                postLogoutRedirectUris: [$appUrl],
+                redirectUris: [$redirectUri, ...$this->configuredProvisionList('redirect_uris')],
+                postLogoutRedirectUris: [$appUrl, ...$this->configuredProvisionList('post_logout_redirect_uris')],
+                allowedExchangeAudiences: $this->configuredProvisionList('allowed_exchange_audiences'),
             );
         } catch (FirstPartyClientProvisioningException $exception) {
             $this->error($exception->getMessage());
@@ -105,6 +106,15 @@ class InstallSelfCommand extends Command
         $this->warn('Restart the app (and any queue workers) so the new configuration takes effect.');
 
         return self::SUCCESS;
+    }
+
+    /** @return string[] */
+    private function configuredProvisionList(string $key): array
+    {
+        return array_values(array_filter(
+            (array) config("oidc.first_party.provision.{$key}", []),
+            fn (mixed $value): bool => is_string($value) && trim($value) !== '',
+        ));
     }
 
     private function defaultClientName(): string
