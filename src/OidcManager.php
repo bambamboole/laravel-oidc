@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\Social\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
@@ -33,6 +34,7 @@ class OidcManager
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
+        private readonly AccessTokenPipeline $accessTokenPipeline,
         private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
         private readonly SocialProviderRegistry $socialProviders,
     ) {}
@@ -163,6 +165,16 @@ class OidcManager
     public function postLogin(Closure $hook): void
     {
         $this->pipeline->register($hook);
+    }
+
+    public function clientCredentials(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerClientCredentials($trigger);
+    }
+
+    public function tokenExchange(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerTokenExchange($trigger);
     }
 
     /**

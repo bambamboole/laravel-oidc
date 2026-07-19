@@ -47,6 +47,8 @@ class KeylessBootTest extends BaseTestCase
         Oidc::onTokenExchange(fn () => null);
         Oidc::onUserinfo(fn () => null);
         Oidc::postLogin(fn () => null);
+        Oidc::clientCredentials(fn () => null);
+        Oidc::tokenExchange(fn () => null);
         Oidc::extendSocialProvider('custom', fn () => throw new \RuntimeException('unused'));
 
         $this->assertInstanceOf(OidcManager::class, $this->app->make(OidcManager::class));

@@ -12,6 +12,7 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
@@ -35,6 +36,7 @@ use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Grant\OidcClientCredentialsGrant;
 use Bambamboole\LaravelOidc\Grant\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
@@ -70,7 +72,6 @@ use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Grant\ClientCredentialsGrant;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -140,6 +141,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
+        $this->app->singleton(AccessTokenPipeline::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
         $this->app->singleton(SessionRegistry::class);
@@ -180,7 +182,7 @@ class OidcServiceProvider extends ServiceProvider
             $server->enableGrantType($refreshGrant, $accessTokenTtl);
 
             $server->enableGrantType(
-                new ClientCredentialsGrant,
+                new OidcClientCredentialsGrant($app->make(AccessTokenPipeline::class)),
                 new DateInterval('PT'.(int) config('oidc.token_lifetimes.client_credentials').'S'),
             );
 
