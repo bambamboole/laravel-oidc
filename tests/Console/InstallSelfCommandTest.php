@@ -73,6 +73,59 @@ it('provisions without token exchange when no audiences are configured', functio
         ->and($client->getAttribute('grant_types'))->not->toContain('urn:ietf:params:oauth:grant-type:token-exchange');
 });
 
+it('adopts the existing client on a second run instead of minting a new one', function () {
+    $env = installSelfEnv();
+    config(['oidc-client' => [], 'app.url' => 'https://app.test']);
+
+    $this->artisan('oidc:install-self', ['--force' => true])->assertSuccessful();
+
+    $firstContents = (string) File::get($env);
+    preg_match('/^OIDC_RP_CLIENT_SECRET=(.+)$/m', $firstContents, $secret);
+    preg_match('/^OIDC_FIRST_PARTY_CLIENT=(.+)$/m', $firstContents, $clientId);
+
+    $this->artisan('oidc:install-self', ['--force' => true])->assertSuccessful();
+
+    $secondContents = (string) File::get($env);
+
+    expect(Passport::client()->newQuery()->count())->toBe(1)
+        ->and($secondContents)->toContain('OIDC_FIRST_PARTY_CLIENT='.$clientId[1])
+        ->and($secondContents)->toContain('OIDC_RP_CLIENT_SECRET='.$secret[1]);
+});
+
+it('rotates the client secret when run again with --fresh', function () {
+    $env = installSelfEnv();
+    config(['oidc-client' => [], 'app.url' => 'https://app.test']);
+
+    $this->artisan('oidc:install-self', ['--force' => true])->assertSuccessful();
+
+    preg_match('/^OIDC_RP_CLIENT_SECRET=(.+)$/m', (string) File::get($env), $secret);
+    $clientId = (string) Passport::client()->newQuery()->firstOrFail()->getKey();
+
+    $this->artisan('oidc:install-self', ['--force' => true, '--fresh' => true])->assertSuccessful();
+
+    $contents = (string) File::get($env);
+    preg_match('/^OIDC_RP_CLIENT_SECRET=(.+)$/m', $contents, $rotated);
+
+    expect(Passport::client()->newQuery()->count())->toBe(1)
+        ->and($contents)->toContain('OIDC_FIRST_PARTY_CLIENT='.$clientId)
+        ->and($rotated[1])->not->toBe($secret[1]);
+});
+
+it('fails instead of rotating when the configured secret no longer matches', function () {
+    $env = installSelfEnv();
+    config(['oidc-client' => [], 'app.url' => 'https://app.test']);
+
+    $this->artisan('oidc:install-self', ['--force' => true])->assertSuccessful();
+
+    File::put($env, (string) preg_replace(
+        '/^OIDC_RP_CLIENT_SECRET=.+$/m',
+        'OIDC_RP_CLIENT_SECRET=tampered',
+        (string) File::get($env),
+    ));
+
+    $this->artisan('oidc:install-self', ['--force' => true])->assertFailed();
+});
+
 it('fails when the relying-party package is not installed', function () {
     $env = installSelfEnv();
     $before = File::get($env);

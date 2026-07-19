@@ -15,6 +15,7 @@ class InstallSelfCommand extends Command
 {
     protected $signature = 'oidc:install-self
         {--name= : First-party client display name (defaults to the app name)}
+        {--fresh : Rotate the first-party client secret instead of adopting the configured one}
         {--force : Skip the confirmation prompt}';
 
     protected $description = 'Configure this app as its own OIDC provider and relying party (self-SSO)';
@@ -58,12 +59,18 @@ class InstallSelfCommand extends Command
             return self::SUCCESS;
         }
 
+        $fresh = (bool) $this->option('fresh');
+        $adoptClientId = $fresh ? null : $this->configuredClientId();
+
         try {
             $result = $this->provisioner->provision(
                 name: $name,
                 redirectUris: [$redirectUri, ...$this->configuredProvisionList('redirect_uris')],
                 postLogoutRedirectUris: [$appUrl, ...$this->configuredProvisionList('post_logout_redirect_uris')],
                 allowedExchangeAudiences: $this->configuredProvisionList('allowed_exchange_audiences'),
+                adoptClientId: $adoptClientId,
+                rotateSecret: $fresh,
+                existingClientSecret: $fresh ? null : $this->environment->value('OIDC_RP_CLIENT_SECRET'),
             );
         } catch (FirstPartyClientProvisioningException $exception) {
             $this->error($exception->getMessage());
@@ -106,6 +113,14 @@ class InstallSelfCommand extends Command
         $this->warn('Restart the app (and any queue workers) so the new configuration takes effect.');
 
         return self::SUCCESS;
+    }
+
+    private function configuredClientId(): ?string
+    {
+        $clientId = $this->environment->value('OIDC_FIRST_PARTY_CLIENT')
+            ?? config('oidc.first_party.client_id');
+
+        return is_string($clientId) && $clientId !== '' ? $clientId : null;
     }
 
     /** @return string[] */
