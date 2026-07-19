@@ -8,12 +8,14 @@ Userinfo claims come from the application's `ClaimsResolver` implementation.
 
 ## Access-token triggers
 
-Two access-token triggers are available:
+Four access-token triggers are available:
 
 | Method | Fires on | Read context |
 | --- | --- | --- |
 | `Oidc::clientCredentials()` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
 | `Oidc::tokenExchange()` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
+| `Oidc::personalAccessToken()` | Passport personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
+| `Oidc::authorizationCode()` | `authorization_code` grant and every `refresh_token` reissue | `AuthorizationCodeEvent` — `user`, `client`, finalized `scopes`, and `grantType` |
 
 Each callback also receives an `AccessTokenApi`. Use `setAccessTokenClaim()` to add a custom claim,
 or `deny()` to stop issuance before the access token is persisted. Triggers run once per issuance in
@@ -29,10 +31,12 @@ Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi 
 });
 ```
 
-For interactive access-token claims, register `Oidc::postLogin()` and call
+For interactive access-token claims computed once at login, register `Oidc::postLogin()` and call
 `LoginApi::setAccessTokenClaim()`. The authentication context carries those claims onto the
 authorization-code access token and reissues them through refresh. The same
 [post-login pipeline](/auth/post-login-pipeline/) handles login decisions and `id_token` claims.
+`Oidc::authorizationCode()` complements it for claims that must be re-evaluated on every issuance;
+its claims are stamped after the context's, so a trigger can override a stale login-time claim.
 
 ## Userinfo claims
 

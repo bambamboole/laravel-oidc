@@ -41,6 +41,31 @@ final class EnvironmentFile implements EnvironmentStore
         }
     }
 
+    public function value(string $key): ?string
+    {
+        $path = $this->path ?? app()->environmentFilePath();
+        $contents = @file_get_contents($path);
+
+        if ($contents === false
+            || preg_match('/^'.preg_quote($key, '/').'=(.*)$/m', $contents, $matches) !== 1) {
+            return null;
+        }
+
+        $value = trim($matches[1]);
+
+        if (preg_match('/^"(.*)"$/s', $value, $quoted) === 1) {
+            return str_replace(['\n', '\"', '\\\\'], ["\n", '"', '\\'], $quoted[1]);
+        }
+
+        if (preg_match("/^'(.*)'$/s", $value, $quoted) === 1) {
+            return $quoted[1];
+        }
+
+        $value = trim((string) preg_replace('/\s+#.*$/', '', $value));
+
+        return $value === '' ? null : $value;
+    }
+
     private function upsert(string $contents, string $name, string $value): string
     {
         $line = $name.'='.$value;

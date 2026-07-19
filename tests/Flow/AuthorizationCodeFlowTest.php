@@ -9,7 +9,10 @@ use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
 use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AuthorizationCodeEvent;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
@@ -106,6 +109,50 @@ it('issues an id_token through the full code + pkce flow', function () {
 
     $jwks = $this->getJson('/.well-known/jwks.json')->json('keys');
     expect($idToken->headers()->get('kid'))->toBe($jwks[0]['kid']);
+});
+
+it('merges authorization-code trigger claims into issued and refreshed access tokens', function () {
+    Oidc::authorizationCode(function (AuthorizationCodeEvent $event, AccessTokenApi $api): void {
+        expect($event->user->getAuthIdentifier())->toBe($this->user->id)
+            ->and($event->client->getIdentifier())->toBe((string) $this->client->id)
+            ->and($event->scopes)->toBe(['openid', 'email']);
+
+        $api->setAccessTokenClaim('project_id', 'p-1');
+        $api->setAccessTokenClaim('via', $event->grantType);
+    });
+
+    $response = completeAuthorization($this)->assertOk();
+    $accessToken = parseAccessToken((string) $response->json('access_token'));
+
+    expect($accessToken->claims()->get('project_id'))->toBe('p-1')
+        ->and($accessToken->claims()->get('via'))->toBe('authorization_code');
+
+    $refreshed = $this->post('/oauth/token', [
+        'grant_type' => 'refresh_token',
+        'client_id' => $this->client->id,
+        'client_secret' => $this->client->plainSecret,
+        'refresh_token' => $response->json('refresh_token'),
+    ])->assertOk();
+
+    $refreshedToken = parseAccessToken((string) $refreshed->json('access_token'));
+
+    expect($refreshedToken->claims()->get('project_id'))->toBe('p-1')
+        ->and($refreshedToken->claims()->get('via'))->toBe('refresh_token');
+});
+
+it('denies authorization-code issuance before persisting when a trigger denies', function () {
+    $persistedTokenCount = Passport::token()->newQuery()->count();
+
+    Oidc::authorizationCode(function (AuthorizationCodeEvent $event, AccessTokenApi $api): void {
+        $api->deny('user_blocked');
+    });
+
+    completeAuthorization($this)
+        ->assertStatus(401)
+        ->assertJsonPath('error', 'access_denied')
+        ->assertJsonMissingPath('access_token');
+
+    expect(Passport::token()->newQuery()->count())->toBe($persistedTokenCount);
 });
 
 // OIDC Core §3.1.2.1 / §5.4 (openid scope)

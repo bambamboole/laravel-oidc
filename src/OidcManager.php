@@ -159,6 +159,16 @@ class OidcManager
         $this->accessTokenPipeline->registerTokenExchange($trigger);
     }
 
+    public function personalAccessToken(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerPersonalAccessToken($trigger);
+    }
+
+    public function authorizationCode(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerAuthorizationCode($trigger);
+    }
+
     /**
      * @param  string[]  $scopes
      */
