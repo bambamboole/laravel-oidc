@@ -4,7 +4,11 @@ use Bambamboole\LaravelOidc\OidcServiceProvider;
 
 it('registers the oidc config', function () {
     expect(config('oidc.token_lifetimes.id_token'))->toBe(3600)
-        ->and(config('oidc.handlers'))->toHaveKey('oidc.userinfo');
+        ->and(config('oidc.routes'))->toBe([
+            'prefix' => '',
+            'middleware' => [],
+        ])
+        ->and(config('oidc.handlers'))->toBe([]);
 });
 
 it('feeds configured oidc signing keys into passport config', function () {

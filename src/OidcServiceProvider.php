@@ -227,7 +227,6 @@ class OidcServiceProvider extends ServiceProvider
 
         $this->publishesMigrations([
             __DIR__.'/../database/migrations' => database_path('migrations'),
-            Passkeys::migrationPath() => database_path('migrations'),
         ], 'oidc-migrations');
 
         if ($this->app->runningInConsole()) {
