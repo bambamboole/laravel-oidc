@@ -40,7 +40,6 @@ use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
-use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\DefaultScopeRepository;
@@ -202,7 +201,6 @@ class OidcServiceProvider extends ServiceProvider
     {
         Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
 
-        Event::listen(Login::class, RecordAuthTime::class);
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Login::class, StartOidcSession::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
