@@ -35,7 +35,7 @@ class AccessTokenApi
     public function setAccessTokenClaim(string $name, mixed $value): void
     {
         if (ProtocolClaims::isAccessTokenReserved($name)) {
-            Log::warning("oidc: postLogin refused to set protected access_token claim [{$name}]");
+            Log::warning("oidc: refused protected access_token claim [{$name}]");
 
             return;
         }
