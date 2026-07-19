@@ -46,11 +46,28 @@ it('prunes expired contexts and keeps live ones', function () {
 
     $registry = app(SessionRegistry::class);
 
-    $oldSid = $registry->start('3');
-    OidcSession::query()->whereKey($oldSid)->update(['expires_at' => now()->subDays(2)]);
-    $registry->recordParticipant($oldSid, 'some-client');
+    $oldUnnotifiedSid = $registry->start('3');
+    OidcSession::query()->whereKey($oldUnnotifiedSid)->update([
+        'expires_at' => now()->subDays(2),
+        'logout_notified_at' => null,
+    ]);
+    $registry->recordParticipant($oldUnnotifiedSid, 'some-client');
 
-    $recentSid = $registry->start('4');
+    $oldRecentlyNotifiedSid = $registry->start('4');
+    OidcSession::query()->whereKey($oldRecentlyNotifiedSid)->update([
+        'expires_at' => now()->subDays(2),
+        'logout_notified_at' => now(),
+    ]);
+    $registry->recordParticipant($oldRecentlyNotifiedSid, 'some-client');
+
+    $oldNotifiedSid = $registry->start('5');
+    OidcSession::query()->whereKey($oldNotifiedSid)->update([
+        'expires_at' => now()->subDays(2),
+        'logout_notified_at' => now()->subDays(2),
+    ]);
+    $registry->recordParticipant($oldNotifiedSid, 'some-client');
+
+    $recentSid = $registry->start('6');
     OidcSession::query()->whereKey($recentSid)->update(['expires_at' => now()->subMinute()]);
     $registry->recordParticipant($recentSid, 'some-client');
 
@@ -59,8 +76,12 @@ it('prunes expired contexts and keeps live ones', function () {
     expect(AuthenticationContext::query()->pluck('id')->all())->toBe([$live->id])
         ->and(AccessTokenContext::query()->where('access_token_id', 'stale')->exists())->toBeFalse()
         ->and(AccessTokenContext::query()->where('access_token_id', 'fresh')->exists())->toBeTrue()
-        ->and(OidcSession::query()->whereKey($oldSid)->exists())->toBeFalse()
-        ->and(SessionParticipant::query()->where('sid', $oldSid)->exists())->toBeFalse()
+        ->and(OidcSession::query()->whereKey($oldUnnotifiedSid)->exists())->toBeTrue()
+        ->and(SessionParticipant::query()->where('sid', $oldUnnotifiedSid)->exists())->toBeTrue()
+        ->and(OidcSession::query()->whereKey($oldRecentlyNotifiedSid)->exists())->toBeTrue()
+        ->and(SessionParticipant::query()->where('sid', $oldRecentlyNotifiedSid)->exists())->toBeTrue()
+        ->and(OidcSession::query()->whereKey($oldNotifiedSid)->exists())->toBeFalse()
+        ->and(SessionParticipant::query()->where('sid', $oldNotifiedSid)->exists())->toBeFalse()
         ->and(OidcSession::query()->whereKey($recentSid)->exists())->toBeTrue()
         ->and(SessionParticipant::query()->where('sid', $recentSid)->exists())->toBeTrue();
 });
