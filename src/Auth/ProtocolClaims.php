@@ -9,7 +9,7 @@ final class ProtocolClaims
     /** @var list<string> */
     public const array RESERVED = [
         'iss', 'sub', 'aud', 'exp', 'iat', 'nbf', 'jti',
-        'nonce', 'at_hash', 'c_hash', 'auth_time', 'azp', 'acr', 'amr',
+        'nonce', 'at_hash', 'c_hash', 'auth_time', 'azp', 'acr', 'amr', 'sid',
     ];
 
     /** @var list<string> */

@@ -56,7 +56,7 @@ first hook that denies the login.
 
 `setIdTokenClaim()` refuses protocol-reserved claim names and logs the attempt instead of applying
 it. The reserved set is `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`,
-`c_hash`, `auth_time`, `azp`, `acr`, and `amr` — so a hook can never forge protocol claims.
+`c_hash`, `auth_time`, `azp`, `acr`, `amr`, and `sid` — so a hook can never forge protocol claims.
 `setAccessTokenClaim()` applies the corresponding access-token protections.
 
 ## Fail-closed

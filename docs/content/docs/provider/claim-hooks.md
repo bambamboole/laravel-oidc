@@ -44,5 +44,5 @@ claims to both userinfo and ID tokens.
 ## Protected claims
 
 `AccessTokenApi::setAccessTokenClaim()` refuses protocol-owned access-token claims such as `iss`,
-`sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf`, and `act`. RFC 8693
-actor chains remain owned by the package.
+`sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `sid`, `client_id`, `scope`, `scopes`, `cnf`, and `act`.
+RFC 8693 actor chains remain owned by the package.

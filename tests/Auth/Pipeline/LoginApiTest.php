@@ -30,6 +30,7 @@ it('refuses to set a protected id_token claim', function () {
     $api = new LoginApi;
     $api->setIdTokenClaim('sub', 'attacker');
     $api->setIdTokenClaim('amr', ['forged']);
+    $api->setIdTokenClaim('sid', 'forged');
 
     expect($api->idTokenClaims())->toBe([]);
 });
@@ -44,6 +45,7 @@ it('buffers access-token claims and refuses protected names', function () {
     $api->setAccessTokenClaim('scopes', ['forged']);
     $api->setAccessTokenClaim('cnf', ['jkt' => 'forged']);
     $api->setAccessTokenClaim('act', ['client_id' => 'forged-client']);
+    $api->setAccessTokenClaim('sid', 'forged');
 
     expect($api->accessTokenClaims())->toBe(['tier' => 'gold']);
 });

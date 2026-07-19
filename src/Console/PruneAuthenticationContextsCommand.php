@@ -16,7 +16,7 @@ class PruneAuthenticationContextsCommand extends Command
 {
     protected $signature = 'oidc:prune-authentication-contexts';
 
-    protected $description = 'Delete expired OIDC authentication contexts and stale access-token links.';
+    protected $description = 'Delete expired OIDC authentication contexts, stale access-token links, and stale notified sessions.';
 
     public function handle(): int
     {

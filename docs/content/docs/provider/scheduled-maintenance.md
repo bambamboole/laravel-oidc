@@ -10,8 +10,9 @@ their pruning yourself:
   one row per token issuance. With short access-token TTLs and refresh-token rotation, that's a row
   on every refresh. Prune them with Passport's `passport:purge`.
 - **This package's tables** grow too: `oidc_authentication_contexts` (one row per login) and
-  `oidc_access_token_contexts` (one row per access-token issuance). Prune them with
-  `oidc:prune-authentication-contexts`.
+  `oidc_access_token_contexts` (one row per access-token issuance), plus `oidc_sessions` (one row
+  per login session) and `oidc_session_participants` (one row per participating client). Prune them
+  with `oidc:prune-authentication-contexts`.
 
 Schedule **all three** — running only some leaves tables growing unbounded, or leaves relying
 parties unnotified of expired sessions. In `routes/console.php`:
@@ -44,6 +45,9 @@ client: a client only receives it if it has registered a `backchannel_logout_uri
   refresh-token lifetime, so a still-rotating refresh chain never loses its link early (which would
   silently drop the deny-on-expiry cap). Retention is fully self-managed here and does **not**
   depend on how `passport:purge` is configured.
+- `oidc_sessions` and their `oidc_session_participants` rows only when both `expires_at` and
+  `logout_notified_at` are more than one day old. This grace keeps session data available to queued
+  back-channel logout jobs; unnotified sessions are retained.
 
 For large deployments, note that Passport's `oauth_refresh_tokens.expires_at` is unindexed
 upstream, so `passport:purge`'s expiry scan can be slow at scale — add an index via your own

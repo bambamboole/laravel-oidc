@@ -75,6 +75,7 @@ it('does not let extra claims override protected access-token claims', function 
     $token->addExtraClaim('client_id', 'forged-client');
     $token->addExtraClaim('cnf', ['jkt' => 'forged']);
     $token->addExtraClaim('act', ['client_id' => 'forged-client']);
+    $token->addExtraClaim('sid', 'forged');
 
     $parsed = parseAccessToken($token->toString());
 
@@ -82,7 +83,8 @@ it('does not let extra claims override protected access-token claims', function 
         ->and($parsed->claims()->get('scopes'))->toBe(['openid', 'email'])
         ->and($parsed->claims()->get('client_id'))->toBe('client-uuid')
         ->and($parsed->claims()->has('cnf'))->toBeFalse()
-        ->and($parsed->claims()->has('act'))->toBeFalse();
+        ->and($parsed->claims()->has('act'))->toBeFalse()
+        ->and($parsed->claims()->has('sid'))->toBeFalse();
 });
 
 it('emits a package-owned actor claim', function () {

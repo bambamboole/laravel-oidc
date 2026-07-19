@@ -45,6 +45,7 @@ it('refuses protected access-token claim :dataset', function (string $claim) {
     'azp',
     'acr',
     'amr',
+    'sid',
     'client_id',
     'scope',
     'scopes',
