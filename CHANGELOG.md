@@ -5,6 +5,37 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.4.0](https://github.com/bambamboole/laravel-oidc/compare/v0.3.0...v0.4.0) (2026-07-19)
+
+
+### Features
+
+* add capability-scoped token triggers ([5bca438](https://github.com/bambamboole/laravel-oidc/commit/5bca4384c5a9515c09707225560962f8fa754a26))
+* add oidc:install-self command for one-shot self-SSO setup ([d9806a9](https://github.com/bambamboole/laravel-oidc/commit/d9806a9992461f6f9d21a550b989eaf06b578378))
+* oidc:install-self command for one-shot self-SSO setup ([0386155](https://github.com/bambamboole/laravel-oidc/commit/0386155560b6a0232846cc5904eb560ab932c055))
+
+
+### Bug Fixes
+
+* align token trigger guidance and coverage ([c5073e8](https://github.com/bambamboole/laravel-oidc/commit/c5073e8b84762a3fb663266d4a676f7e5278d30f))
+* clean up OIDC publishing defaults ([a9b2076](https://github.com/bambamboole/laravel-oidc/commit/a9b207665d886f78fee6077b0882d3ed20543e50))
+* clean up OIDC publishing defaults ([f6e67dd](https://github.com/bambamboole/laravel-oidc/commit/f6e67dd67763856eaa4d217e6cc7fe507318a032))
+* make access-token warning context-neutral ([d835934](https://github.com/bambamboole/laravel-oidc/commit/d83593436c5d183fa58c47a0a9cd83c5134c1325))
+* preserve OIDC metadata for programmatic logins ([3c6036b](https://github.com/bambamboole/laravel-oidc/commit/3c6036b45b3b8c6e793add758c7b3fe00343cfa1))
+* reserve the oidc session claim ([d6c10df](https://github.com/bambamboole/laravel-oidc/commit/d6c10dfee3f5b062672fec0049924d4f9ef84e29))
+* retain sessions until logout delivery is safe ([c6631e7](https://github.com/bambamboole/laravel-oidc/commit/c6631e7690ab794341191168b099df1284dc6f8b))
+
+
+### Refactoring
+
+* centralize access-token claim decisions ([b72fc6c](https://github.com/bambamboole/laravel-oidc/commit/b72fc6c4250931cab5dfde69ca2b877abfc5b864))
+* replace legacy claim hooks with token triggers ([1a1fea3](https://github.com/bambamboole/laravel-oidc/commit/1a1fea3462e5db243448d9adb2b32951837ce71a))
+
+
+### Documentation
+
+* clarify session maintenance ordering ([67f37e1](https://github.com/bambamboole/laravel-oidc/commit/67f37e13e064dcb57febd19a653b31ffb4735966))
+
 ## [0.3.0](https://github.com/bambamboole/laravel-oidc/compare/v0.2.0...v0.3.0) (2026-07-18)
 
 
