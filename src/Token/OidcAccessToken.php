@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Token;
 
 use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
-use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
 use Bambamboole\LaravelOidc\Issuer;
 use DateTimeImmutable;
 use Laravel\Passport\Bridge\AccessToken;
@@ -30,11 +29,6 @@ class OidcAccessToken extends AccessToken
     /** @var string[] */
     private array $audience = [];
 
-    private ?string $grantType = null;
-
-    /** @var array<string, mixed> */
-    private array $subjectClaims = [];
-
     /** @var array<string, mixed> */
     private array $extra = [];
 
@@ -46,36 +40,11 @@ class OidcAccessToken extends AccessToken
         $this->audience = $audience;
     }
 
-    public function setGrantType(?string $grantType): void
-    {
-        $this->grantType = $grantType;
-    }
-
-    public function getGrantType(): ?string
-    {
-        return $this->grantType;
-    }
-
-    public function exchangeAudience(): string
-    {
-        return $this->audience[0] ?? $this->getClient()->getIdentifier();
-    }
-
-    /** @param array<string, mixed> $claims */
-    public function setSubjectClaims(array $claims): void
-    {
-        $this->subjectClaims = $claims;
-    }
-
-    /** @return array<string, mixed> */
-    public function subjectClaims(): array
-    {
-        return $this->subjectClaims;
-    }
-
     public function addExtraClaim(string $name, mixed $value): void
     {
-        $this->extra[$name] = $value;
+        if (! ProtocolClaims::isAccessTokenReserved($name)) {
+            $this->extra[$name] = $value;
+        }
     }
 
     /** @param array<string, mixed> $actor */
@@ -113,14 +82,8 @@ class OidcAccessToken extends AccessToken
             $builder = $builder->permittedFor($aud);
         }
 
-        foreach (app(AccessTokenHookRunner::class)->claims($this) as $name => $value) {
-            $builder = $builder->withClaim($name, $value);
-        }
-
         foreach ($this->extra as $name => $value) {
-            if (! ProtocolClaims::isAccessTokenReserved($name)) {
-                $builder = $builder->withClaim($name, $value);
-            }
+            $builder = $builder->withClaim($name, $value);
         }
 
         if ($this->actor !== null) {

@@ -11,7 +11,7 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 /**
- * Locks the keyless-boot guarantee: registering views/actions/hooks through
+ * Locks the keyless-boot guarantee: registering views, actions, and triggers through
  * the Oidc facade in a provider's boot() must never resolve the encrypter,
  * so keyless artisan runs (package:discover on CI / fresh clones) survive.
  */
@@ -43,9 +43,6 @@ class KeylessBootTest extends BaseTestCase
         Oidc::createUsersUsing(fn (array $input) => throw new \RuntimeException('unused'));
         Oidc::resetUserPasswordsUsing(fn () => null);
         Oidc::createUsersFromSocialUsing(fn () => throw new \RuntimeException('unused'));
-        Oidc::onClientCredentials(fn () => null);
-        Oidc::onTokenExchange(fn () => null);
-        Oidc::onUserinfo(fn () => null);
         Oidc::postLogin(fn () => null);
         Oidc::clientCredentials(fn () => null);
         Oidc::tokenExchange(fn () => null);

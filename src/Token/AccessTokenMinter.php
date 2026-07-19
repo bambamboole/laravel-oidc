@@ -20,7 +20,7 @@ class AccessTokenMinter
      * @param  string[]  $scopeIds
      * @param  string[]  $audiences
      */
-    public function mint(?string $userId, Client $client, array $scopeIds, DateInterval $ttl, array $audiences = [], ?string $grantType = null): OidcAccessToken
+    public function mint(?string $userId, Client $client, array $scopeIds, DateInterval $ttl, array $audiences = []): OidcAccessToken
     {
         $bridgeClient = new BridgeClient((string) $client->getKey(), (string) $client->getAttribute('name'), [], true);
         $scopes = array_map(fn (string $id): BridgeScope => new BridgeScope($id), $scopeIds);
@@ -29,7 +29,6 @@ class AccessTokenMinter
         $token->setIdentifier(bin2hex(random_bytes(40)));
         $token->setExpiryDateTime((new DateTimeImmutable)->add($ttl));
         $token->setPrivateKey(new CryptKey(SigningKeys::privateKey(), null, false));
-        $token->setGrantType($grantType ?? 'programmatic');
 
         if ($audiences !== []) {
             $token->setAudience(...$audiences);

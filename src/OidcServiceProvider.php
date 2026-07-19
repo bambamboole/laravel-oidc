@@ -39,8 +39,6 @@ use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
 use Bambamboole\LaravelOidc\Grant\OidcClientCredentialsGrant;
 use Bambamboole\LaravelOidc\Grant\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
-use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
-use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
@@ -107,7 +105,6 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
-        $this->app->singleton(ClaimHooks::class);
         $this->app->singleton(AuthViewManager::class);
         $this->app->singleton(UserActionManager::class);
         $this->app->singleton(TotpFactorProvider::class);
@@ -129,7 +126,6 @@ class OidcServiceProvider extends ServiceProvider
 
             return $registry;
         });
-        $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->bind(
             FirstPartyClientConfig::class,
             fn (): FirstPartyClientConfig => FirstPartyClientConfig::fromConfig(),

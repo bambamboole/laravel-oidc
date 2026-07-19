@@ -5,6 +5,9 @@ declare(strict_types=1);
  * OpenID Connect Core 1.0 §5.3 (UserInfo endpoint)
  */
 
+use Bambamboole\LaravelOidc\Claims\ClaimSet;
+use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
 
@@ -36,6 +39,27 @@ it('returns sub plus scope-filtered claims', function () {
             'sub' => (string) $this->user->id,
             'email' => 'm@example.com',
             'email_verified' => true,
+        ]);
+});
+
+it('includes scoped claims from a custom claims resolver', function () {
+    app()->instance(ClaimsResolver::class, new class implements ClaimsResolver
+    {
+        public function resolve(Authenticatable $user): ClaimSet
+        {
+            return new ClaimSet([
+                'tenant' => ['tenant' => 'acme'],
+            ]);
+        }
+    });
+
+    Passport::actingAs($this->user, ['openid', 'tenant']);
+
+    $this->getJson('/oauth/userinfo')
+        ->assertOk()
+        ->assertExactJson([
+            'sub' => (string) $this->user->id,
+            'tenant' => 'acme',
         ]);
 });
 

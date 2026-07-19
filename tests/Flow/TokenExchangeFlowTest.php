@@ -6,6 +6,10 @@ declare(strict_types=1);
  * RFC 8693 (OAuth 2.0 Token Exchange); RFC 6749 §5.2 (error responses)
  */
 
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Auth\Pipeline\TokenExchangeEvent;
+use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
+use Bambamboole\LaravelOidc\Facades\Oidc;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
@@ -56,6 +60,92 @@ it('exchanges a reciprocal token for a narrowed, audience-scoped access token', 
         ->and($at->claims()->get('sub'))->toBe((string) $this->user->id)
         ->and($at->claims()->get('scope'))->toBe('orders:read')
         ->and($at->claims()->get('act'))->toBe(['client_id' => $this->client->id]);
+});
+
+it('runs the token-exchange trigger once with finalized context and applies its access-token claims', function () {
+    $triggerCount = 0;
+
+    Oidc::tokenExchange(function (TokenExchangeEvent $event, AccessTokenApi $api) use (&$triggerCount): void {
+        $triggerCount++;
+
+        expect($event->user->getAuthIdentifier())->toBe($this->user->getAuthIdentifier())
+            ->and($event->client->getIdentifier())->toBe((string) $this->client->id)
+            ->and($event->scopes)->toBe(['orders:read'])
+            ->and($event->audience)->toBe('https://api.internal/orders');
+
+        $api->setAccessTokenClaim('tenant', 'acme');
+    });
+
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read', 'orders:write']);
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+        'scope' => 'orders:read',
+    ])->assertOk();
+
+    $claims = parseAccessToken((string) $response->json('access_token'))->claims()->all();
+
+    expect($triggerCount)->toBe(1)
+        ->and($claims)->toHaveKey('tenant', 'acme');
+});
+
+it('denies token exchange before persisting an access token', function () {
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read']);
+    $persistedTokenCount = Passport::token()->newQuery()->count();
+
+    Oidc::tokenExchange(function (TokenExchangeEvent $event, AccessTokenApi $api): void {
+        $api->deny('exchange_blocked');
+    });
+
+    $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+        'scope' => 'orders:read',
+    ])->assertStatus(401)
+        ->assertJsonPath('error', 'access_denied')
+        ->assertJsonMissingPath('access_token');
+
+    expect(Passport::token()->newQuery()->count())->toBe($persistedTokenCount);
+});
+
+it('keeps the package-owned actor chain when a token-exchange trigger attempts to replace it', function () {
+    $rootSubject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid', 'orders:read']);
+    $subject = app(TokenExchanger::class)
+        ->exchange($rootSubject, $this->client, 'https://api.internal/orders', ['orders:read'])
+        ->toString();
+    $triggerCount = 0;
+
+    Oidc::tokenExchange(function (TokenExchangeEvent $event, AccessTokenApi $api) use (&$triggerCount): void {
+        $triggerCount++;
+        $api->setAccessTokenClaim('act', ['client_id' => 'forged-client']);
+    });
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => EXCHANGE_URN,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+        'scope' => 'orders:read',
+    ])->assertOk();
+
+    $accessToken = parseAccessToken((string) $response->json('access_token'));
+
+    expect($triggerCount)->toBe(1)
+        ->and($accessToken->claims()->get('act'))->toBe([
+            'client_id' => $this->client->id,
+            'act' => ['client_id' => $this->client->id],
+        ]);
 });
 
 it('inherits the subject token full scope set when the scope param is omitted', function () {

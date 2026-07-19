@@ -1,62 +1,46 @@
 ---
-title: Custom claims (hooks)
-description: Injecting claims into issued artifacts with claim hooks.
+title: Custom claims
+description: Adding claims to access tokens and userinfo responses through supported extension points.
 ---
 
-Register a hook to inject claims into an issued artifact — an access token or a userinfo
-response — without replacing the `ClaimsResolver`. Hooks are registered against the `Oidc` facade,
-typically in a service provider `boot()`.
+Access-token claims are added through capability-scoped triggers registered on the `Oidc` facade.
+Userinfo claims come from the application's `ClaimsResolver` implementation.
 
-## The three claim hooks
+## Access-token triggers
 
-There are exactly three claim hooks:
+Two access-token triggers are available:
 
-| Hook | Fires on | Context |
+| Method | Fires on | Read context |
 | --- | --- | --- |
-| `Oidc::onClientCredentials()` | `client_credentials` grant | `ClientCredentialsContext` — `client`, `grantedScopes`, and a writer for `accessToken` |
-| `Oidc::onTokenExchange()` | RFC 8693 token exchange | `TokenExchangeContext` — `user`, `client`, `grantedScopes`, `audience`, `subjectClaims`, and a writer for `accessToken` |
-| `Oidc::onUserinfo()` | `GET\|POST /oauth/userinfo` | `UserinfoContext` — `user`, `client`, `grantedScopes`, and a writer for `claims` |
+| `Oidc::clientCredentials()` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
+| `Oidc::tokenExchange()` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
 
-For injecting claims at interactive login, these hooks are **not** the mechanism — use the
-post-login pipeline instead, described under [Post-login pipeline](/auth/post-login-pipeline/).
-
-## Writing claims
-
-Each context exposes one `ClaimsBag` per artifact it can write to (`$context->accessToken` or
-`$context->claims`). Call `->set($name, $value)` to add a claim. A hook that throws is caught,
-logged, and skipped rather than failing the request.
+Each callback also receives an `AccessTokenApi`. Use `setAccessTokenClaim()` to add a custom claim,
+or `deny()` to stop issuance before the access token is persisted. Triggers run once per issuance in
+registration order and fail closed when a callback throws.
 
 ```php
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Auth\Pipeline\ClientCredentialsEvent;
 use Bambamboole\LaravelOidc\Facades\Oidc;
-use Bambamboole\LaravelOidc\Hooks\Context\ClientCredentialsContext;
 
-Oidc::onClientCredentials(function (ClientCredentialsContext $context): void {
-    $context->accessToken->set('tenant', $context->client->getIdentifier());
+Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
+    $api->setAccessTokenClaim('tenant', $event->client->getIdentifier());
 });
 ```
 
+For interactive login decisions and `id_token` claims, use the
+[post-login pipeline](/auth/post-login-pipeline/).
+
+## Userinfo claims
+
+The userinfo endpoint returns `sub` plus the result of
+`ClaimsResolver::resolve($user)->forScopes($grantedScopes)`. Bind a custom implementation of
+`Bambamboole\LaravelOidc\Contracts\ClaimsResolver` to add application-specific, scope-filtered
+claims to both userinfo and ID tokens.
+
 ## Protected claims
 
-`ClaimsBag::set()` silently drops (and logs a warning for) any claim name the artifact controls
-itself, so a hook can never forge a protocol claim:
-
-| Artifact | Protected claims |
-| --- | --- |
-| `id_token` | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`, `c_hash`, `auth_time`, `azp`, `acr`, `amr` |
-| Access token | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf`, `act` |
-| Userinfo | `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti` |
-
-## Hooks must be pure claim writers
-
-A claim hook is a side-effect-free function that only writes claims onto the artifact's
-`ClaimsBag`. Because a hook **may run more than once** per issuance — the access-token bag is
-built whenever the token is serialized — it must be **idempotent**. Do **not** perform audit
-logging, increment counters, or write to the database inside a hook. For side effects that must
-happen once per authentication, use Laravel's auth events (e.g.
-`Illuminate\Auth\Events\Login`), or the post-login pipeline.
-
-These hooks only fire while issuing OIDC artifacts. User-lifecycle events — registration, email
-verification, password resets — are handled elsewhere in the app's authentication layer.
-
-The access-token claims written here ride on the RFC 9068 `at+jwt` — see
-[Access tokens](/provider/access-tokens/) for that format.
+`AccessTokenApi::setAccessTokenClaim()` refuses protocol-owned access-token claims such as `iss`,
+`sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `client_id`, `scope`, `scopes`, `cnf`, and `act`. RFC 8693
+actor chains remain owned by the package.
