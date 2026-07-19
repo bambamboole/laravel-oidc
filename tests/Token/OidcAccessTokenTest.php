@@ -7,25 +7,11 @@ use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Bridge\Scope;
-use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Lcobucci\JWT\Token\Parser;
-use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Validator;
 use League\OAuth2\Server\CryptKey;
-
-function parseAccessToken(string $jwt): UnencryptedToken
-{
-    $token = (new Parser(new JoseEncoder))->parse($jwt);
-
-    if (! $token instanceof UnencryptedToken) {
-        throw new RuntimeException('Expected an unencrypted token.');
-    }
-
-    return $token;
-}
 
 /** @param string[] $scopeIds */
 function makeOidcAccessToken(array $scopeIds = ['openid', 'email']): OidcAccessToken
