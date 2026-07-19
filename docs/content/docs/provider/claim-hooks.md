@@ -29,8 +29,10 @@ Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi 
 });
 ```
 
-For interactive login decisions and `id_token` claims, use the
-[post-login pipeline](/auth/post-login-pipeline/).
+For interactive access-token claims, register `Oidc::postLogin()` and call
+`LoginApi::setAccessTokenClaim()`. The authentication context carries those claims onto the
+authorization-code access token and reissues them through refresh. The same
+[post-login pipeline](/auth/post-login-pipeline/) handles login decisions and `id_token` claims.
 
 ## Userinfo claims
 

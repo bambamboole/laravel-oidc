@@ -52,10 +52,12 @@ first hook that denies the login.
 | `$api->deny(string $reason)` | Denies the login; the user sees a generic authentication failure |
 | `$api->requireMfa()` | Forces the MFA challenge for this login, even if the client didn't request one |
 | `$api->setIdTokenClaim(string $name, mixed $value)` | Queues a claim to be added to the `id_token` once the login completes |
+| `$api->setAccessTokenClaim(string $name, mixed $value)` | Queues a claim for the interactive access token and its refreshed successors |
 
 `setIdTokenClaim()` refuses protocol-reserved claim names and logs the attempt instead of applying
 it. The reserved set is `iss`, `sub`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`, `at_hash`,
 `c_hash`, `auth_time`, `azp`, `acr`, and `amr` — so a hook can never forge protocol claims.
+`setAccessTokenClaim()` applies the corresponding access-token protections.
 
 ## Fail-closed
 
@@ -80,9 +82,10 @@ Your queued custom claims are merged onto the same `id_token`. Because `acr`/`am
 protocol-reserved, they are owned entirely by the OP — the hook influences them only indirectly, by
 calling `requireMfa()` (which changes how many methods end up satisfied).
 
+Claims queued with `setAccessTokenClaim()` are stored on the authentication context, applied to the
+authorization-code access token, and reissued when that context is continued through refresh.
+
 ## Current limitations
 
-- Only `setIdTokenClaim()` is available today. `setAccessTokenClaim()`, and reissuing these claims
-  on a refreshed token, are planned for a follow-up phase and are not available yet.
 - `isNewDevice()` always returns `false` (its recognizer treats every device as known) until the
   device-recognition release ships; there is no real device tracking behind it yet.
