@@ -16,6 +16,12 @@ class AccessTokenPipeline
     /** @var list<Closure(TokenExchangeEvent, AccessTokenApi): void> */
     private array $tokenExchangeTriggers = [];
 
+    /** @var list<Closure(PersonalAccessTokenEvent, AccessTokenApi): void> */
+    private array $personalAccessTokenTriggers = [];
+
+    /** @var list<Closure(AuthorizationCodeEvent, AccessTokenApi): void> */
+    private array $authorizationCodeTriggers = [];
+
     public function registerClientCredentials(Closure $trigger): void
     {
         $this->clientCredentialsTriggers[] = $trigger;
@@ -26,42 +32,59 @@ class AccessTokenPipeline
         $this->tokenExchangeTriggers[] = $trigger;
     }
 
+    public function registerPersonalAccessToken(Closure $trigger): void
+    {
+        $this->personalAccessTokenTriggers[] = $trigger;
+    }
+
+    public function registerAuthorizationCode(Closure $trigger): void
+    {
+        $this->authorizationCodeTriggers[] = $trigger;
+    }
+
+    public function hasPersonalAccessTokenTriggers(): bool
+    {
+        return $this->personalAccessTokenTriggers !== [];
+    }
+
+    public function hasAuthorizationCodeTriggers(): bool
+    {
+        return $this->authorizationCodeTriggers !== [];
+    }
+
     public function runClientCredentials(ClientCredentialsEvent $event): AccessTokenApi
     {
-        $api = new AccessTokenApi;
-
-        foreach ($this->clientCredentialsTriggers as $trigger) {
-            try {
-                $trigger($event, $api);
-            } catch (Throwable $exception) {
-                Log::error('oidc: clientCredentials trigger threw; denying access token (fail-closed): '.$exception->getMessage(), [
-                    'exception' => $exception,
-                ]);
-                $api->deny('client_credentials_trigger_error');
-
-                return $api;
-            }
-
-            if ($api->isDenied()) {
-                return $api;
-            }
-        }
-
-        return $api;
+        return $this->run($this->clientCredentialsTriggers, $event, 'clientCredentials', 'client_credentials_trigger_error');
     }
 
     public function runTokenExchange(TokenExchangeEvent $event): AccessTokenApi
     {
+        return $this->run($this->tokenExchangeTriggers, $event, 'tokenExchange', 'token_exchange_trigger_error');
+    }
+
+    public function runPersonalAccessToken(PersonalAccessTokenEvent $event): AccessTokenApi
+    {
+        return $this->run($this->personalAccessTokenTriggers, $event, 'personalAccessToken', 'personal_access_trigger_error');
+    }
+
+    public function runAuthorizationCode(AuthorizationCodeEvent $event): AccessTokenApi
+    {
+        return $this->run($this->authorizationCodeTriggers, $event, 'authorizationCode', 'authorization_code_trigger_error');
+    }
+
+    /** @param list<Closure> $triggers */
+    private function run(array $triggers, object $event, string $label, string $failureReason): AccessTokenApi
+    {
         $api = new AccessTokenApi;
 
-        foreach ($this->tokenExchangeTriggers as $trigger) {
+        foreach ($triggers as $trigger) {
             try {
                 $trigger($event, $api);
             } catch (Throwable $exception) {
-                Log::error('oidc: tokenExchange trigger threw; denying access token (fail-closed): '.$exception->getMessage(), [
+                Log::error("oidc: {$label} trigger threw; denying access token (fail-closed): ".$exception->getMessage(), [
                     'exception' => $exception,
                 ]);
-                $api->deny('token_exchange_trigger_error');
+                $api->deny($failureReason);
 
                 return $api;
             }

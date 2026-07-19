@@ -15,6 +15,8 @@ use SensitiveParameter;
  * @method static void postLogin(Closure $hook)
  * @method static void clientCredentials(Closure $trigger)
  * @method static void tokenExchange(Closure $trigger)
+ * @method static void personalAccessToken(Closure $trigger)
+ * @method static void authorizationCode(Closure $trigger)
  * @method static void loginView(Closure $view)
  * @method static void confirmPasswordView(Closure $view)
  * @method static void registerView(Closure $view)
