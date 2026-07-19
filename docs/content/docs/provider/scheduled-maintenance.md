@@ -24,15 +24,14 @@ Schedule::command('oidc:dispatch-expired-session-logouts')->hourly();
 Schedule::command('oidc:prune-authentication-contexts')->daily();
 ```
 
-## Order matters: dispatch before prune
+## Dispatch and prune independently
 
 `oidc:dispatch-expired-session-logouts` sends OIDC back-channel logout to a session's
-relying-party participants once the session hits its absolute lifetime (see
-[Logout](/provider/logout/)). It must run **ahead of** `oidc:prune-authentication-contexts`, which
-deletes `oidc_sessions` rows only after a grace window — scheduling dispatch first (and more
-frequently) ensures every expired session is announced before its row is removed. Back-channel
-logout is opt-in per relying-party client: a client only receives it if it has registered a
-`backchannel_logout_uri`.
+relying-party participants and marks the eligible session as notified once it hits its absolute
+lifetime (see [Logout](/provider/logout/)). `oidc:prune-authentication-contexts` removes a session
+only when both its expiry and notification timestamps are older than the one-day grace period, so
+the commands do not require a specific ordering. Back-channel logout is opt-in per relying-party
+client: a client only receives it if it has registered a `backchannel_logout_uri`.
 
 ## What prune deletes
 
