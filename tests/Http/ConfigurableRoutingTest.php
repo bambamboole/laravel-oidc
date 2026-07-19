@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Controllers\AuthenticatedSessionController;
+use Bambamboole\LaravelOidc\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Http\Controllers\DiscoveryController;
 use Bambamboole\LaravelOidc\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Bambamboole\LaravelOidc\Routing\HandlerConfig;
@@ -45,6 +47,8 @@ it('authenticates userinfo via the configured oidc.api_guard', function () {
 });
 
 it('registers a route for every enabled handler', function () {
+    config(['oidc.handlers' => []]);
+
     $routes = registerHandlersInFreshRouter()->getRoutes();
 
     foreach (Handler::cases() as $handler) {
@@ -80,13 +84,15 @@ it('does not register a handler set to false', function () {
 });
 
 it('applies a custom route path, controller and middleware override', function () {
-    $handlers = config('oidc.handlers');
-    $handlers[Handler::Login->value] = [
-        'route' => 'signin',
-        'controller' => JwksController::class,
-        'middleware' => ['web', 'my-guard'],
-    ];
-    config(['oidc.handlers' => $handlers]);
+    config([
+        'oidc.handlers' => [
+            Handler::Login->value => [
+                'route' => 'signin',
+                'controller' => JwksController::class,
+                'middleware' => ['web', 'my-guard'],
+            ],
+        ],
+    ]);
 
     $route = registerHandlersInFreshRouter()->getRoutes()->getByName(Handler::Login->value);
 
@@ -95,13 +101,116 @@ it('applies a custom route path, controller and middleware override', function (
         ->and($route->middleware())->toBe(['web', 'my-guard']);
 });
 
+it('merges sparse route and controller overrides over handler defaults', function () {
+    config([
+        'oidc.handlers' => [
+            Handler::Login->value => ['route' => 'signin'],
+            Handler::Jwks->value => ['controller' => AuthenticatedSessionController::class],
+        ],
+    ]);
+
+    $login = Handler::Login->config();
+    $jwks = Handler::Jwks->config();
+
+    expect($login)->toBeInstanceOf(HandlerConfig::class)
+        ->and($login->route)->toBe('signin')
+        ->and($login->controller)->toBe([AuthenticatedSessionController::class, 'create'])
+        ->and($login->middleware)->toBe(['web', 'guest:identity'])
+        ->and($jwks)->toBeInstanceOf(HandlerConfig::class)
+        ->and($jwks->route)->toBe('.well-known/jwks.json')
+        ->and($jwks->controller)->toBe(AuthenticatedSessionController::class)
+        ->and($jwks->middleware)->toBe([]);
+});
+
+it('replaces default middleware in a per-handler override', function () {
+    config([
+        'oidc.handlers' => [
+            Handler::LoginStore->value => ['middleware' => ['custom-handler']],
+        ],
+    ]);
+
+    $config = Handler::LoginStore->config();
+
+    expect($config)->toBeInstanceOf(HandlerConfig::class)
+        ->and($config->middleware)->toBe(['custom-handler']);
+});
+
+it('appends global route middleware after each handler middleware list', function () {
+    config([
+        'oidc.routes.middleware' => ['global-one', 'global-two'],
+        'oidc.handlers' => [
+            Handler::LoginStore->value => ['middleware' => ['handler-only']],
+        ],
+    ]);
+
+    $routes = registerHandlersInFreshRouter()->getRoutes();
+
+    expect($routes->getByName(Handler::LoginStore->value)->middleware())
+        ->toBe(['handler-only', 'global-one', 'global-two'])
+        ->and($routes->getByName(Handler::Discovery->value)->middleware())
+        ->toBe(['global-one', 'global-two']);
+});
+
+it('prefixes every route except discovery and advertises the registered prefixed endpoints', function () {
+    config([
+        'oidc.issuer' => 'https://issuer.test',
+        'oidc.routes.prefix' => 'provider',
+        'oidc.handlers' => [],
+    ]);
+
+    $routes = registerHandlersInFreshRouter()->getRoutes();
+    app('url')->setRoutes($routes);
+
+    expect($routes->getByName(Handler::Discovery->value)->uri())
+        ->toBe('.well-known/openid-configuration');
+
+    foreach (Handler::cases() as $handler) {
+        if ($handler === Handler::Discovery) {
+            continue;
+        }
+
+        expect($routes->getByName($handler->value)->uri())->toStartWith('provider/');
+    }
+
+    $document = app(DiscoveryController::class)(app(ScopeRepository::class))->getData(true);
+
+    foreach ([
+        'authorization_endpoint' => Handler::Authorize,
+        'token_endpoint' => Handler::IssueToken,
+        'jwks_uri' => Handler::Jwks,
+        'userinfo_endpoint' => Handler::Userinfo,
+        'end_session_endpoint' => Handler::Logout,
+        'introspection_endpoint' => Handler::Introspect,
+        'revocation_endpoint' => Handler::Revoke,
+    ] as $documentKey => $handler) {
+        expect(parse_url($document[$documentKey], PHP_URL_PATH))
+            ->toBe('/'.$routes->getByName($handler->value)->uri());
+    }
+});
+
 it('exposes a handler config DTO through the facade', function () {
+    config(['oidc.handlers' => []]);
+
     $config = Oidc::handlerConfig(Handler::Login);
 
     expect($config)->toBeInstanceOf(HandlerConfig::class)
         ->and($config->route)->toBe('auth/login')
         ->and($config->controller)->toBe([AuthenticatedSessionController::class, 'create'])
         ->and($config->middleware)->toBe(['web', 'guest:identity']);
+});
+
+it('exposes each handler full default independently of consumer configuration', function () {
+    config([
+        'oidc.handlers' => [
+            Handler::Login->value => false,
+        ],
+    ]);
+
+    $defaults = Handler::Login->defaults();
+
+    expect($defaults->route)->toBe('auth/login')
+        ->and($defaults->controller)->toBe([AuthenticatedSessionController::class, 'create'])
+        ->and($defaults->middleware)->toBe(['web', 'guest:identity']);
 });
 
 it('returns false from the facade for a disabled handler', function () {
