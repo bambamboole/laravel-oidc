@@ -2,24 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Hooks\Context;
+namespace Bambamboole\LaravelOidc\Auth\Pipeline;
 
-use Bambamboole\LaravelOidc\Hooks\ClaimsBag;
 use Illuminate\Contracts\Auth\Authenticatable;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 
-final readonly class TokenExchangeContext
+final readonly class TokenExchangeEvent
 {
     /**
-     * @param  string[]  $grantedScopes
+     * @param  list<string>  $scopes
      * @param  array<string, mixed>  $subjectClaims
      */
     public function __construct(
         public Authenticatable $user,
         public ClientEntityInterface $client,
-        public array $grantedScopes,
+        public array $scopes,
         public string $audience,
         public array $subjectClaims,
-        public ClaimsBag $accessToken,
     ) {}
 }

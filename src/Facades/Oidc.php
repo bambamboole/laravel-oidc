@@ -12,10 +12,9 @@ use RuntimeException;
 use SensitiveParameter;
 
 /**
- * @method static void onClientCredentials(Closure $hook)
- * @method static void onTokenExchange(Closure $hook)
- * @method static void onUserinfo(Closure $hook)
  * @method static void postLogin(Closure $hook)
+ * @method static void clientCredentials(Closure $trigger)
+ * @method static void tokenExchange(Closure $trigger)
  * @method static void loginView(Closure $view)
  * @method static void confirmPasswordView(Closure $view)
  * @method static void registerView(Closure $view)

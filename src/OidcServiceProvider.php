@@ -12,6 +12,7 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\WebAuthnFactorProvider;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Auth\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
@@ -35,12 +36,10 @@ use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\DefaultExchangePolicy;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Grant\OidcAuthCodeGrant;
+use Bambamboole\LaravelOidc\Grant\OidcClientCredentialsGrant;
 use Bambamboole\LaravelOidc\Grant\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Grant\TokenExchangeGrant;
-use Bambamboole\LaravelOidc\Hooks\AccessTokenHookRunner;
-use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
 use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
-use Bambamboole\LaravelOidc\Listeners\RecordAuthTime;
 use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
 use Bambamboole\LaravelOidc\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Scopes\DefaultScopeRepository;
@@ -71,7 +70,6 @@ use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Grant\ClientCredentialsGrant;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -107,7 +105,6 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
-        $this->app->singleton(ClaimHooks::class);
         $this->app->singleton(AuthViewManager::class);
         $this->app->singleton(UserActionManager::class);
         $this->app->singleton(TotpFactorProvider::class);
@@ -129,7 +126,6 @@ class OidcServiceProvider extends ServiceProvider
 
             return $registry;
         });
-        $this->app->singleton(AccessTokenHookRunner::class);
         $this->app->bind(
             FirstPartyClientConfig::class,
             fn (): FirstPartyClientConfig => FirstPartyClientConfig::fromConfig(),
@@ -141,6 +137,7 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
         $this->app->singleton(SessionTokenProvider::class, SessionMintTokenProvider::class);
+        $this->app->singleton(AccessTokenPipeline::class);
         $this->app->singleton(PostLoginPipeline::class);
         $this->app->singleton(AuthenticationContextStore::class);
         $this->app->singleton(SessionRegistry::class);
@@ -181,7 +178,7 @@ class OidcServiceProvider extends ServiceProvider
             $server->enableGrantType($refreshGrant, $accessTokenTtl);
 
             $server->enableGrantType(
-                new ClientCredentialsGrant,
+                new OidcClientCredentialsGrant($app->make(AccessTokenPipeline::class)),
                 new DateInterval('PT'.(int) config('oidc.token_lifetimes.client_credentials').'S'),
             );
 
@@ -202,7 +199,6 @@ class OidcServiceProvider extends ServiceProvider
     {
         Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
 
-        Event::listen(Login::class, RecordAuthTime::class);
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Login::class, StartOidcSession::class);
         Event::listen(Logout::class, ForgetSessionToken::class);

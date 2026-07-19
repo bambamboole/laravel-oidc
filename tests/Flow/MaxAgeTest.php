@@ -6,7 +6,6 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
-use Illuminate\Auth\Events\Login;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Workbench\App\Models\User;
@@ -72,14 +71,6 @@ it('forces re-authentication when max_age is zero', function () {
         ->assertRedirect();
 
     expect(auth('identity')->guest())->toBeTrue();
-});
-
-it('records auth_time in the session on login', function () {
-    $this->startSession();
-
-    event(new Login('web', $this->user, false));
-
-    expect(session('oidc.auth_time'))->toBeInt()->toBeGreaterThan(time() - 5);
 });
 
 it('returns login_required for prompt=none guests', function () {

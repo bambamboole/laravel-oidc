@@ -92,7 +92,7 @@ it('rejects an invalid subject token with invalid_grant', function () {
 
 it('nests the prior act claim on a chained exchange', function () {
     $rootEntity = app(AccessTokenMinter::class)->mint((string) $this->user->id, $this->appClient, ['openid'], new DateInterval('PT1H'));
-    $rootEntity->addExtraClaim('act', ['client_id' => 'client-a']);
+    $rootEntity->setActor(['client_id' => 'client-a']);
     $root = $rootEntity->toString();
 
     $issued = app(TokenExchanger::class)->exchange($root, $this->appClient, 'https://api.orders.test', ['openid']);

@@ -7,25 +7,11 @@ use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use Bambamboole\LaravelOidc\Token\SigningKeys;
 use Laravel\Passport\Bridge\Client;
 use Laravel\Passport\Bridge\Scope;
-use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Lcobucci\JWT\Token\Parser;
-use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Validator;
 use League\OAuth2\Server\CryptKey;
-
-function parseAccessToken(string $jwt): UnencryptedToken
-{
-    $token = (new Parser(new JoseEncoder))->parse($jwt);
-
-    if (! $token instanceof UnencryptedToken) {
-        throw new RuntimeException('Expected an unencrypted token.');
-    }
-
-    return $token;
-}
 
 /** @param string[] $scopeIds */
 function makeOidcAccessToken(array $scopeIds = ['openid', 'email']): OidcAccessToken
@@ -82,15 +68,30 @@ it('memoizes serialization', function () {
     expect($token->toString())->toBe($token->toString());
 });
 
-it('does not let an extra claim override the structural access-token claims', function () {
+it('does not let extra claims override protected access-token claims', function () {
     $token = makeOidcAccessToken();
     $token->addExtraClaim('scope', 'forged');
     $token->addExtraClaim('scopes', ['forged']);
     $token->addExtraClaim('client_id', 'forged-client');
+    $token->addExtraClaim('cnf', ['jkt' => 'forged']);
+    $token->addExtraClaim('act', ['client_id' => 'forged-client']);
+    $token->addExtraClaim('sid', 'forged');
 
     $parsed = parseAccessToken($token->toString());
 
     expect($parsed->claims()->get('scope'))->toBe('openid email')
         ->and($parsed->claims()->get('scopes'))->toBe(['openid', 'email'])
-        ->and($parsed->claims()->get('client_id'))->toBe('client-uuid');
+        ->and($parsed->claims()->get('client_id'))->toBe('client-uuid')
+        ->and($parsed->claims()->has('cnf'))->toBeFalse()
+        ->and($parsed->claims()->has('act'))->toBeFalse()
+        ->and($parsed->claims()->has('sid'))->toBeFalse();
+});
+
+it('emits a package-owned actor claim', function () {
+    $token = makeOidcAccessToken();
+    $token->setActor(['client_id' => 'trusted']);
+
+    $parsed = parseAccessToken($token->toString());
+
+    expect($parsed->claims()->get('act'))->toBe(['client_id' => 'trusted']);
 });

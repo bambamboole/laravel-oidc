@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\Social\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
@@ -15,8 +16,6 @@ use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult;
 use Bambamboole\LaravelOidc\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Exchange\IssuedToken;
 use Bambamboole\LaravelOidc\Exchange\TokenExchanger;
-use Bambamboole\LaravelOidc\Hooks\ClaimHooks;
-use Bambamboole\LaravelOidc\Hooks\Trigger;
 use Bambamboole\LaravelOidc\Routing\Handler;
 use Bambamboole\LaravelOidc\Routing\HandlerConfig;
 use Closure;
@@ -27,12 +26,12 @@ use SensitiveParameter;
 class OidcManager
 {
     public function __construct(
-        private readonly ClaimHooks $hooks,
         private readonly SessionTokenProvider $sessionTokens,
         private readonly TokenExchanger $exchanger,
         private readonly AuthViewManager $authViews,
         private readonly UserActionManager $userActions,
         private readonly PostLoginPipeline $pipeline,
+        private readonly AccessTokenPipeline $accessTokenPipeline,
         private readonly FirstPartyClientProvisioner $firstPartyClientProvisioner,
         private readonly SocialProviderRegistry $socialProviders,
     ) {}
@@ -145,24 +144,19 @@ class OidcManager
         );
     }
 
-    public function onClientCredentials(Closure $hook): void
-    {
-        $this->hooks->register(Trigger::ClientCredentials, $hook);
-    }
-
-    public function onTokenExchange(Closure $hook): void
-    {
-        $this->hooks->register(Trigger::TokenExchange, $hook);
-    }
-
-    public function onUserinfo(Closure $hook): void
-    {
-        $this->hooks->register(Trigger::Userinfo, $hook);
-    }
-
     public function postLogin(Closure $hook): void
     {
         $this->pipeline->register($hook);
+    }
+
+    public function clientCredentials(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerClientCredentials($trigger);
+    }
+
+    public function tokenExchange(Closure $trigger): void
+    {
+        $this->accessTokenPipeline->registerTokenExchange($trigger);
     }
 
     /**

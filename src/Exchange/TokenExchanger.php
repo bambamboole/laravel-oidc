@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Exchange;
 
+use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
+use Bambamboole\LaravelOidc\Auth\Pipeline\TokenExchangeEvent;
 use Bambamboole\LaravelOidc\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
+use Bambamboole\LaravelOidc\Token\ResolvesTokenUser;
 use Bambamboole\LaravelOidc\Token\TokenInspector;
 use DateInterval;
 use DateTimeImmutable;
@@ -20,6 +23,8 @@ use League\OAuth2\Server\Exception\OAuthServerException;
 
 class TokenExchanger
 {
+    use ResolvesTokenUser;
+
     private const string GRANT_URN = 'urn:ietf:params:oauth:grant-type:token-exchange';
 
     public function __construct(
@@ -27,6 +32,7 @@ class TokenExchanger
         private readonly TokenInspector $inspector,
         private readonly AccessTokenMinter $minter,
         private readonly ScopeRepository $scopes,
+        private readonly AccessTokenPipeline $pipeline,
     ) {}
 
     /**
@@ -84,10 +90,31 @@ class TokenExchanger
             ),
         );
 
+        $user = $this->resolveUser($result->userId);
+
+        if ($user === null) {
+            throw OAuthServerException::invalidGrant('The subject token user no longer exists.');
+        }
+
+        $api = $this->pipeline->runTokenExchange(new TokenExchangeEvent(
+            user: $user,
+            client: $bridgeClient,
+            scopes: $scopeIds,
+            audience: $result->audience[0] ?? (string) $requestingClient->getKey(),
+            subjectClaims: $claims,
+        ));
+
+        if ($api->isDenied()) {
+            throw OAuthServerException::accessDenied($api->denyReason());
+        }
+
         $ttl = $this->cappedTtl($accessTokenTTL ?? Passport::tokensExpireIn(), $result->expiresAt);
 
-        $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience, self::GRANT_URN);
-        $token->setSubjectClaims($claims);
+        $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience);
+
+        foreach ($api->accessTokenClaims() as $name => $value) {
+            $token->addExtraClaim($name, $value);
+        }
 
         $act = ['client_id' => (string) $requestingClient->getKey()];
 
@@ -95,7 +122,7 @@ class TokenExchanger
             $act['act'] = $claims['act'];
         }
 
-        $token->addExtraClaim('act', $act);
+        $token->setActor($act);
 
         return $token;
     }

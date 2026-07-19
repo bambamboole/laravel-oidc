@@ -15,13 +15,27 @@ use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Token\Parser;
+use Lcobucci\JWT\UnencryptedToken;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\CryptTrait;
 
 uses(TestCase::class)->in(__DIR__);
 uses(RefreshDatabase::class)->in(__DIR__);
+
+function parseAccessToken(string $jwt): UnencryptedToken
+{
+    $token = (new Parser(new JoseEncoder))->parse($jwt);
+
+    if (! $token instanceof UnencryptedToken) {
+        throw new RuntimeException('Expected an unencrypted token.');
+    }
+
+    return $token;
+}
 
 /**
  * Mirrors League\OAuth2\Server\ResponseTypes\BearerTokenResponse::generateHttpResponse(),

@@ -60,7 +60,7 @@ export default defineConfig({
           items: [
             { label: "Endpoints & discovery", link: "/provider/endpoints/" },
             { label: "Scopes & claims", link: "/provider/scopes-and-claims/" },
-            { label: "Custom claims (hooks)", link: "/provider/claim-hooks/" },
+            { label: "Custom claims & triggers", link: "/provider/claim-hooks/" },
             { label: "Access tokens (RFC 9068)", link: "/provider/access-tokens/" },
             { label: "Token exchange (RFC 8693)", link: "/provider/token-exchange/" },
             { label: "Logout", link: "/provider/logout/" },

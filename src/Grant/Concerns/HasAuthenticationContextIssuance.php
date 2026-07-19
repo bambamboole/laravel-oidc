@@ -6,7 +6,6 @@ namespace Bambamboole\LaravelOidc\Grant\Concerns;
 
 use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
-use Bambamboole\LaravelOidc\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Token\OidcAccessToken;
 use DateInterval;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
@@ -38,9 +37,7 @@ trait HasAuthenticationContextIssuance
 
         if ($context !== null && $accessToken instanceof OidcAccessToken) {
             foreach ($context->access_token_claims as $name => $value) {
-                if (! ProtocolClaims::isReserved((string) $name)) {
-                    $accessToken->addExtraClaim((string) $name, $value);
-                }
+                $accessToken->addExtraClaim((string) $name, $value);
             }
 
             app(AccessTokenContextLink::class)->link($accessToken->getIdentifier(), $context->id);

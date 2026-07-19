@@ -16,7 +16,7 @@ class PruneAuthenticationContextsCommand extends Command
 {
     protected $signature = 'oidc:prune-authentication-contexts';
 
-    protected $description = 'Delete expired OIDC authentication contexts and stale access-token links.';
+    protected $description = 'Delete expired OIDC authentication contexts, stale access-token links, and stale notified sessions.';
 
     public function handle(): int
     {
@@ -29,10 +29,13 @@ class PruneAuthenticationContextsCommand extends Command
         $horizon = now()->subSeconds((int) config('oidc.session.absolute_lifetime') + $idleSeconds);
         $links = AccessTokenContext::query()->where('created_at', '<', $horizon)->delete();
 
-        // Sessions are deleted only well after their expiry so the expiry sweep has
-        // announced them first (notify-before-delete).
+        // Sessions are deleted only after both expiry and logout notification grace windows.
+        // The second grace window lets queued back-channel logout jobs read their session.
         $sessionGrace = now()->subSeconds(86400);
-        $sessions = OidcSession::query()->where('expires_at', '<', $sessionGrace)->pluck('sid');
+        $sessions = OidcSession::query()
+            ->where('expires_at', '<', $sessionGrace)
+            ->where('logout_notified_at', '<', $sessionGrace)
+            ->pluck('sid');
         $sessionCount = OidcSession::query()->whereIn('sid', $sessions)->delete();
         SessionParticipant::query()->whereIn('sid', $sessions)->delete();
 
