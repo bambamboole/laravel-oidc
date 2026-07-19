@@ -5,6 +5,17 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.5.0](https://github.com/bambamboole/laravel-oidc/compare/v0.4.0...v0.5.0) (2026-07-19)
+
+
+### Features
+
+* add personal-access and authorization-code token triggers ([e322665](https://github.com/bambamboole/laravel-oidc/commit/e322665d75bf857f6208a35be9781b17a0befeb7))
+* add value() reader to the EnvironmentStore contract ([a94fad9](https://github.com/bambamboole/laravel-oidc/commit/a94fad99cce6c2e24e74c99399180113eea4b109))
+* install-self idempotency, provisioning config, env reader, and new token triggers ([3af5848](https://github.com/bambamboole/laravel-oidc/commit/3af5848fcf0bc95e5f45a11f70f34633c58bf7ef))
+* make oidc:install-self idempotent with adopt-by-default and --fresh ([32e2a08](https://github.com/bambamboole/laravel-oidc/commit/32e2a082476096f5e58b2a5392228830214cacb6))
+* read first_party.provision config in oidc:install-self ([81b8468](https://github.com/bambamboole/laravel-oidc/commit/81b84686d2ef6f0cdd30954732467b54f040878b))
+
 ## [0.4.0](https://github.com/bambamboole/laravel-oidc/compare/v0.3.0...v0.4.0) (2026-07-19)
 
 
