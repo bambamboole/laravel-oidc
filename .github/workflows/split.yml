@@ -1,0 +1,54 @@
+name: split
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+env:
+  GITHUB_TOKEN: ${{ secrets.MONOREPO_SPLIT_TOKEN }}
+
+concurrency:
+  group: split-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - local_path: server
+            split_repository: laravel-oidc-server
+          - local_path: client
+            split_repository: laravel-oidc-client
+          - local_path: ui
+            split_repository: laravel-oidc-ui
+
+    name: Split ${{ matrix.package.split_repository }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Split branch
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: danharrin/monorepo-split-github-action@v2.4.0
+        with:
+          package_directory: 'packages/${{ matrix.package.local_path }}'
+          repository_organization: 'bambamboole'
+          repository_name: '${{ matrix.package.split_repository }}'
+          user_name: 'Manuel Christlieb'
+          user_email: 'manuel@christlieb.eu'
+
+      - name: Split tag
+        if: "startsWith(github.ref, 'refs/tags/')"
+        uses: danharrin/monorepo-split-github-action@v2.4.0
+        with:
+          tag: ${GITHUB_REF#refs/tags/}
+          package_directory: 'packages/${{ matrix.package.local_path }}'
+          repository_organization: 'bambamboole'
+          repository_name: '${{ matrix.package.split_repository }}'
+          user_name: 'Manuel Christlieb'
+          user_email: 'manuel@christlieb.eu'
