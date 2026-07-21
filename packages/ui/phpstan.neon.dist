@@ -10,3 +10,21 @@ parameters:
     level: 6
     peststan:
         testCaseClass: Bambamboole\LaravelOidc\Ui\Tests\TestCase
+    ignoreErrors:
+        # These concerns ship for the forms/actions/fragments landing in later tasks (Lattice
+        # AsForm/AsAction/AsFragment classes that `use` them). None of those consumers exist in
+        # this package yet, so PHPStan's static trait-usage scanner sees zero `use` statements.
+        # ManagesTwoFactor composing ResolvesAuthenticatedUser (trait-in-trait) does not count as
+        # usage for this scanner either, so ResolvesAuthenticatedUser needs the same ignore.
+        -
+            identifier: trait.unused
+            message: '#Trait Bambamboole\\LaravelOidc\\Ui\\Concerns\\ResolvesAuthenticatedUser is used zero times#'
+            path: src/Concerns/ResolvesAuthenticatedUser.php
+        -
+            identifier: trait.unused
+            message: '#Trait Bambamboole\\LaravelOidc\\Ui\\Concerns\\ResolvesFlashStatus is used zero times#'
+            path: src/Concerns/ResolvesFlashStatus.php
+        -
+            identifier: trait.unused
+            message: '#Trait Bambamboole\\LaravelOidc\\Ui\\Concerns\\ManagesTwoFactor is used zero times#'
+            path: src/Concerns/ManagesTwoFactor.php
