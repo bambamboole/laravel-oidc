@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/mrpunyapal/peststan/extension.neon
+
+parameters:
+    paths:
+        - src
+        - tests
+        - workbench/app
+    level: 6
+    peststan:
+        testCaseClass: Bambamboole\LaravelOidc\Ui\Tests\TestCase
+    ignoreErrors:
+        # OAuthConsentTest.php composes the server package's InteractsWithOidc trait via a
+        # file-local uses() call (Pest's dynamic trait composition), so createOidcClient(),
+        # pkce(), and actingAsIdentity() are genuinely available on $this at runtime. See
+        # packages/server/phpstan.neon.dist for the identical, more detailed rationale (a known
+        # PHPStan rough edge resolving methods through a TestCase&Trait intersection type).
+        -
+            identifier: method.notFound
+            message: '#Call to an undefined method Bambamboole\\LaravelOidc\\Ui\\Tests\\TestCase::(createOidcClient|pkce|actingAsIdentity)\(\)#'
+            path: tests/Pages/OAuthConsentTest.php

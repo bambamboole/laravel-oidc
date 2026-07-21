@@ -1,0 +1,82 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bambamboole\LaravelOidc\Ui\Pages;
+
+use Illuminate\Http\Request;
+use Lattice\Lattice\Attributes\AsPage;
+use Lattice\Lattice\Core\PageSchema;
+use Lattice\Lattice\Forms\Components\Form;
+use Lattice\Lattice\Forms\Components\HiddenInput;
+use Lattice\Lattice\Forms\Components\PasswordInput;
+use Lattice\Lattice\Forms\Components\TextInput;
+use Lattice\Lattice\Http\Page;
+use Lattice\Lattice\Ui\Components\Button;
+use Lattice\Lattice\Ui\Components\Component;
+use Lattice\Lattice\Ui\Components\Grid;
+use Lattice\Lattice\Ui\Components\Heading;
+use Lattice\Lattice\Ui\Components\Stack;
+use Lattice\Lattice\Ui\Components\Text;
+use Lattice\Lattice\Ui\Enums\Align;
+use Lattice\Lattice\Ui\Enums\Gap;
+use Lattice\Lattice\Ui\Enums\HttpMethod;
+use Lattice\Lattice\Ui\Enums\PageContainer;
+use Lattice\Lattice\Ui\Enums\PageLayout;
+
+#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
+class ResetPasswordPage extends Page
+{
+    public function title(): string
+    {
+        return __('oidc-ui::auth.reset-password.title');
+    }
+
+    public function render(PageSchema $schema, Request $request): PageSchema
+    {
+        $token = (string) $request->route('token');
+        $email = is_string($request->input('email')) ? $request->input('email') : '';
+
+        return $schema->schema([
+            Stack::make('reset-password-heading')
+                ->gap(Gap::Small)
+                ->schema([
+                    Heading::make(__('oidc-ui::auth.reset-password.heading'), 2),
+                    Text::make(__('oidc-ui::auth.reset-password.subtitle'))->align(Align::Center),
+                ]),
+            Form::make('reset-password-form')
+                ->action(route('identity.password.update', absolute: false))
+                ->method(HttpMethod::Post)
+                ->schema($this->formSchema($token, $email))
+                ->resetOnSuccess(['password', 'password_confirmation'])
+                ->withoutSubmitButton(),
+        ]);
+    }
+
+    /**
+     * @return array<int, Component>
+     */
+    private function formSchema(string $token, string $email): array
+    {
+        return [
+            Grid::make('reset-password-fields')
+                ->columns(1)
+                ->schema([
+                    HiddenInput::make('token', $token),
+                    TextInput::make('email', __('oidc-ui::common.field.email-address'))
+                        ->email()
+                        ->autoComplete('email')
+                        ->value($email)
+                        ->readOnly()
+                        ->required(),
+                    PasswordInput::make('password', __('oidc-ui::common.field.password'))
+                        ->autoComplete('new-password')
+                        ->autoFocus()
+                        ->placeholder(__('oidc-ui::common.placeholder.password'))
+                        ->required()
+                        ->needsConfirmation(),
+                ]),
+            Button::make(__('oidc-ui::auth.reset-password.submit'))->submit(),
+        ];
+    }
+}
