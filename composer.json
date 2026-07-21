@@ -1,0 +1,77 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "bambamboole/laravel-oidc",
+    "description": "OpenID Connect suite for Laravel — identity provider (server), relying party (client), and auth UI",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "passport", "oidc", "openid-connect", "oauth2", "sso", "relying-party"],
+    "authors": [
+        {
+            "name": "Manuel Christlieb",
+            "email": "manuel@christlieb.eu"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "bacon/bacon-qr-code": "^3.1",
+        "illuminate/auth": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/cache": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/http": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/routing": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+        "laravel/passkeys": "^0.2",
+        "laravel/passport": "^13.4",
+        "lcobucci/clock": "^3.2",
+        "lcobucci/jwt": "^5.0",
+        "phpseclib/phpseclib": "^3.0.15",
+        "pragmarx/google2fa": "^9.0"
+    },
+    "replace": {
+        "bambamboole/laravel-oidc-client": "self.version",
+        "bambamboole/laravel-oidc-server": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bambamboole\\LaravelOidc\\": "packages/server/src/",
+            "Bambamboole\\LaravelOidcClient\\": "packages/client/src/"
+        }
+    },
+    "homepage": "https://github.com/bambamboole/laravel-oidc",
+    "support": {
+        "issues": "https://github.com/bambamboole/laravel-oidc/issues",
+        "source": "https://github.com/bambamboole/laravel-oidc"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.6-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Bambamboole\\LaravelOidc\\OidcServiceProvider",
+                "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "install:all": [
+            "@composer --working-dir=packages/server install",
+            "@composer --working-dir=packages/client install"
+        ],
+        "check": [
+            "@check:server",
+            "@check:client"
+        ],
+        "check:server": "@composer --working-dir=packages/server check",
+        "check:client": "@composer --working-dir=packages/client check",
+        "test": [
+            "@composer --working-dir=packages/server test",
+            "@composer --working-dir=packages/client test"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
