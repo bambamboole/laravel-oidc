@@ -44,7 +44,7 @@ jobs:
       matrix:
         package: [server, client]
         php: ['8.4']
-        testbench: ['9.*', '10.*', '11.*']
+        testbench: ['10.*', '11.*']
         stability: [prefer-stable]
         include:
           - package: server
