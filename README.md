@@ -7,6 +7,7 @@ OpenID Connect suite for Laravel, developed as a monorepo.
 | Master (everything below) | repo root | `bambamboole/laravel-oidc` |
 | Identity provider (server) | `packages/server` | `bambamboole/laravel-oidc-server` |
 | Relying party (client) | `packages/client` | `bambamboole/laravel-oidc-client` |
+| Auth UI (ui) | `packages/ui` | `bambamboole/laravel-oidc-ui` |
 
 `bambamboole/laravel-oidc` ships the whole suite and `replace`s the split
 packages. Install the split packages individually if you only need one side

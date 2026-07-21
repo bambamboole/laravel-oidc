@@ -22,6 +22,7 @@
         "illuminate/support": "^12.0 || ^13.0",
         "laravel/passkeys": "^0.2",
         "laravel/passport": "^13.4",
+        "lattice-php/lattice": "^0.24",
         "lcobucci/clock": "^3.2",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15",
@@ -29,12 +30,14 @@
     },
     "replace": {
         "bambamboole/laravel-oidc-client": "self.version",
-        "bambamboole/laravel-oidc-server": "self.version"
+        "bambamboole/laravel-oidc-server": "self.version",
+        "bambamboole/laravel-oidc-ui": "self.version"
     },
     "autoload": {
         "psr-4": {
             "Bambamboole\\LaravelOidc\\": "packages/server/src/",
-            "Bambamboole\\LaravelOidcClient\\": "packages/client/src/"
+            "Bambamboole\\LaravelOidcClient\\": "packages/client/src/",
+            "Bambamboole\\LaravelOidc\\Ui\\": "packages/ui/src/"
         }
     },
     "homepage": "https://github.com/bambamboole/laravel-oidc",
@@ -49,24 +52,29 @@
         "laravel": {
             "providers": [
                 "Bambamboole\\LaravelOidc\\OidcServiceProvider",
-                "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider"
+                "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider",
+                "Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider"
             ]
         }
     },
     "scripts": {
         "install:all": [
             "@composer --working-dir=packages/server install",
-            "@composer --working-dir=packages/client install"
+            "@composer --working-dir=packages/client install",
+            "@composer --working-dir=packages/ui install"
         ],
         "check": [
             "@check:server",
-            "@check:client"
+            "@check:client",
+            "@check:ui"
         ],
         "check:server": "@composer --working-dir=packages/server check",
         "check:client": "@composer --working-dir=packages/client check",
+        "check:ui": "@composer --working-dir=packages/ui check",
         "test": [
             "@composer --working-dir=packages/server test",
-            "@composer --working-dir=packages/client test"
+            "@composer --working-dir=packages/client test",
+            "@composer --working-dir=packages/ui test"
         ]
     },
     "config": {
