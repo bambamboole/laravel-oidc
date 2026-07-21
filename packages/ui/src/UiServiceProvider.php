@@ -6,12 +6,15 @@ namespace Bambamboole\LaravelOidc\Ui;
 
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Ui\Layouts\AuthLayout;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use Lattice\Lattice\Actions\ActionRegistry;
 use Lattice\Lattice\Forms\FormRegistry;
 use Lattice\Lattice\Fragments\FragmentRegistry;
 use Lattice\Lattice\Layouts\LayoutRegistry;
 use Lattice\Lattice\Tables\TableRegistry;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Binds this package's Lattice pages as the default renderers for every
@@ -62,6 +65,15 @@ class UiServiceProvider extends ServiceProvider
         $views->bind(AuthViewManager::VerifyEmail, fn () => new Pages\VerifyEmailPage);
         $views->bind(AuthViewManager::ConfirmPassword, fn () => new Pages\ConfirmPasswordPage);
         $views->bind(AuthViewManager::TwoFactorChallenge, fn () => new Pages\TwoFactorChallengePage);
+
+        Passport::authorizationView(
+            fn (array $parameters): Response => (new Pages\OAuthConsentPage(
+                client: $parameters['client'],
+                user: $parameters['user'],
+                scopes: $parameters['scopes'],
+                authToken: $parameters['authToken'],
+            ))->toResponse(Request::instance()),
+        );
 
         $this->publishes([
             __DIR__.'/../config/oidc-ui.php' => config_path('oidc-ui.php'),
