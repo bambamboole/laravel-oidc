@@ -22,9 +22,5 @@ parameters:
             path: src/Concerns/ResolvesAuthenticatedUser.php
         -
             identifier: trait.unused
-            message: '#Trait Bambamboole\\LaravelOidc\\Ui\\Concerns\\ResolvesFlashStatus is used zero times#'
-            path: src/Concerns/ResolvesFlashStatus.php
-        -
-            identifier: trait.unused
             message: '#Trait Bambamboole\\LaravelOidc\\Ui\\Concerns\\ManagesTwoFactor is used zero times#'
             path: src/Concerns/ManagesTwoFactor.php

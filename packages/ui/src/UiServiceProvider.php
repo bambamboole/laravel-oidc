@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui;
 
+use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use Bambamboole\LaravelOidc\Ui\Layouts\AuthLayout;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Lattice\Layouts\LayoutRegistry;
 
+/**
+ * Binds this package's Lattice pages as the default renderers for every
+ * `AuthViewManager` seam the server package exposes. Package providers boot
+ * before app providers, so a host application that re-binds a view in its own
+ * provider wins — that is the intended override mechanism.
+ */
 class UiServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -16,6 +25,21 @@ class UiServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'oidc-ui');
+
+        // Registered explicitly rather than relying on Lattice's filesystem
+        // discovery, which only scans `config('lattice.discover')` paths
+        // (the host app's `app/` directory by default) and would never see
+        // this package's src/ directory.
+        $this->app->make(LayoutRegistry::class)->register(AuthLayout::class);
+
+        $views = $this->app->make(AuthViewManager::class);
+        $views->bind(AuthViewManager::Login, fn () => new Pages\LoginPage);
+        $views->bind(AuthViewManager::Register, fn () => new Pages\RegisterPage);
+        $views->bind(AuthViewManager::RequestPasswordResetLink, fn () => new Pages\ForgotPasswordPage);
+        $views->bind(AuthViewManager::ResetPassword, fn () => new Pages\ResetPasswordPage);
+        $views->bind(AuthViewManager::VerifyEmail, fn () => new Pages\VerifyEmailPage);
+        $views->bind(AuthViewManager::ConfirmPassword, fn () => new Pages\ConfirmPasswordPage);
+        $views->bind(AuthViewManager::TwoFactorChallenge, fn () => new Pages\TwoFactorChallengePage);
 
         $this->publishes([
             __DIR__.'/../config/oidc-ui.php' => config_path('oidc-ui.php'),
