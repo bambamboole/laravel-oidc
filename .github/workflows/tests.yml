@@ -108,3 +108,36 @@ jobs:
 
       - name: Discover packages without an app key
         run: APP_KEY= vendor/bin/testbench package:discover --ansi
+
+  master:
+    runs-on: ubuntu-latest
+    name: Master package integrity
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gmp, bcmath, openssl, mbstring, dom, curl, json
+          coverage: none
+
+      - name: Validate root composer.json
+        run: composer validate --strict
+
+      - name: Smoke-install the master as a consumer
+        run: |
+          mkdir -p /tmp/master-smoke && cd /tmp/master-smoke
+          cat > composer.json <<JSON
+          {
+              "repositories": [
+                  {"type": "path", "url": "${GITHUB_WORKSPACE}", "options": {"symlink": false}}
+              ],
+              "require": {"bambamboole/laravel-oidc": "*"},
+              "minimum-stability": "dev",
+              "prefer-stable": true
+          }
+          JSON
+          composer install --no-interaction
+          php -r "require 'vendor/autoload.php'; exit(class_exists('Bambamboole\\LaravelOidc\\OidcServiceProvider') && class_exists('Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider') ? 0 : 1);"
