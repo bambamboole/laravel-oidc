@@ -17,6 +17,15 @@ of the protocol.
 
 Each package is a self-contained Composer project. From the repo root:
 
+One-time setup until the split packages are on Packagist — resolve the server
+dep from the monorepo:
+
+```bash
+composer --working-dir=packages/ui config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.6.0"}}}'
+```
+
+This edits `packages/ui/composer.json` locally; do not commit that change.
+
 ```bash
 composer install:all   # composer install in every package
 composer check         # pint --test + phpstan + pest, per package

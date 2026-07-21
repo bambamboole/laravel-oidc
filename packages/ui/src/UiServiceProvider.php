@@ -22,9 +22,9 @@ use Symfony\Component\HttpFoundation\Response;
  * before app providers, so a host application that re-binds a view in its own
  * provider wins — that is the intended override mechanism.
  *
- * The verify-email page's log-out link is rendered only when a route named
- * `oidc-ui.logout_route` (default `logout`) is registered; the host app is
- * responsible for defining it.
+ * The verify-email page renders a log-out link only when the route named by
+ * `config('oidc-ui.logout_route')` (default `logout`) is registered; the host
+ * app is responsible for defining it.
  */
 class UiServiceProvider extends ServiceProvider
 {
