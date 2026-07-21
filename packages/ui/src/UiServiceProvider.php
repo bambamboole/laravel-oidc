@@ -7,7 +7,11 @@ namespace Bambamboole\LaravelOidc\Ui;
 use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Ui\Layouts\AuthLayout;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Lattice\Actions\ActionRegistry;
+use Lattice\Lattice\Forms\FormRegistry;
+use Lattice\Lattice\Fragments\FragmentRegistry;
 use Lattice\Lattice\Layouts\LayoutRegistry;
+use Lattice\Lattice\Tables\TableRegistry;
 
 /**
  * Binds this package's Lattice pages as the default renderers for every
@@ -35,6 +39,20 @@ class UiServiceProvider extends ServiceProvider
         // (the host app's `app/` directory by default) and would never see
         // this package's src/ directory.
         $this->app->make(LayoutRegistry::class)->register(AuthLayout::class);
+
+        $this->app->make(FormRegistry::class)->register(Forms\ConfirmTwoFactorForm::class);
+
+        $this->app->make(ActionRegistry::class)->register([
+            Actions\EnableTwoFactorAuthenticationAction::class,
+            Actions\DisableTwoFactorAuthenticationAction::class,
+            Actions\RegenerateRecoveryCodesAction::class,
+            Actions\DeletePasskeyAction::class,
+            Actions\SendVerificationEmailAction::class,
+        ]);
+
+        $this->app->make(TableRegistry::class)->register(Tables\PasskeysTable::class);
+
+        $this->app->make(FragmentRegistry::class)->register(Fragments\TwoFactorSetupFragment::class);
 
         $views = $this->app->make(AuthViewManager::class);
         $views->bind(AuthViewManager::Login, fn () => new Pages\LoginPage);
