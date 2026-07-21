@@ -2,8 +2,7 @@
 
 # Keep the Composer distribution lean: exclude everything that a consumer
 # installing the package via `composer require` does not need at runtime.
-/.ai                    export-ignore
-/.github                export-ignore
+/artisan                export-ignore
 /docs                   export-ignore
 /tests                  export-ignore
 /workbench              export-ignore
@@ -14,5 +13,3 @@
 /phpunit.xml.dist       export-ignore
 /pint.json              export-ignore
 /testbench.yaml         export-ignore
-/release-please-config.json          export-ignore
-/.release-please-manifest.json       export-ignore

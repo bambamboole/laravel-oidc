@@ -2,6 +2,7 @@
 
 # Keep the Composer distribution lean: exclude everything that a consumer
 # installing the package via `composer require` does not need at runtime.
+/artisan                export-ignore
 /tests                  export-ignore
 /workbench              export-ignore
 /.gitattributes         export-ignore
