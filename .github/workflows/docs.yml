@@ -8,6 +8,8 @@ on:
       - "astro.config.mjs"
       - "package.json"
       - "package-lock.json"
+      - "scripts/sync-docs.mjs"
+      - "packages/client/docs/**"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
