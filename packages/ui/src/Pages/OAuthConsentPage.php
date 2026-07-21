@@ -80,9 +80,9 @@ class OAuthConsentPage extends Page
         return (string) $this->client->getAttribute('name');
     }
 
-    private function userEmail(): ?string
+    private function userEmail(): string
     {
-        return $this->user instanceof Model ? $this->user->getAttribute('email') : null;
+        return $this->user instanceof Model ? (string) $this->user->getAttribute('email') : '';
     }
 
     /**

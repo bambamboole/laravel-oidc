@@ -5,7 +5,11 @@ use Bambamboole\LaravelOidc\Auth\MultiFactor\TwoFactorManager;
 use Bambamboole\LaravelOidc\Ui\Actions\DisableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\EnableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
+use Bambamboole\LaravelOidc\Ui\Actions\SendVerificationEmailAction;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
+use Illuminate\Auth\GenericUser;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 
@@ -68,4 +72,49 @@ test('the regenerate action replaces recovery codes', function () {
     expect(app(TwoFactorManager::class)->recoveryCodes($user))
         ->toHaveCount(8)
         ->not->toBe($originalCodes);
+});
+
+test('the send-verification-email action notifies an unverified user', function () {
+    Notification::fake();
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->callAction(SendVerificationEmailAction::class)
+        ->assertSuccessful()
+        ->assertJsonFragment([
+            'type' => 'toast',
+            'variant' => 'success',
+            'message' => __('oidc-ui::security.verification-sent'),
+        ]);
+
+    Notification::assertSentTo($user, VerifyEmail::class);
+});
+
+test('the send-verification-email action reports an already-verified user without resending', function () {
+    Notification::fake();
+    $user = User::create([
+        'name' => 'M',
+        'email' => 'm@example.com',
+        'password' => 'secret',
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->callAction(SendVerificationEmailAction::class)
+        ->assertSuccessful()
+        ->assertJsonFragment([
+            'type' => 'toast',
+            'variant' => 'info',
+            'message' => __('oidc-ui::security.already-verified'),
+        ]);
+
+    Notification::assertNothingSent();
+});
+
+test('the send-verification-email action is forbidden for a user that cannot verify their email', function () {
+    $user = new GenericUser(['id' => 1]);
+
+    $this->actingAs($user)
+        ->callAction(SendVerificationEmailAction::class)
+        ->assertForbidden();
 });
