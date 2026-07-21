@@ -6,7 +6,7 @@ description: Install laravel-oidc, publish its migrations, and generate signing 
 ## Requirements
 
 - PHP `^8.4`
-- Laravel 11, 12, or 13
+- Laravel 12 or 13
 - `laravel/passport` `^13.4` — the OAuth2 core the package builds on (installed as a dependency)
 
 ## Install

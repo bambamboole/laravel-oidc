@@ -32,7 +32,7 @@ for self-SSO, or at any third-party IdP (Keycloak, Auth0, Okta, …).
 ## Requirements
 
 - PHP `^8.4`
-- Laravel 11, 12, or 13
+- Laravel 12 or 13
 
 ## Installation
 
