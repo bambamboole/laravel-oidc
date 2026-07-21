@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Documentation site for bambamboole/laravel-oidc",
   "scripts": {
-    "docs:dev": "astro dev",
-    "docs:build": "astro build",
+    "docs:sync": "node scripts/sync-docs.mjs",
+    "docs:dev": "npm run docs:sync && astro dev",
+    "docs:build": "npm run docs:sync && astro build",
     "docs:preview": "astro preview"
   },
   "devDependencies": {
