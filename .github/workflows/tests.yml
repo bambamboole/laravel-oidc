@@ -9,7 +9,14 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    name: Lint & static analysis
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [server, client]
+    name: Lint & static analysis (${{ matrix.package }})
+    defaults:
+      run:
+        working-directory: packages/${{ matrix.package }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,15 +42,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        package: [server, client]
         php: ['8.4']
         testbench: ['9.*', '10.*', '11.*']
         stability: [prefer-stable]
         include:
-          - php: '8.4'
+          - package: server
+            php: '8.4'
+            testbench: '11.*'
+            stability: prefer-lowest
+          - package: client
+            php: '8.4'
             testbench: '11.*'
             stability: prefer-lowest
 
-    name: PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
+    name: ${{ matrix.package }} - PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
+    defaults:
+      run:
+        working-directory: packages/${{ matrix.package }}
 
     steps:
       - name: Checkout code
@@ -73,6 +89,9 @@ jobs:
   keyless-boot:
     runs-on: ubuntu-latest
     name: Keyless boot (no APP_KEY)
+    defaults:
+      run:
+        working-directory: packages/server
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
