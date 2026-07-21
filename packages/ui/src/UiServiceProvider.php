@@ -14,6 +14,10 @@ use Lattice\Lattice\Layouts\LayoutRegistry;
  * `AuthViewManager` seam the server package exposes. Package providers boot
  * before app providers, so a host application that re-binds a view in its own
  * provider wins — that is the intended override mechanism.
+ *
+ * The verify-email page's log-out link is rendered only when a route named
+ * `oidc-ui.logout_route` (default `logout`) is registered; the host app is
+ * responsible for defining it.
  */
 class UiServiceProvider extends ServiceProvider
 {

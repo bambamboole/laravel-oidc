@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Ui\Pages;
 
 use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesFlashStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Lattice\Lattice\Attributes\AsPage;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
@@ -33,6 +34,18 @@ class VerifyEmailPage extends Page
 
     public function render(PageSchema $schema, Request $request): PageSchema
     {
+        $formSchema = [
+            Button::make(__('oidc-ui::auth.verify-email.resend'))->submit(),
+        ];
+
+        $logoutRoute = config('oidc-ui.logout_route', 'logout');
+
+        if (Route::has($logoutRoute)) {
+            $formSchema[] = Link::make(__('oidc-ui::common.action.log-out'))
+                ->href(route($logoutRoute, absolute: false))
+                ->method(HttpMethod::Post);
+        }
+
         return $schema->schema([
             Stack::make('verify-email-heading')
                 ->gap(Gap::Small)
@@ -44,12 +57,7 @@ class VerifyEmailPage extends Page
             Form::make('verify-email-form')
                 ->action(route('identity.verification.send', absolute: false))
                 ->method(HttpMethod::Post)
-                ->schema([
-                    Button::make(__('oidc-ui::auth.verify-email.resend'))->submit(),
-                    Link::make(__('oidc-ui::common.action.log-out'))
-                        ->href(route('logout', absolute: false))
-                        ->method(HttpMethod::Post),
-                ])
+                ->schema($formSchema)
                 ->withoutSubmitButton()
                 ->status($this->statusMessage($request)),
         ]);

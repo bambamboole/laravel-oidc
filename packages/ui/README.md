@@ -52,6 +52,10 @@ Every screen this package renders is resolved through `AuthViewManager` — rebi
 entry on that manager in your own service provider to override a single view without
 forking the package.
 
+The verify-email page shows a log-out link only if the host app defines a logout
+route (name configurable via `oidc-ui.logout_route`, default `logout`); apps built on
+`bambamboole/laravel-oidc-client` already get a `logout` route from that package.
+
 ## Development
 
 `bambamboole/laravel-oidc-server` is not published on Packagist yet, so local installs

@@ -46,6 +46,26 @@ it('renders the verify-email page for an unverified authenticated user', functio
         ->assertSee(__('oidc-ui::auth.verify-email.title'), false);
 });
 
+it('shows the log-out link on the verify-email page when the logout route exists', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
+
+    $this->actingAs($user, 'identity')
+        ->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
+        ->assertOk()
+        ->assertSee(__('oidc-ui::common.action.log-out'), false);
+});
+
+it('omits the log-out link on the verify-email page when the configured logout route does not exist', function () {
+    config(['oidc-ui.logout_route' => 'route-that-does-not-exist']);
+
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
+
+    $this->actingAs($user, 'identity')
+        ->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
+        ->assertOk()
+        ->assertDontSee(__('oidc-ui::common.action.log-out'), false);
+});
+
 it('renders the confirm-password page for an authenticated user', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
