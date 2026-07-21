@@ -45,7 +45,7 @@
     },
     "homepage": "https://github.com/bambamboole/laravel-oidc-client",
     "support": {
-        "issues": "https://github.com/bambamboole/laravel-oidc-client/issues",
+        "issues": "https://github.com/bambamboole/laravel-oidc/issues",
         "source": "https://github.com/bambamboole/laravel-oidc-client"
     },
     "extra": {
