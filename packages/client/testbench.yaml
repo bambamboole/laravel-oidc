@@ -1,0 +1,14 @@
+laravel: '@testbench'
+
+providers:
+  - Bambamboole\LaravelOidcClient\OidcClientServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+workbench:
+  welcome: false
+  discovers:
+    web: false
+    api: false
+    commands: false
+    components: false
+    views: false
