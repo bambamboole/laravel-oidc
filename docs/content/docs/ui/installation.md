@@ -44,11 +44,12 @@ package (see [Overriding views](/ui/overriding/)):
   `PasswordResetRequestView`, `PasswordResetView`, `EmailVerificationView`,
   `PasswordConfirmationView`, `TwoFactorChallengeView`, and `ConsentView` (the OAuth consent
   page) — each bound to a Lattice page (see [View seams](/auth/overview/)).
-- **The `auth` layout** (`AuthLayout`) — registered explicitly via `LayoutRegistry::register()`
-  rather than relying on Lattice's filesystem discovery, since that only scans the host app's
-  `app/` directory by default and would never see this package's `src/`.
+- **The `auth` layout** (`AuthLayout`) — discovered, not bound here: `extra.lattice.discover:
+  ["src"]` lets Lattice's root-manifest discovery find the `#[AsLayout('auth')]`-attributed class
+  in this package's `src/` on its own, without relying on the host app's `config('lattice.discover')`
+  paths.
 - **The security building blocks** for settings pages — five actions, one form, one fragment,
-  one table (see [Security components](/ui/security-components/)).
+  one table — likewise discovered, not bound (see [Security components](/ui/security-components/)).
 
 ## Publish (optional)
 

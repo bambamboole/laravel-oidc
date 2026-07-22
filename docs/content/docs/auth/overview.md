@@ -61,9 +61,9 @@ $this->app->bind(LoginView::class, fn () => new class implements LoginView
 });
 ```
 
-Controllers resolve the contract with `app(LoginView::class)->respond($prompt, $request)` — no
-arguments are passed to `make()` — so a bound class must be constructible with no required
-constructor arguments; it receives the real prompt only through `respond()`.
+Controllers resolve the contract with `app(LoginView::class)->respond($prompt, $request)`, so a
+bound class must be resolvable by the container with no arguments passed to `make()`; it receives
+the real prompt only through `respond()`.
 
 A flow whose contract is not bound throws `MissingAuthViewException` when that route is hit, so a
 headless install fails loudly on the first request to an unbound surface instead of rendering
