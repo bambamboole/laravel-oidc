@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Scopes\Scope;
 use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;
@@ -34,7 +35,7 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
     $user = new GenericUser(['id' => 1]);
 
-    $page = new OAuthConsentPage(
+    $prompt = new ConsentPrompt(
         client: $client,
         user: $user,
         scopes: [new Scope('openid', 'OpenID Connect')],
@@ -44,7 +45,7 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
     $request = Request::create('/', 'GET');
     $request->headers->set('X-Inertia', 'true');
 
-    $response = $page->toResponse($request);
+    $response = (new OAuthConsentPage($prompt))->toResponse($request);
     $content = $response->getContent();
 
     expect($response->getStatusCode())->toBe(200)

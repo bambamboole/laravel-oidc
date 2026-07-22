@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesFlashStatus;
+use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationView;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lattice\Lattice\Attributes\AsPage;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Http\Page;
@@ -21,18 +22,35 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class VerifyEmailPage extends Page
+class VerifyEmailPage extends Page implements EmailVerificationView
 {
-    use ResolvesFlashStatus;
+    public function __construct(
+        private readonly ?EmailVerificationPrompt $prompt = null,
+    ) {}
+
+    public function respond(EmailVerificationPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self($prompt))->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
 
     public function title(): string
     {
         return __('oidc-ui::auth.verify-email.title');
     }
 
-    public function render(PageSchema $schema, Request $request): PageSchema
+    public function render(PageSchema $schema): PageSchema
     {
         $formSchema = [
             Button::make(__('oidc-ui::auth.verify-email.resend'))->submit(),
@@ -59,13 +77,13 @@ class VerifyEmailPage extends Page
                 ->method(HttpMethod::Post)
                 ->schema($formSchema)
                 ->withoutSubmitButton()
-                ->status($this->statusMessage($request)),
+                ->status($this->statusMessage()),
         ]);
     }
 
-    private function statusMessage(Request $request): ?string
+    private function statusMessage(): ?string
     {
-        if ($this->flashStatus($request) !== 'verification-link-sent') {
+        if ($this->prompt?->status !== 'verification-link-sent') {
             return null;
         }
 

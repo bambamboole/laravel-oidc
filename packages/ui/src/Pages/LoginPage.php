@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesFlashStatus;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Lattice\Lattice\Attributes\AsPage;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
@@ -27,18 +28,35 @@ use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class LoginPage extends Page
+class LoginPage extends Page implements LoginView
 {
-    use ResolvesFlashStatus;
+    public function __construct(
+        private readonly ?LoginPrompt $prompt = null,
+    ) {}
+
+    public function respond(LoginPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self($prompt))->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
 
     public function title(): string
     {
         return __('oidc-ui::auth.login.title');
     }
 
-    public function render(PageSchema $schema, Request $request): PageSchema
+    public function render(PageSchema $schema): PageSchema
     {
         return $schema->schema([
             Stack::make('login-heading')
@@ -58,7 +76,7 @@ class LoginPage extends Page
                 ->schema($this->formSchema())
                 ->resetOnSuccess(['password'])
                 ->withoutSubmitButton()
-                ->status($this->flashStatus($request)),
+                ->status($this->prompt?->status),
         ]);
     }
 

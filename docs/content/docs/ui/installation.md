@@ -10,8 +10,8 @@ two-factor challenge, and OAuth consent, rendered as Lattice pages instead of Bl
 ## Requirements
 
 - PHP `^8.4`
-- `bambamboole/laravel-oidc-server` `^0.6` — the OIDC provider this UI renders views for
-- `laravel/passport` `^13.4`, `laravel/passkeys` `^0.2`, `lattice-php/lattice` `^0.24`
+- `bambamboole/laravel-oidc-server` `^0.7` — the OIDC provider this UI renders views for
+- `laravel/passport` `^13.4`, `laravel/passkeys` `^0.2`, `lattice-php/lattice` `^0.25`
 
 ## Install
 
@@ -27,41 +27,49 @@ composer require bambamboole/laravel-oidc
 composer require bambamboole/laravel-oidc-ui
 ```
 
-The service provider (`UiServiceProvider`) is auto-discovered.
+The service provider (`UiServiceProvider`) is auto-discovered, and there is nothing to register
+on the frontend either: the package's `composer.json` declares `extra.lattice: { discover: ["src"],
+plugin: "resources/js/plugin.ts" }`, so the app's own `lattice()` Vite plugin discovers this
+package's pages, components, and translations on its own the moment the dependency is installed
+(see [Frontend setup](/ui/frontend-setup/)).
 
 ## What gets bound by default
 
-`UiServiceProvider::boot()` runs before any application service provider, so every bind below
-is a default an app provider can override by re-binding the same seam later (see
-[Overriding views](/ui/overriding/)):
+`UiServiceProvider::register()` completes — along with every other provider's `register()` — before
+any provider's `boot()` runs, so an app provider that re-binds the same contract (in its own
+`register()` or `boot()`) always executes after this default and wins, without forking the
+package (see [Overriding views](/ui/overriding/)):
 
-- **All 7 `AuthViewManager` views** — `Login`, `Register`, `RequestPasswordResetLink`,
-  `ResetPassword`, `VerifyEmail`, `ConfirmPassword`, `TwoFactorChallenge`.
-- **`Passport::authorizationView()`** — the OAuth consent page.
-- **The `auth` layout** (`AuthLayout`) — registered explicitly via `LayoutRegistry::register()`
-  rather than relying on Lattice's filesystem discovery, since that only scans the host app's
-  `app/` directory by default and would never see this package's `src/`.
+- **All eight auth view contracts** the server package declares — `LoginView`, `RegisterView`,
+  `PasswordResetRequestView`, `PasswordResetView`, `EmailVerificationView`,
+  `PasswordConfirmationView`, `TwoFactorChallengeView`, and `ConsentView` (the OAuth consent
+  page) — each bound to a Lattice page (see [View seams](/auth/overview/)).
+- **The `auth` layout** (`AuthLayout`) — discovered, not bound here: `extra.lattice.discover:
+  ["src"]` lets Lattice's root-manifest discovery find the `#[AsLayout('auth')]`-attributed class
+  in this package's `src/` on its own, without relying on the host app's `config('lattice.discover')`
+  paths.
 - **The security building blocks** for settings pages — five actions, one form, one fragment,
-  one table (see [Security components](/ui/security-components/)).
+  one table — likewise discovered, not bound (see [Security components](/ui/security-components/)).
 
 ## Publish (optional)
 
 ```bash
 php artisan vendor:publish --tag=oidc-ui-config
 php artisan vendor:publish --tag=oidc-ui-lang
-php artisan vendor:publish --tag=oidc-ui-js
 ```
 
 - `oidc-ui-config` writes `config/oidc-ui.php` (`brand_icon`, `logout_route` — see
   [Overriding views](/ui/overriding/)).
 - `oidc-ui-lang` writes the `oidc-ui::` translation files (see [Translations](/ui/translations/)).
-- `oidc-ui-js` writes the passkey frontend stub components (see
-  [Frontend setup](/ui/frontend-setup/)).
+
+There is no `oidc-ui-js` (or any other frontend stub) tag — pages and components ship compiled
+from this package's own `resources/js/` and arrive through Lattice's plugin discovery, not
+publishing.
 
 ## Next steps
 
-- [Frontend setup](/ui/frontend-setup/) — register the passkey components in your Lattice
-  registry.
-- [Overriding views](/ui/overriding/) — re-bind a single page or the auth layout.
+- [Frontend setup](/ui/frontend-setup/) — the `brand_icon` sprite and the passkey components'
+  translation strings.
+- [Overriding views](/ui/overriding/) — re-bind a single contract or the auth layout.
 - [Security components](/ui/security-components/) — compose 2FA/passkey/verification building
   blocks into your own settings page.

@@ -89,23 +89,32 @@ introspection and revocation entries each also advertise an
 
 ## Consent view (required)
 
-The authorization endpoint needs a consent view to render. Registration goes through
-Passport (which owns the authorization view seam) via `Passport::authorizationView()`,
-typically in a service provider `boot()`:
+The authorization endpoint needs a consent view to render. The package wires Passport's
+authorization view seam internally and resolves it through the `ConsentView` contract
+(`Bambamboole\LaravelOidc\Auth\Views\ConsentView`), so no app code touches
+`Passport::authorizationView()` directly. Bind the contract instead:
 
 ```php
-use Laravel\Passport\Passport;
+use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
+use Illuminate\Http\Request;
 
-Passport::authorizationView(function (array $parameters) {
-    return view('oauth.authorize', [
-        'client' => $parameters['client'],
-        'user' => $parameters['user'],
-        'scopes' => $parameters['scopes'],
-        'request' => $parameters['request'],
-        'authToken' => $parameters['authToken'],
-    ]);
+app()->bind(ConsentView::class, fn () => new class implements ConsentView {
+    public function respond(ConsentPrompt $prompt, Request $request)
+    {
+        return view('oauth.authorize', [
+            'client' => $prompt->client,
+            'user' => $prompt->user,
+            'scopes' => $prompt->scopes,
+            'authToken' => $prompt->authToken,
+        ]);
+    }
 });
 ```
+
+Without a binding, the default throws `MissingAuthViewException` — install
+`bambamboole/laravel-oidc-ui` (which binds it, among the other auth views) or bind it
+yourself.
 
 The view posts `auth_token` back to `POST /oauth/authorize` to approve, or sends
 `DELETE /oauth/authorize` to deny.

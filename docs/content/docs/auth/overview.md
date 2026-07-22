@@ -20,23 +20,60 @@ provider and the auth engine share one session.
 
 ## View seams
 
-Bind each view in a service provider's `boot()`. Each closure receives the `Request` and returns
-a renderable response (typically a `view(...)`, an Inertia response, or JSON).
+Each auth surface renders through a typed **view contract** — an interface under
+`Bambamboole\LaravelOidc\Auth\Views` with a single `respond()` method that takes a matching
+**prompt** (the page-specific data) and the `Request`, and returns a `Responsable` or `Response`:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
-
-Oidc::loginView(fn ($request) => view('auth.login'));
-Oidc::registerView(fn ($request) => view('auth.register'));
-Oidc::requestPasswordResetLinkView(fn ($request) => view('auth.forgot-password'));
-Oidc::resetPasswordView(fn ($request) => view('auth.reset-password'));
-Oidc::verifyEmailView(fn ($request) => view('auth.verify-email'));
-Oidc::confirmPasswordView(fn ($request) => view('auth.confirm-password'));
-Oidc::twoFactorChallengeView(fn ($request) => view('auth.two-factor-challenge'));
+interface LoginView
+{
+    public function respond(LoginPrompt $prompt, Request $request): Responsable|Response;
+}
 ```
 
-A flow whose view is not bound throws a `RuntimeException` when that route is hit, so you bind
-only the flows you enable.
+Eight contracts cover every auth surface:
+
+| Contract | Prompt | Renders for |
+| --- | --- | --- |
+| `LoginView` | `LoginPrompt` (`status`) | [Login](/auth/login/) |
+| `RegisterView` | `RegisterPrompt` | [Registration](/auth/registration/) |
+| `PasswordResetRequestView` | `PasswordResetRequestPrompt` (`status`) | [Password reset](/auth/passwords/) request step |
+| `PasswordResetView` | `PasswordResetPrompt` (`token`, `email`, `status`) | [Password reset](/auth/passwords/) reset step |
+| `EmailVerificationView` | `EmailVerificationPrompt` (`status`) | [Email verification](/auth/email-verification/) |
+| `PasswordConfirmationView` | `PasswordConfirmationPrompt` | [Password confirmation](/auth/passwords/) |
+| `TwoFactorChallengeView` | `TwoFactorChallengePrompt` | [Multi-factor challenge](/auth/multi-factor/) |
+| `ConsentView` | `ConsentPrompt` (`client`, `user`, `scopes`, `authToken`) | [OAuth consent](/provider/endpoints/#consent-view-required) |
+
+Override one by binding your implementation over the contract, typically in a service provider's
+`boot()` (a bind there wins over the package's default, since package providers boot first):
+
+```php
+use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Illuminate\Http\Request;
+
+$this->app->bind(LoginView::class, fn () => new class implements LoginView
+{
+    public function respond(LoginPrompt $prompt, Request $request)
+    {
+        return view('auth.login', ['status' => $prompt->status]);
+    }
+});
+```
+
+Controllers resolve the contract with `app(LoginView::class)->respond($prompt, $request)`, so a
+bound class must be resolvable by the container with no arguments passed to `make()`; it receives
+the real prompt only through `respond()`.
+
+A flow whose contract is not bound throws `MissingAuthViewException` when that route is hit, so a
+headless install fails loudly on the first request to an unbound surface instead of rendering
+nothing. Install `bambamboole/laravel-oidc-ui` to bind all eight contracts at once (see
+[UI installation](/ui/installation/)), or bind only the ones you enable yourself.
+
+For engine tests that drive the real controllers without a view package installed, add
+`Bambamboole\LaravelOidc\Testing\FakesAuthViews` to the test and call `fakeAuthViews()` before
+hitting a `GET` route — it binds every contract to a minimal JSON responder (see
+[Testing](/advanced/testing/)).
 
 ## Action seams
 
