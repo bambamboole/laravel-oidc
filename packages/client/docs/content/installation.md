@@ -8,7 +8,7 @@ sidebar:
 ## Requirements
 
 - PHP `^8.4`
-- Laravel 11, 12, or 13
+- Laravel 12 or 13
 
 There is no database migration and no key material to generate — the client verifies
 tokens against the provider's published JWKS.

@@ -18,7 +18,7 @@ harness; `composer clear` purges the generated skeleton if you need to reset it.
 
 ## The quality gates
 
-Three composer scripts back the CI matrix (Laravel 11 / 12 / 13). Run them individually, or run all
+Three composer scripts back the CI matrix (Laravel 12 / 13). Run them individually, or run all
 three at once with `composer check`:
 
 ```bash
