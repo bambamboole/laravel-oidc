@@ -6,7 +6,6 @@ namespace Bambamboole\LaravelOidc;
 
 use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
-use Bambamboole\LaravelOidc\Auth\AuthViewManager;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Auth\MultiFactor\RecoveryCodeProvider;
@@ -18,6 +17,15 @@ use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
+use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationView;
+use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Auth\Views\MissingAuthViewException;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetRequestView;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetView;
+use Bambamboole\LaravelOidc\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Claims\DefaultClaimsResolver;
 use Bambamboole\LaravelOidc\Clients\FirstPartyClientConfig;
@@ -107,7 +115,6 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
-        $this->app->singleton(AuthViewManager::class);
         $this->app->singleton(UserActionManager::class);
         $this->app->singleton(TotpFactorProvider::class);
         $this->app->singleton(RecoveryCodeProvider::class);
@@ -147,6 +154,8 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(BackChannelLogoutNotifier::class);
         $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
+
+        $this->registerDefaultAuthViewBindings();
 
         config()->set('passkeys.guard', $identityGuard);
         config()->set('passkeys.redirect', config('oidc.auth.home', '/dashboard'));
@@ -196,6 +205,27 @@ class OidcServiceProvider extends ServiceProvider
 
             return $server;
         });
+    }
+
+    /**
+     * Every auth surface resolves through the container: without a ui
+     * package or app binding, the default throws so the missing view is
+     * caught at development time instead of rendering nothing.
+     */
+    private function registerDefaultAuthViewBindings(): void
+    {
+        foreach ([
+            LoginView::class,
+            RegisterView::class,
+            PasswordResetRequestView::class,
+            PasswordResetView::class,
+            EmailVerificationView::class,
+            PasswordConfirmationView::class,
+            TwoFactorChallengeView::class,
+            ConsentView::class,
+        ] as $contract) {
+            $this->app->bind($contract, fn (): never => throw MissingAuthViewException::forContract($contract));
+        }
     }
 
     public function boot(): void
