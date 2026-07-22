@@ -25,6 +25,7 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResetPasswordPage extends Page implements PasswordResetView
@@ -55,8 +56,8 @@ class ResetPasswordPage extends Page implements PasswordResetView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $token = $this->prompt->token;
-        $email = $this->prompt->email ?? '';
+        $token = $this->prompt()->token;
+        $email = $this->prompt()->email ?? '';
 
         return $schema->schema([
             Stack::make('reset-password-heading')
@@ -72,6 +73,15 @@ class ResetPasswordPage extends Page implements PasswordResetView
                 ->resetOnSuccess(['password', 'password_confirmation'])
                 ->withoutSubmitButton(),
         ]);
+    }
+
+    /**
+     * The controller always resolves this page through respond(), which supplies the real
+     * prompt before render() ever runs — a missing prompt here means that invariant broke.
+     */
+    private function prompt(): PasswordResetPrompt
+    {
+        return $this->prompt ?? throw new LogicException('ResetPasswordPage rendered without a PasswordResetPrompt; respond() must supply one before render() runs.');
     }
 
     /**

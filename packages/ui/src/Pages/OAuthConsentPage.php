@@ -22,6 +22,7 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
 class OAuthConsentPage extends Page implements ConsentView
@@ -85,21 +86,30 @@ class OAuthConsentPage extends Page implements ConsentView
         ]);
     }
 
+    /**
+     * The controller always resolves this page through respond(), which supplies the real
+     * prompt before render() ever runs — a missing prompt here means that invariant broke.
+     */
+    private function prompt(): ConsentPrompt
+    {
+        return $this->prompt ?? throw new LogicException('OAuthConsentPage rendered without a ConsentPrompt; respond() must supply one before render() runs.');
+    }
+
     private function clientName(): string
     {
-        return (string) $this->prompt->client->getAttribute('name');
+        return (string) $this->prompt()->client->getAttribute('name');
     }
 
     private function userEmail(): string
     {
-        $user = $this->prompt->user;
+        $user = $this->prompt()->user;
 
         return $user instanceof Model ? (string) $user->getAttribute('email') : '';
     }
 
     private function authToken(): string
     {
-        return $this->prompt->authToken;
+        return $this->prompt()->authToken;
     }
 
     /**
@@ -107,7 +117,7 @@ class OAuthConsentPage extends Page implements ConsentView
      */
     private function scopeSchema(): array
     {
-        $scopes = $this->prompt->scopes;
+        $scopes = $this->prompt()->scopes;
 
         if ($scopes === []) {
             return [Heading::make(__('oidc-ui::oauth.consent.requested-scopes'), 3)];
