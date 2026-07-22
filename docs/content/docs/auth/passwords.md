@@ -23,7 +23,7 @@ Reset is built on Laravel's `Password` broker (`config('auth.defaults.passwords'
 
 ### Request-link flow
 
-`GET identity.password.request` renders your bound `requestPasswordResetLinkView`.
+`GET identity.password.request` renders through the bound `PasswordResetRequestView` contract.
 
 `POST identity.password.email` validates `email` (`required|email`), lowercases it, and calls the
 broker's `sendResetLink`. The broker itself enforces the per-user throttle window (returning
@@ -41,7 +41,8 @@ yourself.
 
 ### Reset-password flow
 
-`GET identity.password.reset` renders your bound `resetPasswordView` (the `{token}` is in the URL).
+`GET identity.password.reset` renders through the bound `PasswordResetView` contract (the
+`{token}` is in the URL, and reaches the view as `PasswordResetPrompt::$token`).
 
 `POST identity.password.update` validates `token`, `email` (`required|email`), and `password`
 (`required`), then calls the broker's `reset`. Inside the broker callback the package:
@@ -75,7 +76,7 @@ so sensitive actions can require a recent confirmation. It is the mechanism behi
 | `identity.password.confirm.store` | `POST` | `auth/user/confirm-password` | `web`, `AuthenticateIdentity:identity` |
 | `identity.password.confirmation` | `GET` | `auth/user/confirmed-password-status` | `web`, `AuthenticateIdentity:identity` |
 
-`GET identity.password.confirm` renders your bound `confirmPasswordView`.
+`GET identity.password.confirm` renders through the bound `PasswordConfirmationView` contract.
 
 `POST identity.password.confirm.store` validates `password` and `Hash::check`s it against the current
 user's stored password. On success it writes `auth.password_confirmed_at` (the current timestamp) to

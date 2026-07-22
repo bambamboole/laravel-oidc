@@ -3,9 +3,9 @@ title: Registration
 description: The registration flow, the createUsersUsing action seam, and where validation lives.
 ---
 
-Registration is owned by `RegisteredUserController`. Your app fills the view seam with
-`Oidc::registerView(...)` and the action seam with `Oidc::createUsersUsing(...)`; the package owns
-the event dispatch, sign-in, and session regeneration.
+Registration is owned by `RegisteredUserController`. Your app fills the view seam by binding
+`RegisterView` and the action seam with `Oidc::createUsersUsing(...)`; the package owns the event
+dispatch, sign-in, and session regeneration.
 
 ## Routes
 
@@ -14,8 +14,8 @@ the event dispatch, sign-in, and session regeneration.
 | `identity.register` | `GET` | `auth/register` | `web`, `guest:identity` |
 | `identity.register.store` | `POST` | `auth/register` | `web`, `guest:identity` |
 
-`GET identity.register` renders your bound `registerView`. If no view is bound, hitting the route
-throws a `RuntimeException`.
+`GET identity.register` renders through the bound `RegisterView` contract. If none is bound,
+hitting the route throws `MissingAuthViewException`.
 
 ## The registration flow (`POST identity.register.store`)
 

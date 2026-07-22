@@ -1,30 +1,33 @@
 ---
 title: Overriding views
-description: Re-bind a single AuthViewManager view, override the auth layout, and the logout_route/brand_icon config contracts.
+description: Re-bind a single auth view contract, override the auth layout, and the logout_route/brand_icon config contracts.
 ---
 
-Every screen this package renders goes through the seams the server package defines — you
-override any one of them without forking the package.
+Every screen this package renders goes through the view contracts the server package defines —
+you override any one of them without forking the package.
 
 ## Overriding a single view
 
-Package service providers boot before application providers, so a bind performed in your own
-provider's `boot()` simply wins — later bind takes the seam. Rebind exactly the
-`AuthViewManager` entry you want to change; every other entry keeps the package's default:
+Package service providers complete their `register()` phase — this package's included — before
+any provider's `boot()` runs, so a bind performed in your own provider's `register()` or `boot()`
+simply wins. Rebind exactly the contract you want to change; every other contract keeps the
+package's default:
 
 ```php
-use Bambamboole\LaravelOidc\Auth\AuthViewManager;
+use App\Auth\Pages\CustomLoginPage;
+use Bambamboole\LaravelOidc\Auth\Views\LoginView;
 
-$this->app->make(AuthViewManager::class)->bind(
-    AuthViewManager::Login,
-    fn ($request) => new App\Auth\Pages\CustomLoginPage,
-);
+$this->app->bind(LoginView::class, CustomLoginPage::class);
 ```
 
-The OAuth consent page is not on `AuthViewManager` — it goes through
-`Passport::authorizationView()` directly (see
-[Endpoints & discovery](/provider/endpoints/)); rebind it the same way, later in your own
-provider's `boot()`.
+`CustomLoginPage` must implement `LoginView` and be constructible with no required arguments —
+the controller resolves it with `app(LoginView::class)->respond($prompt, $request)`, so it
+receives the real `LoginPrompt` only inside `respond()` (see [View seams](/auth/overview/) for
+the full contract list and the zero-arg-constructible requirement).
+
+The OAuth consent page is not a special case — it is bound the same way, through `ConsentView`
+(see [Endpoints & discovery](/provider/endpoints/#consent-view-required)); rebind it identically,
+in your own provider.
 
 ## Overriding the `auth` layout
 

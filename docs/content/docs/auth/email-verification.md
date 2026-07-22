@@ -20,9 +20,9 @@ All three require an authenticated `identity` session.
 
 ## The verification notice
 
-`GET identity.verification.notice` (`EmailVerificationPromptController`) renders your bound
-`verifyEmailView`. If the current user already has a verified email, it instead redirects via
-`redirect()->intended(...)` to `config('oidc.auth.home')` (default `/dashboard`).
+`GET identity.verification.notice` (`EmailVerificationPromptController`) renders through the bound
+`EmailVerificationView` contract. If the current user already has a verified email, it instead
+redirects via `redirect()->intended(...)` to `config('oidc.auth.home')` (default `/dashboard`).
 
 ## The signed verify route
 
