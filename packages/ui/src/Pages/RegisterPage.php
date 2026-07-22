@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Lattice\Lattice\Attributes\AsPage;
+use Bambamboole\LaravelOidc\Auth\Views\RegisterPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\RegisterView;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
@@ -23,10 +26,30 @@ use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class RegisterPage extends Page
+class RegisterPage extends Page implements RegisterView
 {
+    /**
+     * {@see RegisterPrompt} carries no data today, so there is nothing to
+     * thread through the constructor — every page still resolves with zero
+     * args, satisfying the container binding invariant.
+     */
+    public function respond(RegisterPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self)->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
+
     public function title(): string
     {
         return __('oidc-ui::auth.register.title');

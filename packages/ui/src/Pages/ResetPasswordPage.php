@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetView;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Lattice\Lattice\Attributes\AsPage;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\HiddenInput;
@@ -23,19 +25,38 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class ResetPasswordPage extends Page
+class ResetPasswordPage extends Page implements PasswordResetView
 {
+    public function __construct(
+        private readonly ?PasswordResetPrompt $prompt = null,
+    ) {}
+
+    public function respond(PasswordResetPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self($prompt))->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
+
     public function title(): string
     {
         return __('oidc-ui::auth.reset-password.title');
     }
 
-    public function render(PageSchema $schema, Request $request): PageSchema
+    public function render(PageSchema $schema): PageSchema
     {
-        $token = (string) $request->route('token');
-        $email = is_string($request->input('email')) ? $request->input('email') : '';
+        $token = $this->prompt->token;
+        $email = $this->prompt->email ?? '';
 
         return $schema->schema([
             Stack::make('reset-password-heading')

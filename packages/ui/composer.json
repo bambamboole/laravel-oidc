@@ -13,10 +13,10 @@
     ],
     "require": {
         "php": "^8.4",
-        "bambamboole/laravel-oidc-server": "^0.6",
+        "bambamboole/laravel-oidc-server": "^0.7",
         "laravel/passkeys": "^0.2",
         "laravel/passport": "^13.4",
-        "lattice-php/lattice": "^0.24"
+        "lattice-php/lattice": "^0.25"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
@@ -51,6 +51,10 @@
             "providers": [
                 "Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider"
             ]
+        },
+        "lattice": {
+            "discover": ["src"],
+            "plugin": "resources/js/plugin.ts"
         }
     },
     "scripts": {

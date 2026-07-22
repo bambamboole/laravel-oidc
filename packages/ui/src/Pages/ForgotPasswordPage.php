@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesFlashStatus;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetRequestPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordResetRequestView;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Lattice\Lattice\Attributes\AsPage;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\TextInput;
@@ -24,18 +25,35 @@ use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class ForgotPasswordPage extends Page
+class ForgotPasswordPage extends Page implements PasswordResetRequestView
 {
-    use ResolvesFlashStatus;
+    public function __construct(
+        private readonly ?PasswordResetRequestPrompt $prompt = null,
+    ) {}
+
+    public function respond(PasswordResetRequestPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self($prompt))->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
 
     public function title(): string
     {
         return __('oidc-ui::auth.forgot-password.title');
     }
 
-    public function render(PageSchema $schema, Request $request): PageSchema
+    public function render(PageSchema $schema): PageSchema
     {
         return $schema->schema([
             Stack::make('forgot-password-heading')
@@ -51,7 +69,7 @@ class ForgotPasswordPage extends Page
                 ->schema($this->formSchema())
                 ->resetOnSuccess(['email'])
                 ->withoutSubmitButton()
-                ->status($this->flashStatus($request)),
+                ->status($this->prompt?->status),
         ]);
     }
 

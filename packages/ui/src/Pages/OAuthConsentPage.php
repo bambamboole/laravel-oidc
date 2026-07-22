@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
 use Bambamboole\LaravelOidc\Scopes\Scope;
-use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Passport\Client;
-use Lattice\Lattice\Attributes\AsPage;
+use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\HiddenInput;
@@ -21,19 +22,28 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class OAuthConsentPage extends Page
+class OAuthConsentPage extends Page implements ConsentView
 {
-    /**
-     * @param  array<int, Scope>  $scopes
-     */
     public function __construct(
-        private readonly Client $client,
-        private readonly Authenticatable $user,
-        private readonly array $scopes,
-        private readonly string $authToken,
+        private readonly ?ConsentPrompt $prompt = null,
     ) {}
+
+    public function respond(ConsentPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self($prompt))->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
 
     public function title(): string
     {
@@ -60,7 +70,7 @@ class OAuthConsentPage extends Page
                         ->method(HttpMethod::Post)
                         ->withoutSubmitButton()
                         ->schema([
-                            HiddenInput::make('auth_token')->value($this->authToken),
+                            HiddenInput::make('auth_token')->value($this->authToken()),
                             Button::make(__('oidc-ui::oauth.consent.approve'))->submit(),
                         ]),
                     Form::make('oauth-consent-deny')
@@ -68,7 +78,7 @@ class OAuthConsentPage extends Page
                         ->method(HttpMethod::Delete)
                         ->withoutSubmitButton()
                         ->schema([
-                            HiddenInput::make('auth_token')->value($this->authToken),
+                            HiddenInput::make('auth_token')->value($this->authToken()),
                             Button::make(__('oidc-ui::oauth.consent.deny'))->submit(),
                         ]),
                 ]),
@@ -77,12 +87,19 @@ class OAuthConsentPage extends Page
 
     private function clientName(): string
     {
-        return (string) $this->client->getAttribute('name');
+        return (string) $this->prompt->client->getAttribute('name');
     }
 
     private function userEmail(): string
     {
-        return $this->user instanceof Model ? (string) $this->user->getAttribute('email') : '';
+        $user = $this->prompt->user;
+
+        return $user instanceof Model ? (string) $user->getAttribute('email') : '';
+    }
+
+    private function authToken(): string
+    {
+        return $this->prompt->authToken;
     }
 
     /**
@@ -90,7 +107,9 @@ class OAuthConsentPage extends Page
      */
     private function scopeSchema(): array
     {
-        if ($this->scopes === []) {
+        $scopes = $this->prompt->scopes;
+
+        if ($scopes === []) {
             return [Heading::make(__('oidc-ui::oauth.consent.requested-scopes'), 3)];
         }
 
@@ -98,7 +117,7 @@ class OAuthConsentPage extends Page
             Heading::make(__('oidc-ui::oauth.consent.requested-scopes'), 3),
             ...array_map(
                 fn (Scope $scope): Text => Text::make($scope->description),
-                $this->scopes,
+                $scopes,
             ),
         ];
     }

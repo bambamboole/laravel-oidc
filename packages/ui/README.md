@@ -48,9 +48,9 @@ export const registry = extendRegistry(
 );
 ```
 
-Every screen this package renders is resolved through `AuthViewManager` — rebind any
-entry on that manager in your own service provider to override a single view without
-forking the package.
+Every screen this package renders is bound to its server-defined view contract (e.g.
+`LoginView`, `ConsentView`) in the container — rebind any one of them in your own
+service provider to override a single view without forking the package.
 
 The verify-email page shows a log-out link only if the host app defines a logout
 route (name configurable via `oidc-ui.logout_route`, default `logout`); apps built on
@@ -63,7 +63,7 @@ need a path repository pointed at the sibling checkout — see
 [`composer.local-dev.md`](composer.local-dev.md):
 
 ```bash
-composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.6.0"}}}'
+composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
 composer install
 composer check   # pint --test, phpstan, pest
 git checkout -- composer.json   # drop the local-only repositories entry before committing

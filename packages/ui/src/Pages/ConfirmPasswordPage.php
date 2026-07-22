@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Auth\Views\PasswordConfirmationPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
-use Lattice\Lattice\Attributes\AsPage;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
@@ -21,10 +24,30 @@ use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class ConfirmPasswordPage extends Page
+class ConfirmPasswordPage extends Page implements PasswordConfirmationView
 {
+    /**
+     * {@see PasswordConfirmationPrompt} carries no data today, so there is
+     * nothing to thread through the constructor — the page still resolves
+     * with zero args, satisfying the container binding invariant.
+     */
+    public function respond(PasswordConfirmationPrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self)->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
+
     public function title(): string
     {
         return __('oidc-ui::auth.confirm-password.title');
