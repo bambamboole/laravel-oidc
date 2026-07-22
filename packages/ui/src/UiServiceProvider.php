@@ -58,9 +58,5 @@ class UiServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/lang' => lang_path('vendor/oidc-ui'),
         ], 'oidc-ui-lang');
-
-        $this->publishes([
-            __DIR__.'/../resources/js' => resource_path('js/vendor/oidc-ui'),
-        ], 'oidc-ui-js');
     }
 }

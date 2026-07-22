@@ -11,46 +11,30 @@ app.
 ```bash
 composer require bambamboole/laravel-oidc-ui
 
-# Optional: publish the config, translations, and frontend stub components
+# Optional: publish the config or translations to customize them
 php artisan vendor:publish --tag=oidc-ui-config
 php artisan vendor:publish --tag=oidc-ui-lang
-php artisan vendor:publish --tag=oidc-ui-js
 ```
 
 The service provider is auto-discovered and merges the `oidc-ui` config and
 `oidc-ui::` translation namespace automatically.
 
-## Frontend registration
+## Frontend
 
-The `oidc-ui-js` publish tag copies stub components into
-`resources/js/vendor/oidc-ui`. Register them in your app's Lattice component
-registry (`resources/js/registry.ts`) alongside your own:
-
-```ts
-import {
-    createPlugin,
-    extendRegistry,
-    eagerComponent,
-    registry as packageRegistry,
-} from "@lattice-php/lattice";
-import PasskeyVerify from "./vendor/oidc-ui/passkey-verify";
-import PasskeyRegistration from "./vendor/oidc-ui/passkey-registration";
-
-export const registry = extendRegistry(
-    packageRegistry,
-    createPlugin({
-        components: {
-            "oidc.passkey-verify": eagerComponent(PasskeyVerify),
-            "oidc.passkey-registration": eagerComponent(PasskeyRegistration),
-        },
-        name: "oidc-ui",
-    }),
-);
-```
+Nothing to register. This package declares `extra.lattice.plugin` in its
+`composer.json`, so the app's `lattice()` Vite plugin picks up its component
+plugin — `oidc.passkey-verify` and `oidc.passkey-registration` — automatically
+through `virtual:lattice/plugins`, the same mechanism that discovers every
+other installed Lattice component package.
 
 Every screen this package renders is bound to its server-defined view contract (e.g.
 `LoginView`, `ConsentView`) in the container — rebind any one of them in your own
 service provider to override a single view without forking the package.
+
+The passkey components' strings live in the `oidc-ui` i18n namespace (English
+fallbacks are built into the components, so translations are optional) —
+publish `oidc-ui-lang` and edit `lang/vendor/oidc-ui/{locale}/passkey.php` to
+override them.
 
 The verify-email page shows a log-out link only if the host app defines a logout
 route (name configurable via `oidc-ui.logout_route`, default `logout`); apps built on
