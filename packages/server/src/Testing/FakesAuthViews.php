@@ -26,7 +26,9 @@ use Illuminate\Http\Request;
 /**
  * Binds every auth view contract to a minimal JSON responder so engine tests
  * can drive the real controllers without depending on `bambamboole/laravel-oidc-ui`
- * (or any other view package) being installed.
+ * (or any other view package) being installed. Add to your Pest suite with
+ * `uses(FakesAuthViews::class)` (or `use` it in a PHPUnit TestCase), then call
+ * `fakeAuthViews()` before hitting a GET route for one of the views.
  */
 trait FakesAuthViews
 {

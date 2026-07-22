@@ -17,6 +17,7 @@ use Bambamboole\LaravelOidc\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Auth\SessionRegistry;
 use Bambamboole\LaravelOidc\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
 use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationView;
 use Bambamboole\LaravelOidc\Auth\Views\LoginView;
@@ -67,9 +68,11 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passkeys\Contracts\PasskeyUser;
@@ -80,6 +83,7 @@ use Laravel\Passport\Bridge\RefreshTokenRepository;
 use Laravel\Passport\Bridge\ScopeRepository as PassportBridgeScopeRepository;
 use Laravel\Passport\Passport;
 use League\OAuth2\Server\AuthorizationServer;
+use Symfony\Component\HttpFoundation\Response;
 
 class OidcServiceProvider extends ServiceProvider
 {
@@ -231,6 +235,22 @@ class OidcServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Passport::useAuthorizationServerResponseType($this->app->make(IdTokenResponse::class));
+
+        // The only Passport view seam the package wires: every consent
+        // render resolves the ConsentView contract from the container, so
+        // overriding consent (or getting the "missing view" exception) is
+        // identical to every other auth surface.
+        Passport::authorizationView(
+            fn (array $parameters): Responsable|Response => $this->app->make(ConsentView::class)->respond(
+                new ConsentPrompt(
+                    client: $parameters['client'],
+                    user: $parameters['user'],
+                    scopes: $parameters['scopes'],
+                    authToken: $parameters['authToken'],
+                ),
+                Request::instance(),
+            ),
+        );
 
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Login::class, StartOidcSession::class);
