@@ -5,6 +5,48 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.6.0](https://github.com/bambamboole/laravel-oidc/compare/v0.5.0...v0.6.0) (2026-07-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* wire the ui package into the master package and CI
+* drop Laravel 11 support
+* turn the repo root into the laravel-oidc master package
+* import laravel-oidc-client into packages/client
+* move the server package to packages/server
+
+### Features
+
+* consolidate docs and add the monorepo split workflow ([3233365](https://github.com/bambamboole/laravel-oidc/commit/323336582c1945958055c5c4834e8bc0b1290bdf))
+* drop Laravel 11 support ([32acd68](https://github.com/bambamboole/laravel-oidc/commit/32acd68e65cca7bb768f117d3a6067abccb2ee4f))
+* import laravel-oidc-client into packages/client ([1b25e5f](https://github.com/bambamboole/laravel-oidc/commit/1b25e5f1cf2442ba2ec3898e1a299d1eb7266ecb))
+* port auth layout, shared concerns, and translations to the ui package ([e9af4c7](https://github.com/bambamboole/laravel-oidc/commit/e9af4c7b7451cd4acace872ba3c59234f857b1a5))
+* port auth pages and bind AuthViewManager defaults ([21f9789](https://github.com/bambamboole/laravel-oidc/commit/21f9789b4ff464ee1934b6539f18d904cbd4c786))
+* port the oauth consent page and wire Passport authorization view ([976b236](https://github.com/bambamboole/laravel-oidc/commit/976b236cb3d6f5f09180dc5e58987be31cd5da06))
+* port two-factor and passkey security components ([2b0be3b](https://github.com/bambamboole/laravel-oidc/commit/2b0be3bdabcde7f7632eeba55b00873bdb27355f))
+* scaffold the laravel-oidc-ui package ([9674908](https://github.com/bambamboole/laravel-oidc/commit/9674908eab97e7a02bf035fbcf6540ec9f63107f))
+* turn the repo root into the laravel-oidc master package ([f293c17](https://github.com/bambamboole/laravel-oidc/commit/f293c175f0952328e9e9de71bf1e99cd6514c36c))
+* wire the ui package into the master package and CI ([625cc3e](https://github.com/bambamboole/laravel-oidc/commit/625cc3ed73e95fab6641ad79211801617b627b5f))
+
+
+### Bug Fixes
+
+* harden consent email fallback and cover verification-email action ([412f1be](https://github.com/bambamboole/laravel-oidc/commit/412f1becd61a6c3f42bfc157c8db8832c791646b))
+* omit the verify-email logout link when the host app has no logout route ([f2c77bd](https://github.com/bambamboole/laravel-oidc/commit/f2c77bdacfe3d30f5c02b8c55769db74ffb98091))
+
+
+### Refactoring
+
+* move the server package to packages/server ([4f2d335](https://github.com/bambamboole/laravel-oidc/commit/4f2d3358f386043c4ad437cc42bf05e0516b4d44))
+
+
+### Documentation
+
+* consolidate client and ui documentation into the monorepo site ([f99b90c](https://github.com/bambamboole/laravel-oidc/commit/f99b90ca28acf2b38d998d99817ba0c1eb5a512e))
+* document the ui path-repo setup and clarify the logout-route contract ([5dfb793](https://github.com/bambamboole/laravel-oidc/commit/5dfb79369c98023694acfc204191dab3ff3b9d48))
+* drop stale Laravel 11 support claims ([4a6b0f4](https://github.com/bambamboole/laravel-oidc/commit/4a6b0f4651964df000288be6ea6fa329a494fa70))
+
 ## [0.5.0](https://github.com/bambamboole/laravel-oidc/compare/v0.4.0...v0.5.0) (2026-07-19)
 
 
