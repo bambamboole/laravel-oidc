@@ -10,7 +10,7 @@ use Lattice\Lattice\Actions\ActionDefinition;
 use Lattice\Lattice\Actions\ActionResult;
 use Lattice\Lattice\Actions\Components\Action as ActionComponent;
 use Lattice\Lattice\Attributes\AsAction;
-use Lattice\Lattice\Ui\Enums\ButtonVariant;
+use Lattice\Lattice\Ui\Enums\Emphasis;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
 use Lattice\Lattice\Ui\Enums\Variant;
 
@@ -26,7 +26,7 @@ class DisableTwoFactorAuthenticationAction extends ActionDefinition
         return $action
             ->label(__('oidc-ui::security.two-factor.disable'))
             ->method(HttpMethod::Post)
-            ->variant(ButtonVariant::Outline)
+            ->emphasis(Emphasis::Outline)
             ->confirm(
                 title: __('oidc-ui::security.two-factor.disable-confirm-title'),
                 description: __('oidc-ui::security.two-factor.disable-confirm-description'),
