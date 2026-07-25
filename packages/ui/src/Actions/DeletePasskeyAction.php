@@ -10,7 +10,7 @@ use Lattice\Lattice\Actions\ActionDefinition;
 use Lattice\Lattice\Actions\ActionResult;
 use Lattice\Lattice\Actions\Components\Action;
 use Lattice\Lattice\Attributes\AsAction;
-use Lattice\Lattice\Ui\Enums\ButtonVariant;
+use Lattice\Lattice\Ui\Enums\Emphasis;
 use Lattice\Lattice\Ui\Enums\Variant;
 
 #[AsAction('oidc.passkeys.delete')]
@@ -22,7 +22,7 @@ class DeletePasskeyAction extends ActionDefinition
     {
         return $action
             ->label(__('oidc-ui::security.passkeys.remove'))
-            ->variant(ButtonVariant::Ghost)
+            ->emphasis(Emphasis::Ghost)
             ->confirm(
                 title: __('oidc-ui::security.passkeys.remove-confirm-title'),
                 description: __('oidc-ui::security.passkeys.remove-confirm-description'),

@@ -16,7 +16,7 @@
         "bambamboole/laravel-oidc-server": "^0.7",
         "laravel/passkeys": "^0.2",
         "laravel/passport": "^13.4",
-        "lattice-php/lattice": "^0.25"
+        "lattice-php/lattice": "^0.26"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
