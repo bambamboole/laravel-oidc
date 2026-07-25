@@ -5,6 +5,38 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.7.0](https://github.com/bambamboole/laravel-oidc/compare/v0.6.0...v0.7.0) (2026-07-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade to lattice 0.26
+* wire lattice discovery and 0.25 for master-package installs
+* ship the frontend as a lattice component plugin
+* adopt lattice 0.25 declarative discovery and the server view contracts
+* route the consent view through the ConsentView contract
+* `AuthViewManager` and the `OidcManager`/`Oidc` facade fluent view-bind methods (`loginView()`, `registerView()`, etc.) are removed. Bind the new contracts directly on the container instead.
+
+### Features
+
+* adopt lattice 0.25 declarative discovery and the server view contracts ([5da7476](https://github.com/bambamboole/laravel-oidc/commit/5da74768fbcaea616738d6a31e2a46317f4961d0))
+* replace the auth view manager with typed view contracts ([87ad2ba](https://github.com/bambamboole/laravel-oidc/commit/87ad2ba48b4b10623046430801ad1cc2cb2f1f6e))
+* route the consent view through the ConsentView contract ([bdb7e26](https://github.com/bambamboole/laravel-oidc/commit/bdb7e2625567c81b5be8a5d45d6b464b603be25a))
+* ship the frontend as a lattice component plugin ([0753993](https://github.com/bambamboole/laravel-oidc/commit/0753993632239bd4e9143e513e2a2bd8eba51813))
+* upgrade to lattice 0.26 ([159b1da](https://github.com/bambamboole/laravel-oidc/commit/159b1da212a0ee5d4341167c50ed3cb0bf116c41))
+
+
+### Bug Fixes
+
+* register the oidc-ui translation namespace directly on the loader ([9b3c88b](https://github.com/bambamboole/laravel-oidc/commit/9b3c88b46976822b12158d27cd49bf994e23f707))
+* wire lattice discovery and 0.25 for master-package installs ([e9844bf](https://github.com/bambamboole/laravel-oidc/commit/e9844bfbce0b9a586f49b67d2f071896f452e0ee))
+
+
+### Documentation
+
+* align ui docs with declarative discovery ([bef221b](https://github.com/bambamboole/laravel-oidc/commit/bef221b7a2bccca7cac02186258f555ea374da5b))
+* document the typed auth view contracts and zero-config ui setup ([fa49a2e](https://github.com/bambamboole/laravel-oidc/commit/fa49a2e9a38210ab5cf976bb8c095543ccee0bfb))
+
 ## [0.6.0](https://github.com/bambamboole/laravel-oidc/compare/v0.5.0...v0.6.0) (2026-07-22)
 
 
