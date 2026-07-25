@@ -14,6 +14,7 @@ automatically by `UiServiceProvider` — no publishing is required to get a work
 | `common.php` | Shared field labels, placeholders, and actions reused across pages |
 | `oauth.php` | The OAuth consent page |
 | `security.php` | The settings-page building blocks (two-factor, recovery codes, passkeys, verification) — see [Security components](/ui/security-components/) |
+| `passkey.php` | The passkey sign-in and registration components' copy — see [Frontend setup](/ui/frontend-setup/) |
 
 Shipped locales: `en` and `de`.
 
@@ -29,4 +30,9 @@ basis, so publishing and overriding a single key does not require copying the wh
 untouched keys keep resolving from the package.
 
 To add a locale the package doesn't ship, publish the `en` files as a starting point and add a
-new `lang/vendor/oidc-ui/{locale}/` directory with the same four filenames.
+new `lang/vendor/oidc-ui/{locale}/` directory with the same five filenames.
+
+The same `oidc-ui::` namespace is also what the frontend requests: the package's Lattice plugin
+declares `i18n: { namespace: "oidc-ui" }`, so i18next resolves `/locales/{lng}/oidc-ui.json`
+through this namespace too — the merge-over-package-defaults behavior above applies identically
+on the frontend and in PHP's `__('oidc-ui::...')`.

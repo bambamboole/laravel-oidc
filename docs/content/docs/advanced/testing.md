@@ -88,9 +88,9 @@ $result->json('error'); // invalid_client
 
 `params:` overrides any authorize query parameter (`state`, `nonce`,
 `max_age`, `redirect_uri`, ...), and `pkce:` accepts a fixed
-`PkcePair` when the test needs the verifier later. The helper registers a
-minimal JSON authorization view unless the test already registered one via
-`Passport::authorizationView()`.
+`PkcePair` when the test needs the verifier later. The helper binds a
+minimal JSON `ConsentView` unless the test (or `FakesAuthViews`, or the ui
+package) already bound one.
 
 The CSRF exemption applied by `authorizeAndApprove()` persists for the
 remainder of the calling test method.

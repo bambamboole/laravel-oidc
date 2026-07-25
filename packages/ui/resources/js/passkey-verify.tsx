@@ -29,7 +29,7 @@ type PasskeyVerifyProps = {
 };
 
 function PasskeyVerify({ routes, label, loadingLabel, separator }: PasskeyVerifyProps = {}) {
-    const { t } = useT("app");
+    const { t } = useT("oidc-ui");
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
         ...(routes && {
             routes: {

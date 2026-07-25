@@ -74,8 +74,8 @@ redirects to the challenge:
 | `identity.two-factor.login` | `GET` | `auth/two-factor-challenge` | `web`, `guest:identity` |
 | `identity.two-factor.login.store` | `POST` | `auth/two-factor-challenge` | `web`, `guest:identity`, `throttle:5,1` |
 
-`GET identity.two-factor.login` renders your bound `twoFactorChallengeView`, or redirects to
-`identity.login` if there is no pending challenge on the session.
+`GET identity.two-factor.login` renders through the bound `TwoFactorChallengeView` contract, or
+redirects to `identity.login` if there is no pending challenge on the session.
 
 `POST identity.two-factor.login.store` (throttled **5/minute**) validates `code` and `recovery_code`
 (both `nullable|string`), resolves the pending user, and picks the provider: `recovery_code` when a

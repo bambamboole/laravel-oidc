@@ -22,7 +22,7 @@
         "illuminate/support": "^12.0 || ^13.0",
         "laravel/passkeys": "^0.2",
         "laravel/passport": "^13.4",
-        "lattice-php/lattice": "^0.24",
+        "lattice-php/lattice": "^0.25",
         "lcobucci/clock": "^3.2",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15",
@@ -47,7 +47,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "0.6-dev"
+            "dev-main": "0.7-dev"
         },
         "laravel": {
             "providers": [
@@ -55,6 +55,10 @@
                 "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider",
                 "Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider"
             ]
+        },
+        "lattice": {
+            "discover": ["packages/ui/src"],
+            "plugin": "packages/ui/resources/js/plugin.ts"
         }
     },
     "scripts": {

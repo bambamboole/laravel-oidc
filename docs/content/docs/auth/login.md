@@ -4,8 +4,8 @@ description: The interactive login flow, its two-factor hand-off, passkey login,
 ---
 
 Login is owned by `AuthenticatedSessionController`, wired through two handlers that share the
-`auth/login` path. Your app fills the [view seam](/auth/overview/) with `Oidc::loginView(...)`;
-the package owns validation, credential checks, rate limiting, event dispatch, session
+`auth/login` path. Your app fills the [`LoginView` seam](/auth/overview/) by binding the
+contract; the package owns validation, credential checks, rate limiting, event dispatch, session
 regeneration, and the hand-off to the [post-login pipeline](/auth/post-login-pipeline/) and
 [multi-factor challenge](/auth/multi-factor/).
 
@@ -16,8 +16,8 @@ regeneration, and the hand-off to the [post-login pipeline](/auth/post-login-pip
 | `identity.login` | `GET` | `auth/login` | `web`, `guest:identity` |
 | `identity.login.store` | `POST` | `auth/login` | `web`, `guest:identity`, `throttle:5,1` |
 
-`GET identity.login` renders your bound `loginView`. If no view is bound, hitting the route throws
-a `RuntimeException`.
+`GET identity.login` renders through the bound `LoginView` contract. If none is bound, hitting the
+route throws `MissingAuthViewException`.
 
 ## The login flow (`POST identity.login.store`)
 

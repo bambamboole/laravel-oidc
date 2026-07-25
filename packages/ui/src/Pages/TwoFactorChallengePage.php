@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Lattice\Lattice\Attributes\AsPage;
+use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengeView;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
@@ -18,10 +21,30 @@ use Lattice\Lattice\Ui\Enums\Align;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
+use Symfony\Component\HttpFoundation\Response;
 
-#[AsPage(layout: PageLayout::Auth, container: PageContainer::Default)]
-class TwoFactorChallengePage extends Page
+class TwoFactorChallengePage extends Page implements TwoFactorChallengeView
 {
+    /**
+     * {@see TwoFactorChallengePrompt} carries no data today, so there is
+     * nothing to thread through the constructor — the page still resolves
+     * with zero args, satisfying the container binding invariant.
+     */
+    public function respond(TwoFactorChallengePrompt $prompt, Request $request): Responsable|Response
+    {
+        return (new self)->toResponse($request);
+    }
+
+    public function layout(): PageLayout|string|null
+    {
+        return PageLayout::Auth;
+    }
+
+    public function container(): PageContainer|string|null
+    {
+        return PageContainer::Default;
+    }
+
     public function title(): string
     {
         return __('oidc-ui::auth.two-factor.title');

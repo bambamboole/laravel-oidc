@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Workbench\App\Models\User;
 
 /**
- * Every AuthViewManager seam renders through the server package's real
- * `identity.*` routes. Requests are sent with the `X-Inertia` header so
- * Inertia returns the page payload as JSON instead of trying to render a
- * host application's root Blade view (which this package does not ship),
- * and `assertSee(..., false)` checks the payload for the translated string
- * without HTML-escaping the expectation first.
+ * Every auth view contract renders through the server package's real
+ * `identity.*` routes, resolved from the container. Requests are sent with
+ * the `X-Inertia` header so Inertia returns the page payload as JSON instead
+ * of trying to render a host application's root Blade view (which this
+ * package does not ship), and `assertSee(..., false)` checks the payload for
+ * the translated string without HTML-escaping the expectation first.
  */
 it('renders the login page', function () {
     $this->get(route('identity.login'), ['X-Inertia' => 'true'])
@@ -82,4 +86,18 @@ it('renders the two-factor challenge page for a pending login', function () {
         ->get(route('identity.two-factor.login'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertSee(__('oidc-ui::auth.two-factor.title'), false);
+});
+
+it('lets a host application override a bound view contract', function () {
+    $this->app->bind(LoginView::class, fn () => new class implements LoginView
+    {
+        public function respond(LoginPrompt $prompt, Request $request): JsonResponse
+        {
+            return response()->json(['view' => 'fake-login']);
+        }
+    });
+
+    $this->get(route('identity.login'), ['X-Inertia' => 'true'])
+        ->assertOk()
+        ->assertExactJson(['view' => 'fake-login']);
 });

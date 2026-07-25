@@ -30,7 +30,7 @@ jobs:
 
       - name: Use the monorepo server package (ui only)
         if: matrix.package == 'ui'
-        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.6.0"}}}'
+        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction
@@ -87,7 +87,7 @@ jobs:
 
       - name: Use the monorepo server package (ui only)
         if: matrix.package == 'ui'
-        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.6.0"}}}'
+        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
 
       - name: Constrain testbench
         run: composer require "orchestra/testbench:${{ matrix.testbench }}" --no-update --no-interaction
@@ -153,3 +153,27 @@ jobs:
           JSON
           composer install --no-interaction
           php -r "require 'vendor/autoload.php'; exit(class_exists('Bambamboole\\LaravelOidc\\OidcServiceProvider') && class_exists('Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider') && class_exists('Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider') ? 0 : 1);"
+
+      # Guards the master package's ONLY path to Lattice discovery: the ui package is
+      # replace()d, so packages/ui/composer.json is never read from a master install —
+      # only this root composer.json's lattice-php/lattice constraint and extra.lattice
+      # govern it. Fails loudly if either regresses.
+      - name: Assert lattice discovery for master installs
+        working-directory: /tmp/master-smoke
+        run: |
+          php -r '
+          require "vendor/autoload.php";
+          $version = Composer\InstalledVersions::getVersion("lattice-php/lattice");
+          if ($version === null || version_compare($version, "0.25.0", "<")) {
+              fwrite(STDERR, "lattice-php/lattice version too low: ".var_export($version, true)."\n");
+              exit(1);
+          }
+          $roots = Lattice\Lattice\Core\Discovery\ComponentPackages::discoverRoots();
+          foreach ($roots as $root) {
+              if (str_ends_with($root, "packages/ui/src")) {
+                  exit(0);
+              }
+          }
+          fwrite(STDERR, "packages/ui/src missing from discovery roots: ".implode(", ", $roots)."\n");
+          exit(1);
+          '

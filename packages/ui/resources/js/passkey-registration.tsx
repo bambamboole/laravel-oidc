@@ -28,7 +28,7 @@ function suggestedPasskeyName(connector: string): string {
 }
 
 const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ node }) => {
-    const { t } = useT("app");
+    const { t } = useT("oidc-ui");
     const [name, setName] = useState(() => suggestedPasskeyName(t("passkey.on", "on")));
     const [showForm, setShowForm] = useState(false);
     const { register, isLoading, error, isSupported } = usePasskeyRegister({
