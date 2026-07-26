@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Token;
 
-use Bambamboole\LaravelOidc\Server\Auth\ProtocolClaims;
 use Bambamboole\LaravelOidc\Server\Issuer;
 use DateTimeImmutable;
 use Laravel\Passport\Bridge\AccessToken;

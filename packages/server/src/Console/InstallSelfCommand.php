@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Server\Console;
 
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningException;
-use Bambamboole\LaravelOidc\Server\Contracts\EnvironmentStore;
+use Bambamboole\LaravelOidc\Server\Support\EnvironmentStore;
 use Bambamboole\LaravelOidc\Server\Support\EnvironmentWriteException;
 use Bambamboole\LaravelOidc\Server\Token\SigningKeyGenerator;
 use Illuminate\Console\Command;

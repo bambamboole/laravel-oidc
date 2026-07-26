@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Auth\Pipeline;
 
-use Bambamboole\LaravelOidc\Server\Contracts\DeviceRecognizer;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\Contracts\DeviceRecognizer;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use League\OAuth2\Server\Entities\ClientEntityInterface;

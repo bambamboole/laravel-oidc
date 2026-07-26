@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Console;
 
-use Bambamboole\LaravelOidc\Server\Contracts\EnvironmentStore;
+use Bambamboole\LaravelOidc\Server\Support\EnvironmentStore;
 use Bambamboole\LaravelOidc\Server\Support\EnvironmentWriteException;
 use Bambamboole\LaravelOidc\Server\Token\SigningKeyGenerator;
 use Bambamboole\LaravelOidc\Server\Token\SigningKeys;

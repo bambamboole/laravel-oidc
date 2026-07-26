@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Http\Controllers;
 
+use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\LoginDestination;
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
@@ -32,6 +33,7 @@ class AuthorizationController extends PassportAuthorizationController
         protected ScopeRepository $scopeRepository,
         private readonly LoginDestination $loginDestination,
         private readonly FirstPartyClientConfig $firstPartyClient,
+        private readonly AuthSessionState $sessionState,
     ) {
         parent::__construct($server, $guard, $clients);
     }
@@ -98,7 +100,7 @@ class AuthorizationController extends PassportAuthorizationController
             return;
         }
 
-        $authTime = (int) $request->session()->get('oidc.auth_time', 0);
+        $authTime = $this->sessionState->authTime() ?? 0;
 
         if (time() - $authTime >= (int) $maxAge) {
             $this->guard->logout();

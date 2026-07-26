@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Support;
 
-use Bambamboole\LaravelOidc\Server\Contracts\EnvironmentStore;
-
 final class EnvironmentFile implements EnvironmentStore
 {
     public function __construct(private readonly ?string $path = null) {}

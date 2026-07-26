@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth;
+namespace Bambamboole\LaravelOidc\Server\Context;
 
 use Bambamboole\LaravelOidc\Server\Auth\Models\AuthenticationContext;
 use Illuminate\Support\Carbon;

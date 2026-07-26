@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Http\Controllers;
 
-use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\BackChannel\BackChannelLogoutNotifier;
 use Bambamboole\LaravelOidc\Server\Issuer;
+use Bambamboole\LaravelOidc\Server\Session\OidcSessionRepository;
 use Bambamboole\LaravelOidc\Server\Token\TokenInspector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,11 +27,11 @@ class EndSessionController
         if ($this->shouldLogout($request, $hint)) {
             $sid = $hint?->claims()->get('sid');
             if (! is_string($sid) || $sid === '') {
-                $sid = $request->hasSession() ? $request->session()->get('oidc.sid') : null;
+                $sid = $request->hasSession() ? app(AuthSessionState::class)->sid() : null;
             }
 
             if (is_string($sid) && $sid !== '') {
-                app(SessionRegistry::class)->revoke($sid);
+                app(OidcSessionRepository::class)->revoke($sid);
                 app(BackChannelLogoutNotifier::class)->notify($sid);
             }
 

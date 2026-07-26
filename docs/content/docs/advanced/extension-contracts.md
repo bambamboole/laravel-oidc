@@ -121,7 +121,7 @@ $this->app->singleton(
 
 ## `DeviceRecognizer`
 
-`Bambamboole\LaravelOidc\Server\Contracts\DeviceRecognizer` decides whether the current
+`Bambamboole\LaravelOidc\Server\Auth\Pipeline\Contracts\DeviceRecognizer` decides whether the current
 request comes from a device already known for the user — it backs the
 `LoginEvent::isNewDevice()` signal in the post-login pipeline.
 
@@ -139,7 +139,7 @@ own to add it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\DeviceRecognizer::class,
+    \Bambamboole\LaravelOidc\Server\Auth\Pipeline\Contracts\DeviceRecognizer::class,
     MyDeviceRecognizer::class,
 );
 ```
