@@ -46,9 +46,6 @@
         "source": "https://github.com/bambamboole/laravel-oidc"
     },
     "extra": {
-        "branch-alias": {
-            "dev-main": "0.7-dev"
-        },
         "laravel": {
             "providers": [
                 "Bambamboole\\LaravelOidc\\OidcServiceProvider",

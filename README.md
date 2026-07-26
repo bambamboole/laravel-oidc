@@ -21,7 +21,8 @@ One-time setup until the split packages are on Packagist — resolve the server
 dep from the monorepo:
 
 ```bash
-composer --working-dir=packages/ui config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
+VERSION=$(php -r 'echo json_decode(file_get_contents(".release-please-manifest.json"), true)["."];')
+composer --working-dir=packages/ui config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
 ```
 
 This edits `packages/ui/composer.json` locally; do not commit that change.

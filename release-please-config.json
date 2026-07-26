@@ -12,6 +12,14 @@
     { "type": "docs", "section": "Documentation" }
   ],
   "packages": {
-    ".": {}
+    ".": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "packages/ui/composer.json",
+          "jsonpath": "$.require['bambamboole/laravel-oidc-server']"
+        }
+      ]
+    }
   }
 }
