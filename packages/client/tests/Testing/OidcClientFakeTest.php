@@ -9,6 +9,7 @@ use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
 
@@ -57,6 +58,20 @@ it('honors an issuer configured before fake() and resets the discovery singleton
 
     $claims = app(IdTokenValidator::class)->validate($fake->idToken(), OidcClientFake::NONCE);
     expect($claims['iss'])->toBe('https://custom.test');
+});
+
+it('mints tokens at the frozen Carbon test time', function () {
+    Carbon::setTestNow('2026-01-01 12:00:00');
+    $frozen = Carbon::now()->getTimestamp();
+    $fake = OidcClient::fake();
+
+    $decode = fn (string $jwt): array => json_decode(
+        base64_decode(strtr(explode('.', $jwt)[1], '-_', '+/')),
+        true,
+    );
+
+    expect((int) $decode($fake->idToken())['iat'])->toBe($frozen)
+        ->and((int) $decode($fake->logoutToken())['iat'])->toBe($frozen);
 });
 
 it('fails the token exchange with the configured status', function () {

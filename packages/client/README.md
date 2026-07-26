@@ -58,10 +58,17 @@ full walkthrough, every config key, and the back-channel logout setup.
 
 ## Documentation
 
-The documentation lives in [`docs/content/`](docs/content/) as Starlight-flavoured
-Markdown. It is not built here: the
-[`laravel-oidc` docs site](https://bambamboole.github.io/laravel-oidc) fetches these pages
-on deployment and publishes them under `/client/`.
+The full documentation lives at
+**[bambamboole.github.io/laravel-oidc](https://bambamboole.github.io/laravel-oidc)** —
+the client pages are under
+[`/client/`](https://bambamboole.github.io/laravel-oidc/client/overview/). It is built
+from the `docs/` directory of the
+[`laravel-oidc` monorepo](https://github.com/bambamboole/laravel-oidc).
+
+## Changelog
+
+All packages in the suite are versioned in lockstep; see the
+[monorepo changelog](https://github.com/bambamboole/laravel-oidc/blob/main/CHANGELOG.md).
 
 ## Development
 

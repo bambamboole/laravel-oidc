@@ -5,15 +5,12 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
 
 beforeEach(function () {
-    Auth::forgetGuards();
-    Cache::clear();
     config()->set('oidc-client.client_secret', 'secret-xyz');
     config()->set('oidc-client.redirect_after_login', '/dashboard');
 

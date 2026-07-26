@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Testing\FakeOidcProvider;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
-use Illuminate\Support\Facades\Http;
 
 /**
  * @param  array<string, mixed>  $overrides
@@ -35,24 +34,14 @@ beforeEach(function () {
 
     $this->provider = new FakeOidcProvider;
 
-    Http::fake([
-        'https://id.example.com/.well-known/openid-configuration' => Http::response([
-            'issuer' => 'https://id.example.com',
-            'authorization_endpoint' => 'https://id.example.com/oauth/authorize',
-            'token_endpoint' => 'https://id.example.com/oauth/token',
-            'jwks_uri' => 'https://id.example.com/.well-known/jwks.json',
-        ]),
-        'https://id.example.com/.well-known/jwks.json' => Http::response([
-            'keys' => array_merge(
-                $this->provider->rsaJwks('key-1'),
-                $this->provider->ecJwks('key-2'),
-                array_map(
-                    fn (array $jwk): array => array_merge($jwk, ['kid' => 'key-3', 'alg' => 'PS256']),
-                    $this->provider->rsaJwks('key-3'),
-                ),
-            ),
-        ]),
-    ]);
+    fakeIssuerEndpoints($this->provider, array_merge(
+        $this->provider->rsaJwks('key-1'),
+        $this->provider->ecJwks('key-2'),
+        array_map(
+            fn (array $jwk): array => array_merge($jwk, ['kid' => 'key-3', 'alg' => 'PS256']),
+            $this->provider->rsaJwks('key-3'),
+        ),
+    ));
 });
 
 it('accepts an ES256-signed id token', function () {

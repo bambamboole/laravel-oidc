@@ -6,7 +6,6 @@ use Bambamboole\LaravelOidc\Client\Testing\FakeOidcProvider;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Bambamboole\LaravelOidc\Client\Token\JwksKeyResolver;
 use Bambamboole\LaravelOidc\Client\Token\ValidatorConfig;
-use Illuminate\Support\Facades\Http;
 
 it('builds itself from the oidc-client config', function () {
     config()->set('oidc-client.issuer', 'https://id.example.com');
@@ -28,17 +27,7 @@ it('validates against the injected issuer and client rather than the global conf
 
     $provider = new FakeOidcProvider;
 
-    Http::fake([
-        'https://id.example.com/.well-known/openid-configuration' => Http::response([
-            'issuer' => 'https://id.example.com',
-            'authorization_endpoint' => 'https://id.example.com/oauth/authorize',
-            'token_endpoint' => 'https://id.example.com/oauth/token',
-            'jwks_uri' => 'https://id.example.com/.well-known/jwks.json',
-        ]),
-        'https://id.example.com/.well-known/jwks.json' => Http::response([
-            'keys' => $provider->rsaJwks('key-1'),
-        ]),
-    ]);
+    fakeIssuerEndpoints($provider);
 
     $validator = new IdTokenValidator(app(JwksKeyResolver::class), new ValidatorConfig(
         issuer: 'https://second.example.com',

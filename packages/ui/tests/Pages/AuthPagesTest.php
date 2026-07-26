@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
+use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
+use Bambamboole\LaravelOidc\Ui\Pages\RegisterPage;
+use Bambamboole\LaravelOidc\Ui\Pages\ResetPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +100,42 @@ it('renders the code form without the passkey ceremony for a totp factor', funct
 
     expect($content)->not->toContain('passkey-verify')
         ->and($content)->toContain('two-factor-challenge');
+});
+
+it('renders the confirm-password page with the passkey ceremony when the handlers are registered', function () {
+    expect(renderPage(new ConfirmPasswordPage))->toContain('passkey-verify');
+});
+
+it('offers only the recovery-code input on the two-factor challenge for a webauthn factor', function () {
+    // The totp render anchors the `field.otp` marker so the not-contains
+    // below cannot pass vacuously if the field type string ever changes.
+    $totp = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp')));
+    $webauthn = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'webauthn')));
+
+    expect($totp)->toContain('field.otp')
+        ->and($webauthn)->toContain('recovery_code')
+        ->and($webauthn)->not->toContain('field.otp')
+        ->and($webauthn)->not->toContain('use_recovery_code');
+});
+
+it('links back to the login page from the register page', function () {
+    $content = renderPage(new RegisterPage);
+
+    expect($content)->toContain(__('oidc-ui::auth.register.have-account'))
+        ->and($content)->toContain(__('oidc-ui::common.action.log-in'));
+});
+
+it('threads the prompt status through the forgot-password form', function () {
+    $content = renderPage(new ForgotPasswordPage(new PasswordResetRequestPrompt(status: 'A reset link was sent to your inbox.')));
+
+    expect($content)->toContain('A reset link was sent to your inbox.');
+});
+
+it('prefills the reset-password form with the prompt token and email', function () {
+    $content = renderPage(new ResetPasswordPage(new PasswordResetPrompt(token: 'reset-token-123', email: 'reset-user@example.com')));
+
+    expect($content)->toContain('reset-token-123')
+        ->and($content)->toContain('reset-user@example.com');
 });
 
 it('renders the register page', function () {
