@@ -68,6 +68,12 @@ class OidcClientFake
         $fake->reset();
         $fake->installStub();
 
+        // The stub returns null for URLs it does not own, which would send
+        // the request over the real network. Fail loudly instead; tests that
+        // need other endpoints can Http::fake() them, and real network access
+        // can be restored with Http::allowStrayRequests().
+        Http::preventStrayRequests();
+
         app()->instance(self::class, $fake);
 
         return $fake;
