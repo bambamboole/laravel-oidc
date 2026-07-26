@@ -17,6 +17,25 @@ grants it for the `password`, `personal_access`, and `client_credentials` grants
 `$user->createToken('cli', ['*'])`). Here `*` resolves as a scope and survives finalization for
 those grant types, and is stripped for `authorization_code` (interactive) flows.
 
+### Registering API scopes
+
+Feed your API scope catalog to Passport through `config/oidc.php`'s `passport.scopes`
+option instead of calling `Passport::tokensCan()` yourself:
+
+```php
+'passport' => [
+    'token_model' => App\Models\ApiToken::class,   // optional custom Passport token model
+    'scopes' => App\Auth\ApiScopes::class,          // or an inline [scope => description] map
+],
+```
+
+A class-string must implement `Bambamboole\LaravelOidc\Contracts\ScopeCatalog`
+(`scopes(): array<string, string>`). It is resolved from the container, so a
+catalog may load scopes from the database; failures while resolving scopes are
+rescued (leaving the catalog empty) so key- and db-less artisan runs never
+break. The default consent screen, discovery document, and token issuance all
+pick the catalog up automatically.
+
 The scope catalogue is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.
 
@@ -55,6 +74,11 @@ $this->app->singleton(
     AppClaimsResolver::class,
 );
 ```
+
+The bundled `DefaultClaimsResolver` also maps two conventional user attributes
+under the `profile` scope, when present: `locale` (from `$user->locale`) and
+`zoneinfo` (from `$user->timezone`). A custom resolver like the one above
+replaces it entirely, so re-add that mapping yourself if you want to keep it.
 
 The `ClaimsResolver` and `ScopeRepository` are the two seams described in full under
 [Extension contracts](/advanced/extension-contracts/).
