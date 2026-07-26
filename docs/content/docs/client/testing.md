@@ -1,8 +1,6 @@
 ---
 title: Testing
 description: OidcClient::fake() — a fake OpenID provider for relying-party tests, with token minting, callback seeding, and flow assertions.
-sidebar:
-  order: 6
 ---
 
 `OidcClient::fake()` installs a fake OpenID provider: it stubs the issuer's

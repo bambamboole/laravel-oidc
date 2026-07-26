@@ -1,8 +1,6 @@
 ---
 title: Back-channel logout
 description: Accepting provider-pushed logout tokens and tearing down the matching local session.
-sidebar:
-  order: 5
 ---
 
 Back-channel logout lets the provider end this app's session **without the browser's
