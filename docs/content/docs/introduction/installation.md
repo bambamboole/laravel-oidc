@@ -21,13 +21,16 @@ The service provider is auto-discovered.
 
 The package ships migrations that extend `oauth_clients` (post-logout redirect URIs, exchange
 audiences, provisioning key, back-channel logout) and add its own tables (authentication
-contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants).
-The publish tag also includes the `laravel/passkeys` migration.
+contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants,
+social accounts).
 
 ```bash
 php artisan vendor:publish --tag=oidc-migrations
 php artisan migrate
 ```
+
+If you use the passkey/WebAuthn factor, also publish the `laravel/passkeys` migration with
+`php artisan vendor:publish --tag=passkeys-migrations`.
 
 ## Generate signing keys
 

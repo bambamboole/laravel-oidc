@@ -57,7 +57,7 @@ flowchart TD
 
 ### Success response
 
-When no challengeable factor is enrolled, the user is logged in on the `identity` guard (honouring
+When no challengeable factor is enrolled, the user is logged in on the `identity` guard (honoring
 the `remember` field), the **session is regenerated**, and:
 
 - A JSON request (`wantsJson`) receives an empty **`200`** response.

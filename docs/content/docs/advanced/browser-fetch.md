@@ -37,7 +37,7 @@ sent to the browser. A server-side session driver (e.g. `database`, `redis`) is
 recommended so the root token stays server-side.
 :::
 
-## Config
+## Configuration
 
 | Key | Default | Description |
 | --- | --- | --- |

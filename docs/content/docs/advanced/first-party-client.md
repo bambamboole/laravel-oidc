@@ -66,6 +66,7 @@ final readonly class FirstPartyClientProvisioningResult
     public Client $client;                             // the oauth_clients model (Laravel\Passport\Client)
     public string $clientId;
     public ?string $clientSecret;                      // plaintext, only when newly created or rotated
+    public bool $created;
     public FirstPartyClientProvisioningOutcome $outcome;
 }
 ```

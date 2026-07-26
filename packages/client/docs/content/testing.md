@@ -12,7 +12,7 @@ the client's resolved services so test config takes effect, and returns an
 the flow.
 
 The package's routes — including `login` and `login.callback` — register only
-when `enabled` is on (see [Configuration](/configuration/)), so a consumer
+when `enabled` is on (see [Configuration](/client/configuration/)), so a consumer
 test environment must set `OIDC_RP_ENABLED=true` or
 `config(['oidc-client.enabled' => true])` before `route('login')` or
 `callbackUrl()` will resolve.
@@ -88,7 +88,7 @@ $fake->assertBackchannelLogoutProcessed('s1');
 ```
 
 This route only exists when `oidc-client.backchannel_logout.enabled` is on —
-see [Back-channel logout](/backchannel-logout/).
+see [Back-channel logout](/client/backchannel-logout/).
 
 ## Customizing the provider
 

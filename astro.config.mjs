@@ -97,11 +97,6 @@ export default defineConfig({
                 { label: "Testing", link: "/advanced/testing/" },
               ],
             },
-            {
-              label: "Contributing",
-              collapsed: true,
-              items: [{ label: "Local development", link: "/contributing/local-development/" }],
-            },
           ],
         },
         {
@@ -126,6 +121,11 @@ export default defineConfig({
             { label: "Security components", link: "/ui/security-components/" },
             { label: "Translations", link: "/ui/translations/" },
           ],
+        },
+        {
+          label: "Contributing",
+          collapsed: true,
+          items: [{ label: "Local development", link: "/contributing/local-development/" }],
         },
       ],
     }),

@@ -15,7 +15,7 @@ endpoint therefore only destroys the session when the request proves intent:
   `web` guard's CSRF protection, so it is same-site.
 - **No valid hint + `GET`** → **do not log out**; redirect to the fallback unchanged.
 
-`post_logout_redirect_uri` is only honoured when it is registered on the client the hint was issued
+`post_logout_redirect_uri` is only honored when it is registered on the client the hint was issued
 to (stored in `oauth_clients.post_logout_redirect_uris`); otherwise the fallback
 (`oidc.logout_redirect`) is used. When present, a `state` parameter is appended to the redirect.
 
@@ -23,7 +23,7 @@ to (stored in `oauth_clients.post_logout_redirect_uris`); otherwise the fallback
 
 `GET /oauth/authorize?max_age=0&client_id=<active client>` forces re-authentication for an
 already-authenticated victim when the attacker knows an active `client_id` (public client ids are
-discoverable). This is inherent to honouring `max_age` at the authorization endpoint — the effect
+discoverable). This is inherent to honoring `max_age` at the authorization endpoint — the effect
 is a forced re-login, never account compromise.
 
 ## Back-channel logout

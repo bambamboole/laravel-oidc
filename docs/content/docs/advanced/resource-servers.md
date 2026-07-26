@@ -45,6 +45,7 @@ It independently validates, **in order**:
 
 On success it resolves the request's user from the token's `sub` claim via the guard's
 user provider and sets it as the request's user — no `Auth::` call needed on the route.
+A token whose `sub` does not resolve to a user is rejected with `401 invalid_token`.
 
 ```php
 use Bambamboole\LaravelOidc\Http\Middleware\CheckAudience;

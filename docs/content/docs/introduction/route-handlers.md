@@ -3,9 +3,11 @@ title: Route handlers
 description: How the package registers, customizes, and disables every HTTP endpoint.
 ---
 
-Every endpoint the package registers lives in `config('oidc.handlers')`, a flat map keyed by the
-`Bambamboole\LaravelOidc\Routing\Handler` enum. Each entry has three keys and is registered by a
-single `HandlerRegistrar`:
+Every endpoint the package registers is defined by the
+`Bambamboole\LaravelOidc\Routing\Handler` enum, which carries each endpoint's default path,
+controller, and middleware. `config('oidc.handlers')` is a **sparse override map** on top of
+those defaults — it ships empty, and each entry you add is merged over the built-in definition
+for that handler. Each entry has three keys and is registered by a single `HandlerRegistrar`:
 
 ```php
 use Bambamboole\LaravelOidc\Routing\Handler;
@@ -19,9 +21,13 @@ Handler::Userinfo->value => [
 
 ## Customizing an endpoint
 
-Customize any entry — point it at your own controller, change its path, or adjust its
+Add an entry for any handler — point it at your own controller, change its path, or adjust its
 middleware — or set it to `false` to disable that endpoint entirely. The HTTP verb is intrinsic
 to each endpoint (defined on `Handler::method()`) and is therefore not configurable.
+
+To move or wrap *all* routes at once, use `oidc.routes.prefix` (a URI prefix applied to every
+handler route) and `oidc.routes.middleware` (middleware prepended to every handler route)
+instead of overriding each entry.
 
 Because paths are literal, the `/oauth/*` routes do not automatically follow
 `config('passport.path')`; if you change Passport's prefix, update the corresponding handler
@@ -47,11 +53,12 @@ $issuer = Oidc::issuer();                          // issuer URL
 
 ## What lives in the handler map
 
-The map covers three groups of endpoints:
+The map covers two groups of endpoints:
 
 - **Protocol** — authorize, token, token refresh, approve/deny, userinfo, logout, introspect,
   revoke, discovery, JWKS.
 - **Auth engine** — login, register, forgot/reset password, password confirmation, email
   verification, two-factor challenge and management, passkey registration/login/confirmation.
-- Each auth-engine route is named `identity.*` (e.g. `identity.login`) and carries the
-  appropriate `web` + `guest`/`AuthenticateIdentity` middleware for its guard.
+
+Each auth-engine route is named `identity.*` (e.g. `identity.login`) and carries the
+appropriate `web` + `guest`/`AuthenticateIdentity` middleware for its guard.

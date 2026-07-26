@@ -1,5 +1,5 @@
 ---
-title: Custom claims
+title: Custom claims & triggers
 description: Adding claims to access tokens and userinfo responses through supported extension points.
 ---
 

@@ -65,10 +65,11 @@ that browser's next request, then is invalidated.
 The endpoint accepts only tokens that pass all of
 [the spec's checks](https://openid.net/specs/openid-connect-backchannel-1_0.html):
 a `logout+jwt` type header, an RS256 signature against the provider's JWKS, matching
-`iss` and `aud`, the back-channel logout `events` claim, **no** `nonce`, a fresh
-`iat`/valid `exp` (within leeway), and a non-empty `sid`. Anything else gets a `400
-invalid_request`; the endpoint never reveals whether a session existed. It responds with
-`Cache-Control: no-store` either way and is throttled (`throttle:60,1`).
+`iss` and `aud`, the back-channel logout `events` claim, **no** `nonce`, a valid `exp`
+(within leeway), an `iat` no older than the leeway plus five minutes, and a non-empty
+`sid`. Anything else gets a `400 invalid_request`; the endpoint never reveals whether a
+session existed. It responds with `Cache-Control: no-store, private` either way and is
+throttled (`throttle:60,1`).
 
 ## Placing the middleware yourself
 
