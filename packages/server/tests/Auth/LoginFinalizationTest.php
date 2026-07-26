@@ -14,6 +14,7 @@ use Bambamboole\LaravelOidc\Auth\Pipeline\LoginApi;
 use Bambamboole\LaravelOidc\Auth\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Facades\Oidc;
 use Bambamboole\LaravelOidc\Routing\Handler;
+use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Support\Facades\Hash;
@@ -26,6 +27,17 @@ use Symfony\Component\HttpFoundation\Response;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Workbench\App\Models\User;
+
+function finalizationPasswordToken(User $user): string
+{
+    $broker = app('auth.password.broker');
+
+    if (! $broker instanceof PasswordBroker) {
+        throw new RuntimeException('The configured password broker is not a concrete password broker.');
+    }
+
+    return $broker->createToken($user);
+}
 
 function finalizationRegisterUsers(): void
 {
@@ -113,7 +125,7 @@ it('records amr for registration logins', function () {
 
 it('applies the postLogin policy to password resets', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
-    $token = resolvePasswordBroker()->createToken($user);
+    $token = finalizationPasswordToken($user);
 
     Oidc::resetUserPasswordsUsing(function (CanResetPassword $user, array $input): void {
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
@@ -133,7 +145,7 @@ it('applies the postLogin policy to password resets', function () {
 
 it('records amr for password-reset logins', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
-    $token = resolvePasswordBroker()->createToken($user);
+    $token = finalizationPasswordToken($user);
 
     Oidc::resetUserPasswordsUsing(function (CanResetPassword $user, array $input): void {
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
