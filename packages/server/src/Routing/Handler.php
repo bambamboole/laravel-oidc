@@ -12,6 +12,7 @@ use Bambamboole\LaravelOidc\Auth\Controllers\EmailVerificationPromptController;
 use Bambamboole\LaravelOidc\Auth\Controllers\EnableTwoFactorAuthenticationController;
 use Bambamboole\LaravelOidc\Auth\Controllers\LinkedAccountController;
 use Bambamboole\LaravelOidc\Auth\Controllers\NewPasswordController;
+use Bambamboole\LaravelOidc\Auth\Controllers\PasskeyAuthenticatedSessionController;
 use Bambamboole\LaravelOidc\Auth\Controllers\PasswordResetLinkController;
 use Bambamboole\LaravelOidc\Auth\Controllers\RegenerateRecoveryCodesController;
 use Bambamboole\LaravelOidc\Auth\Controllers\RegisteredUserController;
@@ -274,7 +275,7 @@ enum Handler: string
             ),
             self::PasskeyLogin => new HandlerConfig(
                 route: 'auth/passkeys/login',
-                controller: [PasskeyLoginController::class, 'store'],
+                controller: [PasskeyAuthenticatedSessionController::class, 'store'],
                 middleware: ['web', $guest, 'throttle:5,1'],
             ),
             self::PasskeyConfirmOptions => new HandlerConfig(
