@@ -6,6 +6,8 @@ provider) — login, passkeys, TOTP, and recovery-code screens rendered as Latti
 pages/components instead of Blade views, ready to drop into a Passport/Passkeys-backed
 app.
 
+📖 **[Read the documentation →](https://bambamboole.github.io/laravel-oidc)**
+
 ## Installation
 
 ```bash
@@ -43,15 +45,19 @@ route (name configurable via `oidc-ui.logout_route`, default `logout`); apps bui
 ## Development
 
 `bambamboole/laravel-oidc-server` is not published on Packagist yet, so local installs
-need a path repository pointed at the sibling checkout — see
-[`composer.local-dev.md`](composer.local-dev.md):
+need a temporary path repository pointed at the sibling `packages/server` checkout.
+From the monorepo root, `composer install:all` sets it up (and restores
+`composer.json` afterwards); the manual equivalent is documented in
+[`composer.local-dev.md`](composer.local-dev.md).
 
 ```bash
-composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
-composer install
 composer check   # pint --test, phpstan, pest
-git checkout -- composer.json   # drop the local-only repositories entry before committing
 ```
+
+## Changelog
+
+All packages in the suite are versioned in lockstep; see the
+[monorepo changelog](https://github.com/bambamboole/laravel-oidc/blob/main/CHANGELOG.md).
 
 ## License
 

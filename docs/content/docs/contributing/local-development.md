@@ -24,7 +24,15 @@ cd laravel-oidc
 composer install:all
 ```
 
-`composer install:all` runs `composer install` inside each package. The packages are developed
+`composer install:all` runs `composer install` inside each package. Because
+`bambamboole/laravel-oidc-server` is not on Packagist yet, the `packages/ui` install resolves
+it from the sibling `packages/server` checkout: the script backs up `packages/ui/composer.json`,
+writes a temporary path repository into it (version taken from `.release-please-manifest.json`),
+installs, and restores the file — `composer.json` ends up unchanged, and each package's
+`composer.lock` is git-ignored. `composer install:ui` reruns just that leg; the manual
+equivalent is documented in `packages/ui/composer.local-dev.md`.
+
+The packages are developed
 against an [Orchestra Testbench](https://packages.tools/testbench) harness — there is no full
 Laravel app to boot. Each package's install wires itself into its harness via its
 `post-autoload-dump` script (`testbench package:discover`); `composer clear` inside a package

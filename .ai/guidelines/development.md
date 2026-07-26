@@ -1,14 +1,18 @@
 # Local Development
 
-- This package is developed with Orchestra Testbench, not a full Laravel app.
-- `artisan` at the repo root is a symlink to `vendor/bin/testbench`, so `php artisan <command>` boots the Testbench
-  skeleton with this package's service provider and the `workbench/` app.
-- Run the full package gate with `composer check`.
-- The individual gates are `composer test`, `composer test:lint`, and `composer analyse`.
-- Run package commands through Testbench: `php artisan <command>` or `vendor/bin/testbench <command>`.
+- This repository is a monorepo: `packages/server`, `packages/client`, and `packages/ui`, each a self-contained
+  Composer project developed with Orchestra Testbench, not a full Laravel app.
+- `packages/server` and `packages/client` each have an `artisan` symlink to `vendor/bin/testbench`, so `php artisan
+  <command>` inside those packages boots the Testbench skeleton with the package's service provider and its
+  `workbench/` app. `packages/ui` has no symlink — use `vendor/bin/testbench <command>` there.
+- From the repo root, `composer install:all` installs every package, and `composer check` / `composer test` fan out
+  across all three packages (`composer check:server`, `check:client`, `check:ui` for a single one).
+- Inside a package, run the full gate with `composer check`; the individual gates are `composer test`,
+  `composer test:lint`, and `composer analyse`.
 - The first consumer for the auth-engine work is `../saas-starter-kit`, but package behavior must be implemented and
   verified in this repository's Testbench harness first.
-- Regenerate `CLAUDE.md` and `AGENTS.md` after editing files in `.ai/guidelines/` with `composer boost:refresh`.
+- Each package (server, client, ui) has a `composer boost:refresh` script to regenerate its `CLAUDE.md` and
+  `AGENTS.md` after editing files in `.ai/guidelines/`.
 
 ## Verification
 
@@ -24,7 +28,8 @@
   ```
 - Never push on red. Use `git commit`/`git push --no-verify` only in emergencies.
 - Do not add PHPStan suppressions or baselines unless the user explicitly approves them.
-- If Composer dependencies are missing in a fresh checkout, run `composer install` before testing.
+- If Composer dependencies are missing in a fresh checkout, run `composer install:all` from the repo root before
+  testing.
 
 ## Comments
 

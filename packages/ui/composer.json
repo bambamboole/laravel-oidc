@@ -20,6 +20,7 @@
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
+        "laravel/boost": "^2.4",
         "laravel/pint": "^1.16",
         "mockery/mockery": "^1.6",
         "mrpunyapal/peststan": "^0.2.10",
@@ -69,7 +70,8 @@
             "@prepare"
         ],
         "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
-        "prepare": "@php vendor/bin/testbench package:discover --ansi"
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "boost:refresh": "@php vendor/bin/testbench boost:update --no-interaction"
     },
     "config": {
         "sort-packages": true,

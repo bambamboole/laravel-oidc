@@ -1,23 +1,22 @@
 # Local development
 
-`bambamboole/laravel-oidc-server` is not published on Packagist yet. To install
-this package's dependencies locally (from a checkout of the monorepo), point
-Composer at the sibling `packages/server` checkout with a pinned version
-before running `composer install`:
+`bambamboole/laravel-oidc-server` is not published on Packagist yet. Composer
+resolves it from the sibling `packages/server` checkout via a temporary path
+repository with a pinned version taken from `.release-please-manifest.json`.
+
+From the monorepo root, `composer install:all` (or `composer install:ui` for
+this package alone) handles the whole dance: it backs up `composer.json`,
+writes the `repositories.server` entry, runs `composer install`, and restores
+`composer.json` — so the repositories entry never ends up committed
+(`composer.lock` is git-ignored and keeps referencing the path repository).
+
+The manual equivalent, from `packages/ui`:
 
 ```bash
-cd packages/ui
 VERSION=$(php -r 'echo json_decode(file_get_contents("../../.release-please-manifest.json"), true)["."];')
 composer config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
 composer install
-```
-
-This writes a `repositories.server` entry into `composer.json` — do not commit
-it. Revert it once `composer.lock` has been generated (`composer.lock` is
-git-ignored, so `vendor/` and the lock file are unaffected by the revert):
-
-```bash
-git checkout -- composer.json
+git checkout -- composer.json   # drop the local-only repositories entry
 ```
 
 CI re-runs the same `composer config` command before installing (see the
