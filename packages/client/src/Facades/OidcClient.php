@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static void resolveUsersUsing(\Closure $callback)
- * @method static void routes()
  * @method static \Illuminate\Contracts\Auth\StatefulGuard guard()
  * @method static \Illuminate\Http\RedirectResponse redirectAfterLogin()
  * @method static void terminateLocalSession(\Illuminate\Http\Request $request)

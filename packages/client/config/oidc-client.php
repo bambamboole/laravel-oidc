@@ -2,12 +2,6 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Client\Http\Controllers\BackchannelLogoutController;
-use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcCallbackController;
-use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcLoginController;
-use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcLogoutController;
-use Bambamboole\LaravelOidc\Client\Routing\Handler;
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -41,35 +35,35 @@ return [
     | Route handlers
     |--------------------------------------------------------------------------
     |
-    | Each endpoint the package registers is a single entry keyed by its route
-    | name. The `route` (URI path), `controller`, and `middleware` are yours to
-    | change; set an entry to `false` to disable that endpoint entirely. The
-    | HTTP verb is intrinsic to the endpoint and lives in code, not here, so it
-    | cannot be mis-set. Routes are only registered when `enabled` is true.
+    | Sparse overrides for the endpoints the package registers, keyed by route
+    | name (see the Handler enum). An absent entry registers the endpoint with
+    | its package defaults, `false` disables it, and a partial entry overrides
+    | only the given keys (`route`, `controller`, `middleware`). The HTTP verb
+    | is intrinsic to the endpoint and lives in code, not here. Routes are
+    | only registered when `enabled` is true.
+    |
+    | 'handlers' => [
+    |     Handler::Login->value => ['route' => 'sign-in'],
+    |     Handler::Logout->value => false,
+    | ],
     |
     */
 
-    'handlers' => [
-        Handler::Login->value => [
-            'route' => 'login',
-            'controller' => OidcLoginController::class,
-            'middleware' => ['web'],
-        ],
-        Handler::Callback->value => [
-            'route' => 'login/callback',
-            'controller' => OidcCallbackController::class,
-            'middleware' => ['web'],
-        ],
-        Handler::Logout->value => [
-            'route' => 'logout',
-            'controller' => OidcLogoutController::class,
-            'middleware' => ['web'],
-        ],
-        Handler::BackchannelLogout->value => [
-            'route' => 'oidc/backchannel-logout',
-            'controller' => BackchannelLogoutController::class,
-            'middleware' => ['throttle:60,1'],
-        ],
+    'handlers' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route defaults
+    |--------------------------------------------------------------------------
+    |
+    | Applied to every registered endpoint: `prefix` is prepended to each
+    | route path, `middleware` is appended after each endpoint's own stack.
+    |
+    */
+
+    'routes' => [
+        'prefix' => '',
+        'middleware' => [],
     ],
 
     'redirect_after_login' => env('OIDC_RP_HOME', '/dashboard'),

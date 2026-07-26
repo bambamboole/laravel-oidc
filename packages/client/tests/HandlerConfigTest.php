@@ -56,8 +56,37 @@ it('treats a disabled handler as false', function () {
     expect(Handler::Logout->config())->toBeFalse();
 });
 
-it('treats an absent handler as false', function () {
+it('registers an absent handler with its package defaults', function () {
     config()->set('oidc-client.handlers', []);
 
-    expect(Handler::Login->config())->toBeFalse();
+    $config = Handler::Login->config();
+
+    expect($config)->toBeInstanceOf(HandlerConfig::class)
+        ->and($config->route)->toBe('login')
+        ->and($config->controller)->toBe(OidcLoginController::class)
+        ->and($config->middleware)->toBe(['web']);
+});
+
+it('merges a partial override onto the defaults', function () {
+    config()->set('oidc-client.handlers.'.Handler::Login->value, [
+        'route' => 'sign-in',
+    ]);
+
+    $config = Handler::Login->config();
+
+    expect($config)->toBeInstanceOf(HandlerConfig::class)
+        ->and($config->route)->toBe('sign-in')
+        ->and($config->controller)->toBe(OidcLoginController::class)
+        ->and($config->middleware)->toBe(['web']);
+});
+
+it('applies the global route prefix and middleware', function () {
+    config()->set('oidc-client.routes.prefix', 'auth');
+    config()->set('oidc-client.routes.middleware', ['throttle:30,1']);
+
+    $config = Handler::Login->config();
+
+    expect($config)->toBeInstanceOf(HandlerConfig::class)
+        ->and($config->route)->toBe('auth/login')
+        ->and($config->middleware)->toBe(['web', 'throttle:30,1']);
 });
