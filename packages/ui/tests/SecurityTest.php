@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Actions\DisableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\EnableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Notification;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 
-test('the enable action creates a pending factor, recovery codes, and opens the setup modal', function () {
+test('the enable action creates a pending factor and opens the setup modal', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $this->actingAs($user)
@@ -22,25 +23,35 @@ test('the enable action creates a pending factor, recovery codes, and opens the 
         ->assertSuccessful()
         ->assertJsonFragment(['type' => 'open-modal', 'modal' => 'oidc.two-factor-setup']);
 
-    expect($user->totpFactors()->whereNull('confirmed_at')->exists())->toBeTrue()
-        ->and($user->recoveryCodes()->count())->toBe(8);
+    expect($user->totpFactors()->whereNull('confirmed_at')->count())->toBe(1)
+        ->and($user->recoveryCodes()->count())->toBe(0);
 });
 
-test('confirming a valid code through the lattice form enables two factor', function () {
+test('a repeated enable action reuses the pending factor instead of stacking rows', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    $factor = app(TwoFactorManager::class)->enable($user);
+
+    $this->actingAs($user)->callAction(EnableTwoFactorAuthenticationAction::class)->assertSuccessful();
+    $this->actingAs($user)->callAction(EnableTwoFactorAuthenticationAction::class)->assertSuccessful();
+
+    expect($user->totpFactors()->count())->toBe(1);
+});
+
+test('confirming a valid code through the lattice form enables two factor and backfills recovery codes', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $factor = app(TotpFactorProvider::class)->enroll($user);
     $code = app(Google2FA::class)->getCurrentOtp($factor->secret);
 
     $this->actingAs($user)
         ->submitForm(ConfirmTwoFactorForm::class, ['code' => $code])
         ->assertRedirect();
 
-    expect($user->totpFactors()->whereNotNull('confirmed_at')->exists())->toBeTrue();
+    expect($user->totpFactors()->whereNotNull('confirmed_at')->exists())->toBeTrue()
+        ->and($user->recoveryCodes()->count())->toBe(8);
 });
 
 test('confirming an invalid code through the lattice form returns a field error', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    app(TwoFactorManager::class)->enable($user);
+    app(TotpFactorProvider::class)->enroll($user);
 
     $this->actingAs($user)
         ->submitForm(ConfirmTwoFactorForm::class, ['code' => '000000'])
@@ -51,7 +62,8 @@ test('confirming an invalid code through the lattice form returns a field error'
 
 test('the disable action removes factors and recovery codes', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    app(TwoFactorManager::class)->enable($user);
+    app(TotpFactorProvider::class)->enroll($user);
+    app(RecoveryCodeProvider::class)->generate($user);
 
     $this->actingAs($user)
         ->callAction(DisableTwoFactorAuthenticationAction::class)
@@ -63,21 +75,21 @@ test('the disable action removes factors and recovery codes', function () {
 
 test('the regenerate action replaces recovery codes', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    app(TwoFactorManager::class)->enable($user);
-    $originalCodes = app(TwoFactorManager::class)->recoveryCodes($user);
+    app(TotpFactorProvider::class)->enroll($user);
+    $originalCodes = app(RecoveryCodeProvider::class)->generate($user);
 
     $this->actingAs($user)
         ->callAction(RegenerateRecoveryCodesAction::class)
         ->assertSuccessful();
 
-    expect(app(TwoFactorManager::class)->recoveryCodes($user))
+    expect(app(RecoveryCodeProvider::class)->codes($user))
         ->toHaveCount(8)
         ->not->toBe($originalCodes);
 });
 
 test('the two-factor setup fragment shows the QR code and setup key for a pending factor', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    $factor = app(TwoFactorManager::class)->enable($user);
+    $factor = app(TotpFactorProvider::class)->enroll($user);
 
     $this->actingAs($user)
         ->loadFragment(TwoFactorSetupFragment::class)
@@ -88,7 +100,7 @@ test('the two-factor setup fragment shows the QR code and setup key for a pendin
 
 test('the two-factor setup fragment reports an already-confirmed factor instead of re-showing the secret', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    $factor = app(TwoFactorManager::class)->enable($user);
+    $factor = app(TotpFactorProvider::class)->enroll($user);
     $user->totpFactors()->update(['confirmed_at' => now()]);
 
     $this->actingAs($user)

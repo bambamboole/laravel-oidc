@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
 use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
 use Lattice\Lattice\Attributes\AsFragment;
@@ -22,15 +21,12 @@ class TwoFactorSetupFragment extends FragmentDefinition
 {
     use ResolvesAuthenticatedUser;
 
-    public function __construct(
-        private readonly TwoFactorManager $twoFactor,
-        private readonly TotpFactorProvider $totp,
-    ) {}
+    public function __construct(private readonly TotpFactorProvider $totp) {}
 
     public function schema(PageSchema $schema): PageSchema
     {
         $user = $this->currentUser();
-        $factor = $this->twoFactor->currentFactor($user);
+        $factor = $this->totp->latestFactor($user);
 
         if ($factor === null || $factor->confirmed_at !== null) {
             return $schema->schema([

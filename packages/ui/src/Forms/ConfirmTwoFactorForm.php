@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Forms;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\EnrollmentPolicy;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorResponse;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +22,10 @@ class ConfirmTwoFactorForm extends FormDefinition
 {
     use ManagesTwoFactor;
 
-    public function __construct(private readonly TwoFactorManager $twoFactor) {}
+    public function __construct(
+        private readonly FactorRegistry $factors,
+        private readonly EnrollmentPolicy $policy,
+    ) {}
 
     public function definition(Form $form, Request $request): Form
     {
@@ -36,12 +42,28 @@ class ConfirmTwoFactorForm extends FormDefinition
     public function handle(Request $request): LatticeResponse
     {
         $user = $this->twoFactorUser();
+        $enrollable = $this->totpEnrollable($this->factors);
 
-        if (! $this->twoFactor->confirm($user, (string) $request->input('code'))) {
+        $pending = null;
+        foreach ($enrollable->enrollments($user) as $enrollment) {
+            if ($enrollment->confirmedAt === null) {
+                $pending = $enrollment;
+            }
+        }
+
+        $confirmed = $pending instanceof FactorEnrollment && $enrollable->confirmEnrollment(
+            $user,
+            $pending,
+            new FactorResponse(['code' => (string) $request->input('code')]),
+        );
+
+        if (! $confirmed) {
             throw ValidationException::withMessages([
                 'code' => __('oidc-ui::security.two-factor.invalid-code'),
             ]);
         }
+
+        $this->policy->factorConfirmed($user);
 
         return $this->toast(__('oidc-ui::security.two-factor.enabled-toast'), Variant::Success)->back();
     }
