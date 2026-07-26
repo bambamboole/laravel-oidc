@@ -70,6 +70,10 @@ return [
         'recovery-code' => 'Wiederherstellungscode',
         'recovery-help' => 'Bestätige den Zugriff, indem du einen deiner Notfall-Wiederherstellungscodes eingibst.',
         'use-recovery' => 'Stattdessen einen Wiederherstellungscode verwenden',
+        'subtitle-passkey' => 'Bestätige mit deinem Passkey, um fortzufahren',
+        'passkey-label' => 'Mit Passkey bestätigen',
+        'passkey-loading' => 'Wird überprüft...',
+        'passkey-separator' => 'Oder einen Wiederherstellungscode verwenden',
     ],
 
 ];

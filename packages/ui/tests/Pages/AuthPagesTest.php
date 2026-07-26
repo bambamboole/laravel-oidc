@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
 use Bambamboole\LaravelOidc\Routing\HandlerRegistrar;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
@@ -70,6 +72,29 @@ it('renders the confirm-password page without passkeys when the passkey handlers
     withDisabledHandlers([Handler::PasskeyConfirmOptions, Handler::PasskeyConfirm]);
 
     expect(renderPage(new ConfirmPasswordPage))->not->toContain('passkey-verify');
+});
+
+it('offers the passkey ceremony on the two-factor challenge for a webauthn factor', function () {
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (string) (new TwoFactorChallengePage)
+        ->respond(new TwoFactorChallengePrompt(factor: 'webauthn'), $request)
+        ->getContent();
+
+    expect($content)->toContain('passkey-verify');
+});
+
+it('renders the code form without the passkey ceremony for a totp factor', function () {
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (string) (new TwoFactorChallengePage)
+        ->respond(new TwoFactorChallengePrompt(factor: 'totp'), $request)
+        ->getContent();
+
+    expect($content)->not->toContain('passkey-verify')
+        ->and($content)->toContain('two-factor-challenge');
 });
 
 it('renders the register page', function () {

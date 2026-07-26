@@ -70,6 +70,10 @@ return [
         'recovery-code' => 'Recovery code',
         'recovery-help' => 'Confirm access by entering one of your emergency recovery codes.',
         'use-recovery' => 'Use a recovery code instead',
+        'subtitle-passkey' => 'Verify with your passkey to continue',
+        'passkey-label' => 'Verify with a passkey',
+        'passkey-loading' => 'Verifying...',
+        'passkey-separator' => 'Or use a recovery code',
     ],
 
 ];
