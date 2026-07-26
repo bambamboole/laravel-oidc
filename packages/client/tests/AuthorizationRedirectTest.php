@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Workbench\App\Models\User;
 
 beforeEach(function () {

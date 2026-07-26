@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Controllers;
+namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +17,9 @@ class BackchannelLogoutController
     {
         try {
             ['sid' => $sid] = $validator->validate((string) $request->input('logout_token'));
-        } catch (OidcClientException) {
+        } catch (OidcClientException $e) {
+            report($e);
+
             return response()->json(['error' => 'invalid_request'], 400)->header('Cache-Control', 'no-store, private');
         }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Concerns;
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorAuthenticatable;
 
 trait ManagesTwoFactor
 {

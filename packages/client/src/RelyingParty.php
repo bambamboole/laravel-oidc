@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient;
+namespace Bambamboole\LaravelOidc\Client;
 
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

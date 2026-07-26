@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Tests\Support;
+namespace Bambamboole\LaravelOidc\Client\Tests\Support;
 
-use Bambamboole\LaravelOidcClient\Tests\TestCase;
+use Bambamboole\LaravelOidc\Client\Tests\TestCase;
 
 abstract class BackchannelLogoutEnabledTestCase extends TestCase
 {

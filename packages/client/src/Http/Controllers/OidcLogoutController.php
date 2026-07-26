@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Controllers;
+namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\OidcClientManager;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\RedirectResponse;

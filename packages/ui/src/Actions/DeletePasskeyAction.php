@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorAuthenticatable;
 use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;

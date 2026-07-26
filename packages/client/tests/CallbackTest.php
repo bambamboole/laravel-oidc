@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\Testing\OidcClientFake;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
 
@@ -102,6 +104,16 @@ it('rejects replayed callback session context before discovery or token exchange
 
     $this->assertGuest();
     $this->fake->assertCodeNotExchanged();
+});
+
+it('reports the callback failure before redirecting back to login', function () {
+    Exceptions::fake();
+
+    $this->withSession($this->fake->callbackContext())
+        ->get($this->fake->callbackUrl(['state' => 'WRONG-state']))
+        ->assertRedirect(route('login'));
+
+    Exceptions::assertReported(OidcClientException::class);
 });
 
 it('rejects a failed token exchange and does not log in', function () {

@@ -91,12 +91,12 @@ introspection and revocation entries each also advertise an
 
 The authorization endpoint needs a consent view to render. The package wires Passport's
 authorization view seam internally and resolves it through the `ConsentView` contract
-(`Bambamboole\LaravelOidc\Auth\Views\ConsentView`), so no app code touches
+(`Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView`), so no app code touches
 `Passport::authorizationView()` directly. Bind the contract instead:
 
 ```php
-use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView;
 use Illuminate\Http\Request;
 
 app()->bind(ConsentView::class, fn () => new class implements ConsentView {

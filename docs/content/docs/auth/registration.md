@@ -66,7 +66,7 @@ class CreateNewUser
 Register it in a service provider `boot()`:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 Oidc::createUsersUsing(App\Actions\CreateNewUser::class);
 ```

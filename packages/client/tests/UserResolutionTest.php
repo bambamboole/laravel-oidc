@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\OidcClientManager;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Workbench\App\Models\User;
 

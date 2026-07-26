@@ -51,7 +51,7 @@ ids. Against a third-party IdP, the `sub` is the *provider's* identifier, so bin
 resolver in a service provider's `boot()`:
 
 ```php
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 
 OidcClient::resolveUsersUsing(function (string $sub, array $claims): ?User {
     return User::firstOrCreate(

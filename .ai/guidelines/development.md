@@ -50,7 +50,7 @@
 
 ## Package Architecture
 
-- Package code lives under `Bambamboole\LaravelOidc`.
+- Package namespaces are `Bambamboole\LaravelOidc\Server`, `\Client`, and `\Ui` (umbrella root `Bambamboole\LaravelOidc` holds no code).
 - Existing OIDC and Passport integration remains package-owned. New auth-engine behavior must also live in this package,
   exposed through configuration plus view/action seams that a consuming app binds.
 - Keep route names and response shapes compatible with Laravel/Fortify conventions when replacing Fortify-equivalent

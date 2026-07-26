@@ -4,30 +4,26 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\PasswordResetRequestPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\PasswordResetRequestView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Components\Heading;
 use Lattice\Lattice\Ui\Components\Link;
 use Lattice\Lattice\Ui\Components\Stack;
 use Lattice\Lattice\Ui\Components\Text;
 use Lattice\Lattice\Ui\Enums\Align;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
 use Symfony\Component\HttpFoundation\Response;
 
-class ForgotPasswordPage extends Page implements PasswordResetRequestView
+class ForgotPasswordPage extends AuthPage implements PasswordResetRequestView
 {
     public function __construct(
         private readonly ?PasswordResetRequestPrompt $prompt = null,
@@ -38,16 +34,6 @@ class ForgotPasswordPage extends Page implements PasswordResetRequestView
         return (new self($prompt))->toResponse($request);
     }
 
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
-    }
-
     public function title(): string
     {
         return __('oidc-ui::auth.forgot-password.title');
@@ -56,13 +42,7 @@ class ForgotPasswordPage extends Page implements PasswordResetRequestView
     public function render(PageSchema $schema): PageSchema
     {
         return $schema->schema([
-            Stack::make('forgot-password-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.forgot-password.heading'), 2),
-                    Text::make(__('oidc-ui::auth.forgot-password.subtitle'))
-                        ->align(Align::Center),
-                ]),
+            $this->heading('forgot-password-heading', __('oidc-ui::auth.forgot-password.heading'), __('oidc-ui::auth.forgot-password.subtitle')),
             Form::make('forgot-password-form')
                 ->action(route('identity.password.email', absolute: false))
                 ->method(HttpMethod::Post)

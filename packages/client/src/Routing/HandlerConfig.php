@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Routing;
+namespace Bambamboole\LaravelOidc\Client\Routing;
 
 /**
  * The resolved configuration for a single {@see Handler}: where it lives, what

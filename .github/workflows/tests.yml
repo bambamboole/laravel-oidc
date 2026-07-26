@@ -114,7 +114,7 @@ jobs:
           }
           JSON
           composer install --no-interaction
-          php -r "require 'vendor/autoload.php'; exit(class_exists('Bambamboole\\LaravelOidc\\OidcServiceProvider') && class_exists('Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider') && class_exists('Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider') ? 0 : 1);"
+          php -r "require 'vendor/autoload.php'; exit(class_exists('Bambamboole\\LaravelOidc\\Server\\OidcServiceProvider') && class_exists('Bambamboole\\LaravelOidc\\Client\\OidcClientServiceProvider') && class_exists('Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider') ? 0 : 1);"
 
       # Guards the master package's ONLY path to Lattice discovery: the ui package is
       # replace()d, so packages/ui/composer.json is never read from a master install —

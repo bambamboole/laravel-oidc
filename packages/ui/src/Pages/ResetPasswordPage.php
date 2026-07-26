@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\PasswordResetPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
@@ -13,22 +13,13 @@ use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\HiddenInput;
 use Lattice\Lattice\Forms\Components\PasswordInput;
 use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Components\Heading;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
-use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
-class ResetPasswordPage extends Page implements PasswordResetView
+class ResetPasswordPage extends AuthPage implements PasswordResetView
 {
     public function __construct(
         private readonly ?PasswordResetPrompt $prompt = null,
@@ -37,16 +28,6 @@ class ResetPasswordPage extends Page implements PasswordResetView
     public function respond(PasswordResetPrompt $prompt, Request $request): Responsable|Response
     {
         return (new self($prompt))->toResponse($request);
-    }
-
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
     }
 
     public function title(): string
@@ -60,12 +41,7 @@ class ResetPasswordPage extends Page implements PasswordResetView
         $email = $this->prompt()->email ?? '';
 
         return $schema->schema([
-            Stack::make('reset-password-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.reset-password.heading'), 2),
-                    Text::make(__('oidc-ui::auth.reset-password.subtitle'))->align(Align::Center),
-                ]),
+            $this->heading('reset-password-heading', __('oidc-ui::auth.reset-password.heading'), __('oidc-ui::auth.reset-password.subtitle')),
             Form::make('reset-password-form')
                 ->action(route('identity.password.update', absolute: false))
                 ->method(HttpMethod::Post)
@@ -75,13 +51,9 @@ class ResetPasswordPage extends Page implements PasswordResetView
         ]);
     }
 
-    /**
-     * The controller always resolves this page through respond(), which supplies the real
-     * prompt before render() ever runs — a missing prompt here means that invariant broke.
-     */
     private function prompt(): PasswordResetPrompt
     {
-        return $this->prompt ?? throw new LogicException('ResetPasswordPage rendered without a PasswordResetPrompt; respond() must supply one before render() runs.');
+        return $this->requirePrompt($this->prompt);
     }
 
     /**

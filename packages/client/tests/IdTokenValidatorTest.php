@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Testing\FakeOidcProvider;
-use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Testing\FakeOidcProvider;
+use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Illuminate\Support\Facades\Http;
 
 /**

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengeView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -15,17 +15,9 @@ use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\OtpInput;
 use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Http\Page;
-use Lattice\Lattice\Ui\Components\Heading;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
 use Symfony\Component\HttpFoundation\Response;
 
-class TwoFactorChallengePage extends Page implements TwoFactorChallengeView
+class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 {
     public function __construct(
         private readonly ?TwoFactorChallengePrompt $prompt = null,
@@ -34,16 +26,6 @@ class TwoFactorChallengePage extends Page implements TwoFactorChallengeView
     public function respond(TwoFactorChallengePrompt $prompt, Request $request): Responsable|Response
     {
         return (new self($prompt))->toResponse($request);
-    }
-
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
     }
 
     public function title(): string
@@ -58,15 +40,9 @@ class TwoFactorChallengePage extends Page implements TwoFactorChallengeView
             && Route::has('identity.two-factor.login.store');
 
         return $schema->schema([
-            Stack::make('two-factor-challenge-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.two-factor.heading'), 2),
-                    Text::make($webauthn
-                        ? __('oidc-ui::auth.two-factor.subtitle-passkey')
-                        : __('oidc-ui::auth.two-factor.subtitle'))
-                        ->align(Align::Center),
-                ]),
+            $this->heading('two-factor-challenge-heading', __('oidc-ui::auth.two-factor.heading'), $webauthn
+                ? __('oidc-ui::auth.two-factor.subtitle-passkey')
+                : __('oidc-ui::auth.two-factor.subtitle')),
             ...($webauthn ? [
                 PasskeyVerify::make(
                     route('identity.two-factor.login.options', absolute: false),

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\LoginView;
-use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Routing\Handler;
-use Bambamboole\LaravelOidc\Routing\HandlerRegistrar;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
 use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;

@@ -4,31 +4,27 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\RegisterPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
 use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Components\Heading;
 use Lattice\Lattice\Ui\Components\Link;
 use Lattice\Lattice\Ui\Components\Stack;
 use Lattice\Lattice\Ui\Components\Text;
 use Lattice\Lattice\Ui\Enums\Align;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
 use Symfony\Component\HttpFoundation\Response;
 
-class RegisterPage extends Page implements RegisterView
+class RegisterPage extends AuthPage implements RegisterView
 {
     /**
      * {@see RegisterPrompt} carries no data today, so there is nothing to
@@ -40,16 +36,6 @@ class RegisterPage extends Page implements RegisterView
         return (new self)->toResponse($request);
     }
 
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
-    }
-
     public function title(): string
     {
         return __('oidc-ui::auth.register.title');
@@ -58,13 +44,7 @@ class RegisterPage extends Page implements RegisterView
     public function render(PageSchema $schema): PageSchema
     {
         return $schema->schema([
-            Stack::make('register-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.register.heading'), 2),
-                    Text::make(__('oidc-ui::auth.register.subtitle'))
-                        ->align(Align::Center),
-                ]),
+            $this->heading('register-heading', __('oidc-ui::auth.register.heading'), __('oidc-ui::auth.register.subtitle')),
             Form::make('register-form')
                 ->action(route('identity.register.store', absolute: false))
                 ->method(HttpMethod::Post)

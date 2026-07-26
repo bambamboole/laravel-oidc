@@ -21,7 +21,7 @@ provider and the auth engine share one session.
 ## View seams
 
 Each auth surface renders through a typed **view contract** — an interface under
-`Bambamboole\LaravelOidc\Auth\Views` with a single `respond()` method that takes a matching
+`Bambamboole\LaravelOidc\Server\Auth\Views` with a single `respond()` method that takes a matching
 **prompt** (the page-specific data) and the `Request`, and returns a `Responsable` or `Response`:
 
 ```php
@@ -48,8 +48,8 @@ Override one by binding your implementation over the contract, typically in a se
 `boot()` (a bind there wins over the package's default, since package providers boot first):
 
 ```php
-use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Illuminate\Http\Request;
 
 $this->app->bind(LoginView::class, fn () => new class implements LoginView
@@ -71,7 +71,7 @@ nothing. Install `bambamboole/laravel-oidc-ui` to bind all eight contracts at on
 [UI installation](/ui/installation/)), or bind only the ones you enable yourself.
 
 For engine tests that drive the real controllers without a view package installed, add
-`Bambamboole\LaravelOidc\Testing\FakesAuthViews` to the test and call `fakeAuthViews()` before
+`Bambamboole\LaravelOidc\Server\Testing\FakesAuthViews` to the test and call `fakeAuthViews()` before
 hitting a `GET` route — it binds every contract to a minimal JSON responder (see
 [Testing](/advanced/testing/)).
 
@@ -80,7 +80,7 @@ hitting a `GET` route — it binds every contract to a minimal JSON responder (s
 Two domain actions let the package stay out of your user model and persistence:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 // Called by the registration flow with the validated input array.
 // Return the created Authenticatable.

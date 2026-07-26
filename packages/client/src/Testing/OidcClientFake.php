@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Testing;
+namespace Bambamboole\LaravelOidc\Client\Testing;
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\RelyingParty;
-use Bambamboole\LaravelOidcClient\Routing\Handler;
-use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
-use Bambamboole\LaravelOidcClient\Token\JwksKeyResolver;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\RelyingParty;
+use Bambamboole\LaravelOidc\Client\Routing\Handler;
+use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
+use Bambamboole\LaravelOidc\Client\Token\JwksKeyResolver;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Client\Request;

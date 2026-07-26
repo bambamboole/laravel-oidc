@@ -30,7 +30,7 @@ option instead of calling `Passport::tokensCan()` yourself:
 ],
 ```
 
-A class-string must implement `Bambamboole\LaravelOidc\Contracts\ScopeCatalog`
+A class-string must implement `Bambamboole\LaravelOidc\Server\Contracts\ScopeCatalog`
 (`scopes(): array<string, string>`). The scope repository consults it lazily —
 resolved from the container the first time scopes are actually enumerated (the
 consent screen, the discovery document, token issuance), so a database-backed
@@ -50,14 +50,14 @@ The scope catalog is provided by the `ScopeRepository` contract — see
 
 ## Claims
 
-`Bambamboole\LaravelOidc\Contracts\ClaimsResolver` maps an authenticated user to a `ClaimSet`. A
+`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` maps an authenticated user to a `ClaimSet`. A
 `ClaimSet` is constructed from a `scope => [claim => value]` map. Both the `id_token` builder and
 the userinfo endpoint call `forScopes()` on it with the token's granted scopes, so a claim is only
 emitted when its scope was granted — and null values are dropped.
 
 ```php
-use Bambamboole\LaravelOidc\Claims\ClaimSet;
-use Bambamboole\LaravelOidc\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Server\Claims\ClaimSet;
+use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 class AppClaimsResolver implements ClaimsResolver
@@ -79,7 +79,7 @@ Bind your resolver so the provider uses it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```

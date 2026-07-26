@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\TotpFactorProvider;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
 use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
 use Lattice\Lattice\Attributes\AsFragment;

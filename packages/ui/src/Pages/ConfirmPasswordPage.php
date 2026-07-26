@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\PasswordConfirmationPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -13,21 +13,13 @@ use Illuminate\Support\Facades\Route;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Components\Heading;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
 use Symfony\Component\HttpFoundation\Response;
 
-class ConfirmPasswordPage extends Page implements PasswordConfirmationView
+class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
 {
     /**
      * {@see PasswordConfirmationPrompt} carries no data today, so there is
@@ -39,16 +31,6 @@ class ConfirmPasswordPage extends Page implements PasswordConfirmationView
         return (new self)->toResponse($request);
     }
 
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
-    }
-
     public function title(): string
     {
         return __('oidc-ui::auth.confirm-password.title');
@@ -57,13 +39,7 @@ class ConfirmPasswordPage extends Page implements PasswordConfirmationView
     public function render(PageSchema $schema): PageSchema
     {
         return $schema->schema([
-            Stack::make('confirm-password-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.confirm-password.heading'), 2),
-                    Text::make(__('oidc-ui::auth.confirm-password.subtitle'))
-                        ->align(Align::Center),
-                ]),
+            $this->heading('confirm-password-heading', __('oidc-ui::auth.confirm-password.heading'), __('oidc-ui::auth.confirm-password.subtitle')),
             ...$this->passkeySchema(),
             Form::make('confirm-password-form')
                 ->action(route('identity.password.confirm.store', absolute: false))

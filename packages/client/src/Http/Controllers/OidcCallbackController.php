@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Controllers;
+namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\RelyingParty;
-use Bambamboole\LaravelOidcClient\Routing\Handler;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\RelyingParty;
+use Bambamboole\LaravelOidc\Client\Routing\Handler;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +16,9 @@ class OidcCallbackController
     {
         try {
             return $relyingParty->handleCallback($request);
-        } catch (OidcClientException) {
+        } catch (OidcClientException $e) {
+            report($e);
+
             return redirect()->route(Handler::Login->value)->withErrors([
                 'oidc' => 'Sign-in failed. Please try again.',
             ]);

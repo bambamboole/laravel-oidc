@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -15,23 +15,19 @@ use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
 use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Components\Heading;
 use Lattice\Lattice\Ui\Components\Link;
 use Lattice\Lattice\Ui\Components\Stack;
 use Lattice\Lattice\Ui\Components\Text;
 use Lattice\Lattice\Ui\Enums\Align;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
 use Lattice\Lattice\Ui\Enums\StackDirection;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoginPage extends Page implements LoginView
+class LoginPage extends AuthPage implements LoginView
 {
     public function __construct(
         private readonly ?LoginPrompt $prompt = null,
@@ -40,16 +36,6 @@ class LoginPage extends Page implements LoginView
     public function respond(LoginPrompt $prompt, Request $request): Responsable|Response
     {
         return (new self($prompt))->toResponse($request);
-    }
-
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
     }
 
     public function title(): string
@@ -69,13 +55,7 @@ class LoginPage extends Page implements LoginView
             : [];
 
         return $schema->schema([
-            Stack::make('login-heading')
-                ->gap(Gap::Small)
-                ->schema([
-                    Heading::make(__('oidc-ui::auth.login.heading'), 2),
-                    Text::make(__('oidc-ui::auth.login.subtitle'))
-                        ->align(Align::Center),
-                ]),
+            $this->heading('login-heading', __('oidc-ui::auth.login.heading'), __('oidc-ui::auth.login.subtitle')),
             ...$passkey,
             Form::make('login-form')
                 ->action(route('identity.login.store', absolute: false))

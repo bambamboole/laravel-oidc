@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
 use Bambamboole\LaravelOidc\Ui\Actions\DisableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\EnableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
