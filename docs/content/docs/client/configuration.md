@@ -40,11 +40,20 @@ See [Back-channel logout](/client/backchannel-logout/) for how these fit togethe
 
 ## Route handlers
 
-Every endpoint the package registers lives in `oidc-client.handlers`, keyed by route name —
-the same pattern as the provider's [route handlers](/introduction/route-handlers/). Each
-entry has a `route` (URI path), a `controller`, and a `middleware` list; set an entry to
-`false` to disable that endpoint. The HTTP verb is intrinsic to each endpoint and is not
-configurable.
+Route defaults live in code; `oidc-client.handlers` is a sparse override map keyed by
+route name — the same pattern as the provider's
+[route handlers](/introduction/route-handlers/). An absent entry registers the endpoint
+with its package defaults (so upgrades can add endpoints), `false` disables it, and a
+partial entry overrides only the keys you set (`route`, `controller`, `middleware`).
+`oidc-client.routes.prefix` and `oidc-client.routes.middleware` apply to every registered
+endpoint. The HTTP verb is intrinsic to each endpoint and is not configurable.
+
+```php
+'handlers' => [
+    Handler::Login->value => ['route' => 'sign-in'],
+    Handler::Logout->value => false,
+],
+```
 
 | Route name | Verb | Default path | Purpose |
 | --- | --- | --- | --- |

@@ -72,7 +72,14 @@ redirects to the challenge:
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.two-factor.login` | `GET` | `auth/two-factor-challenge` | `web`, `guest:identity` |
+| `identity.two-factor.login.options` | `GET` | `auth/two-factor-challenge/options` | `web`, `guest:identity`, `throttle:5,1` |
 | `identity.two-factor.login.store` | `POST` | `auth/two-factor-challenge` | `web`, `guest:identity`, `throttle:5,1` |
+
+`GET identity.two-factor.login.options` issues the pending factor's challenge: the private
+half is persisted in the session for the verification step, the public half (for WebAuthn,
+the browser request options) is returned as JSON. Issuance and verification are separate
+requests by design — each verification attempt consumes the stored state and needs a fresh
+challenge.
 
 `GET identity.two-factor.login` renders through the bound `TwoFactorChallengeView` contract, or
 redirects to `identity.login` if there is no pending challenge on the session.
@@ -104,7 +111,28 @@ confirmation (`RequirePassword::using('identity.password.confirm')` — see
 | `identity.two-factor.regenerate-recovery-codes` | `POST` | `auth/user/two-factor-recovery-codes` | Replace the recovery codes |
 
 Enable/confirm/disable/regenerate return an empty **`200`** response (JSON) or a `back()`
-redirect flashing a status key to the session (browser).
+redirect flashing a status key to the session (browser). The read endpoints (`qr-code`,
+`secret-key`, `recovery-codes`) return **`404`** while two-factor authentication is not
+enabled.
+
+## Provider-keyed enrollment
+
+Any provider implementing `EnrollableFactorProvider` (`beginEnrollment`,
+`confirmEnrollment`, `revoke`) is enrollable through generic endpoints — a new factor type
+needs no package changes. All of them share the management middleware above.
+
+| Route name | Verb | Path | Purpose |
+| --- | --- | --- | --- |
+| `identity.two-factor.factors` | `GET` | `auth/user/two-factor/factors` | Every enrollment across all providers |
+| `identity.two-factor.enroll` | `POST` | `auth/user/two-factor/{provider}` | Begin an enrollment; the response `metadata` carries the setup payload (e.g. the TOTP secret, exposed only here) |
+| `identity.two-factor.enroll.confirm` | `POST` | `auth/user/two-factor/{provider}/confirm` | Confirm with `enrollment_id` plus the provider's proof (e.g. `code`) |
+| `identity.two-factor.revoke` | `DELETE` | `auth/user/two-factor/{provider}/{enrollment}` | Remove one enrollment |
+
+Recovery codes are generated automatically when a first factor is confirmed and removed
+when the last challengeable factor is revoked. Unknown provider keys — and providers with
+their own enrollment ceremony, like `webauthn` (see
+[Passkey management](#passkey-management)) — return `404` from the enroll endpoints while
+still appearing in the factors listing.
 
 ### Passkey management
 

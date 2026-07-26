@@ -66,18 +66,14 @@ final readonly class FirstPartyClientProvisioningResult
     public Client $client;                             // the oauth_clients model (Laravel\Passport\Client)
     public string $clientId;
     public ?string $clientSecret;                      // plaintext, only when newly created or rotated
-    public bool $created;
-    public FirstPartyClientProvisioningOutcome $outcome;
+    public bool $wasCreated;                           // a new client row was created (rollback() deletes it)
+    public bool $secretRotated;                        // the secret was (re)generated; clientSecret holds it
 }
 ```
 
-`$outcome` is one of:
-
-| Outcome | Meaning |
-| --- | --- |
-| `Created` | A new client was created; `clientSecret` holds its plaintext secret. |
-| `Reconciled` | An existing first-party client's metadata was updated in place; `clientSecret` is `null` unless a verified `existingClientSecret` was supplied (see below). |
-| `Rotated` | `rotateSecret: true` was passed; the secret was regenerated and `clientSecret` holds the new plaintext value. |
+A reconciliation of an existing client reports both flags `false`; `clientSecret` is then
+`null` unless a verified `existingClientSecret` was supplied (see below). A create-then-rotate
+run reports both flags `true`.
 
 ## Credential-aware reconciliation
 
