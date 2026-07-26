@@ -100,20 +100,25 @@ All management endpoints require an authenticated `identity` session **and** a r
 confirmation (`RequirePassword::using('identity.password.confirm')` — see
 [Password confirmation](/auth/passwords/)).
 
+Enrollment, confirmation, and revocation run exclusively through the
+[provider-keyed endpoints](#provider-keyed-enrollment) below. The former Fortify-compatible
+routes `identity.two-factor.enable`, `identity.two-factor.confirm`, and
+`identity.two-factor.disable` have been removed — use `identity.two-factor.enroll`,
+`identity.two-factor.enroll.confirm`, and `identity.two-factor.revoke` (all with
+`provider=totp`) instead.
+
+The TOTP-specific and recovery-code endpoints without a generic equivalent remain:
+
 | Route name | Verb | Path | Purpose |
 | --- | --- | --- | --- |
-| `identity.two-factor.enable` | `POST` | `auth/user/two-factor-authentication` | Enroll TOTP + generate recovery codes (`force` re-enrolls) |
-| `identity.two-factor.confirm` | `POST` | `auth/user/confirmed-two-factor-authentication` | Confirm the pending TOTP enrollment with a `code` |
-| `identity.two-factor.disable` | `DELETE` | `auth/user/two-factor-authentication` | Remove TOTP factors and recovery codes |
-| `identity.two-factor.qr-code` | `GET` | `auth/user/two-factor-qr-code` | `{ "svg": ..., "url": ... }` for the current factor |
+| `identity.two-factor.qr-code` | `GET` | `auth/user/two-factor-qr-code` | `{ "svg": ..., "url": ... }` for the latest TOTP factor |
 | `identity.two-factor.secret-key` | `GET` | `auth/user/two-factor-secret-key` | `{ "secretKey": ... }` (404 if not enabled) |
 | `identity.two-factor.recovery-codes` | `GET` | `auth/user/two-factor-recovery-codes` | The unused recovery codes |
 | `identity.two-factor.regenerate-recovery-codes` | `POST` | `auth/user/two-factor-recovery-codes` | Replace the recovery codes |
 
-Enable/confirm/disable/regenerate return an empty **`200`** response (JSON) or a `back()`
-redirect flashing a status key to the session (browser). The read endpoints (`qr-code`,
-`secret-key`, `recovery-codes`) return **`404`** while two-factor authentication is not
-enabled.
+Regenerate returns an empty **`200`** response (JSON) or a `back()` redirect flashing a
+status key to the session (browser). The read endpoints (`qr-code`, `secret-key`,
+`recovery-codes`) return **`404`** while no TOTP factor exists.
 
 ## Provider-keyed enrollment
 
@@ -127,6 +132,10 @@ needs no package changes. All of them share the management middleware above.
 | `identity.two-factor.enroll` | `POST` | `auth/user/two-factor/{provider}` | Begin an enrollment; the response `metadata` carries the setup payload (e.g. the TOTP secret, exposed only here) |
 | `identity.two-factor.enroll.confirm` | `POST` | `auth/user/two-factor/{provider}/confirm` | Confirm with `enrollment_id` plus the provider's proof (e.g. `code`) |
 | `identity.two-factor.revoke` | `DELETE` | `auth/user/two-factor/{provider}/{enrollment}` | Remove one enrollment |
+
+Repeating `enroll` for `totp` while an unconfirmed enrollment exists returns that pending
+enrollment (same id, same secret) instead of creating another; enrolling alongside a
+confirmed factor starts a fresh pending enrollment (re-enrollment).
 
 Recovery codes are generated automatically when a first factor is confirmed and removed
 when the last challengeable factor is revoked. Unknown provider keys — and providers with

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
@@ -18,7 +18,7 @@ class RegenerateRecoveryCodesAction extends ActionDefinition
 {
     use ManagesTwoFactor;
 
-    public function __construct(private readonly TwoFactorManager $twoFactor) {}
+    public function __construct(private readonly RecoveryCodeProvider $recoveryCodes) {}
 
     public function definition(ActionComponent $action): ActionComponent
     {
@@ -37,7 +37,7 @@ class RegenerateRecoveryCodesAction extends ActionDefinition
     {
         $user = $this->twoFactorUser();
 
-        $this->twoFactor->regenerateRecoveryCodes($user);
+        $this->recoveryCodes->generate($user);
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.recovery-codes.regenerated'), Variant::Success)

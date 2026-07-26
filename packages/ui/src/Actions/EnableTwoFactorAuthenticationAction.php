@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
@@ -18,7 +18,7 @@ class EnableTwoFactorAuthenticationAction extends ActionDefinition
 {
     use ManagesTwoFactor;
 
-    public function __construct(private readonly TwoFactorManager $twoFactor) {}
+    public function __construct(private readonly FactorRegistry $factors) {}
 
     public function definition(ActionComponent $action): ActionComponent
     {
@@ -31,7 +31,7 @@ class EnableTwoFactorAuthenticationAction extends ActionDefinition
     {
         $user = $this->twoFactorUser();
 
-        $this->twoFactor->enable($user);
+        $this->totpEnrollable($this->factors)->beginEnrollment($user);
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.two-factor.setup-started'), Variant::Info)

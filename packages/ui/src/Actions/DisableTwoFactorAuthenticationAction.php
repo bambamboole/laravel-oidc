@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TwoFactorManager;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\EnrollmentPolicy;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
@@ -19,7 +20,10 @@ class DisableTwoFactorAuthenticationAction extends ActionDefinition
 {
     use ManagesTwoFactor;
 
-    public function __construct(private readonly TwoFactorManager $twoFactor) {}
+    public function __construct(
+        private readonly FactorRegistry $factors,
+        private readonly EnrollmentPolicy $policy,
+    ) {}
 
     public function definition(ActionComponent $action): ActionComponent
     {
@@ -37,8 +41,13 @@ class DisableTwoFactorAuthenticationAction extends ActionDefinition
     public function handle(Request $request): ActionResult
     {
         $user = $this->twoFactorUser();
+        $enrollable = $this->totpEnrollable($this->factors);
 
-        $this->twoFactor->disable($user);
+        foreach ($enrollable->enrollments($user) as $enrollment) {
+            $enrollable->revoke($user, $enrollment);
+        }
+
+        $this->policy->factorRevoked($user);
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.two-factor.disabled-toast'), Variant::Success)
