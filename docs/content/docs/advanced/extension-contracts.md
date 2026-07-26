@@ -28,11 +28,12 @@ interface ScopeRepository
 }
 ```
 
-The default `DefaultScopeRepository` merges the OIDC scopes (`openid`, `profile`,
-`email`, `address`, `phone`) over any scopes your app registered via `Passport::$scopes`;
-its `finalize()` filters out unknown scopes. (The wildcard `*` parity rules live in the
-Passport-bridge layer on top of this repository, not in the contract itself.) Bind your
-own to change the catalog:
+The default `DefaultScopeRepository` merges scopes in order: first, the configured
+catalog (`oidc.passport.scopes`); second, scopes registered via `Passport::tokensCan()`;
+third, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
+The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
+(See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
+the catalog:
 
 ```php
 $this->app->singleton(

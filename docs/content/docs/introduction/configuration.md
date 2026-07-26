@@ -34,7 +34,7 @@ below with its default and the environment variable that overrides it.
 | Key | Default | Description |
 | --- | --- | --- |
 | `passport.token_model` | `null` | A `Laravel\Passport\Token` subclass handed to `Passport::useTokenModel()`. `null` keeps Passport's default model. |
-| `passport.scopes` | `[]` | API scope catalog fed to `Passport::tokensCan()` — an inline `[scope => description]` map or a `ScopeCatalog` class-string. See [Scopes & claims](/provider/scopes-and-claims/). |
+| `passport.scopes` | `[]` | API scope catalog the scope repository consults directly at enumeration time — an inline `[scope => description]` map or a `ScopeCatalog` class-string. See [Scopes & claims](/provider/scopes-and-claims/). |
 
 ## Token exchange & keys
 
