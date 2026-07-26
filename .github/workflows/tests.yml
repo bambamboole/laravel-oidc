@@ -51,6 +51,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Advisory blocking stays ON (Composer's default): a consumer with
+      # default settings cannot install advisory-affected versions either, so
+      # the lowest cells test the lowest set that is actually installable.
       - name: Setup package
         uses: ./.github/actions/setup-package
         with:
@@ -58,7 +61,6 @@ jobs:
           php-version: ${{ matrix.php }}
           testbench: ${{ matrix.testbench }}
           dependency-versions: ${{ matrix.stability == 'prefer-lowest' && 'lowest' || 'highest' }}
-          allow-advisories: 'true'
 
       - name: Tests (Pest)
         run: vendor/bin/pest
