@@ -4,10 +4,45 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Routing\HandlerRegistrar;
+use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
+use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
+use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
+
+/**
+ * Re-registers the identity routes with the given handlers disabled, swapping
+ * both the router and the URL generator's collection so route() and
+ * Route::has() agree on what exists.
+ *
+ * @param  list<Handler>  $disabled
+ */
+function withDisabledHandlers(array $disabled): void
+{
+    config(['oidc.handlers' => array_fill_keys(array_map(fn (Handler $handler) => $handler->value, $disabled), false)]);
+
+    $router = new Router(new Dispatcher, app());
+    Route::swap($router);
+    app(HandlerRegistrar::class)->register();
+    $router->getRoutes()->refreshNameLookups();
+    app('url')->setRoutes($router->getRoutes());
+}
+
+function renderPage(object $page): string
+{
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    return (string) $page->toResponse($request)->getContent();
+}
 
 /**
  * Every auth view contract renders through the server package's real
@@ -21,6 +56,45 @@ it('renders the login page', function () {
     $this->get(route('identity.login'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertSee(__('oidc-ui::auth.login.title'), false);
+});
+
+it('offers passkey sign-in on the login page when the handlers are registered', function () {
+    expect(renderPage(new LoginPage))->toContain('passkey-verify');
+});
+
+it('renders the login page without passkeys when the passkey handlers are disabled', function () {
+    withDisabledHandlers([Handler::PasskeyLoginOptions, Handler::PasskeyLogin]);
+
+    expect(renderPage(new LoginPage))->not->toContain('passkey-verify');
+});
+
+it('renders the confirm-password page without passkeys when the passkey handlers are disabled', function () {
+    withDisabledHandlers([Handler::PasskeyConfirmOptions, Handler::PasskeyConfirm]);
+
+    expect(renderPage(new ConfirmPasswordPage))->not->toContain('passkey-verify');
+});
+
+it('offers the passkey ceremony on the two-factor challenge for a webauthn factor', function () {
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (string) (new TwoFactorChallengePage)
+        ->respond(new TwoFactorChallengePrompt(factor: 'webauthn'), $request)
+        ->getContent();
+
+    expect($content)->toContain('passkey-verify');
+});
+
+it('renders the code form without the passkey ceremony for a totp factor', function () {
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (string) (new TwoFactorChallengePage)
+        ->respond(new TwoFactorChallengePrompt(factor: 'totp'), $request)
+        ->getContent();
+
+    expect($content)->not->toContain('passkey-verify')
+        ->and($content)->toContain('two-factor-challenge');
 });
 
 it('renders the register page', function () {

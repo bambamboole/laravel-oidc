@@ -13,8 +13,8 @@
     ],
     "require": {
         "php": "^8.4",
-        "bambamboole/laravel-oidc-server": "^0.7",
-        "laravel/passkeys": "^0.2",
+        "bambamboole/laravel-oidc-server": "0.8.0",
+        "laravel/passkeys": "^0.2.1",
         "laravel/passport": "^13.4",
         "lattice-php/lattice": "^0.26"
     },
@@ -44,9 +44,6 @@
         "source": "https://github.com/bambamboole/laravel-oidc-ui"
     },
     "extra": {
-        "branch-alias": {
-            "dev-main": "0.7-dev"
-        },
         "laravel": {
             "providers": [
                 "Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider"

@@ -30,7 +30,9 @@ jobs:
 
       - name: Use the monorepo server package (ui only)
         if: matrix.package == 'ui'
-        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
+        run: |
+          VERSION=$(php -r 'echo json_decode(file_get_contents("../../.release-please-manifest.json"), true)["."];')
+          composer config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
 
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction
@@ -87,7 +89,9 @@ jobs:
 
       - name: Use the monorepo server package (ui only)
         if: matrix.package == 'ui'
-        run: composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
+        run: |
+          VERSION=$(php -r 'echo json_decode(file_get_contents("../../.release-please-manifest.json"), true)["."];')
+          composer config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
 
       - name: Constrain testbench
         run: composer require "orchestra/testbench:${{ matrix.testbench }}" --no-update --no-interaction

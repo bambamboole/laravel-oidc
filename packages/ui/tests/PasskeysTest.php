@@ -4,6 +4,9 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Ui\Actions\DeletePasskeyAction;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyRegistration;
 use Bambamboole\LaravelOidc\Ui\Tables\PasskeysTable;
+use Illuminate\Events\Dispatcher;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Laravel\Passkeys\Passkey;
 use Workbench\App\Models\User;
 
@@ -21,6 +24,14 @@ test('passkey registration uses the identity provider ceremony routes', function
 
     expect($component->optionsUrl)->toBe(route('identity.passkey.registration-options', absolute: false))
         ->and($component->submitUrl)->toBe(route('identity.passkey.store', absolute: false));
+});
+
+test('passkey registration reports availability from the ceremony routes', function () {
+    expect(PasskeyRegistration::isAvailable())->toBeTrue();
+
+    Route::swap(new Router(new Dispatcher, app()));
+
+    expect(PasskeyRegistration::isAvailable())->toBeFalse();
 });
 
 test('users can delete their own passkey through the lattice action', function () {

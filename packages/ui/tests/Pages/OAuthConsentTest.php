@@ -53,6 +53,46 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
         ->and($content)->not->toContain('Signed in as null');
 });
 
+it('does not render hidden scopes', function () {
+    $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
+
+    $prompt = new ConsentPrompt(
+        client: $client,
+        user: new GenericUser(['id' => 1]),
+        scopes: [
+            new Scope('openid', 'OpenID Connect'),
+            new Scope('internal:metrics', 'Internal metrics access', hidden: true),
+        ],
+        authToken: 'test-auth-token',
+    );
+
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (new OAuthConsentPage($prompt))->toResponse($request)->getContent();
+
+    expect($content)->toContain('OpenID Connect')
+        ->and($content)->not->toContain('Internal metrics access');
+});
+
+it('omits the scopes heading when only hidden scopes are requested', function () {
+    $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
+
+    $prompt = new ConsentPrompt(
+        client: $client,
+        user: new GenericUser(['id' => 1]),
+        scopes: [new Scope('internal:metrics', 'Internal metrics access', hidden: true)],
+        authToken: 'test-auth-token',
+    );
+
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = (new OAuthConsentPage($prompt))->toResponse($request)->getContent();
+
+    expect($content)->not->toContain(__('oidc-ui::oauth.consent.requested-scopes'));
+});
+
 it('redirects guests to login', function () {
     config(['oidc.login_route' => 'identity.login']);
 

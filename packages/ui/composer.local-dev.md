@@ -7,7 +7,8 @@ before running `composer install`:
 
 ```bash
 cd packages/ui
-composer config repositories.server '{"type":"path","url":"../server","options":{"symlink":true,"versions":{"bambamboole/laravel-oidc-server":"0.7.0"}}}'
+VERSION=$(php -r 'echo json_decode(file_get_contents("../../.release-please-manifest.json"), true)["."];')
+composer config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
 composer install
 ```
 
