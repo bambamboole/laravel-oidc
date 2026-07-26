@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Client;
 
 use DateTimeInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -34,6 +35,20 @@ class BackchannelLogoutStore
     public function isRevoked(string $sid): bool
     {
         return Cache::has($this->revokedKey($sid));
+    }
+
+    /**
+     * Remember a consumed logout-token jti; false means it was already
+     * consumed (a replay, Back-Channel Logout §2.6). Kept until the later of
+     * the token's exp and the retention window, which outlives the exp+leeway
+     * span in which the token itself would still be accepted.
+     */
+    public function rememberJti(string $jti, int $expiresAt): bool
+    {
+        $retention = $this->retention();
+        $until = max($expiresAt, $retention->getTimestamp());
+
+        return Cache::add("oidc-client:logout-jti:{$jti}", true, Carbon::createFromTimestamp($until));
     }
 
     private function sessionKey(string $sid): string

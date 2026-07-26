@@ -12,7 +12,7 @@ class LogoutTokenValidator extends TokenValidator
     private const string EVENT = 'http://schemas.openid.net/event/backchannel-logout';
 
     /**
-     * @return array{sid: string, sub: string}
+     * @return array{sid: string, sub: string, jti: string|null, exp: int}
      */
     public function validate(string $logoutToken): array
     {
@@ -51,8 +51,14 @@ class LogoutTokenValidator extends TokenValidator
         }
 
         $sub = $claims->get('sub');
+        $jti = $claims->get('jti');
 
-        return ['sid' => $sid, 'sub' => is_string($sub) ? $sub : ''];
+        return [
+            'sid' => $sid,
+            'sub' => is_string($sub) ? $sub : '',
+            'jti' => is_string($jti) && $jti !== '' ? $jti : null,
+            'exp' => (int) $exp,
+        ];
     }
 
     protected function tokenName(): string

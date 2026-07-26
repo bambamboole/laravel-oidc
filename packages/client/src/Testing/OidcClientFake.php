@@ -15,6 +15,7 @@ use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -187,8 +188,8 @@ class OidcClientFake
             'aud' => $this->clientId,
             'sub' => $this->subject,
             'sid' => self::SID,
-            'iat' => time(),
-            'exp' => time() + 300,
+            'iat' => Carbon::now()->getTimestamp(),
+            'exp' => Carbon::now()->getTimestamp() + 300,
             'jti' => 'oidc-fake-jti',
             'events' => ['http://schemas.openid.net/event/backchannel-logout' => (object) []],
         ], $claims), self::KID);
@@ -204,9 +205,9 @@ class OidcClientFake
             'aud' => $this->clientId,
             'sub' => $this->subject,
             'nonce' => self::NONCE,
-            'iat' => time(),
-            'nbf' => time(),
-            'exp' => time() + 300,
+            'iat' => Carbon::now()->getTimestamp(),
+            'nbf' => Carbon::now()->getTimestamp(),
+            'exp' => Carbon::now()->getTimestamp() + 300,
         ];
     }
 

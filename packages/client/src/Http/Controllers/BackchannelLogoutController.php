@@ -16,7 +16,11 @@ class BackchannelLogoutController
     public function __invoke(Request $request, LogoutTokenValidator $validator, BackchannelLogoutStore $store): Response
     {
         try {
-            ['sid' => $sid] = $validator->validate((string) $request->input('logout_token'));
+            ['sid' => $sid, 'jti' => $jti, 'exp' => $exp] = $validator->validate((string) $request->input('logout_token'));
+
+            if ($jti !== null && ! $store->rememberJti($jti, $exp)) {
+                throw new OidcClientException("The logout token jti [{$jti}] has already been consumed.");
+            }
         } catch (OidcClientException $e) {
             report($e);
 

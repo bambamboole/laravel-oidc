@@ -13,7 +13,6 @@ use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Mockery;
 
@@ -29,15 +28,7 @@ class BackchannelLogoutEndpointTest extends BackchannelLogoutEnabledTestCase
         config()->set('oidc-client.client_id', 'client-123');
         config()->set('oidc-client.backchannel_logout.enabled', true);
         $this->provider = new FakeOidcProvider;
-        Http::fake([
-            'https://id.example.com/.well-known/openid-configuration' => Http::response([
-                'issuer' => 'https://id.example.com',
-                'authorization_endpoint' => 'https://id.example.com/oauth/authorize',
-                'token_endpoint' => 'https://id.example.com/oauth/token',
-                'jwks_uri' => 'https://id.example.com/.well-known/jwks.json',
-            ]),
-            'https://id.example.com/.well-known/jwks.json' => Http::response(['keys' => $this->provider->rsaJwks('key-1')]),
-        ]);
+        fakeIssuerEndpoints($this->provider);
     }
 
     /**
@@ -92,6 +83,16 @@ class BackchannelLogoutEndpointTest extends BackchannelLogoutEnabledTestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $handler->shouldHaveReceived('destroy', ['the-session-id']);
+    }
+
+    public function test_it_rejects_a_replayed_logout_token_jti_with_400(): void
+    {
+        $token = $this->validLogoutToken(['jti' => 'jti-replayed']);
+
+        $this->post('/oidc/backchannel-logout', ['logout_token' => $token])->assertOk();
+
+        $this->post('/oidc/backchannel-logout', ['logout_token' => $token])
+            ->assertStatus(400)->assertJson(['error' => 'invalid_request']);
     }
 
     public function test_it_rejects_an_invalid_logout_token_with_400_and_changes_nothing(): void
