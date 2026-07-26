@@ -45,7 +45,27 @@ class TotpFactorProvider implements EnrollableFactorProvider
 
     public function beginEnrollment(Authenticatable $user, ?string $name = null): FactorEnrollment
     {
-        return $this->toEnrollment($this->enroll($user, $name));
+        $factor = $this->enroll($user, $name);
+        $enrollment = $this->toEnrollment($factor);
+
+        // The setup payload only exists at enrollment time; enrollments()
+        // never exposes the secret again.
+        return new FactorEnrollment(
+            $enrollment->providerKey,
+            $enrollment->id,
+            $enrollment->label,
+            $enrollment->confirmedAt,
+            $enrollment->lastUsedAt,
+            ['secret' => $factor->secret],
+        );
+    }
+
+    public function confirmEnrollment(Authenticatable $user, FactorEnrollment $enrollment, FactorResponse $response): bool
+    {
+        return $this->confirm(
+            $this->factorFor($this->factorUser($user), $enrollment),
+            $response->string('code'),
+        );
     }
 
     public function confirm(TotpFactor $factor, string $code): bool
