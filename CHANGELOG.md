@@ -5,6 +5,54 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.9.0](https://github.com/bambamboole/laravel-oidc/compare/v0.8.0...v0.9.0) (2026-07-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* identity.two-factor.{enable,confirm,disable} routes and TwoFactorManager are gone — use identity.two-factor.{enroll,enroll.confirm, revoke} and the EnrollableFactorProvider seam. Recovery codes are generated at confirmation, not at enable.
+* FirstPartyClientProvisioningOutcome is gone; result consumers read wasCreated/secretRotated. 2FA qr-code and recovery-codes endpoints return 404 (previously 200 []) when two-factor is disabled.
+* AuthenticationMethods is gone (use AuthSessionState); DeviceRecognizer, EnvironmentStore, ProtocolClaims, AuthenticationContextStore, AccessTokenContextLink moved namespaces; SessionRegistry is now Session\OidcSessionRepository.
+* IdTokenValidator/LogoutTokenValidator constructors take a ValidatorConfig; construct via the container or ValidatorConfig::fromConfig().
+* published oidc-client.php configs must replace the full handlers map with sparse overrides (an entry that mirrors the old defaults keeps working); OidcClient::routes() is gone.
+* every import of Bambamboole\LaravelOidc\* (server) and Bambamboole\LaravelOidcClient\* must be updated to the new prefixes.
+* Passport::scopes()/scopeIds() no longer reflect oidc.passport.scopes; enumerate through the ScopeRepository contract. DefaultScopeRepository's constructor now requires the application container — code instantiating or decorating it directly must pass it.
+
+### Features
+
+* client validators take injected config and verify per-JWK algorithms ([e356922](https://github.com/bambamboole/laravel-oidc/commit/e356922453bb0506b5b56f67361cf45f2090f2ea))
+* make WebAuthn usable as a deferred second factor ([269ffe6](https://github.com/bambamboole/laravel-oidc/commit/269ffe69d2f21a2879a577bca948b84a6fdb9dfd))
+* provider-keyed factor enrollment endpoints ([97446c7](https://github.com/bambamboole/laravel-oidc/commit/97446c7f17278c5160168a5b1aea1185bed236e7))
+* reject replayed back-channel logout tokens; harden client test infra ([c5d6825](https://github.com/bambamboole/laravel-oidc/commit/c5d682547ba6fc812b012c4531b771ddaf6ec54e))
+* scope repository consumes the configured catalog directly ([91a9ad0](https://github.com/bambamboole/laravel-oidc/commit/91a9ad0c5d24461e95b1ad953714eefc645fafd9))
+
+
+### Bug Fixes
+
+* allow audience members to introspect tokens ([eb53b9c](https://github.com/bambamboole/laravel-oidc/commit/eb53b9c869874cb6348ecc5c959bbba68bcf7bec))
+* exclude hidden scopes from the consent page ([97102f6](https://github.com/bambamboole/laravel-oidc/commit/97102f68e737419b2f3ffcca8f2cbecb994f6e49))
+* finalize every interactive login through the post-login pipeline ([cd8a943](https://github.com/bambamboole/laravel-oidc/commit/cd8a943489f44f4d034b137c3e81415882de169c))
+* honor retained previous keys when verifying token signatures ([6bd6f46](https://github.com/bambamboole/laravel-oidc/commit/6bd6f460a466db8c9a7fa211fd170b9b275a3f01))
+* keep auth pages rendering when passkey handlers are disabled ([61ac68e](https://github.com/bambamboole/laravel-oidc/commit/61ac68e8e49b83199c38db390ec375f3c879ce20))
+* pin ui→server constraint to the released version and stop version rot ([cb76c80](https://github.com/bambamboole/laravel-oidc/commit/cb76c80e8cb56c9c2b1e4dae1acc1c18c2a06283))
+* require laravel/passkeys 0.2.1 as the floor ([a666464](https://github.com/bambamboole/laravel-oidc/commit/a6664647b794fd4ffcce931346b9037b04ffb0a1))
+* resolve tier-1 audit findings (release, auth policy, key rotation, consent, WebAuthn 2FA) ([820351a](https://github.com/bambamboole/laravel-oidc/commit/820351ade383d2a4dcb1460c97f3e3f4ace83c73))
+* scope session-token lifecycle to a single owning guard ([8858f4a](https://github.com/bambamboole/laravel-oidc/commit/8858f4a3901acaf3c290218f8c1dc09121d3563c))
+
+
+### Refactoring
+
+* client routes default in code with sparse config overrides ([a79eccc](https://github.com/bambamboole/laravel-oidc/commit/a79ecccfc419e2ec770f63859f285b35697a5088))
+* close out the audit's grouped design items ([c047bab](https://github.com/bambamboole/laravel-oidc/commit/c047babf71be2a923b71fd67cb399c920d9830da))
+* the generic enrollment API is the only enrollment path ([68506af](https://github.com/bambamboole/laravel-oidc/commit/68506af5bf8989863a0b1ee0a7fdeb6704dbce4e))
+* typed session state and protocol infrastructure moves ([f0d9c49](https://github.com/bambamboole/laravel-oidc/commit/f0d9c49e72a1f343e78f0aa6b450dad33b7f4c17))
+* unify package namespaces under Bambamboole\LaravelOidc ([32282fb](https://github.com/bambamboole/laravel-oidc/commit/32282fbaeb9cd3faaf28d265049b123c6c8bac18))
+
+
+### Documentation
+
+* cover the tier-2 surface changes ([c409ad1](https://github.com/bambamboole/laravel-oidc/commit/c409ad16e0c2eba70910bf4368c0652a9e20dcd1))
+
 ## [0.8.0](https://github.com/bambamboole/laravel-oidc/compare/v0.7.0...v0.8.0) (2026-07-26)
 
 
