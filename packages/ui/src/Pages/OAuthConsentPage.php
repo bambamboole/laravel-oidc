@@ -117,17 +117,22 @@ class OAuthConsentPage extends Page implements ConsentView
      */
     private function scopeSchema(): array
     {
-        $scopes = $this->prompt()->scopes;
+        // Hidden scopes are excluded from discovery on purpose; the consent
+        // page must not disclose them either.
+        $visible = array_values(array_filter(
+            $this->prompt()->scopes,
+            fn (Scope $scope): bool => ! $scope->hidden,
+        ));
 
-        if ($scopes === []) {
-            return [Heading::make(__('oidc-ui::oauth.consent.requested-scopes'), 3)];
+        if ($visible === []) {
+            return [];
         }
 
         return [
             Heading::make(__('oidc-ui::oauth.consent.requested-scopes'), 3),
             ...array_map(
                 fn (Scope $scope): Text => Text::make($scope->description),
-                $scopes,
+                $visible,
             ),
         ];
     }
