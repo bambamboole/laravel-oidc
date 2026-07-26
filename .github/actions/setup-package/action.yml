@@ -1,0 +1,66 @@
+name: Setup package
+description: >-
+  PHP + Composer setup for one monorepo package: setup-php, the ui path-repo
+  pointing at the monorepo server package, optional testbench constraint, and
+  a cached dependency install via ramsey/composer-install.
+
+inputs:
+  working-directory:
+    description: Package directory (e.g. packages/server)
+    required: true
+  php-version:
+    description: PHP version for setup-php
+    required: false
+    default: '8.4'
+  dependency-versions:
+    description: ramsey/composer-install dependency-versions (highest or lowest)
+    required: false
+    default: highest
+  testbench:
+    description: Optional orchestra/testbench constraint (e.g. 10.*)
+    required: false
+    default: ''
+  allow-advisories:
+    description: >-
+      Set to 'true' to not block dependency resolution on framework security
+      advisories (compat matrix runs test version compatibility, they do not
+      ship the app).
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+        extensions: gmp, bcmath, openssl, mbstring, dom, curl, json
+        coverage: none
+
+    - name: Allow advisory-affected framework versions
+      if: inputs.allow-advisories == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: composer config policy.advisories.block false
+
+    - name: Use the monorepo server package (ui only)
+      if: endsWith(inputs.working-directory, '/ui')
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        VERSION=$(php -r 'echo json_decode(file_get_contents("../../.release-please-manifest.json"), true)["."];')
+        composer config repositories.server "{\"type\":\"path\",\"url\":\"../server\",\"options\":{\"symlink\":true,\"versions\":{\"bambamboole/laravel-oidc-server\":\"$VERSION\"}}}"
+
+    - name: Constrain testbench
+      if: inputs.testbench != ''
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: composer require "orchestra/testbench:${{ inputs.testbench }}" --no-update --no-interaction
+
+    - name: Install dependencies
+      uses: ramsey/composer-install@v3
+      with:
+        working-directory: ${{ inputs.working-directory }}
+        dependency-versions: ${{ inputs.dependency-versions }}
+        composer-options: --prefer-dist
