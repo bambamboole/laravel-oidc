@@ -7,6 +7,7 @@ use Bambamboole\LaravelOidc\Ui\Actions\EnableTwoFactorAuthenticationAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\SendVerificationEmailAction;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
+use Bambamboole\LaravelOidc\Ui\Fragments\TwoFactorSetupFragment;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
@@ -72,6 +73,29 @@ test('the regenerate action replaces recovery codes', function () {
     expect(app(TwoFactorManager::class)->recoveryCodes($user))
         ->toHaveCount(8)
         ->not->toBe($originalCodes);
+});
+
+test('the two-factor setup fragment shows the QR code and setup key for a pending factor', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $factor = app(TwoFactorManager::class)->enable($user);
+
+    $this->actingAs($user)
+        ->loadFragment(TwoFactorSetupFragment::class)
+        ->assertOk()
+        ->assertSee(__('oidc-ui::security.two-factor.setup-key'), false)
+        ->assertSee($factor->secret, false);
+});
+
+test('the two-factor setup fragment reports an already-confirmed factor instead of re-showing the secret', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $factor = app(TwoFactorManager::class)->enable($user);
+    $user->totpFactors()->update(['confirmed_at' => now()]);
+
+    $this->actingAs($user)
+        ->loadFragment(TwoFactorSetupFragment::class)
+        ->assertOk()
+        ->assertSee(__('oidc-ui::security.two-factor.already-enabled'), false)
+        ->assertDontSee($factor->secret, false);
 });
 
 test('the send-verification-email action notifies an unverified user', function () {

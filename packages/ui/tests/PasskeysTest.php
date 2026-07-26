@@ -58,6 +58,19 @@ test('users cannot delete another users passkey', function () {
     expect($other->passkeys()->whereKey($passkey->id)->exists())->toBeTrue();
 });
 
+test('the passkeys table lists only the authenticated users passkeys', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
+    createPasskey($user, 'My MacBook');
+    createPasskey($other, 'Other Device');
+
+    $this->actingAs($user)
+        ->loadTable(PasskeysTable::class)
+        ->assertOk()
+        ->assertJsonFragment(['name' => 'My MacBook'])
+        ->assertJsonMissing(['name' => 'Other Device']);
+});
+
 test('the passkeys table lists a created passkey', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     createPasskey($user, 'MacBook Pro');

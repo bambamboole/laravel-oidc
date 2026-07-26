@@ -49,8 +49,8 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
     $content = $response->getContent();
 
     expect($response->getStatusCode())->toBe(200)
-        ->and($content)->toContain('Signed in as ')
-        ->and($content)->not->toContain('Signed in as null');
+        ->and($content)->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => '']))
+        ->and($content)->not->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => 'null']));
 });
 
 it('does not render hidden scopes', function () {
@@ -91,6 +91,14 @@ it('omits the scopes heading when only hidden scopes are requested', function ()
     $content = (new OAuthConsentPage($prompt))->toResponse($request)->getContent();
 
     expect($content)->not->toContain(__('oidc-ui::oauth.consent.requested-scopes'));
+});
+
+it('throws when rendered without the consent prompt', function () {
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    expect(fn () => (new OAuthConsentPage)->toResponse($request))
+        ->toThrow(LogicException::class, 'rendered without its prompt');
 });
 
 it('redirects guests to login', function () {
