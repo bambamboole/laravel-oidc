@@ -6,9 +6,10 @@ description: The OIDC scope catalog and how an authenticated user is mapped to c
 ## Scope catalog
 
 The provider understands the OIDC standard scopes — `openid`, `profile`, `email`, `address`,
-`phone` — merged **over** `Passport::$scopes`. Because the merge favors your app's definitions,
-scopes you already define win: you can override the description of a standard scope simply by
-defining it yourself.
+`phone` — merged with your configured catalog (`passport.scopes`, below) and any scopes a
+third party registered directly via `Passport::tokensCan()`. On a conflict the configured
+catalog wins, then `tokensCan()`-registered scopes, then the built-in OIDC scopes — so you can
+override the description of a standard scope simply by defining it in your catalog.
 
 ### Wildcard (`*`) parity
 
@@ -19,7 +20,7 @@ those grant types, and is stripped for `authorization_code` (interactive) flows.
 
 ### Registering API scopes
 
-Feed your API scope catalog to Passport through `config/oidc.php`'s `passport.scopes`
+Feed your API scope catalog to the provider through `config/oidc.php`'s `passport.scopes`
 option instead of calling `Passport::tokensCan()` yourself:
 
 ```php
@@ -30,13 +31,19 @@ option instead of calling `Passport::tokensCan()` yourself:
 ```
 
 A class-string must implement `Bambamboole\LaravelOidc\Contracts\ScopeCatalog`
-(`scopes(): array<string, string>`). It is materialized lazily — resolved from
-the container the first time scopes are actually enumerated (the consent
-screen, the discovery document, token issuance), so a database-backed catalog
-costs nothing on unrelated requests, keeping key- and db-less artisan runs
-working. Exceptions thrown by `scopes()` are rescued to an empty catalog; an
-invalid class-string still fails loudly, at first enumeration rather than at
-boot.
+(`scopes(): array<string, string>`). The scope repository consults it lazily —
+resolved from the container the first time scopes are actually enumerated (the
+consent screen, the discovery document, token issuance), so a database-backed
+catalog costs nothing on unrelated requests, keeping key- and db-less artisan
+runs working, and the result is memoized for the life of the repository.
+Exceptions thrown by `scopes()` fall back to an empty catalog; an invalid
+class-string still fails loudly, at first enumeration rather than at boot.
+
+Scopes registered directly via `Passport::tokensCan()` (by a third-party
+package, for instance) are still honored — the repository merges them in,
+with the configured catalog winning on conflict. `Passport::scopes()` /
+`scopeIds()` no longer reflect `oidc.passport.scopes`; enumerate the full
+catalog through the `ScopeRepository` contract instead.
 
 The scope catalog is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.
