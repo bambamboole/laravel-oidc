@@ -30,11 +30,13 @@ option instead of calling `Passport::tokensCan()` yourself:
 ```
 
 A class-string must implement `Bambamboole\LaravelOidc\Contracts\ScopeCatalog`
-(`scopes(): array<string, string>`). It is resolved from the container, so a
-catalog may load scopes from the database; exceptions thrown by `scopes()` are
-rescued to an empty catalog, keeping key- and db-less artisan runs working. An
-invalid class-string still fails loudly at boot. The default consent screen, discovery document, and token issuance all
-pick the catalog up automatically.
+(`scopes(): array<string, string>`). It is materialized lazily — resolved from
+the container the first time scopes are actually enumerated (the consent
+screen, the discovery document, token issuance), so a database-backed catalog
+costs nothing on unrelated requests, keeping key- and db-less artisan runs
+working. Exceptions thrown by `scopes()` are rescued to an empty catalog; an
+invalid class-string still fails loudly, at first enumeration rather than at
+boot.
 
 The scope catalogue is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.
