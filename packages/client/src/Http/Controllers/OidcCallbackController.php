@@ -16,7 +16,9 @@ class OidcCallbackController
     {
         try {
             return $relyingParty->handleCallback($request);
-        } catch (OidcClientException) {
+        } catch (OidcClientException $e) {
+            report($e);
+
             return redirect()->route(Handler::Login->value)->withErrors([
                 'oidc' => 'Sign-in failed. Please try again.',
             ]);

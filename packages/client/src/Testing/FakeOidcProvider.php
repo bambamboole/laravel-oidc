@@ -5,22 +5,39 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Client\Testing;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Lcobucci\JWT\Encoding\ChainedFormatter;
 use Lcobucci\JWT\Encoding\JoseEncoder;
+use Lcobucci\JWT\Signer;
+use Lcobucci\JWT\Signer\Ecdsa\Sha256 as EcdsaSha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token\Builder;
+use phpseclib3\Crypt\EC;
 use phpseclib3\Crypt\RSA;
 
 class FakeOidcProvider
 {
     private readonly RSA\PrivateKey $privateKey;
 
+    private ?EC\PrivateKey $ecPrivateKey = null;
+
     public function __construct()
     {
         /** @var RSA\PrivateKey $key */
         $key = RSA::createKey(2048);
         $this->privateKey = $key;
+    }
+
+    private function ecPrivateKey(): EC\PrivateKey
+    {
+        if ($this->ecPrivateKey === null) {
+            /** @var EC\PrivateKey $key */
+            $key = EC::createKey('secp256r1');
+            $this->ecPrivateKey = $key;
+        }
+
+        return $this->ecPrivateKey;
     }
 
     /**
@@ -43,9 +60,26 @@ class FakeOidcProvider
     }
 
     /**
+     * @return array<int, array<string, string>>
+     */
+    public function ecJwks(string $kid): array
+    {
+        /** @var array{keys?: array<int, array<string, string>>}|array<string, string> $jwk */
+        $jwk = json_decode((string) $this->ecPrivateKey()->getPublicKey()->toString('JWK'), true);
+        /** @var array<string, string> $key */
+        $key = $jwk['keys'][0] ?? $jwk;
+
+        return [array_merge($key, [
+            'use' => 'sig',
+            'alg' => 'ES256',
+            'kid' => $kid,
+        ])];
+    }
+
+    /**
      * @param  array<string, mixed>  $claims
      */
-    public function idToken(array $claims, string $kid): string
+    public function idToken(array $claims, string $kid, string $algorithm = 'RS256'): string
     {
         $builder = new Builder(new JoseEncoder, ChainedFormatter::default());
         $builder = $builder->withHeader('kid', $kid);
@@ -63,9 +97,21 @@ class FakeOidcProvider
             };
         }
 
-        $pem = (string) $this->privateKey->toString('PKCS8');
+        [$signer, $pem] = $this->signerFor($algorithm);
 
-        return $builder->getToken(new Sha256, InMemory::plainText($pem))->toString();
+        return $builder->getToken($signer, InMemory::plainText($pem))->toString();
+    }
+
+    /**
+     * @return array{0: Signer, 1: string}
+     */
+    private function signerFor(string $algorithm): array
+    {
+        return match ($algorithm) {
+            'RS256' => [new Sha256, (string) $this->privateKey->toString('PKCS8')],
+            'ES256' => [new EcdsaSha256, (string) $this->ecPrivateKey()->toString('PKCS8')],
+            default => throw new InvalidArgumentException("The fake provider cannot sign with [{$algorithm}]."),
+        };
     }
 
     /**

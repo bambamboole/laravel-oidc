@@ -9,6 +9,8 @@ use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Bambamboole\LaravelOidc\Client\Token\JwksKeyResolver;
 use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\Token\ValidatorConfig;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,8 +23,14 @@ class OidcClientServiceProvider extends ServiceProvider
         $this->app->singleton(OidcClientManager::class);
         $this->app->singleton(OidcDiscovery::class);
         $this->app->singleton(JwksKeyResolver::class);
-        $this->app->singleton(IdTokenValidator::class);
-        $this->app->singleton(LogoutTokenValidator::class);
+        $this->app->singleton(
+            IdTokenValidator::class,
+            fn (Application $app): IdTokenValidator => new IdTokenValidator($app->make(JwksKeyResolver::class), ValidatorConfig::fromConfig()),
+        );
+        $this->app->singleton(
+            LogoutTokenValidator::class,
+            fn (Application $app): LogoutTokenValidator => new LogoutTokenValidator($app->make(JwksKeyResolver::class), ValidatorConfig::fromConfig()),
+        );
         $this->app->singleton(RelyingParty::class);
     }
 

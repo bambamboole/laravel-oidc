@@ -7,8 +7,10 @@ namespace Bambamboole\LaravelOidc\Client\Token;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use DateTimeInterface;
 use Lcobucci\JWT\Encoding\JoseEncoder;
+use Lcobucci\JWT\Signer;
+use Lcobucci\JWT\Signer\Ecdsa\Sha256 as EcdsaSha256;
 use Lcobucci\JWT\Signer\Key\InMemory;
-use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Signer\Rsa\Sha256 as RsaSha256;
 use Lcobucci\JWT\Token\Parser;
 use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
@@ -17,9 +19,9 @@ use Throwable;
 
 /**
  * Shared machinery for validating provider-issued JWTs: parse, verify the
- * RS256 signature against the provider's JWKS, and assert the claims every
- * token type has in common. Concrete validators add their token-specific
- * claim checks on top.
+ * signature against the provider's JWKS with an allow-listed algorithm, and
+ * assert the claims every token type has in common. Concrete validators add
+ * their token-specific claim checks on top.
  */
 abstract class TokenValidator
 {
@@ -27,8 +29,10 @@ abstract class TokenValidator
 
     private readonly Validator $signatureValidator;
 
-    public function __construct(private readonly JwksKeyResolver $keys)
-    {
+    public function __construct(
+        private readonly JwksKeyResolver $keys,
+        private readonly ValidatorConfig $config,
+    ) {
         $this->parser = new Parser(new JoseEncoder);
         $this->signatureValidator = new Validator;
     }
@@ -60,13 +64,29 @@ abstract class TokenValidator
             throw new OidcClientException("The {$name} has no kid header.");
         }
 
-        $pem = $this->keys->publicKeyPem($kid);
+        $key = $this->keys->signingKey($kid);
+        $constraint = new SignedWith($this->signer($key->algorithm), InMemory::plainText($key->pem));
 
-        if (! $this->signatureValidator->validate($token, new SignedWith(new Sha256, InMemory::plainText($pem)))) {
+        // SignedWith also rejects tokens whose alg header differs from the
+        // JWK's algorithm, so a downgraded header (none, HS256, ...) can never
+        // reach signature verification with an asymmetric public key.
+        if (! $this->signatureValidator->validate($token, $constraint)) {
             throw new OidcClientException("The {$name} signature is invalid.");
         }
 
         return $token;
+    }
+
+    /**
+     * PS256 is intentionally absent: lcobucci/jwt 5 ships no RSASSA-PSS signer.
+     */
+    private function signer(string $algorithm): Signer
+    {
+        return match ($algorithm) {
+            'RS256' => new RsaSha256,
+            'ES256' => new EcdsaSha256,
+            default => throw new OidcClientException("The {$this->tokenName()} signature algorithm [{$algorithm}] is not supported."),
+        };
     }
 
     /**
@@ -76,9 +96,7 @@ abstract class TokenValidator
 
     protected function assertIssuer(UnencryptedToken $token): void
     {
-        $issuer = (string) config('oidc-client.issuer');
-
-        if (rtrim((string) $token->claims()->get('iss'), '/') !== rtrim($issuer, '/')) {
+        if (rtrim((string) $token->claims()->get('iss'), '/') !== rtrim($this->config->issuer, '/')) {
             throw new OidcClientException("The {$this->tokenName()} issuer does not match.");
         }
     }
@@ -101,12 +119,12 @@ abstract class TokenValidator
 
     protected function clientId(): string
     {
-        return (string) config('oidc-client.client_id');
+        return $this->config->clientId;
     }
 
     protected function leeway(): int
     {
-        return (int) config('oidc-client.leeway', 60);
+        return $this->config->leeway;
     }
 
     protected function timestamp(mixed $value, string $claim, bool $required = false): ?int

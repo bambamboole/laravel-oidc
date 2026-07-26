@@ -17,7 +17,9 @@ class BackchannelLogoutController
     {
         try {
             ['sid' => $sid] = $validator->validate((string) $request->input('logout_token'));
-        } catch (OidcClientException) {
+        } catch (OidcClientException $e) {
+            report($e);
+
             return response()->json(['error' => 'invalid_request'], 400)->header('Cache-Control', 'no-store, private');
         }
 

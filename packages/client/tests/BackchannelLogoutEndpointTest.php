@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Client\Tests;
 
 use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Http\Controllers\BackchannelLogoutController;
 use Bambamboole\LaravelOidc\Client\Testing\FakeOidcProvider;
 use Bambamboole\LaravelOidc\Client\Tests\Support\BackchannelLogoutEnabledTestCase;
 use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Mockery;
@@ -97,5 +99,14 @@ class BackchannelLogoutEndpointTest extends BackchannelLogoutEnabledTestCase
         $this->post('/oidc/backchannel-logout', ['logout_token' => 'not-a-jwt'])
             ->assertStatus(400)->assertJson(['error' => 'invalid_request']);
         $this->assertFalse(Cache::has('oidc-client:bclo:revoked:sess-abc'));
+    }
+
+    public function test_it_reports_the_rejected_logout_token_before_responding(): void
+    {
+        Exceptions::fake();
+
+        $this->post('/oidc/backchannel-logout', ['logout_token' => 'not-a-jwt'])->assertStatus(400);
+
+        Exceptions::assertReported(OidcClientException::class);
     }
 }
