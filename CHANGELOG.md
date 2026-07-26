@@ -5,6 +5,30 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.8.0](https://github.com/bambamboole/laravel-oidc/compare/v0.7.0...v0.8.0) (2026-07-26)
+
+
+### Features
+
+* add ScopeCatalog contract and oidc.passport config seams ([305327c](https://github.com/bambamboole/laravel-oidc/commit/305327c3efb5e06cd9ef26c74e3fa24291a6047f))
+* materialize the scope catalog lazily on first scope enumeration ([70ae82f](https://github.com/bambamboole/laravel-oidc/commit/70ae82fe7b4d8730adbf367f1c00a9f988058ada))
+* passport seams (token model, scope catalog) and conventional locale/zoneinfo claims ([3b4059d](https://github.com/bambamboole/laravel-oidc/commit/3b4059debf77521d866b757320efed2ae8262999))
+* resolve locale and zoneinfo claims from conventional user attributes ([1021db0](https://github.com/bambamboole/laravel-oidc/commit/1021db0ff26c6d42b1e1ba65ad3f2314af9704a9))
+* wire Passport token model and scope catalog from oidc config ([b06d61c](https://github.com/bambamboole/laravel-oidc/commit/b06d61c24fa7bb8e435ce9d1eaf43ed17a06cd28))
+
+
+### Bug Fixes
+
+* guard non-array scope config and sharpen catalog failure docs ([77ad762](https://github.com/bambamboole/laravel-oidc/commit/77ad7627e3b027a5cc29679b4980f8c41039f389))
+
+
+### Documentation
+
+* consolidate client docs into the single docs tree ([3787d11](https://github.com/bambamboole/laravel-oidc/commit/3787d1172f8cf4bbf19237dde9865a1390463164))
+* document passport config seams and claim attribute conventions ([2386d04](https://github.com/bambamboole/laravel-oidc/commit/2386d04d6e654d1fbaa755d6470012142a82082c))
+* reorganize sidebar, fix stale claims, and align wording ([c33487b](https://github.com/bambamboole/laravel-oidc/commit/c33487b9d41e84c3a4cee49b9bec6307de0f3b53))
+* reorganize sidebar, fix stale claims, and align wording ([eca040e](https://github.com/bambamboole/laravel-oidc/commit/eca040eb4bec5ae98fd50b50bb83add43db5e272))
+
 ## [0.7.0](https://github.com/bambamboole/laravel-oidc/compare/v0.6.0...v0.7.0) (2026-07-25)
 
 
