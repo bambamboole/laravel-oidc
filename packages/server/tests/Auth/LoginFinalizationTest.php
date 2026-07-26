@@ -17,12 +17,12 @@ use Bambamboole\LaravelOidc\Routing\Handler;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Testing\TestResponse;
 use Laravel\Passkeys\Actions\VerifyPasskey;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\Passkey;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use Symfony\Component\HttpFoundation\Response;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Workbench\App\Models\User;
@@ -36,6 +36,9 @@ function finalizationRegisterUsers(): void
     ]));
 }
 
+/**
+ * @return TestResponse<Response>
+ */
 function finalizationPasskeyLogin(mixed $test, User $user): TestResponse
 {
     $passkey = $user->passkeys()->create([
@@ -110,7 +113,7 @@ it('records amr for registration logins', function () {
 
 it('applies the postLogin policy to password resets', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
-    $token = Password::broker()->createToken($user);
+    $token = resolvePasswordBroker()->createToken($user);
 
     Oidc::resetUserPasswordsUsing(function (CanResetPassword $user, array $input): void {
         $user->forceFill(['password' => Hash::make($input['password'])])->save();
@@ -130,7 +133,7 @@ it('applies the postLogin policy to password resets', function () {
 
 it('records amr for password-reset logins', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
-    $token = Password::broker()->createToken($user);
+    $token = resolvePasswordBroker()->createToken($user);
 
     Oidc::resetUserPasswordsUsing(function (CanResetPassword $user, array $input): void {
         $user->forceFill(['password' => Hash::make($input['password'])])->save();

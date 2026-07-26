@@ -75,9 +75,6 @@ class ConfirmPasswordPage extends Page implements PasswordConfirmationView
     }
 
     /**
-     * @return array<int, Component>
-     */
-    /**
      * The passkey handlers can be disabled via oidc.handlers; the page must
      * keep rendering without them.
      *
@@ -100,6 +97,9 @@ class ConfirmPasswordPage extends Page implements PasswordConfirmationView
         ];
     }
 
+    /**
+     * @return array<int, Component>
+     */
     private function formSchema(): array
     {
         return [
