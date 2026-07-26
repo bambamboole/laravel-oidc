@@ -67,3 +67,11 @@ it('registers a configured token model', function () {
 
     expect(Passport::tokenModel())->toBe(ConfiguratorTestToken::class);
 });
+
+it('ignores an explicit null scopes config', function () {
+    config()->set('oidc.passport.scopes', null);
+
+    app(PassportConfigurator::class)();
+
+    expect(Passport::scopeIds())->toBe([]);
+});

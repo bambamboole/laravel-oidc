@@ -24,16 +24,16 @@ option instead of calling `Passport::tokensCan()` yourself:
 
 ```php
 'passport' => [
-    'token_model' => App\Models\ApiToken::class,   // optional custom Passport token model
+    'token_model' => App\Models\ApiToken::class,   // optional Passport token model (a `Laravel\Passport\Token` subclass)
     'scopes' => App\Auth\ApiScopes::class,          // or an inline [scope => description] map
 ],
 ```
 
 A class-string must implement `Bambamboole\LaravelOidc\Contracts\ScopeCatalog`
 (`scopes(): array<string, string>`). It is resolved from the container, so a
-catalog may load scopes from the database; failures while resolving scopes are
-rescued (leaving the catalog empty) so key- and db-less artisan runs never
-break. The default consent screen, discovery document, and token issuance all
+catalog may load scopes from the database; exceptions thrown by `scopes()` are
+rescued to an empty catalog, keeping key- and db-less artisan runs working. An
+invalid class-string still fails loudly at boot. The default consent screen, discovery document, and token issuance all
 pick the catalog up automatically.
 
 The scope catalogue is provided by the `ScopeRepository` contract — see

@@ -33,7 +33,9 @@ class PassportConfigurator
             $scopes = rescue(fn (): array => $catalog->scopes(), [], report: false);
         }
 
-        if ($scopes !== []) {
+        // tokensCan() replaces Passport's whole scope list, so an empty or
+        // failed catalog must leave scopes another provider registered untouched.
+        if (is_array($scopes) && $scopes !== []) {
             Passport::tokensCan($scopes);
         }
     }
