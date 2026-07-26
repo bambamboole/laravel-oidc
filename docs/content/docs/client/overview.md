@@ -1,8 +1,6 @@
 ---
 title: Client overview
 description: An OpenID Connect relying party for Laravel — log users in through any OIDC provider with Authorization Code + PKCE.
-sidebar:
-  order: 1
 ---
 
 `bambamboole/laravel-oidc-client` turns a Laravel app into an **OpenID Connect relying

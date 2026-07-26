@@ -1,8 +1,6 @@
 ---
 title: Installation
 description: Install laravel-oidc-client, enable the relying party, and register it at your provider.
-sidebar:
-  order: 2
 ---
 
 ## Requirements

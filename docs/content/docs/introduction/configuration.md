@@ -25,7 +25,16 @@ below with its default and the environment variable that overrides it.
 | `api_guard` | `env('OIDC_API_GUARD', 'api')` | The guard the userinfo endpoint authenticates against. |
 | `claims_supported` | standard set | Claims advertised in the discovery document. |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
-| `handlers` | full map | Every HTTP endpoint the package registers, keyed by route name. See [Route handlers](/introduction/route-handlers/). |
+| `handlers` | `[]` | Sparse per-endpoint overrides, merged over the package's built-in endpoint map. See [Route handlers](/introduction/route-handlers/). |
+| `routes.prefix` | `''` | URI prefix applied to every registered handler route. |
+| `routes.middleware` | `[]` | Middleware prepended to every registered handler route. |
+
+## Passport integration
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `passport.token_model` | `null` | A `Laravel\Passport\Token` subclass handed to `Passport::useTokenModel()`. `null` keeps Passport's default model. |
+| `passport.scopes` | `[]` | API scope catalog fed to `Passport::tokensCan()` — an inline `[scope => description]` map or a `ScopeCatalog` class-string. See [Scopes & claims](/provider/scopes-and-claims/). |
 
 ## Token exchange & keys
 
@@ -43,6 +52,7 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 | --- | --- | --- |
 | `first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and perform exchanges on its behalf. |
 | `first_party.trusted` | `false` (`OIDC_FIRST_PARTY_TRUSTED`) | Whether the first-party client is auto-consented. |
+| `first_party.provision` | empty lists | Extra provisioning metadata (`redirect_uris`, `post_logout_redirect_uris`, `allowed_exchange_audiences`) applied on top of the `APP_URL`-derived defaults — see [First-party client provisioning](/advanced/first-party-client/). |
 | `trusted_clients` | `[]` | Additional client ids that skip the consent screen. |
 | `login_route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name unauthenticated users are redirected to. |
 | `session_token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
@@ -63,6 +73,14 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 | `auth.two_factor.window` | `1` | TOTP validation window. |
 | `auth.two_factor.recovery_codes` | `8` | Number of recovery codes generated. |
 | `auth.factors` | TOTP, recovery, WebAuthn providers | The registered `FactorProvider` classes. |
+
+## Social login
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `social.link_by_verified_email` | `true` | Attach an upstream identity to an existing local user when the provider reports a matching verified email. |
+| `social.auto_provision` | `true` | Create a local user on first social login via the `Oidc::createUsersFromSocialUsing()` action. |
+| `social.providers` | `google`, `apple`, `github` entries | The upstream identity providers; each is active only once its `client_id` is set. See [Social login](/auth/social-login/). |
 
 ## Assumptions
 

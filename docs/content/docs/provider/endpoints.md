@@ -79,7 +79,7 @@ host — and is served with `Cache-Control: max-age=3600, public`. The fixed met
 | `backchannel_logout_session_supported` | `true` |
 | `token_endpoint_auth_methods_supported` | `["client_secret_basic", "client_secret_post", "none"]` |
 
-`scopes_supported` is the non-hidden catalogue from the `ScopeRepository`, and `claims_supported`
+`scopes_supported` is the non-hidden catalog from the `ScopeRepository`, and `claims_supported`
 comes from `config('oidc.claims_supported')`.
 
 The `userinfo_endpoint`, `end_session_endpoint`, `introspection_endpoint`, and

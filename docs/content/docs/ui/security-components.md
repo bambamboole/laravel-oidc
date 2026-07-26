@@ -5,8 +5,9 @@ description: The Lattice action, form, fragment, and table IDs this package ship
 
 Beyond the auth-flow pages, the package ships the Lattice building blocks a settings/profile
 page needs to manage two-factor authentication, passkeys, and email verification. They are
-auto-registered by `UiServiceProvider` (see [Installation](/ui/installation/)) — compose them
-into your own page rather than rebuilding the underlying logic.
+discovered through the package's Lattice manifest (`extra.lattice.discover`, see
+[Installation](/ui/installation/)) — compose them into your own page rather than rebuilding
+the underlying logic.
 
 ## IDs
 

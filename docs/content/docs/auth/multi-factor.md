@@ -83,7 +83,7 @@ recovery code is submitted, otherwise the stashed `login.factor` (default `totp`
 `beginChallenge` + `verify`; a failed verification throws a validation error. On success it:
 
 1. Adds the verified factor's `amr` to the session's authentication methods.
-2. Logs the user in on the `identity` guard (honouring the stashed `remember` flag).
+2. Logs the user in on the `identity` guard (honoring the stashed `remember` flag).
 3. **Regenerates the session.**
 4. Responds with an empty **`204`** (JSON) or `redirect()->intended(...)` to the home URL (browser).
 
@@ -103,21 +103,24 @@ confirmation (`RequirePassword::using('identity.password.confirm')` — see
 | `identity.two-factor.recovery-codes` | `GET` | `auth/user/two-factor-recovery-codes` | The unused recovery codes |
 | `identity.two-factor.regenerate-recovery-codes` | `POST` | `auth/user/two-factor-recovery-codes` | Replace the recovery codes |
 
-Enable/confirm/disable/regenerate return an empty status response — **`200`** with a status key
-(JSON) or a `back()` redirect flashing the status (browser).
+Enable/confirm/disable/regenerate return an empty **`200`** response (JSON) or a `back()`
+redirect flashing a status key to the session (browser).
 
 ### Passkey management
 
-Passkeys are registered and removed through `laravel/passkeys`, gated the same way (`identity`
-session + `RequirePassword`); the options/store endpoints also carry `throttle:5,1`:
+Passkeys are registered and removed through `laravel/passkeys`. The registration and delete
+endpoints are gated the same way (`identity` session + `RequirePassword`); the confirm
+endpoints require only an authenticated session — they *are* a password-confirmation
+mechanism, so they cannot demand a prior confirmation themselves. The options/store/confirm
+endpoints also carry `throttle:5,1`:
 
-| Route name | Verb | Path |
-| --- | --- | --- |
-| `identity.passkey.registration-options` | `GET` | `auth/user/passkeys/options` |
-| `identity.passkey.store` | `POST` | `auth/user/passkeys` |
-| `identity.passkey.destroy` | `DELETE` | `auth/user/passkeys/{passkey}` |
-| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` |
-| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` |
+| Route name | Verb | Path | `RequirePassword` |
+| --- | --- | --- | --- |
+| `identity.passkey.registration-options` | `GET` | `auth/user/passkeys/options` | yes |
+| `identity.passkey.store` | `POST` | `auth/user/passkeys` | yes |
+| `identity.passkey.destroy` | `DELETE` | `auth/user/passkeys/{passkey}` | yes |
+| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` | no |
+| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` | no |
 
 (Passkey *login* — the passwordless sign-in path — lives on the [login page](/auth/login/).)
 

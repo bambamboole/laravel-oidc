@@ -30,7 +30,8 @@ sequenceDiagram
 
 ## Enabling it per client
 
-A client must opt in on two columns of `oauth_clients` (added by this package's migration):
+A client must opt in on two columns of `oauth_clients` — Passport's own `grant_types` and the
+`allowed_exchange_audiences` column added by this package's migration:
 
 ```php
 $client->forceFill([
@@ -40,7 +41,7 @@ $client->forceFill([
 ```
 
 - `grant_types` must include the exchange URN, or the token endpoint rejects the client with
-  `invalid_client`.
+  `unauthorized_client`.
 - `allowed_exchange_audiences` is a JSON array of audience strings the client is permitted to
   request. Anything outside it is rejected.
 

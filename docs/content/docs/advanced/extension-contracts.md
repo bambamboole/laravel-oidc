@@ -5,11 +5,11 @@ description: The container-bound seams — ScopeRepository, ClaimsResolver, Exch
 
 Each of the package's extension points is a container-bound interface with a default
 implementation. Rebind any of them from a service provider's `register()` (or `boot()`)
-method to replace the behaviour without touching a caller.
+method to replace the behavior without touching a caller.
 
 ## `ScopeRepository`
 
-`Bambamboole\LaravelOidc\Contracts\ScopeRepository` is the catalogue of scopes the
+`Bambamboole\LaravelOidc\Contracts\ScopeRepository` is the catalog of scopes the
 provider understands.
 
 ```php
@@ -29,9 +29,10 @@ interface ScopeRepository
 ```
 
 The default `DefaultScopeRepository` merges the OIDC scopes (`openid`, `profile`,
-`email`, `address`, `phone`) over any scopes your app registered via `Passport::$scopes`,
-and applies the wildcard (`*`) parity rules during `finalize()`. Bind your own to change
-the catalogue:
+`email`, `address`, `phone`) over any scopes your app registered via `Passport::$scopes`;
+its `finalize()` filters out unknown scopes. (The wildcard `*` parity rules live in the
+Passport-bridge layer on top of this repository, not in the contract itself.) Bind your
+own to change the catalog:
 
 ```php
 $this->app->singleton(

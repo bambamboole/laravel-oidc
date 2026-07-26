@@ -1,8 +1,6 @@
 ---
 title: Configuration
 description: Every key in config/oidc-client.php, including the route handler map.
-sidebar:
-  order: 3
 ---
 
 Publish the config with `php artisan vendor:publish --tag=oidc-client-config`. Every key is

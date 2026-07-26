@@ -1,18 +1,18 @@
 ---
 title: Scopes & claims
-description: The OIDC scope catalogue and how an authenticated user is mapped to claims.
+description: The OIDC scope catalog and how an authenticated user is mapped to claims.
 ---
 
-## Scope catalogue
+## Scope catalog
 
 The provider understands the OIDC standard scopes — `openid`, `profile`, `email`, `address`,
-`phone` — merged **over** `Passport::$scopes`. Because the merge favours your app's definitions,
+`phone` — merged **over** `Passport::$scopes`. Because the merge favors your app's definitions,
 scopes you already define win: you can override the description of a standard scope simply by
 defining it yourself.
 
 ### Wildcard (`*`) parity
 
-The package mirrors Passport's wildcard behaviour exactly. Passport treats `*` as always valid and
+The package mirrors Passport's wildcard behavior exactly. Passport treats `*` as always valid and
 grants it for the `password`, `personal_access`, and `client_credentials` grants (e.g.
 `$user->createToken('cli', ['*'])`). Here `*` resolves as a scope and survives finalization for
 those grant types, and is stripped for `authorization_code` (interactive) flows.
@@ -38,7 +38,7 @@ working. Exceptions thrown by `scopes()` are rescued to an empty catalog; an
 invalid class-string still fails loudly, at first enumeration rather than at
 boot.
 
-The scope catalogue is provided by the `ScopeRepository` contract — see
+The scope catalog is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.
 
 ## Claims

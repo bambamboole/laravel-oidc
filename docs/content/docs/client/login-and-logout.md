@@ -1,8 +1,6 @@
 ---
 title: Login & logout
 description: The Authorization Code + PKCE flow in detail, id_token validation, the user-resolution seam, and RP-initiated logout.
-sidebar:
-  order: 4
 ---
 
 ## Starting a login (`GET login`)
