@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidcClient\Tests;
 
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\ParallelTesting;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -14,6 +15,13 @@ abstract class TestCase extends BaseTestCase
 {
     use WithLaravelMigrations;
     use WithWorkbench;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
 
     protected function getEnvironmentSetUp($app): void
     {

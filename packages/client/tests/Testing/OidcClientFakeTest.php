@@ -19,6 +19,13 @@ it('installs the fake and stubs discovery, jwks and token endpoints', function (
         ->and(config('oidc-client.client_id'))->toBe('oidc-client-test');
 });
 
+it('blocks unstubbed requests from reaching the network', function () {
+    OidcClient::fake();
+
+    expect(fn () => Http::get('https://unrelated.example/api'))
+        ->toThrow(RuntimeException::class, 'unrelated.example');
+});
+
 it('mints an id_token the real validator accepts', function () {
     $fake = OidcClient::fake();
 
