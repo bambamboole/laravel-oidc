@@ -21,6 +21,8 @@ final class AuthSessionState
 
     private const string SID_KEY = 'oidc.sid';
 
+    private const string REQUESTED_ACR_VALUES_KEY = 'oidc.requested_acr_values';
+
     public function start(string $method): void
     {
         session()->put(self::AMR_KEY, $this->dedupe([$method]));
@@ -71,6 +73,35 @@ final class AuthSessionState
         $claims = session()->get(self::ACCESS_TOKEN_CLAIMS_KEY, []);
 
         return is_array($claims) ? $claims : [];
+    }
+
+    /**
+     * League's AuthorizationRequestInterface has no acr accessor, so the raw
+     * acr_values query param is stashed here at authorize time for the
+     * post-login pipeline. An empty list clears the key — each authorize
+     * request syncs it, so values never outlive the flow that requested them.
+     *
+     * @param  list<string>  $values
+     */
+    public function putRequestedAcrValues(array $values): void
+    {
+        if ($values === []) {
+            session()->forget(self::REQUESTED_ACR_VALUES_KEY);
+
+            return;
+        }
+
+        session()->put(self::REQUESTED_ACR_VALUES_KEY, $values);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function requestedAcrValues(): array
+    {
+        $values = session()->get(self::REQUESTED_ACR_VALUES_KEY, []);
+
+        return is_array($values) ? array_values(array_filter($values, is_string(...))) : [];
     }
 
     public function startOidcSession(string $sid): void

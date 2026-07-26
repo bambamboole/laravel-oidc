@@ -19,17 +19,12 @@ class ShowTwoFactorQrCodeController
         private readonly TotpFactorProvider $totp,
     ) {}
 
-    /**
-     * @return JsonResponse|array<never, never>
-     */
-    public function __invoke(Request $request): JsonResponse|array
+    public function __invoke(Request $request): JsonResponse
     {
         $user = $this->currentUser($request);
         $factor = $this->twoFactor->currentFactor($user);
 
-        if ($factor === null) {
-            return [];
-        }
+        abort_if($factor === null, 404, 'Two factor authentication has not been enabled.');
 
         return new JsonResponse([
             'svg' => $this->totp->qrCodeSvg($factor, $user),

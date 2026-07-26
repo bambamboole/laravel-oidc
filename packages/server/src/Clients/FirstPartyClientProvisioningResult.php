@@ -12,8 +12,8 @@ final readonly class FirstPartyClientProvisioningResult
         public Client $client,
         public string $clientId,
         public ?string $clientSecret,
-        public FirstPartyClientProvisioningOutcome $outcome,
-        public bool $created,
+        public bool $wasCreated,
+        public bool $secretRotated,
     ) {}
 
     /**
@@ -22,7 +22,7 @@ final readonly class FirstPartyClientProvisioningResult
      */
     public function rollback(): bool
     {
-        if (! $this->created) {
+        if (! $this->wasCreated) {
             return false;
         }
 

@@ -72,6 +72,25 @@ it('lists regenerates and disables recovery credentials', function () {
         ->and($user->recoveryCodes()->count())->toBe(0);
 });
 
+it('returns 404 from all two-factor read endpoints when 2FA is not enabled', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user, 'identity')
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->getJson(route('identity.two-factor.qr-code'))
+        ->assertNotFound();
+
+    $this->actingAs($user, 'identity')
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->getJson(route('identity.two-factor.secret-key'))
+        ->assertNotFound();
+
+    $this->actingAs($user, 'identity')
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->getJson(route('identity.two-factor.recovery-codes'))
+        ->assertNotFound();
+});
+
 it('allows multiple TOTP enrollments per user', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 

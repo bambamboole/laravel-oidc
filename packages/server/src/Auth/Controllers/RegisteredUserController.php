@@ -39,6 +39,10 @@ class RegisteredUserController
 
     public function store(Request $request): JsonResponse|RedirectResponse
     {
+        // Mirrors the createUserFromSocial null design: registration without a
+        // configured action is disabled, not broken — so 404, not 500.
+        abort_unless($this->actions->hasCreateUserAction(), 404);
+
         $input = array_merge($request->all(), [
             'email' => $request->string('email')->lower()->value(),
         ]);

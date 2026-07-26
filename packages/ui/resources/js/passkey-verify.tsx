@@ -11,9 +11,9 @@ declare module "@lattice-php/lattice" {
         "oidc.passkey-verify": {
             label?: string;
             loadingLabel?: string;
-            optionsUrl?: string;
+            optionsUrl: string;
             separator?: string;
-            submitUrl?: string;
+            submitUrl: string;
         };
     }
 }
@@ -92,11 +92,11 @@ const PasskeyVerifyComponent: RendererComponent<"oidc.passkey-verify"> = ({ node
             routes={{
                 options: {
                     method: "get",
-                    url: node.props.optionsUrl ?? "",
+                    url: node.props.optionsUrl,
                 },
                 submit: {
                     method: "post",
-                    url: node.props.submitUrl ?? "",
+                    url: node.props.submitUrl,
                 },
             }}
             separator={node.props.separator}

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Scopes;
 
-final readonly class Scope
+use Laravel\Passport\Scope as PassportScope;
+
+final class Scope extends PassportScope
 {
     public function __construct(
-        public string $id,
-        public string $description = '',
+        string $id,
+        string $description = '',
         public bool $hidden = false,
-    ) {}
+    ) {
+        parent::__construct($id, $description);
+    }
 }

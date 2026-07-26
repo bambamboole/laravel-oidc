@@ -34,6 +34,15 @@ it('registers a user through the package action seam and logs them in', function
     Event::assertDispatched(Registered::class, fn (Registered $event): bool => $event->user->is($user));
 });
 
+it('returns 404 from the register endpoint when no create user action is registered', function () {
+    $this->postJson(route('identity.register.store'), [
+        'name' => 'M',
+        'email' => 'm@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertNotFound();
+});
+
 it('returns Fortify-compatible JSON after registration', function () {
     Oidc::createUsersUsing(function (array $input): Authenticatable {
         return User::create([

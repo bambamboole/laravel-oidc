@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\HiddenInput;
-use Lattice\Lattice\Http\Page;
 use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Heading;
@@ -20,12 +19,9 @@ use Lattice\Lattice\Ui\Components\Stack;
 use Lattice\Lattice\Ui\Components\Text;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
-use Lattice\Lattice\Ui\Enums\PageContainer;
-use Lattice\Lattice\Ui\Enums\PageLayout;
-use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
-class OAuthConsentPage extends Page implements ConsentView
+class OAuthConsentPage extends AuthPage implements ConsentView
 {
     public function __construct(
         private readonly ?ConsentPrompt $prompt = null,
@@ -34,16 +30,6 @@ class OAuthConsentPage extends Page implements ConsentView
     public function respond(ConsentPrompt $prompt, Request $request): Responsable|Response
     {
         return (new self($prompt))->toResponse($request);
-    }
-
-    public function layout(): PageLayout|string|null
-    {
-        return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
     }
 
     public function title(): string
@@ -86,13 +72,9 @@ class OAuthConsentPage extends Page implements ConsentView
         ]);
     }
 
-    /**
-     * The controller always resolves this page through respond(), which supplies the real
-     * prompt before render() ever runs — a missing prompt here means that invariant broke.
-     */
     private function prompt(): ConsentPrompt
     {
-        return $this->prompt ?? throw new LogicException('OAuthConsentPage rendered without a ConsentPrompt; respond() must supply one before render() runs.');
+        return $this->requirePrompt($this->prompt);
     }
 
     private function clientName(): string

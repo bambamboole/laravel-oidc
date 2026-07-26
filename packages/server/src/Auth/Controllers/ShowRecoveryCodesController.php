@@ -15,16 +15,11 @@ class ShowRecoveryCodesController
 
     public function __construct(private readonly TwoFactorManager $twoFactor) {}
 
-    /**
-     * @return JsonResponse|array<never, never>
-     */
-    public function __invoke(Request $request): JsonResponse|array
+    public function __invoke(Request $request): JsonResponse
     {
         $user = $this->currentUser($request);
 
-        if ($this->twoFactor->currentFactor($user) === null) {
-            return [];
-        }
+        abort_if($this->twoFactor->currentFactor($user) === null, 404, 'Two factor authentication has not been enabled.');
 
         return new JsonResponse($this->twoFactor->recoveryCodes($user));
     }

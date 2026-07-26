@@ -45,6 +45,7 @@ class AuthorizationController extends PassportAuthorizationController
         AuthorizationViewResponse $viewResponse
     ): Response|AuthorizationViewResponse {
         $this->removeConsentPromptForTrustedClient($request);
+        $this->rememberRequestedAcrValues($request);
         $this->enforceMaxAge($request);
 
         return parent::authorize($psrRequest, $request, $psrResponse, $viewResponse);
@@ -109,6 +110,21 @@ class AuthorizationController extends PassportAuthorizationController
 
             $this->promptForLogin($request);
         }
+    }
+
+    /**
+     * The pending authorize request is stashed by Passport only at consent
+     * time — after login — so acr_values must be persisted here for the
+     * post-login pipeline to see it. Synced on every authorize request so a
+     * flow without acr_values clears an earlier flow's leftovers.
+     */
+    private function rememberRequestedAcrValues(Request $request): void
+    {
+        $acrValues = $request->query('acr_values');
+
+        $this->sessionState->putRequestedAcrValues(is_string($acrValues)
+            ? array_values(array_filter(explode(' ', $acrValues), static fn (string $value): bool => $value !== ''))
+            : []);
     }
 
     private function removeConsentPromptForTrustedClient(Request $request): void

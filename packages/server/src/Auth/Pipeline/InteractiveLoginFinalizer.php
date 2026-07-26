@@ -52,7 +52,7 @@ final class InteractiveLoginFinalizer
             user: $user,
             client: $this->pendingClient($request),
             scopes: $this->pendingScopes($request),
-            requestedAcrValues: [],
+            requestedAcrValues: $this->sessionState->requestedAcrValues(),
             ip: $request->ip(),
             userAgent: $request->userAgent(),
             amr: [$method],

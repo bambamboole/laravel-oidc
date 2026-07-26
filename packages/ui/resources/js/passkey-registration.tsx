@@ -1,5 +1,5 @@
 import { usePasskeyRegister } from "@laravel/passkeys/react";
-import type { RendererComponent } from "@lattice-php/lattice";
+import { LATTICE_EVENT, type RendererComponent } from "@lattice-php/lattice";
 import { useT } from "@lattice-php/lattice/i18n";
 import { Button, Input, InputError, Label } from "@lattice-php/lattice/ui";
 import { useState } from "react";
@@ -40,11 +40,8 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
             setName("");
             setShowForm(false);
             window.dispatchEvent(
-                new CustomEvent("lattice:reload-component", {
-                    detail: {
-                        component: "oidc.passkeys",
-                        type: "reloadComponent",
-                    },
+                new CustomEvent(LATTICE_EVENT.reloadComponent, {
+                    detail: { component: "oidc.passkeys" },
                 }),
             );
         },
