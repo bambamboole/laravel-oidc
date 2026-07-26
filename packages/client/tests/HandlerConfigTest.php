@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Http\Controllers\OidcCallbackController;
-use Bambamboole\LaravelOidcClient\Http\Controllers\OidcLoginController;
-use Bambamboole\LaravelOidcClient\Http\Controllers\OidcLogoutController;
-use Bambamboole\LaravelOidcClient\Routing\Handler;
-use Bambamboole\LaravelOidcClient\Routing\HandlerConfig;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcCallbackController;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcLoginController;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\OidcLogoutController;
+use Bambamboole\LaravelOidc\Client\Routing\Handler;
+use Bambamboole\LaravelOidc\Client\Routing\HandlerConfig;
 
 it('resolves each handler from the default config', function () {
     $login = Handler::Login->config();

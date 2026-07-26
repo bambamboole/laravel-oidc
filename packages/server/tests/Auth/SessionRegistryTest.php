@@ -2,8 +2,8 @@
 // tests/Auth/SessionRegistryTest.php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
 
 it('creates a session, records participants idempotently, revokes and notifies', function () {
     config(['oidc.session.absolute_lifetime' => 3600]);

@@ -25,7 +25,7 @@ validate it before serving the request. There are three ways to do that.
 
 ## `CheckAudience`
 
-`Bambamboole\LaravelOidc\Http\Middleware\CheckAudience` is a **self-contained** RFC 9068
+`Bambamboole\LaravelOidc\Server\Http\Middleware\CheckAudience` is a **self-contained** RFC 9068
 resource-server validator for routes that accept exchanged (or any audience-scoped)
 tokens.
 
@@ -48,7 +48,7 @@ user provider and sets it as the request's user — no `Auth::` call needed on t
 A token whose `sub` does not resolve to a user is rejected with `401 invalid_token`.
 
 ```php
-use Bambamboole\LaravelOidc\Http\Middleware\CheckAudience;
+use Bambamboole\LaravelOidc\Server\Http\Middleware\CheckAudience;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

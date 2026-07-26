@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
-use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningOutcome;
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningException;
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningOutcome;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 it('provisions through the public facade', function () {
     $result = Oidc::provisionFirstPartyClient(

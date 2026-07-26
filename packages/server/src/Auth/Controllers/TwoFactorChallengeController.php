@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Auth\Controllers;
+namespace Bambamboole\LaravelOidc\Server\Auth\Controllers;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
-use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorChallenge;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorEnrollment;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorRegistry;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\FactorResponse;
-use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Auth\Views\TwoFactorChallengeView;
-use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorChallenge;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorResponse;
+use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengeView;
+use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;

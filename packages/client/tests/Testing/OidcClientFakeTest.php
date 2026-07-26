@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\Testing\OidcClientFake;
-use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
+use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
 

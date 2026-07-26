@@ -48,7 +48,7 @@ report it.
 - Comments: no "what" comments. Delete touched comments that restate code.
 - PHP: strict types, explicit parameter and return types, constructor property promotion, curly
   braces, TitleCase enum cases, PHPDoc only when it carries type/static-analysis/API value.
-- Auth engine: all auth logic stays under `Bambamboole\LaravelOidc`; consuming apps bind only views,
+- Auth engine: all auth logic stays under `Bambamboole\LaravelOidc\Server`; consuming apps bind only views,
   actions, and config.
 - Tests: package behavior is verified through Testbench. Do not depend on `../saas-starter-kit` to
   prove package correctness.

@@ -1,7 +1,7 @@
 laravel: '@testbench'
 
 providers:
-  - Bambamboole\LaravelOidcClient\OidcClientServiceProvider
+  - Bambamboole\LaravelOidc\Client\OidcClientServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
 
 workbench:

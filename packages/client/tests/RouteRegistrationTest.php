@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Tests;
+namespace Bambamboole\LaravelOidc\Client\Tests;
 
-use Bambamboole\LaravelOidcClient\Tests\Support\DisabledRoutesTestCase;
+use Bambamboole\LaravelOidc\Client\Tests\Support\DisabledRoutesTestCase;
 use Illuminate\Support\Facades\Route;
 
 class RouteRegistrationTest extends DisabledRoutesTestCase

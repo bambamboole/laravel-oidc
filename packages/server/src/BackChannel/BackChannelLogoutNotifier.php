@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\BackChannel;
+namespace Bambamboole\LaravelOidc\Server\BackChannel;
 
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
 use Laravel\Passport\Passport;
 
 class BackChannelLogoutNotifier

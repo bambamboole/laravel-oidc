@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Grant;
+namespace Bambamboole\LaravelOidc\Server\Grant;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
-use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
-use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
-use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationContextStore;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Server\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Grant\Concerns\HasAuthenticationContextIssuance;
+use Bambamboole\LaravelOidc\Server\Responses\IdTokenResponse;
 use DateInterval;
 use DateTimeImmutable;
 use League\OAuth2\Server\Entities\UserEntityInterface;

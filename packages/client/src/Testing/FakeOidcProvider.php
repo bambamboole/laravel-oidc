@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Testing;
+namespace Bambamboole\LaravelOidc\Client\Testing;
 
 use DateTimeImmutable;
 use Lcobucci\JWT\Encoding\ChainedFormatter;

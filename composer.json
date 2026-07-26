@@ -35,8 +35,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Bambamboole\\LaravelOidc\\": "packages/server/src/",
-            "Bambamboole\\LaravelOidcClient\\": "packages/client/src/",
+            "Bambamboole\\LaravelOidc\\Server\\": "packages/server/src/",
+            "Bambamboole\\LaravelOidc\\Client\\": "packages/client/src/",
             "Bambamboole\\LaravelOidc\\Ui\\": "packages/ui/src/"
         }
     },
@@ -48,8 +48,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Bambamboole\\LaravelOidc\\OidcServiceProvider",
-                "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider",
+                "Bambamboole\\LaravelOidc\\Server\\OidcServiceProvider",
+                "Bambamboole\\LaravelOidc\\Client\\OidcClientServiceProvider",
                 "Bambamboole\\LaravelOidc\\Ui\\UiServiceProvider"
             ]
         },

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Contracts;
+namespace Bambamboole\LaravelOidc\Server\Contracts;
 
-use Bambamboole\LaravelOidc\Support\EnvironmentWriteException;
+use Bambamboole\LaravelOidc\Server\Support\EnvironmentWriteException;
 
 interface EnvironmentStore
 {

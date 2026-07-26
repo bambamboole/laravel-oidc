@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Grant\Concerns;
+namespace Bambamboole\LaravelOidc\Server\Grant\Concerns;
 
-use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
-use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
-use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenPipeline;
-use Bambamboole\LaravelOidc\Auth\Pipeline\AuthorizationCodeEvent;
-use Bambamboole\LaravelOidc\Token\OidcAccessToken;
-use Bambamboole\LaravelOidc\Token\ResolvesTokenUser;
+use Bambamboole\LaravelOidc\Server\Auth\AccessTokenContextLink;
+use Bambamboole\LaravelOidc\Server\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenPipeline;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AuthorizationCodeEvent;
+use Bambamboole\LaravelOidc\Server\Token\OidcAccessToken;
+use Bambamboole\LaravelOidc\Server\Token\ResolvesTokenUser;
 use DateInterval;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;

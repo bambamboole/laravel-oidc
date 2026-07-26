@@ -9,7 +9,7 @@ method to replace the behavior without touching a caller.
 
 ## `ScopeRepository`
 
-`Bambamboole\LaravelOidc\Contracts\ScopeRepository` is the catalog of scopes the
+`Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository` is the catalog of scopes the
 provider understands.
 
 ```php
@@ -37,14 +37,14 @@ the catalog:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\ScopeRepository::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository::class,
     MyScopeRepository::class,
 );
 ```
 
 ## `ClaimsResolver`
 
-`Bambamboole\LaravelOidc\Contracts\ClaimsResolver` maps an authenticated user to a
+`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` maps an authenticated user to a
 `ClaimSet`.
 
 ```php
@@ -61,14 +61,14 @@ The default is `DefaultClaimsResolver`. Bind your own:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```
 
 ## `ExchangePolicy`
 
-`Bambamboole\LaravelOidc\Contracts\ExchangePolicy` authorizes every RFC 8693 token
+`Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy` authorizes every RFC 8693 token
 exchange (and every `Oidc::issueScopedToken()` call).
 
 ```php
@@ -87,14 +87,14 @@ a different allowlist source:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\ExchangePolicy::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy::class,
     TenantScopedExchangePolicy::class,
 );
 ```
 
 ## `SessionTokenProvider`
 
-`Bambamboole\LaravelOidc\Contracts\SessionTokenProvider` owns the server-side session
+`Bambamboole\LaravelOidc\Server\Contracts\SessionTokenProvider` owns the server-side session
 root token used by the [browser-fetch flow](/advanced/browser-fetch/).
 
 ```php
@@ -114,14 +114,14 @@ Rebind it to source the root token elsewhere (e.g. an external SSO exchange):
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\SessionTokenProvider::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\SessionTokenProvider::class,
     MyExternalSsoTokenProvider::class,
 );
 ```
 
 ## `DeviceRecognizer`
 
-`Bambamboole\LaravelOidc\Contracts\DeviceRecognizer` decides whether the current
+`Bambamboole\LaravelOidc\Server\Contracts\DeviceRecognizer` decides whether the current
 request comes from a device already known for the user — it backs the
 `LoginEvent::isNewDevice()` signal in the post-login pipeline.
 
@@ -139,7 +139,7 @@ own to add it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Contracts\DeviceRecognizer::class,
+    \Bambamboole\LaravelOidc\Server\Contracts\DeviceRecognizer::class,
     MyDeviceRecognizer::class,
 );
 ```

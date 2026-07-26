@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
-use Bambamboole\LaravelOidc\Scopes\Scope;
-use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
+use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Scopes\Scope;
+use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;

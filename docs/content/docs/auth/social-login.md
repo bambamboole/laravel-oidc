@@ -93,10 +93,10 @@ and an upstream identity that resolves to no existing user fails to sign in. Reg
 a service provider's `boot()`:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Illuminate\Support\Str;
 
-Oidc::createUsersFromSocialUsing(function (Bambamboole\LaravelOidc\Auth\Social\SocialUser $socialUser, string $provider) {
+Oidc::createUsersFromSocialUsing(function (Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser $socialUser, string $provider) {
     return User::create([
         'name' => $socialUser->name,
         'email' => $socialUser->email,
@@ -172,7 +172,7 @@ user) and returns an empty **`200`** response (JSON) or a `back()` redirect flas
 Register a custom driver factory in a service provider's `boot()`:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 Oidc::extendSocialProvider('my-driver', function (string $key, array $config) {
     return new App\Auth\Social\MyDriverProvider($key, $config);
@@ -180,7 +180,7 @@ Oidc::extendSocialProvider('my-driver', function (string $key, array $config) {
 ```
 
 The closure receives the provider's key (its entry name under `oidc.social.providers`) and its
-config array, and must return a `Bambamboole\LaravelOidc\Auth\Social\Contracts\SocialProvider`
+config array, and must return a `Bambamboole\LaravelOidc\Server\Auth\Social\Contracts\SocialProvider`
 implementation (`key()`, `redirect(Request $request, string $intent)`, and
 `user(Request $request, PendingAuthorization $pending): SocialUser`). Reference the entry with the
 matching `driver`:

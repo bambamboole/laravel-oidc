@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Auth\Controllers;
+namespace Bambamboole\LaravelOidc\Server\Auth\Controllers;
 
-use Bambamboole\LaravelOidc\Auth\Controllers\Concerns\ResolvesIdentityGuard;
-use Bambamboole\LaravelOidc\Auth\Pipeline\InteractiveLoginFinalizer;
-use Bambamboole\LaravelOidc\Auth\Pipeline\LoginOutcome;
-use Bambamboole\LaravelOidc\Auth\UserActionManager;
-use Bambamboole\LaravelOidc\Auth\Views\RegisterPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\RegisterView;
-use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\InteractiveLoginFinalizer;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginOutcome;
+use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;

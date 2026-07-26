@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Token;
+namespace Bambamboole\LaravelOidc\Client\Token;
 
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use phpseclib3\Crypt\RSA;
 use Throwable;
 

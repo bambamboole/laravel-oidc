@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Routing;
+namespace Bambamboole\LaravelOidc\Client\Routing;
 
 /**
  * The canonical registry of every HTTP endpoint the relying party can register.

@@ -3,17 +3,17 @@ title: Testing
 description: The InteractsWithOidc trait — identity context, real tokens, and the full authorization-code dance in consumer test suites.
 ---
 
-The package ships test helpers in `Bambamboole\LaravelOidc\Testing`. Add the
+The package ships test helpers in `Bambamboole\LaravelOidc\Server\Testing`. Add the
 trait to your suite:
 
 ```php
 // Pest (tests/Pest.php)
-uses(Bambamboole\LaravelOidc\Testing\InteractsWithOidc::class)->in('Feature');
+uses(Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc::class)->in('Feature');
 
 // PHPUnit
 abstract class TestCase extends BaseTestCase
 {
-    use \Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
+    use \Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 }
 ```
 

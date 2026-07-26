@@ -4,13 +4,13 @@ description: How the package registers, customizes, and disables every HTTP endp
 ---
 
 Every endpoint the package registers is defined by the
-`Bambamboole\LaravelOidc\Routing\Handler` enum, which carries each endpoint's default path,
+`Bambamboole\LaravelOidc\Server\Routing\Handler` enum, which carries each endpoint's default path,
 controller, and middleware. `config('oidc.handlers')` is a **sparse override map** on top of
 those defaults — it ships empty, and each entry you add is merged over the built-in definition
 for that handler. Each entry has three keys and is registered by a single `HandlerRegistrar`:
 
 ```php
-use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Routing\Handler;
 
 Handler::Userinfo->value => [
     'route' => 'oauth/userinfo',                 // URI path (literal)
@@ -44,8 +44,8 @@ Resolve a handler's configuration anywhere via the facade instead of reading con
 it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
-use Bambamboole\LaravelOidc\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Routing\Handler;
 
 $config = Oidc::handlerConfig(Handler::Userinfo); // HandlerConfig|false
 $issuer = Oidc::issuer();                          // issuer URL

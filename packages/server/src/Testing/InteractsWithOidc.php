@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Testing;
+namespace Bambamboole\LaravelOidc\Server\Testing;
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
-use Bambamboole\LaravelOidc\Auth\Views\ConsentPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\ConsentView;
-use Bambamboole\LaravelOidc\Auth\Views\MissingAuthViewException;
-use Bambamboole\LaravelOidc\Token\AccessTokenMinter;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\MissingAuthViewException;
+use Bambamboole\LaravelOidc\Server\Token\AccessTokenMinter;
 use DateInterval;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;

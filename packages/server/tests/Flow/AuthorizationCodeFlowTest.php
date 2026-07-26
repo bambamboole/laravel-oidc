@@ -5,20 +5,20 @@ declare(strict_types=1);
  * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
  */
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
-use Bambamboole\LaravelOidc\Auth\Models\AccessTokenContext;
-use Bambamboole\LaravelOidc\Auth\Models\AuthenticationContext;
-use Bambamboole\LaravelOidc\Auth\Models\OidcSession;
-use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Auth\Pipeline\AuthorizationCodeEvent;
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\Facades\Oidc;
-use Bambamboole\LaravelOidc\Http\Controllers\ApproveAuthorizationController;
-use Bambamboole\LaravelOidc\Http\Controllers\AuthorizationController;
-use Bambamboole\LaravelOidc\Http\Controllers\DenyAuthorizationController;
-use Bambamboole\LaravelOidc\Testing\InteractsWithOidc;
-use Bambamboole\LaravelOidc\Tests\TestCase;
-use Bambamboole\LaravelOidc\Token\SigningKeys;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Server\Auth\Models\AccessTokenContext;
+use Bambamboole\LaravelOidc\Server\Auth\Models\AuthenticationContext;
+use Bambamboole\LaravelOidc\Server\Auth\Models\OidcSession;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AuthorizationCodeEvent;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Http\Controllers\ApproveAuthorizationController;
+use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Server\Http\Controllers\DenyAuthorizationController;
+use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
+use Bambamboole\LaravelOidc\Server\Tests\TestCase;
+use Bambamboole\LaravelOidc\Server\Token\SigningKeys;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Testing\TestResponse;

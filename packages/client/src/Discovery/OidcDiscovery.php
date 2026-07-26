@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Discovery;
+namespace Bambamboole\LaravelOidc\Client\Discovery;
 
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Http\Client\Factory as Http;
 

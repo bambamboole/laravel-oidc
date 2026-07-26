@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient;
+namespace Bambamboole\LaravelOidc\Client;
 
 use DateTimeInterface;
 use Illuminate\Support\Facades\Cache;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Http\Middleware\EnforceBackchannelLogout;
+use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;

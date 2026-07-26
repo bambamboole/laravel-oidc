@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient;
+namespace Bambamboole\LaravelOidc\Client;
 
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
-use Bambamboole\LaravelOidcClient\Http\Middleware\EnforceBackchannelLogout;
-use Bambamboole\LaravelOidcClient\Token\IdTokenValidator;
-use Bambamboole\LaravelOidcClient\Token\JwksKeyResolver;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
+use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
+use Bambamboole\LaravelOidc\Client\Token\JwksKeyResolver;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 

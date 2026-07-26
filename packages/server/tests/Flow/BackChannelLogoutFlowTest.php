@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\BackChannel\SendBackChannelLogout;
-use Bambamboole\LaravelOidc\Session\EndOidcSession;
-use Bambamboole\LaravelOidc\Tests\TestCase;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\BackChannel\SendBackChannelLogout;
+use Bambamboole\LaravelOidc\Server\Session\EndOidcSession;
+use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\JsonResponse;

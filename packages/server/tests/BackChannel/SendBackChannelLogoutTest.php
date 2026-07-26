@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\BackChannel\SendBackChannelLogout;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\BackChannel\SendBackChannelLogout;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passport\ClientRepository;

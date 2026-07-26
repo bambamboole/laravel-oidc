@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\EmailVerificationView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

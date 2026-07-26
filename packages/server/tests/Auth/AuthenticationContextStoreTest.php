@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationContextStore;
 
 it('persists and reloads an authentication context', function () {
     $store = app(AuthenticationContextStore::class);

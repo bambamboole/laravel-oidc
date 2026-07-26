@@ -11,7 +11,7 @@ management endpoints drive them. Three providers ship out of the box.
 
 ### `FactorProvider`
 
-`Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorProvider` is the contract every factor
+`Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorProvider` is the contract every factor
 implements:
 
 | Method | Purpose |

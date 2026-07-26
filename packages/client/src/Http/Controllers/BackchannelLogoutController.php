@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Controllers;
+namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;

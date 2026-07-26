@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Models\TotpFactor;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Models\TotpFactor;
 use Illuminate\Support\Facades\DB;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;

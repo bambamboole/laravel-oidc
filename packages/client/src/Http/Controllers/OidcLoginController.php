@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Controllers;
+namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
-use Bambamboole\LaravelOidcClient\OidcClientManager;
-use Bambamboole\LaravelOidcClient\RelyingParty;
+use Bambamboole\LaravelOidc\Client\OidcClientManager;
+use Bambamboole\LaravelOidc\Client\RelyingParty;
 use Illuminate\Http\RedirectResponse;
 
 class OidcLoginController

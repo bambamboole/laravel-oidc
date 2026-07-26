@@ -22,9 +22,9 @@ or `deny()` to stop issuance before the access token is persisted. Triggers run 
 registration order and fail closed when a callback throws.
 
 ```php
-use Bambamboole\LaravelOidc\Auth\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Auth\Pipeline\ClientCredentialsEvent;
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Auth\Pipeline\ClientCredentialsEvent;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
     $api->setAccessTokenClaim('tenant', $event->client->getIdentifier());
@@ -42,7 +42,7 @@ its claims are stamped after the context's, so a trigger can override a stale lo
 
 The userinfo endpoint returns `sub` plus the result of
 `ClaimsResolver::resolve($user)->forScopes($grantedScopes)`. Bind a custom implementation of
-`Bambamboole\LaravelOidc\Contracts\ClaimsResolver` to add application-specific, scope-filtered
+`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` to add application-specific, scope-filtered
 claims to both userinfo and ID tokens.
 
 ## Protected claims

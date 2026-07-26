@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Tests;
+namespace Bambamboole\LaravelOidc\Client\Tests;
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\Tests\Support\BackchannelLogoutEnabledTestCase;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Tests\Support\BackchannelLogoutEnabledTestCase;
 use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 

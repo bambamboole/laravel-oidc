@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\AuthenticationMethods;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationMethods;
 
 it('starts a fresh amr list, overwriting any previous value', function () {
     session()->put(AuthenticationMethods::SESSION_KEY, ['stale']);

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningException;
-use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningOutcome;
-use Bambamboole\LaravelOidc\Clients\FirstPartyClientProvisioningResult;
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningException;
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningOutcome;
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningResult;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Passport\ClientRepository;

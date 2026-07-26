@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Tests;
+namespace Bambamboole\LaravelOidc\Client\Tests;
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\Http\Controllers\BackchannelLogoutController;
-use Bambamboole\LaravelOidcClient\Testing\FakeOidcProvider;
-use Bambamboole\LaravelOidcClient\Tests\Support\BackchannelLogoutEnabledTestCase;
-use Bambamboole\LaravelOidcClient\Token\LogoutTokenValidator;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\BackchannelLogoutController;
+use Bambamboole\LaravelOidc\Client\Testing\FakeOidcProvider;
+use Bambamboole\LaravelOidc\Client\Tests\Support\BackchannelLogoutEnabledTestCase;
+use Bambamboole\LaravelOidc\Client\Token\LogoutTokenValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;

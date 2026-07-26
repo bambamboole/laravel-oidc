@@ -34,12 +34,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Bambamboole\\LaravelOidcClient\\": "src/"
+            "Bambamboole\\LaravelOidc\\Client\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Bambamboole\\LaravelOidcClient\\Tests\\": "tests/",
+            "Bambamboole\\LaravelOidc\\Client\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -51,7 +51,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Bambamboole\\LaravelOidcClient\\OidcClientServiceProvider"
+                "Bambamboole\\LaravelOidc\\Client\\OidcClientServiceProvider"
             ]
         }
     },

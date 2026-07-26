@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Discovery\OidcDiscovery;
+use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {

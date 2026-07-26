@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\LoginPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;

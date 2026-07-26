@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Grant;
+namespace Bambamboole\LaravelOidc\Server\Grant;
 
-use Bambamboole\LaravelOidc\Auth\AccessTokenContextLink;
-use Bambamboole\LaravelOidc\Auth\AuthenticationContextStore;
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\Grant\Concerns\HasAuthenticationContextIssuance;
-use Bambamboole\LaravelOidc\Responses\IdTokenResponse;
+use Bambamboole\LaravelOidc\Server\Auth\AccessTokenContextLink;
+use Bambamboole\LaravelOidc\Server\Auth\AuthenticationContextStore;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\Grant\Concerns\HasAuthenticationContextIssuance;
+use Bambamboole\LaravelOidc\Server\Responses\IdTokenResponse;
 use DateInterval;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\RefreshTokenGrant;

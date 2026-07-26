@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Auth\SessionRegistry;
-use Bambamboole\LaravelOidc\BackChannel\BackChannelLogoutNotifier;
-use Bambamboole\LaravelOidc\BackChannel\SendBackChannelLogout;
+use Bambamboole\LaravelOidc\Server\Auth\SessionRegistry;
+use Bambamboole\LaravelOidc\Server\BackChannel\BackChannelLogoutNotifier;
+use Bambamboole\LaravelOidc\Server\BackChannel\SendBackChannelLogout;
 use Illuminate\Support\Facades\Bus;
 use Laravel\Passport\ClientRepository;
 

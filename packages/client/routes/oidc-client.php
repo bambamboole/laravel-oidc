@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 
 OidcClient::routes();

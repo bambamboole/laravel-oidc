@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Token;
+namespace Bambamboole\LaravelOidc\Client\Token;
 
-use Bambamboole\LaravelOidcClient\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use DateTimeInterface;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;

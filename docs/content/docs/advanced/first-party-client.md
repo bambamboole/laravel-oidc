@@ -45,7 +45,7 @@ rotated (the plaintext secret is only ever available at that moment).
 The same operation is available programmatically:
 
 ```php
-use Bambamboole\LaravelOidc\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 $result = Oidc::provisionFirstPartyClient(
     name: 'My App',

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Auth\MultiFactor;
+namespace Bambamboole\LaravelOidc\Server\Auth\MultiFactor;
 
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Contracts\FactorAuthenticatable;
-use Bambamboole\LaravelOidc\Auth\MultiFactor\Models\TotpFactor;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorAuthenticatable;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Models\TotpFactor;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
 use LogicException;

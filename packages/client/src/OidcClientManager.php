@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient;
+namespace Bambamboole\LaravelOidc\Client;
 
-use Bambamboole\LaravelOidcClient\Routing\Handler;
+use Bambamboole\LaravelOidc\Client\Routing\Handler;
 use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\StatefulGuard;

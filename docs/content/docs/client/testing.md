@@ -22,7 +22,7 @@ The callback reads a `state`/`nonce`/`code_verifier` triplet from the session.
 token endpoint's id_token at the user and returns the callback URL:
 
 ```php
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 
 $fake = OidcClient::fake();
 

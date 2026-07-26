@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Tests;
+namespace Bambamboole\LaravelOidc\Client\Tests;
 
-use Bambamboole\LaravelOidcClient\Http\Middleware\EnforceBackchannelLogout;
+use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 

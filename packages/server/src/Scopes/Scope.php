@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Scopes;
+namespace Bambamboole\LaravelOidc\Server\Scopes;
 
 final readonly class Scope
 {

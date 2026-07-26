@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Exceptions;
+namespace Bambamboole\LaravelOidc\Client\Exceptions;
 
 use RuntimeException;
 

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidcClient\Facades\OidcClient;
-use Bambamboole\LaravelOidcClient\Testing\OidcClientFake;
+use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
+use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;

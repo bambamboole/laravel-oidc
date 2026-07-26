@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Facades;
+namespace Bambamboole\LaravelOidc\Client\Facades;
 
-use Bambamboole\LaravelOidcClient\OidcClientManager;
-use Bambamboole\LaravelOidcClient\Testing\OidcClientFake;
+use Bambamboole\LaravelOidc\Client\OidcClientManager;
+use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Contracts\Auth\StatefulGuard guard()
  * @method static \Illuminate\Http\RedirectResponse redirectAfterLogin()
  * @method static void terminateLocalSession(\Illuminate\Http\Request $request)
- * @method static \Bambamboole\LaravelOidcClient\Testing\OidcClientFake fake()
+ * @method static \Bambamboole\LaravelOidc\Client\Testing\OidcClientFake fake()
  *
  * @see OidcClientManager
  */

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidcClient\Http\Middleware;
+namespace Bambamboole\LaravelOidc\Client\Http\Middleware;
 
-use Bambamboole\LaravelOidcClient\BackchannelLogoutStore;
-use Bambamboole\LaravelOidcClient\OidcClientManager;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
+use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

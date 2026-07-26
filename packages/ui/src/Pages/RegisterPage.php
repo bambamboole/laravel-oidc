@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Auth\Views\RegisterPrompt;
-use Bambamboole\LaravelOidc\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterPrompt;
+use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Core\PageSchema;
