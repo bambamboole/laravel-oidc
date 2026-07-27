@@ -59,6 +59,7 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 | `session_token.session_key` | `oidc.session_token` | Session key the root token is stored under. |
 | `session_token.refresh_skew` | `60` | Seconds before expiry at which the token is re-minted instead of reused. |
 | `session_token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope. |
+| `session_token.guard` | `null` (`OIDC_SESSION_TOKEN_GUARD`) | Guard whose login/logout owns the session token. `null` falls back to `auth.guard`, then the application default guard. Other guards never mint or revoke. |
 
 ## Auth engine
 
