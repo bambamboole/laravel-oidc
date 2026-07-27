@@ -5,6 +5,23 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.10.0](https://github.com/bambamboole/laravel-oidc/compare/v0.9.0...v0.10.0) (2026-07-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** when oidc.session_token.guard is null it now resolves to oidc.auth.guard (default: identity) before the application default guard. Apps relying on the previous app-default behaviour should set OIDC_SESSION_TOKEN_GUARD (or oidc.session_token.guard) explicitly.
+
+### Features
+
+* **server:** surface OIDC details in the about command ([9e40b1f](https://github.com/bambamboole/laravel-oidc/commit/9e40b1fd9c08935311c3008021403884702496bc))
+
+
+### Bug Fixes
+
+* **server:** default session token guard to the OIDC auth guard ([b253e48](https://github.com/bambamboole/laravel-oidc/commit/b253e48462a28ca1dbc6aefda1821744af9c0631))
+* **server:** report scope-catalog failures outside the console ([f79f6a1](https://github.com/bambamboole/laravel-oidc/commit/f79f6a1ab2176776db29a01a3640efae2c364270))
+
 ## [0.9.0](https://github.com/bambamboole/laravel-oidc/compare/v0.8.0...v0.9.0) (2026-07-26)
 
 
