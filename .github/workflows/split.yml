@@ -8,8 +8,13 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.MONOREPO_SPLIT_TOKEN }}
 
+# A release merge pushes the commit to main and creates the vX.Y.Z tag almost
+# simultaneously, firing two split runs (branch mode + tag mode). Both push to
+# the downstream repositories' main branch, so they must not overlap or one
+# push is rejected with "cannot lock ref 'refs/heads/main'". A single static
+# group (not keyed on github.ref) serialises every split run repo-wide.
 concurrency:
-  group: split-${{ github.ref }}
+  group: split
   cancel-in-progress: false
 
 jobs:
