@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "bambamboole/laravel-oidc-server": "0.10.1",
+        "bambamboole/laravel-oidc-server": "0.10.2",
         "laravel/passkeys": "^0.2.1",
         "laravel/passport": "^13.4",
         "lattice-php/lattice": ">=0.28 <1.0"
