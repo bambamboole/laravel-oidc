@@ -48,16 +48,19 @@ class TwoFactorChallengeController
         return app(TwoFactorChallengeView::class)->respond(new TwoFactorChallengePrompt(
             factor: $pending->factor,
             availableFactors: $this->factors->configuredChallengeableEnrollments($user),
+            factorId: $pending->factorId,
         ), $request);
     }
 
     /**
      * Switches the pending challenge to another of the user's challengeable
-     * factors. Matching against configuredChallengeableEnrollments() validates
-     * ownership, confirmation, and the challenge-provider allow-list in one
-     * step; an unknown or unenrolled provider is silently ignored.
+     * factors — the provider's first enrollment, or a specific one when an
+     * enrollment id is given. Matching against
+     * configuredChallengeableEnrollments() validates ownership, confirmation,
+     * and the challenge-provider allow-list in one step; an unknown or
+     * unenrolled provider or enrollment is silently ignored.
      */
-    public function selectFactor(Request $request, string $provider): RedirectResponse
+    public function selectFactor(Request $request, string $provider, ?string $enrollment = null): RedirectResponse
     {
         $pending = PendingMfaChallenge::find();
         $user = $pending === null ? null : $this->challengedUser($pending);
@@ -66,13 +69,13 @@ class TwoFactorChallengeController
             return redirect()->route(Handler::Login->value);
         }
 
-        foreach ($this->factors->configuredChallengeableEnrollments($user) as $enrollment) {
-            if ($enrollment->providerKey === $provider) {
+        foreach ($this->factors->configuredChallengeableEnrollments($user) as $available) {
+            if ($available->providerKey === $provider && ($enrollment === null || $available->id === $enrollment)) {
                 (new PendingMfaChallenge(
                     userId: $pending->userId,
                     remember: $pending->remember,
-                    factor: $enrollment->providerKey,
-                    factorId: $enrollment->id,
+                    factor: $available->providerKey,
+                    factorId: $available->id,
                 ))->store();
 
                 break;

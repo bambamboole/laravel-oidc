@@ -22,11 +22,19 @@ class EnrollmentPolicy
         private readonly RecoveryCodeProvider $recoveryCodes,
     ) {}
 
-    public function factorConfirmed(Authenticatable $user): void
+    /**
+     * Returns whether recovery codes were backfilled, so callers can surface
+     * the fresh codes to the user.
+     */
+    public function factorConfirmed(Authenticatable $user): bool
     {
         if ($this->recoveryCodes->enrollments($user) === []) {
             $this->recoveryCodes->generate($user);
+
+            return true;
         }
+
+        return false;
     }
 
     public function factorRevoked(Authenticatable $user): void

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Auth\MultiFactor;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class RecoveryCodeProvider implements FactorProvider
+class RecoveryCodeProvider implements EnrollableFactorProvider
 {
     use InteractsWithFactorUser;
 
@@ -61,17 +61,41 @@ class RecoveryCodeProvider implements FactorProvider
     }
 
     /**
+     * A single account-wide enrollment whenever codes exist. The
+     * EnrollmentPolicy owns the lifecycle (backfilled with the first
+     * confirmed factor, removed with the last), so existence of codes is the
+     * whole gate — any factor type covers them, not just TOTP.
+     *
      * @return list<FactorEnrollment>
      */
     public function enrollments(Authenticatable $user): array
     {
-        $user = $this->factorUser($user);
-
-        if (! $user->totpFactors()->whereNotNull('confirmed_at')->exists() || ! $user->recoveryCodes()->exists()) {
+        if (! $this->factorUser($user)->recoveryCodes()->exists()) {
             return [];
         }
 
         return [new FactorEnrollment($this->key(), 'account', 'Recovery code', now(), null)];
+    }
+
+    /**
+     * Enrolling (re)generates the code set — the codes appear only in this
+     * return value's metadata, never in enrollments().
+     */
+    public function beginEnrollment(Authenticatable $user, ?string $name = null): FactorEnrollment
+    {
+        return new FactorEnrollment($this->key(), 'account', 'Recovery code', now(), null, [
+            'codes' => $this->generate($user),
+        ]);
+    }
+
+    public function confirmEnrollment(Authenticatable $user, FactorEnrollment $enrollment, FactorResponse $response): bool
+    {
+        return true;
+    }
+
+    public function revoke(Authenticatable $user, FactorEnrollment $enrollment): void
+    {
+        $this->factorUser($user)->recoveryCodes()->delete();
     }
 
     public function beginChallenge(Authenticatable $user, FactorEnrollment $enrollment): FactorChallenge

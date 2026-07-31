@@ -63,7 +63,11 @@ class TotpFactorProvider implements EnrollableFactorProvider
             $enrollment->label,
             $enrollment->confirmedAt,
             $enrollment->lastUsedAt,
-            ['secret' => $factor->secret],
+            [
+                'secret' => $factor->secret,
+                'qr_svg' => $this->qrCodeSvg($factor, $user),
+                'qr_url' => $this->qrCodeUrl($factor, $user),
+            ],
         );
     }
 

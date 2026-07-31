@@ -12,13 +12,9 @@ use Bambamboole\LaravelOidc\Server\Auth\Controllers\LinkedAccountController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\NewPasswordController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\PasskeyAuthenticatedSessionController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\PasswordResetLinkController;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\RegenerateRecoveryCodesController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\RegisteredUserController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\SendEmailVerificationNotificationController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\ShowConfirmedPasswordStatusController;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\ShowRecoveryCodesController;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\ShowTwoFactorQrCodeController;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\ShowTwoFactorSecretKeyController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\SocialAuthenticationController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\TwoFactorChallengeController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\VerifyEmailController;
@@ -74,10 +70,6 @@ enum Handler: string
     case TwoFactorLoginStore = 'identity.two-factor.login.store';
     case TwoFactorChallengeOptions = 'identity.two-factor.login.options';
     case TwoFactorLoginFactor = 'identity.two-factor.login.factor';
-    case TwoFactorQrCode = 'identity.two-factor.qr-code';
-    case TwoFactorSecretKey = 'identity.two-factor.secret-key';
-    case TwoFactorRecoveryCodes = 'identity.two-factor.recovery-codes';
-    case TwoFactorRegenerateRecoveryCodes = 'identity.two-factor.regenerate-recovery-codes';
     case TwoFactorFactors = 'identity.two-factor.factors';
     case TwoFactorEnroll = 'identity.two-factor.enroll';
     case TwoFactorEnrollConfirm = 'identity.two-factor.enroll.confirm';
@@ -240,29 +232,9 @@ enum Handler: string
                 middleware: ['web', $guest, 'throttle:5,1'],
             ),
             self::TwoFactorLoginFactor => new HandlerConfig(
-                route: 'auth/two-factor-challenge/factor/{provider}',
+                route: 'auth/two-factor-challenge/factor/{provider}/{enrollment?}',
                 controller: [TwoFactorChallengeController::class, 'selectFactor'],
                 middleware: ['web', $guest],
-            ),
-            self::TwoFactorQrCode => new HandlerConfig(
-                route: 'auth/user/two-factor-qr-code',
-                controller: ShowTwoFactorQrCodeController::class,
-                middleware: ['web', $authenticated, $passwordConfirmed],
-            ),
-            self::TwoFactorSecretKey => new HandlerConfig(
-                route: 'auth/user/two-factor-secret-key',
-                controller: ShowTwoFactorSecretKeyController::class,
-                middleware: ['web', $authenticated, $passwordConfirmed],
-            ),
-            self::TwoFactorRecoveryCodes => new HandlerConfig(
-                route: 'auth/user/two-factor-recovery-codes',
-                controller: ShowRecoveryCodesController::class,
-                middleware: ['web', $authenticated, $passwordConfirmed],
-            ),
-            self::TwoFactorRegenerateRecoveryCodes => new HandlerConfig(
-                route: 'auth/user/two-factor-recovery-codes',
-                controller: RegenerateRecoveryCodesController::class,
-                middleware: ['web', $authenticated, $passwordConfirmed],
             ),
             self::TwoFactorFactors => new HandlerConfig(
                 route: 'auth/user/two-factor/factors',
@@ -418,7 +390,6 @@ enum Handler: string
             self::PasswordConfirmStore,
             self::VerificationSend,
             self::TwoFactorLoginStore,
-            self::TwoFactorRegenerateRecoveryCodes,
             self::TwoFactorEnroll,
             self::TwoFactorEnrollConfirm,
             self::PasskeyLogin,

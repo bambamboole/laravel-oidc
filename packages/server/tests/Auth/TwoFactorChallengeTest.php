@@ -173,6 +173,28 @@ it('switches the pending challenge to another enrolled factor', function () {
         ->assertSessionMissing('login.challenge_state');
 });
 
+it('switches the pending challenge to a specific enrollment', function () {
+    [$user, $first] = confirmedTotpUser();
+    $second = app(TotpFactorProvider::class)->enroll($user, 'Second');
+    $second->forceFill(['confirmed_at' => now()])->save();
+
+    $this->withSession([
+        'login.id' => $user->getAuthIdentifier(),
+        'login.factor' => 'totp',
+        'login.factor_id' => (string) $first->getKey(),
+    ])->get(route('identity.two-factor.login.factor', ['provider' => 'totp', 'enrollment' => (string) $second->getKey()]))
+        ->assertRedirect(route('identity.two-factor.login'))
+        ->assertSessionHas('login.factor_id', (string) $second->getKey());
+
+    $this->withSession([
+        'login.id' => $user->getAuthIdentifier(),
+        'login.factor' => 'totp',
+        'login.factor_id' => (string) $first->getKey(),
+    ])->get(route('identity.two-factor.login.factor', ['provider' => 'totp', 'enrollment' => 'unknown']))
+        ->assertRedirect(route('identity.two-factor.login'))
+        ->assertSessionHas('login.factor_id', (string) $first->getKey());
+});
+
 it('ignores a switch to a provider without a challengeable enrollment', function () {
     [$user, $factor] = confirmedTotpUser();
 
