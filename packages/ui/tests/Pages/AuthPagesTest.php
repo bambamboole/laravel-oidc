@@ -230,7 +230,7 @@ it('renders the confirm-password page for an authenticated user', function () {
 it('renders the two-factor challenge page for a pending login', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->get(route('identity.two-factor.login'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertSee(__('oidc-ui::auth.two-factor.title'), false);

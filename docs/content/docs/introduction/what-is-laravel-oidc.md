@@ -21,7 +21,7 @@ its own views and a create-user action, and gets a complete identity provider.
 The package is organized into two cooperating layers you can adopt together or piecemeal:
 
 - **The OIDC provider** — the protocol endpoints and token machinery. Usable on its own if you
-  already have your own authentication (e.g. Fortify) and only need the OIDC surface.
+  already have your own authentication and only need the OIDC surface.
 - **The auth engine** — package-owned authentication flows with view/action seams. Use it when
   you want the package to own login, registration, and MFA as well.
 

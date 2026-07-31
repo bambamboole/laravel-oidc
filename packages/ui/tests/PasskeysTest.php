@@ -19,11 +19,11 @@ function createPasskey(User $user, string $name = 'My passkey'): Passkey
     ]);
 }
 
-test('passkey registration uses the identity provider ceremony routes', function () {
+test('passkey registration uses the generic webauthn enrollment routes', function () {
     $component = PasskeyRegistration::make();
 
-    expect($component->optionsUrl)->toBe(route('identity.passkey.registration-options', absolute: false))
-        ->and($component->submitUrl)->toBe(route('identity.passkey.store', absolute: false));
+    expect($component->beginUrl)->toBe(route('identity.two-factor.enroll', ['provider' => 'webauthn'], absolute: false))
+        ->and($component->confirmUrl)->toBe(route('identity.two-factor.enroll.confirm', ['provider' => 'webauthn'], absolute: false));
 });
 
 test('passkey registration reports availability from the ceremony routes', function () {
