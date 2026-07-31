@@ -12,8 +12,7 @@ return new class extends Migration
     {
         Schema::create('oidc_social_accounts', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('authenticatable_type');
-            $table->string('authenticatable_id');
+            $table->uuidMorphs('authenticatable', 'oidc_social_authenticatable_index');
             $table->string('provider');
             $table->string('provider_user_id');
             $table->string('email')->nullable();
@@ -27,7 +26,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['provider', 'provider_user_id']);
-            $table->index(['authenticatable_type', 'authenticatable_id'], 'oidc_social_authenticatable_index');
         });
     }
 
