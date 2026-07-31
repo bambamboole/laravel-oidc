@@ -22,7 +22,9 @@ The service provider is auto-discovered.
 The package ships migrations that extend `oauth_clients` (post-logout redirect URIs, exchange
 audiences, provisioning key, back-channel logout) and add its own tables (authentication
 contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants,
-social accounts).
+social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and the
+user references (`user_id`, `authenticatable_id`) are strings — integer- and UUID-keyed user
+models both work.
 
 ```bash
 php artisan vendor:publish --tag=oidc-migrations

@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('oidc_totp_factors', function (Blueprint $table): void {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('authenticatable_type');
             $table->string('authenticatable_id');
             $table->string('name');
