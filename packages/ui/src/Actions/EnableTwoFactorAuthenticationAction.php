@@ -32,7 +32,7 @@ class EnableTwoFactorAuthenticationAction extends ActionDefinition
     {
         $user = $this->twoFactorUser();
 
-        $this->enrollableProvider($this->factors)->beginEnrollment($user);
+        ($this->factors->enrollable($this->providerKey()) ?? abort(404))->beginEnrollment($user);
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.two-factor.setup-started'), Variant::Info)

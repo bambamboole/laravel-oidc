@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Lattice\Lattice\Attributes\AsFragment;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Fragments\FragmentDefinition;
@@ -21,13 +20,15 @@ use Lattice\Lattice\Ui\Enums\Gap;
 #[AsFragment('oidc.recovery-codes')]
 class RecoveryCodesFragment extends FragmentDefinition
 {
-    use ResolvesAuthenticatedUser;
-
     public function __construct(private readonly RecoveryCodeProvider $recoveryCodes) {}
 
     public function schema(PageSchema $schema): PageSchema
     {
-        $codes = $this->recoveryCodes->codes($this->currentUser());
+        $user = auth()->user();
+
+        abort_unless($user !== null, 403);
+
+        $codes = $this->recoveryCodes->codes($user);
 
         if ($codes === []) {
             return $schema->schema([

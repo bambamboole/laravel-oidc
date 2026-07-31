@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Lattice\Lattice\Actions\ActionDefinition;
 use Lattice\Lattice\Actions\ActionResult;
 use Lattice\Lattice\Actions\Components\Action;
@@ -48,7 +49,7 @@ class RevokeFactorAction extends ActionDefinition
         $user = $this->twoFactorUser();
         $enrollment = $this->contextEnrollment() ?? abort(404);
 
-        $this->enrollableProvider($this->factors)->revoke($user, $enrollment);
+        ($this->factors->enrollable($this->providerKey()) ?? abort(404))->revoke($user, $enrollment);
         $this->policy->factorRevoked($user);
 
         return ActionResult::success()
@@ -58,18 +59,9 @@ class RevokeFactorAction extends ActionDefinition
 
     private function contextEnrollment(): ?FactorEnrollment
     {
-        $enrollable = $this->factors->enrollable($this->providerKey());
-
-        if ($enrollable === null) {
-            return null;
-        }
-
-        foreach ($enrollable->enrollments($this->twoFactorUser()) as $enrollment) {
-            if ($enrollment->id === (string) $this->context('enrollment')) {
-                return $enrollment;
-            }
-        }
-
-        return null;
+        return Arr::first(
+            $this->factors->enrollable($this->providerKey())?->enrollments($this->twoFactorUser()) ?? [],
+            fn (FactorEnrollment $enrollment): bool => $enrollment->id === (string) $this->context('enrollment'),
+        );
     }
 }

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\PasswordInput;
@@ -21,12 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
 {
-    /**
-     * {@see PasswordConfirmationPrompt} carries no data today, so there is
-     * nothing to thread through the constructor — the page still resolves
-     * with zero args, satisfying the container binding invariant.
-     */
-    public function respond(PasswordConfirmationPrompt $prompt, Request $request): Responsable|Response
+    public function respond(Request $request): Responsable|Response
     {
         return (new self)->toResponse($request);
     }
@@ -58,19 +51,15 @@ class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
      */
     private function passkeySchema(): array
     {
-        if (! Route::has('identity.passkey.confirm-options') || ! Route::has('identity.passkey.confirm')) {
-            return [];
-        }
+        $passkey = PasskeyVerify::makeIfAvailable(
+            'identity.passkey.confirm-options',
+            'identity.passkey.confirm',
+            label: __('oidc-ui::auth.confirm-password.passkey-label'),
+            loadingLabel: __('oidc-ui::auth.confirm-password.passkey-loading'),
+            separator: __('oidc-ui::auth.confirm-password.passkey-separator'),
+        );
 
-        return [
-            PasskeyVerify::make(
-                route('identity.passkey.confirm-options', absolute: false),
-                route('identity.passkey.confirm', absolute: false),
-            )
-                ->label(__('oidc-ui::auth.confirm-password.passkey-label'))
-                ->loadingLabel(__('oidc-ui::auth.confirm-password.passkey-loading'))
-                ->separator(__('oidc-ui::auth.confirm-password.passkey-separator')),
-        ];
+        return $passkey === null ? [] : [$passkey];
     }
 
     /**

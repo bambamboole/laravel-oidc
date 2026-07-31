@@ -12,7 +12,6 @@ use Lattice\Lattice\Ui\Enums\Align;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\PageContainer;
 use Lattice\Lattice\Ui\Enums\PageLayout;
-use LogicException;
 
 abstract class AuthPage extends Page
 {
@@ -34,20 +33,5 @@ abstract class AuthPage extends Page
                 Heading::make($heading, 2),
                 ...($subtitle === null ? [] : [Text::make($subtitle)->align(Align::Center)]),
             ]);
-    }
-
-    /**
-     * The controller always resolves a page through respond(), which supplies
-     * the real prompt before render() ever runs — a missing prompt here means
-     * that invariant broke.
-     *
-     * @template TPrompt of object
-     *
-     * @param  TPrompt|null  $prompt
-     * @return TPrompt
-     */
-    protected function requirePrompt(?object $prompt): object
-    {
-        return $prompt ?? throw new LogicException(static::class.' rendered without its prompt; respond() must supply one before render() runs.');
     }
 }

@@ -17,6 +17,7 @@ use Lattice\Lattice\Ui\Components\Button;
 use Lattice\Lattice\Ui\Components\Component;
 use Lattice\Lattice\Ui\Components\Grid;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResetPasswordPage extends AuthPage implements PasswordResetView
@@ -37,8 +38,9 @@ class ResetPasswordPage extends AuthPage implements PasswordResetView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $token = $this->prompt()->token;
-        $email = $this->prompt()->email ?? '';
+        $prompt = $this->prompt ?? throw new LogicException(self::class.' rendered without its prompt; respond() must supply one before render() runs.');
+        $token = $prompt->token;
+        $email = $prompt->email ?? '';
 
         return $schema->schema([
             $this->heading('reset-password-heading', __('oidc-ui::auth.reset-password.heading'), __('oidc-ui::auth.reset-password.subtitle')),
@@ -49,11 +51,6 @@ class ResetPasswordPage extends AuthPage implements PasswordResetView
                 ->resetOnSuccess(['password', 'password_confirmation'])
                 ->withoutSubmitButton(),
         ]);
-    }
-
-    private function prompt(): PasswordResetPrompt
-    {
-        return $this->requirePrompt($this->prompt);
     }
 
     /**

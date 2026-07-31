@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -26,12 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RegisterPage extends AuthPage implements RegisterView
 {
-    /**
-     * {@see RegisterPrompt} carries no data today, so there is nothing to
-     * thread through the constructor — every page still resolves with zero
-     * args, satisfying the container binding invariant.
-     */
-    public function respond(RegisterPrompt $prompt, Request $request): Responsable|Response
+    public function respond(Request $request): Responsable|Response
     {
         return (new self)->toResponse($request);
     }

@@ -1,4 +1,3 @@
-import type { UrlMethodPair } from "@inertiajs/core";
 import { router } from "@inertiajs/react";
 import { usePasskeyVerify } from "@laravel/passkeys/react";
 import type { RendererComponent } from "@lattice-php/lattice";
@@ -18,25 +17,13 @@ declare module "@lattice-php/lattice" {
     }
 }
 
-type PasskeyVerifyProps = {
-    routes?: {
-        options: UrlMethodPair;
-        submit: UrlMethodPair;
-    };
-    label?: string;
-    loadingLabel?: string;
-    separator?: string;
-};
-
-function PasskeyVerify({ routes, label, loadingLabel, separator }: PasskeyVerifyProps = {}) {
+const PasskeyVerify: RendererComponent<"oidc.passkey-verify"> = ({ node }) => {
     const { t } = useT("oidc-ui");
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
-        ...(routes && {
-            routes: {
-                options: routes.options.url,
-                submit: routes.submit.url,
-            },
-        }),
+        routes: {
+            options: node.props.optionsUrl,
+            submit: node.props.submitUrl,
+        },
         onSuccess: (response) => {
             if (response.redirect) {
                 router.visit(response.redirect);
@@ -49,7 +36,7 @@ function PasskeyVerify({ routes, label, loadingLabel, separator }: PasskeyVerify
     }
 
     return (
-        <>
+        <div className="mx-auto w-full max-w-md">
             <div className="grid gap-2">
                 <Button
                     type="button"
@@ -64,8 +51,8 @@ function PasskeyVerify({ routes, label, loadingLabel, separator }: PasskeyVerify
                         <IconRenderer icon="key-round" className="h-4 w-4" />
                     )}
                     {isLoading
-                        ? (loadingLabel ?? t("passkey.authenticating", "Authenticating..."))
-                        : (label ?? t("passkey.sign-in", "Sign in with a passkey"))}
+                        ? (node.props.loadingLabel ?? t("passkey.authenticating", "Authenticating..."))
+                        : (node.props.label ?? t("passkey.sign-in", "Sign in with a passkey"))}
                 </Button>
                 {error && <InputError message={error} className="text-center" />}
             </div>
@@ -76,32 +63,12 @@ function PasskeyVerify({ routes, label, loadingLabel, separator }: PasskeyVerify
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-lt-bg px-2 text-lt-muted-fg">
-                        {separator ?? t("passkey.separator", "Or continue with email")}
+                        {node.props.separator ?? t("passkey.separator", "Or continue with email")}
                     </span>
                 </div>
             </div>
-        </>
+        </div>
     );
-}
+};
 
-const PasskeyVerifyComponent: RendererComponent<"oidc.passkey-verify"> = ({ node }) => (
-    <div className="mx-auto w-full max-w-md">
-        <PasskeyVerify
-            label={node.props.label}
-            loadingLabel={node.props.loadingLabel}
-            routes={{
-                options: {
-                    method: "get",
-                    url: node.props.optionsUrl,
-                },
-                submit: {
-                    method: "post",
-                    url: node.props.submitUrl,
-                },
-            }}
-            separator={node.props.separator}
-        />
-    </div>
-);
-
-export default PasskeyVerifyComponent;
+export default PasskeyVerify;
