@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passkeys\Actions\VerifyPasskey;
@@ -99,6 +100,32 @@ it('completes a webauthn second-factor challenge end to end', function () {
     ])->assertRedirect(route(Handler::TwoFactorLogin->value));
 
     $this->assertGuest('identity');
+
+    $this->getJson(route(Handler::TwoFactorChallengeOptions->value))->assertOk();
+
+    $this->post(route(Handler::TwoFactorLoginStore->value), [
+        'credential' => webauthnAssertionPayload(),
+    ])->assertRedirect('/dashboard');
+
+    $this->assertAuthenticatedAs($user, 'identity');
+    expect(session(AuthSessionState::AMR_KEY))->toContain('webauthn');
+});
+
+it('completes a challenge after switching from totp to webauthn', function () {
+    [$user, $passkey] = webauthnChallengeUser();
+    $factor = app(TotpFactorProvider::class)->enroll($user);
+    $factor->forceFill(['confirmed_at' => now()])->save();
+    stubVerifiedPasskey($passkey);
+
+    $this->post(route(Handler::LoginStore->value), [
+        'email' => 'm@example.com',
+        'password' => 'password',
+    ])->assertRedirect(route(Handler::TwoFactorLogin->value))
+        ->assertSessionHas('login.factor', 'totp');
+
+    $this->get(route(Handler::TwoFactorLoginFactor->value, ['provider' => 'webauthn']))
+        ->assertRedirect(route(Handler::TwoFactorLogin->value))
+        ->assertSessionHas('login.factor', 'webauthn');
 
     $this->getJson(route(Handler::TwoFactorChallengeOptions->value))->assertOk();
 

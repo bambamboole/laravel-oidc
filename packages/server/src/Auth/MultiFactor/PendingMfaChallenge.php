@@ -28,8 +28,14 @@ final readonly class PendingMfaChallenge
         public string $factorId,
     ) {}
 
+    /**
+     * Storing (re)selects the active factor, so any challenge state issued for
+     * a previously selected factor is stale and must not verify.
+     */
     public function store(): void
     {
+        session()->forget(self::CHALLENGE_STATE_KEY);
+
         session()->put([
             self::USER_ID_KEY => $this->userId,
             self::REMEMBER_KEY => $this->remember,

@@ -72,6 +72,7 @@ redirects to the challenge:
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.two-factor.login` | `GET` | `auth/two-factor-challenge` | `web`, `guest:identity` |
+| `identity.two-factor.login.factor` | `GET` | `auth/two-factor-challenge/factor/{provider}` | `web`, `guest:identity` |
 | `identity.two-factor.login.options` | `GET` | `auth/two-factor-challenge/options` | `web`, `guest:identity`, `throttle:5,1` |
 | `identity.two-factor.login.store` | `POST` | `auth/two-factor-challenge` | `web`, `guest:identity`, `throttle:5,1` |
 
@@ -82,7 +83,15 @@ requests by design — each verification attempt consumes the stored state and n
 challenge.
 
 `GET identity.two-factor.login` renders through the bound `TwoFactorChallengeView` contract, or
-redirects to `identity.login` if there is no pending challenge on the session.
+redirects to `identity.login` if there is no pending challenge on the session. The
+`TwoFactorChallengePrompt` passed to the view carries the active `factor` key plus
+`availableFactors` — every challengeable enrollment the user could switch to — so the view
+can offer a method picker.
+
+`GET identity.two-factor.login.factor` switches the pending challenge to another of the
+user's challengeable factors (e.g. from `totp` to `webauthn`). The provider must have a
+confirmed, non-backup enrollment and be listed in `challenge_providers`; anything else is
+silently ignored. Switching discards any previously issued challenge state.
 
 `POST identity.two-factor.login.store` (throttled **5/minute**) validates `code` and `recovery_code`
 (both `nullable|string`), resolves the pending user, and picks the provider: `recovery_code` when a
@@ -165,12 +174,20 @@ endpoints also carry `throttle:5,1`:
 
 ```php
 'two_factor' => [
-    'challenge_providers' => ['totp'], // which providers are offered at the login challenge
-    'secret_length' => 16,             // TOTP secret length
-    'window' => 1,                     // accepted TOTP time-step window
-    'recovery_codes' => 8,             // how many recovery codes are generated
+    'challenge_providers' => ['totp', 'webauthn'], // which providers are offered at the login challenge
+    'secret_length' => 16,                         // TOTP secret length
+    'window' => 1,                                 // accepted TOTP time-step window
+    'recovery_codes' => 8,                         // how many recovery codes are generated
 ],
 ```
+
+With `webauthn` in `challenge_providers` (the default), a password login by a user who owns a
+passkey is challenged with that passkey as second factor. Set the list to `['totp']` to
+restore challenge-on-TOTP-only behavior.
+
+Known limitation: the WebAuthn challenge is pinned to one enrollment. A user with several
+passkeys must assert with the pinned one (the first, or the one selected via
+`identity.two-factor.login.factor`).
 
 ## Enrollment, challenge, and `amr`
 

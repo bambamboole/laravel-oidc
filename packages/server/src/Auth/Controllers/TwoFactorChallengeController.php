@@ -39,14 +39,47 @@ class TwoFactorChallengeController
     public function create(Request $request): Responsable|RedirectResponse|Response
     {
         $pending = PendingMfaChallenge::find();
+        $user = $pending === null ? null : $this->challengedUser($pending);
 
-        if ($pending === null || $this->challengedUser($pending) === null) {
+        if ($pending === null || $user === null) {
             return redirect()->route(Handler::Login->value);
         }
 
         return app(TwoFactorChallengeView::class)->respond(new TwoFactorChallengePrompt(
             factor: $pending->factor,
+            availableFactors: $this->factors->configuredChallengeableEnrollments($user),
         ), $request);
+    }
+
+    /**
+     * Switches the pending challenge to another of the user's challengeable
+     * factors. Matching against configuredChallengeableEnrollments() validates
+     * ownership, confirmation, and the challenge-provider allow-list in one
+     * step; an unknown or unenrolled provider is silently ignored.
+     */
+    public function selectFactor(Request $request, string $provider): RedirectResponse
+    {
+        $pending = PendingMfaChallenge::find();
+        $user = $pending === null ? null : $this->challengedUser($pending);
+
+        if ($pending === null || $user === null) {
+            return redirect()->route(Handler::Login->value);
+        }
+
+        foreach ($this->factors->configuredChallengeableEnrollments($user) as $enrollment) {
+            if ($enrollment->providerKey === $provider) {
+                (new PendingMfaChallenge(
+                    userId: $pending->userId,
+                    remember: $pending->remember,
+                    factor: $enrollment->providerKey,
+                    factorId: $enrollment->id,
+                ))->store();
+
+                break;
+            }
+        }
+
+        return redirect()->route(Handler::TwoFactorLogin->value);
     }
 
     /**

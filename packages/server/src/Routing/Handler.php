@@ -73,6 +73,7 @@ enum Handler: string
     case TwoFactorLogin = 'identity.two-factor.login';
     case TwoFactorLoginStore = 'identity.two-factor.login.store';
     case TwoFactorChallengeOptions = 'identity.two-factor.login.options';
+    case TwoFactorLoginFactor = 'identity.two-factor.login.factor';
     case TwoFactorQrCode = 'identity.two-factor.qr-code';
     case TwoFactorSecretKey = 'identity.two-factor.secret-key';
     case TwoFactorRecoveryCodes = 'identity.two-factor.recovery-codes';
@@ -237,6 +238,11 @@ enum Handler: string
                 route: 'auth/two-factor-challenge/options',
                 controller: [TwoFactorChallengeController::class, 'options'],
                 middleware: ['web', $guest, 'throttle:5,1'],
+            ),
+            self::TwoFactorLoginFactor => new HandlerConfig(
+                route: 'auth/two-factor-challenge/factor/{provider}',
+                controller: [TwoFactorChallengeController::class, 'selectFactor'],
+                middleware: ['web', $guest],
             ),
             self::TwoFactorQrCode => new HandlerConfig(
                 route: 'auth/user/two-factor-qr-code',

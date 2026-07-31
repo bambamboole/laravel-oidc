@@ -18,7 +18,31 @@ it('exposes passkeys as webauthn factor enrollments', function () {
         ->and(app(FactorRegistry::class)->get('webauthn')->key())->toBe('webauthn');
 });
 
-it('does not force the deferred WebAuthn MFA ceremony during password login', function () {
+it('challenges a password login with an enrolled passkey by default', function () {
+    $user = User::create([
+        'name' => 'M',
+        'email' => 'm@example.com',
+        'password' => Hash::make('password'),
+    ]);
+
+    $user->passkeys()->create([
+        'name' => 'Security key',
+        'credential_id' => 'credential-id',
+        'credential' => [],
+    ]);
+
+    $this->post(route('identity.login.store'), [
+        'email' => 'm@example.com',
+        'password' => 'password',
+    ])->assertRedirect(route('identity.two-factor.login', absolute: false));
+
+    expect(session('login.factor'))->toBe('webauthn');
+    $this->assertGuest('identity');
+});
+
+it('does not force the deferred WebAuthn MFA ceremony when webauthn is not a challenge provider', function () {
+    config(['oidc.auth.two_factor.challenge_providers' => ['totp']]);
+
     $user = User::create([
         'name' => 'M',
         'email' => 'm@example.com',
