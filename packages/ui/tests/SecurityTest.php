@@ -16,6 +16,7 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Lattice\Lattice\Effects\Builtin\OpenModal;
+use Lattice\Lattice\Facades\Effects;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 
@@ -190,14 +191,24 @@ test('the regenerate action opens the recovery codes modal', function () {
 });
 
 test('confirming the first factor opens the recovery codes modal once', function () {
-    $openedModals = function (): array {
-        $effects = session('inertia.flash_data.latticeEffects', []);
+    // Observe Lattice's own effect flasher instead of Inertia's flash-bag
+    // session internals, which vary across inertia-laravel versions.
+    $recorder = new class
+    {
+        /** @var list<object> */
+        public array $effects = [];
 
-        return array_map(
-            static fn (OpenModal $effect): string => $effect->modal,
-            array_values(array_filter($effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
-        );
+        public function flash(object ...$effects): void
+        {
+            array_push($this->effects, ...$effects);
+        }
     };
+    Effects::swap($recorder);
+
+    $openedModals = fn (): array => array_map(
+        static fn (OpenModal $effect): string => $effect->modal,
+        array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
+    );
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $factor = app(TotpFactorProvider::class)->enroll($user);
@@ -209,8 +220,9 @@ test('confirming the first factor opens the recovery codes modal once', function
 
     expect($openedModals())->toBe(['oidc.recovery-codes']);
 
-    // A later re-enrollment confirmation must not regenerate the codes — the
-    // policy only backfills when none exist.
+    // A later re-enrollment confirmation must not regenerate the codes or
+    // re-open the modal — the policy only backfills when none exist.
+    $recorder->effects = [];
     $codes = app(RecoveryCodeProvider::class)->codes($user);
     $second = app(TotpFactorProvider::class)->enroll($user);
     $secondCode = app(Google2FA::class)->getCurrentOtp($second->secret);
@@ -219,7 +231,8 @@ test('confirming the first factor opens the recovery codes modal once', function
         ->submitForm(ConfirmTwoFactorForm::class, ['code' => $secondCode])
         ->assertRedirect();
 
-    expect(app(RecoveryCodeProvider::class)->codes($user))->toBe($codes);
+    expect(app(RecoveryCodeProvider::class)->codes($user))->toBe($codes)
+        ->and($openedModals())->toBe([]);
 });
 
 test('the enable action opens a context-provided modal', function () {
