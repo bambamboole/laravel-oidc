@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Ui\Pages;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
+use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -78,7 +79,9 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 
     /**
      * Links to re-challenge with another enrolled method, rendered only when
-     * the prompt offers more than the active provider.
+     * the prompt offers more than the active enrollment. Providers with a
+     * single enrollment get one link; multiple enrollments of the same
+     * provider are listed individually by their label.
      *
      * @return list<Stack>
      */
@@ -88,13 +91,33 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
             return [];
         }
 
-        $providerKeys = array_values(array_unique(array_map(
-            fn ($enrollment) => $enrollment->providerKey,
-            $this->prompt->availableFactors ?? [],
-        )));
-        $otherKeys = array_values(array_diff($providerKeys, [(string) $this->prompt?->factor]));
+        $available = $this->prompt->availableFactors ?? [];
+        $countPerProvider = array_count_values(array_map(
+            fn ($enrollment): string => $enrollment->providerKey,
+            $available,
+        ));
 
-        if ($otherKeys === [] || count($providerKeys) < 2) {
+        $links = [];
+
+        foreach ($available as $enrollment) {
+            if ($enrollment->providerKey === $this->prompt?->factor
+                && ($this->prompt->factorId === null || $enrollment->id === $this->prompt->factorId)) {
+                continue;
+            }
+
+            $label = FactorMethodName::for($enrollment->providerKey);
+
+            if ($countPerProvider[$enrollment->providerKey] > 1) {
+                $label .= " ({$enrollment->label})";
+            }
+
+            $links[] = Link::make($label)->href(route('identity.two-factor.login.factor', [
+                'provider' => $enrollment->providerKey,
+                'enrollment' => $enrollment->id,
+            ], absolute: false));
+        }
+
+        if ($links === []) {
             return [];
         }
 
@@ -104,23 +127,8 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
                 ->gap(Gap::ExtraSmall)
                 ->schema([
                     Text::make(__('oidc-ui::auth.two-factor.use-another')),
-                    ...array_map(
-                        fn (string $key) => Link::make($this->providerLabel($key))
-                            ->href(route('identity.two-factor.login.factor', ['provider' => $key], absolute: false)),
-                        $otherKeys,
-                    ),
+                    ...$links,
                 ]),
         ];
-    }
-
-    /**
-     * Falls back to the raw provider key so host-registered providers render
-     * without package translations.
-     */
-    private function providerLabel(string $key): string
-    {
-        $labelKey = "oidc-ui::auth.two-factor.method.{$key}";
-
-        return trans()->has($labelKey) ? __($labelKey) : $key;
     }
 }

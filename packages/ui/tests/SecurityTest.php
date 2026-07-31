@@ -9,11 +9,13 @@ use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Actions\SendVerificationEmailAction;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
+use Bambamboole\LaravelOidc\Ui\Fragments\RecoveryCodesFragment;
 use Bambamboole\LaravelOidc\Ui\Fragments\TwoFactorSetupFragment;
 use Bambamboole\LaravelOidc\Ui\Tables\TwoFactorMethodsTable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
+use Lattice\Lattice\Effects\Builtin\OpenModal;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 
@@ -112,16 +114,112 @@ test('the two-factor setup fragment reports an already-confirmed factor instead 
         ->assertDontSee($factor->secret, false);
 });
 
-test('the enable action rejects non-enrollable and unknown provider contexts', function () {
+test('the enable action rejects an unknown provider context', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-
-    $this->actingAs($user)
-        ->callAction(EnableTwoFactorAuthenticationAction::class, context: ['provider' => 'webauthn'])
-        ->assertNotFound();
 
     $this->actingAs($user)
         ->callAction(EnableTwoFactorAuthenticationAction::class, context: ['provider' => 'unknown'])
         ->assertNotFound();
+});
+
+test('the enable action begins a webauthn enrollment and opens the setup modal', function () {
+    config(['passkeys.user_handle_secret' => 'user-handle-secret']);
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->callAction(EnableTwoFactorAuthenticationAction::class, context: ['provider' => 'webauthn'])
+        ->assertSuccessful()
+        ->assertJsonFragment(['type' => 'open-modal', 'modal' => 'oidc.two-factor-setup']);
+
+    expect(session('oidc.webauthn.enrollment'))->toBeArray();
+});
+
+test('the setup fragment renders the passkey ceremony for the webauthn provider', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->loadFragment(TwoFactorSetupFragment::class, context: ['provider' => 'webauthn'])
+        ->assertOk()
+        ->assertSee('oidc.passkey-registration');
+});
+
+test('the disable action removes code-based factors but keeps passkeys', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    app(TotpFactorProvider::class)->enroll($user);
+    app(RecoveryCodeProvider::class)->generate($user);
+    $user->passkeys()->create(['name' => 'Yubikey', 'credential_id' => 'credential-id', 'credential' => []]);
+
+    $this->actingAs($user)
+        ->callAction(DisableTwoFactorAuthenticationAction::class)
+        ->assertSuccessful();
+
+    expect($user->totpFactors()->exists())->toBeFalse()
+        ->and($user->recoveryCodes()->exists())->toBeFalse()
+        ->and($user->passkeys()->count())->toBe(1);
+});
+
+test('the recovery codes fragment renders the unused codes', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $codes = app(RecoveryCodeProvider::class)->generate($user);
+
+    $this->actingAs($user)
+        ->loadFragment(RecoveryCodesFragment::class)
+        ->assertOk()
+        ->assertSee($codes[0])
+        ->assertSee(__('oidc-ui::security.recovery-codes.description'), false);
+});
+
+test('the recovery codes fragment reports when no codes exist', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $this->actingAs($user)
+        ->loadFragment(RecoveryCodesFragment::class)
+        ->assertOk()
+        ->assertSee(__('oidc-ui::security.recovery-codes.none'), false);
+});
+
+test('the regenerate action opens the recovery codes modal', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    app(TotpFactorProvider::class)->enroll($user);
+    app(RecoveryCodeProvider::class)->generate($user);
+
+    $this->actingAs($user)
+        ->callAction(RegenerateRecoveryCodesAction::class)
+        ->assertSuccessful()
+        ->assertJsonFragment(['type' => 'open-modal', 'modal' => 'oidc.recovery-codes']);
+});
+
+test('confirming the first factor opens the recovery codes modal once', function () {
+    $openedModals = function (): array {
+        $effects = session('inertia.flash_data.latticeEffects', []);
+
+        return array_map(
+            static fn (OpenModal $effect): string => $effect->modal,
+            array_values(array_filter($effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
+        );
+    };
+
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    $factor = app(TotpFactorProvider::class)->enroll($user);
+    $code = app(Google2FA::class)->getCurrentOtp($factor->secret);
+
+    $this->actingAs($user)
+        ->submitForm(ConfirmTwoFactorForm::class, ['code' => $code])
+        ->assertRedirect();
+
+    expect($openedModals())->toBe(['oidc.recovery-codes']);
+
+    // A later re-enrollment confirmation must not regenerate the codes — the
+    // policy only backfills when none exist.
+    $codes = app(RecoveryCodeProvider::class)->codes($user);
+    $second = app(TotpFactorProvider::class)->enroll($user);
+    $secondCode = app(Google2FA::class)->getCurrentOtp($second->secret);
+
+    $this->actingAs($user)
+        ->submitForm(ConfirmTwoFactorForm::class, ['code' => $secondCode])
+        ->assertRedirect();
+
+    expect(app(RecoveryCodeProvider::class)->codes($user))->toBe($codes);
 });
 
 test('the enable action opens a context-provided modal', function () {

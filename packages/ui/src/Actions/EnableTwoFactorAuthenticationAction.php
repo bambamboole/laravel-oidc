@@ -5,6 +5,7 @@ namespace Bambamboole\LaravelOidc\Ui\Actions;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
+use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
 use Lattice\Lattice\Actions\ActionResult;
@@ -23,7 +24,7 @@ class EnableTwoFactorAuthenticationAction extends ActionDefinition
     public function definition(ActionComponent $action): ActionComponent
     {
         return $action
-            ->label(__('oidc-ui::security.two-factor.enable'))
+            ->label(__('oidc-ui::security.two-factor.enable', ['method' => FactorMethodName::for($this->providerKey())]))
             ->method(HttpMethod::Post);
     }
 

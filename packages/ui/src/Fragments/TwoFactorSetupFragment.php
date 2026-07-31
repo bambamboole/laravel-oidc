@@ -7,6 +7,8 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorPr
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\WebAuthnFactorProvider;
+use Bambamboole\LaravelOidc\Ui\Components\PasskeyRegistration;
 use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
 use Lattice\Lattice\Attributes\AsFragment;
@@ -50,6 +52,17 @@ class TwoFactorSetupFragment extends FragmentDefinition
             ]);
         }
 
+        if ($provider instanceof WebAuthnFactorProvider) {
+            abort_unless(PasskeyRegistration::isAvailable(), 404);
+
+            return $schema->schema([
+                Stack::make('two-factor-setup')
+                    ->align(Align::Center)
+                    ->gap(Gap::Medium)
+                    ->schema([PasskeyRegistration::make()]),
+            ]);
+        }
+
         $pending = null;
         foreach ($provider->enrollments($user) as $enrollment) {
             if ($enrollment->confirmedAt === null) {
@@ -63,8 +76,18 @@ class TwoFactorSetupFragment extends FragmentDefinition
             ]);
         }
 
+        // A custom provider's setup payload lives in the pending enrollment's
+        // metadata; scalar values (a secret, a code) are rendered as-is, and
+        // richer setup UI stays a host-side fragment override.
+        $metadata = [];
+        foreach ($pending->metadata as $value) {
+            if (is_scalar($value)) {
+                $metadata[] = Text::make((string) $value);
+            }
+        }
+
         return $schema->schema([
-            $this->setupStack([Text::make($pending->label)], $provider),
+            $this->setupStack([Text::make($pending->label), ...$metadata], $provider),
         ]);
     }
 

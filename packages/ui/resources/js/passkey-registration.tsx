@@ -41,7 +41,7 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
             setShowForm(false);
             window.dispatchEvent(
                 new CustomEvent(LATTICE_EVENT.reloadComponent, {
-                    detail: { component: "oidc.passkeys" },
+                    detail: { component: "oidc.two-factor.methods" },
                 }),
             );
         },

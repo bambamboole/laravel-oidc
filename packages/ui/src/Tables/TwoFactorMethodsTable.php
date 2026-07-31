@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Ui\Tables;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
+use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Support\Carbon;
 use Lattice\Lattice\Actions\Components\Action;
 use Lattice\Lattice\Attributes\AsTable;
@@ -23,9 +24,8 @@ use Lattice\Lattice\Ui\Enums\Size;
 
 /**
  * Every confirmed non-backup factor enrollment across all registered
- * providers. Passkey rows are listed for completeness but managed through the
- * richer `oidc.passkeys` table, so only enrollable providers get a revoke
- * action here.
+ * providers, with per-enrollment revocation for enrollable providers —
+ * including passkeys.
  */
 #[AsTable('oidc.two-factor.methods')]
 class TwoFactorMethodsTable extends TableDefinition
@@ -50,6 +50,7 @@ class TwoFactorMethodsTable extends TableDefinition
                 ->schema([
                     Text::bound('method'),
                     Text::bound('label')->color(ColorName::Muted)->size(Size::Sm),
+                    Text::bound('detail')->color(ColorName::Muted)->size(Size::Sm),
                 ]),
             TextColumn::make('last_used_at_diff')->label(__('oidc-ui::security.methods.last-used')),
         ];
@@ -93,17 +94,18 @@ class TwoFactorMethodsTable extends TableDefinition
     }
 
     /**
-     * @return array{id: string, provider: string, method: string, label: string, last_used_at_diff: string}
+     * @return array{id: string, provider: string, method: string, label: string, detail: string, last_used_at_diff: string}
      */
     private function row(FactorEnrollment $enrollment): array
     {
-        $labelKey = "oidc-ui::auth.two-factor.method.{$enrollment->providerKey}";
+        $authenticator = $enrollment->metadata['authenticator'] ?? null;
 
         return [
             'id' => $enrollment->id,
             'provider' => $enrollment->providerKey,
-            'method' => trans()->has($labelKey) ? __($labelKey) : $enrollment->providerKey,
+            'method' => FactorMethodName::for($enrollment->providerKey),
             'label' => $enrollment->label,
+            'detail' => is_string($authenticator) ? $authenticator : '',
             'last_used_at_diff' => $enrollment->lastUsedAt === null
                 ? __('oidc-ui::security.methods.never-used')
                 : __('oidc-ui::security.methods.last-used-at', ['time' => Carbon::instance($enrollment->lastUsedAt)->diffForHumans()]),
