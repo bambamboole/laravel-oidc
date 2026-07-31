@@ -22,7 +22,11 @@ The service provider is auto-discovered.
 The package ships migrations that extend `oauth_clients` (post-logout redirect URIs, exchange
 audiences, provisioning key, back-channel logout) and add its own tables (authentication
 contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants,
-social accounts).
+social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and the user
+references (`user_id`, `uuidMorphs` on `authenticatable`) are native `uuid` columns — **your
+user model must be UUID-keyed** (e.g. `HasUuids`). The `laravel/passkeys` migration derives its
+`user_id` type from your user model automatically; publish it if you also want to change that
+table's own primary key.
 
 ```bash
 php artisan vendor:publish --tag=oidc-migrations

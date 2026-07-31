@@ -41,6 +41,6 @@ class RegenerateRecoveryCodesAction extends ActionDefinition
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.recovery-codes.regenerated'), Variant::Success)
-            ->reloadPage();
+            ->openModal((string) $this->context('modal', 'oidc.recovery-codes'));
     }
 }

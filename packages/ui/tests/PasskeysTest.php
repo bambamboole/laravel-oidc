@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Ui\Actions\DeletePasskeyAction;
+use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyRegistration;
-use Bambamboole\LaravelOidc\Ui\Tables\PasskeysTable;
+use Bambamboole\LaravelOidc\Ui\Tables\TwoFactorMethodsTable;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
@@ -19,11 +19,11 @@ function createPasskey(User $user, string $name = 'My passkey'): Passkey
     ]);
 }
 
-test('passkey registration uses the identity provider ceremony routes', function () {
+test('passkey registration uses the generic webauthn enrollment routes', function () {
     $component = PasskeyRegistration::make();
 
-    expect($component->optionsUrl)->toBe(route('identity.passkey.registration-options', absolute: false))
-        ->and($component->submitUrl)->toBe(route('identity.passkey.store', absolute: false));
+    expect($component->beginUrl)->toBe(route('identity.two-factor.enroll', ['provider' => 'webauthn'], absolute: false))
+        ->and($component->confirmUrl)->toBe(route('identity.two-factor.enroll.confirm', ['provider' => 'webauthn'], absolute: false));
 });
 
 test('passkey registration reports availability from the ceremony routes', function () {
@@ -34,49 +34,39 @@ test('passkey registration reports availability from the ceremony routes', funct
     expect(PasskeyRegistration::isAvailable())->toBeFalse();
 });
 
-test('users can delete their own passkey through the lattice action', function () {
+test('users can revoke their own passkey through the methods table action', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $passkey = createPasskey($user);
 
     $this->actingAs($user)
-        ->callAction(DeletePasskeyAction::class, context: ['passkey' => $passkey->id])
+        ->callAction(RevokeFactorAction::class, context: ['provider' => 'webauthn', 'enrollment' => (string) $passkey->id])
         ->assertOk()
-        ->assertJsonFragment(['type' => 'reload-component', 'component' => 'oidc.passkeys']);
+        ->assertJsonFragment(['type' => 'reload-component', 'component' => 'oidc.two-factor.methods']);
 
     expect($user->passkeys()->whereKey($passkey->id)->exists())->toBeFalse();
 });
 
-test('users cannot delete another users passkey', function () {
+test('users cannot revoke another users passkey', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
     $passkey = createPasskey($other);
 
     $this->actingAs($user)
-        ->callDeniedAction(DeletePasskeyAction::class, context: ['passkey' => $passkey->id])
+        ->callDeniedAction(RevokeFactorAction::class, context: ['provider' => 'webauthn', 'enrollment' => (string) $passkey->id])
         ->assertForbidden();
 
     expect($other->passkeys()->whereKey($passkey->id)->exists())->toBeTrue();
 });
 
-test('the passkeys table lists only the authenticated users passkeys', function () {
+test('the methods table lists only the authenticated users passkeys', function () {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
     createPasskey($user, 'My MacBook');
     createPasskey($other, 'Other Device');
 
     $this->actingAs($user)
-        ->loadTable(PasskeysTable::class)
+        ->loadTable(TwoFactorMethodsTable::class)
         ->assertOk()
-        ->assertJsonFragment(['name' => 'My MacBook'])
-        ->assertJsonMissing(['name' => 'Other Device']);
-});
-
-test('the passkeys table lists a created passkey', function () {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    createPasskey($user, 'MacBook Pro');
-
-    $this->actingAs($user)
-        ->loadTable(PasskeysTable::class)
-        ->assertOk()
-        ->assertJsonFragment(['name' => 'MacBook Pro']);
+        ->assertSee('My MacBook')
+        ->assertDontSee('Other Device');
 });

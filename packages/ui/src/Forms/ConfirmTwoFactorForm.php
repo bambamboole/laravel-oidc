@@ -11,6 +11,7 @@ use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Lattice\Lattice\Attributes\AsForm;
+use Lattice\Lattice\Effects\Builtin\OpenModal;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\OtpInput;
 use Lattice\Lattice\Forms\FormDefinition;
@@ -42,7 +43,7 @@ class ConfirmTwoFactorForm extends FormDefinition
     public function handle(Request $request): LatticeResponse
     {
         $user = $this->twoFactorUser();
-        $enrollable = $this->totpEnrollable($this->factors);
+        $enrollable = $this->enrollableProvider($this->factors);
 
         $pending = null;
         foreach ($enrollable->enrollments($user) as $enrollment) {
@@ -63,8 +64,16 @@ class ConfirmTwoFactorForm extends FormDefinition
             ]);
         }
 
-        $this->policy->factorConfirmed($user);
+        $backfilledCodes = $this->policy->factorConfirmed($user);
 
-        return $this->toast(__('oidc-ui::security.two-factor.enabled-toast'), Variant::Success)->back();
+        $response = $this->toast(__('oidc-ui::security.two-factor.enabled-toast'), Variant::Success);
+
+        // Freshly generated recovery codes are shown once — right after the
+        // first factor is confirmed.
+        if ($backfilledCodes) {
+            $response = $response->effect(new OpenModal((string) $this->context('recovery_codes_modal', 'oidc.recovery-codes')));
+        }
+
+        return $response->back();
     }
 }

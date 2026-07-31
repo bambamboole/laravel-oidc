@@ -12,6 +12,7 @@ return [
     'name-placeholder' => 'z. B. MacBook Pro, iPhone',
     'name-help' => 'Ein Name hilft dir, diesen Passkey später wiederzuerkennen.',
     'registering' => 'Wird registriert …',
+    'error' => 'Passkey-Registrierung fehlgeschlagen. Bitte versuche es erneut.',
     'register' => 'Passkey registrieren',
     'cancel' => 'Abbrechen',
 ];

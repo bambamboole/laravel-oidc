@@ -12,6 +12,7 @@ return [
     'name-placeholder' => 'e.g., MacBook Pro, iPhone',
     'name-help' => 'A name helps you identify this passkey later.',
     'registering' => 'Registering...',
+    'error' => 'Passkey registration failed. Please try again.',
     'register' => 'Register passkey',
     'cancel' => 'Cancel',
 ];

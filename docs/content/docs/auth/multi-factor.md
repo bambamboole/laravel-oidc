@@ -25,6 +25,12 @@ implements:
 `EnrollableFactorProvider` extends it with `beginEnrollment(...)` and `revoke(...)` for factors the
 user can add and remove themselves.
 
+Each provider owns its storage and builds its own morph relations, so any Eloquent
+authenticatable works — the user model needs no factor-specific methods. The
+`HasAuthenticationFactors` trait is a convenience: it adds `totpFactors()` / `recoveryCodes()`
+relations for your own queries, cascades factor deletion when the user is deleted, and pulls in
+`PasskeyAuthenticatable` (webauthn additionally requires the `PasskeyUser` contract).
+
 ### `FactorRegistry`
 
 `FactorRegistry` registers providers by key (duplicate keys throw a `LogicException`) and resolves
@@ -48,6 +54,8 @@ providers:
 
 ## The shipped providers
 
+All three shipped providers are enrollable through the [generic endpoints](#provider-keyed-enrollment):
+
 | Provider | Key | Backup? | Backed by | `amr` on success |
 | --- | --- | --- | --- | --- |
 | `TotpFactorProvider` | `totp` | no | `pragmarx/google2fa` | `otp` |
@@ -55,14 +63,23 @@ providers:
 | `WebAuthnFactorProvider` | `webauthn` | no | `laravel/passkeys` (WebAuthn) | `webauthn` |
 
 **TOTP** enrolls an authenticator-app secret (length `oidc.auth.two_factor.secret_length`, default
-`16`), verifies codes within a `window` (default `1`) using replay-resistant
-`verifyKeyNewer` bookkeeping, and can render the enrollment as a QR-code SVG/URL.
+`16`) and verifies codes within a `window` (default `1`) using replay-resistant
+`verifyKeyNewer` bookkeeping. The begin-enrollment metadata carries the setup payload —
+`secret`, `qr_svg` (rendered QR code), and `qr_url` (the `otpauth://` URL) — exposed only there,
+never in the factors listing.
 
-**Recovery codes** are a backup factor: they only present an enrollment once TOTP is confirmed and
-codes exist. Verification consumes a single code (locked + transactional) and marks it used.
+**Recovery codes** are a backup factor with one account-wide enrollment whenever codes exist.
+Beginning an enrollment (re)generates the code set and returns the plaintext codes in the
+metadata — the only place they appear. Confirmation is a no-op (codes need no proof), and
+revocation deletes them. Verification consumes a single code (locked + transactional) and marks
+it used.
 
-**WebAuthn / passkeys** reuses `laravel/passkeys` to generate assertion options and verify the
-returned credential; its verification reports `phishing_resistant` and `user_verified` metadata.
+**WebAuthn / passkeys** reuses `laravel/passkeys`. The challenge issues assertion options for
+*all* the user's passkeys and accepts any of them; verification reports `phishing_resistant`
+and `user_verified` metadata. Enrollment is a two-step ceremony: begin returns the WebAuthn
+creation options in the metadata (and parks them in the session as a synthetic `pending`
+enrollment); confirm takes the attestation `credential` and stores the passkey. The
+[dedicated passkey routes](#passkey-management) remain for browser-driven registration.
 
 ## The challenge flow
 
@@ -72,6 +89,7 @@ redirects to the challenge:
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.two-factor.login` | `GET` | `auth/two-factor-challenge` | `web`, `guest:identity` |
+| `identity.two-factor.login.factor` | `GET` | `auth/two-factor-challenge/factor/{provider}/{enrollment?}` | `web`, `guest:identity` |
 | `identity.two-factor.login.options` | `GET` | `auth/two-factor-challenge/options` | `web`, `guest:identity`, `throttle:5,1` |
 | `identity.two-factor.login.store` | `POST` | `auth/two-factor-challenge` | `web`, `guest:identity`, `throttle:5,1` |
 
@@ -82,7 +100,16 @@ requests by design — each verification attempt consumes the stored state and n
 challenge.
 
 `GET identity.two-factor.login` renders through the bound `TwoFactorChallengeView` contract, or
-redirects to `identity.login` if there is no pending challenge on the session.
+redirects to `identity.login` if there is no pending challenge on the session. The
+`TwoFactorChallengePrompt` passed to the view carries the active `factor` key plus
+`availableFactors` — every challengeable enrollment the user could switch to — so the view
+can offer a method picker.
+
+`GET identity.two-factor.login.factor` switches the pending challenge to another of the
+user's challengeable factors (e.g. from `totp` to `webauthn`) — the provider's first
+enrollment, or a specific one when the optional `enrollment` id is given. The target must be
+a confirmed, non-backup enrollment of a provider listed in `challenge_providers`; anything
+else is silently ignored. Switching discards any previously issued challenge state.
 
 `POST identity.two-factor.login.store` (throttled **5/minute**) validates `code` and `recovery_code`
 (both `nullable|string`), resolves the pending user, and picks the provider: `recovery_code` when a
@@ -101,24 +128,11 @@ confirmation (`RequirePassword::using('identity.password.confirm')` — see
 [Password confirmation](/auth/passwords/)).
 
 Enrollment, confirmation, and revocation run exclusively through the
-[provider-keyed endpoints](#provider-keyed-enrollment) below. The former Fortify-compatible
-routes `identity.two-factor.enable`, `identity.two-factor.confirm`, and
-`identity.two-factor.disable` have been removed — use `identity.two-factor.enroll`,
-`identity.two-factor.enroll.confirm`, and `identity.two-factor.revoke` (all with
-`provider=totp`) instead.
-
-The TOTP-specific and recovery-code endpoints without a generic equivalent remain:
-
-| Route name | Verb | Path | Purpose |
-| --- | --- | --- | --- |
-| `identity.two-factor.qr-code` | `GET` | `auth/user/two-factor-qr-code` | `{ "svg": ..., "url": ... }` for the latest TOTP factor |
-| `identity.two-factor.secret-key` | `GET` | `auth/user/two-factor-secret-key` | `{ "secretKey": ... }` (404 if not enabled) |
-| `identity.two-factor.recovery-codes` | `GET` | `auth/user/two-factor-recovery-codes` | The unused recovery codes |
-| `identity.two-factor.regenerate-recovery-codes` | `POST` | `auth/user/two-factor-recovery-codes` | Replace the recovery codes |
-
-Regenerate returns an empty **`200`** response (JSON) or a `back()` redirect flashing a
-status key to the session (browser). The read endpoints (`qr-code`, `secret-key`,
-`recovery-codes`) return **`404`** while no TOTP factor exists.
+[provider-keyed endpoints](#provider-keyed-enrollment) below. The former TOTP-specific
+routes (`identity.two-factor.qr-code`, `identity.two-factor.secret-key`,
+`identity.two-factor.recovery-codes`, `identity.two-factor.regenerate-recovery-codes`) have
+been removed: the QR code and secret are part of the TOTP begin-enrollment metadata, and
+recovery codes are read and regenerated by enrolling the `recovery_code` provider.
 
 ## Provider-keyed enrollment
 
@@ -138,26 +152,28 @@ enrollment (same id, same secret) instead of creating another; enrolling alongsi
 confirmed factor starts a fresh pending enrollment (re-enrollment).
 
 Recovery codes are generated automatically when a first factor is confirmed and removed
-when the last challengeable factor is revoked. Unknown provider keys — and providers with
-their own enrollment ceremony, like `webauthn` (see
-[Passkey management](#passkey-management)) — return `404` from the enroll endpoints while
-still appearing in the factors listing.
+when the last challengeable factor is revoked. Unknown provider keys return `404`.
+
+The `webauthn` provider maps its two-step ceremony onto these endpoints: begin returns a
+synthetic `pending` enrollment whose metadata carries the WebAuthn creation options (the
+serialized options are parked in the session), confirm takes the browser's attestation as
+`credential` and stores the passkey, and revoke deletes a passkey by id (or discards the
+pending ceremony for the `pending` id). The [passkey routes](#passkey-management) offer the
+same registration as a standalone browser ceremony.
 
 ### Passkey management
 
-Passkeys are registered and removed through `laravel/passkeys`. The registration and delete
-endpoints are gated the same way (`identity` session + `RequirePassword`); the confirm
-endpoints require only an authenticated session — they *are* a password-confirmation
-mechanism, so they cannot demand a prior confirmation themselves. The options/store/confirm
-endpoints also carry `throttle:5,1`:
+Passkey registration, listing, and removal all run through the generic
+[provider-keyed endpoints](#provider-keyed-enrollment) with `provider=webauthn` — there are
+no separate registration routes. What remains from `laravel/passkeys` are the
+password-confirmation ceremony endpoints, which require only an authenticated session —
+they *are* a password-confirmation mechanism, so they cannot demand a prior confirmation
+themselves (both carry `throttle:5,1`):
 
-| Route name | Verb | Path | `RequirePassword` |
-| --- | --- | --- | --- |
-| `identity.passkey.registration-options` | `GET` | `auth/user/passkeys/options` | yes |
-| `identity.passkey.store` | `POST` | `auth/user/passkeys` | yes |
-| `identity.passkey.destroy` | `DELETE` | `auth/user/passkeys/{passkey}` | yes |
-| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` | no |
-| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` | no |
+| Route name | Verb | Path |
+| --- | --- | --- |
+| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` |
+| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` |
 
 (Passkey *login* — the passwordless sign-in path — lives on the [login page](/auth/login/).)
 
@@ -165,12 +181,19 @@ endpoints also carry `throttle:5,1`:
 
 ```php
 'two_factor' => [
-    'challenge_providers' => ['totp'], // which providers are offered at the login challenge
-    'secret_length' => 16,             // TOTP secret length
-    'window' => 1,                     // accepted TOTP time-step window
-    'recovery_codes' => 8,             // how many recovery codes are generated
+    'challenge_providers' => ['totp', 'webauthn'], // which providers are offered at the login challenge
+    'secret_length' => 16,                         // TOTP secret length
+    'window' => 1,                                 // accepted TOTP time-step window
+    'recovery_codes' => 8,                         // how many recovery codes are generated
 ],
 ```
+
+With `webauthn` in `challenge_providers` (the default), a password login by a user who owns a
+passkey is challenged with that passkey as second factor. Set the list to `['totp']` to
+restore challenge-on-TOTP-only behavior.
+
+The WebAuthn challenge issues assertion options for all of the user's passkeys, and any of
+them satisfies it — the active enrollment only determines what the challenge view displays.
 
 ## Enrollment, challenge, and `amr`
 

@@ -8,10 +8,10 @@ return [
     'already-verified' => 'Your email address is already verified.',
 
     'two-factor' => [
-        'enable' => 'Enable 2FA',
-        'disable' => 'Disable 2FA',
+        'enable' => 'Add :method',
+        'disable' => 'Disable two-factor authentication',
         'disable-confirm-title' => 'Disable two-factor authentication?',
-        'disable-confirm-description' => 'Your account will no longer require a one-time code during sign in.',
+        'disable-confirm-description' => 'All two-factor methods except passkeys will be removed, and sign-in will no longer require a second step.',
         'setup-started' => 'Two-factor authentication setup started.',
         'setup-key' => 'Or enter this setup key in your authenticator app:',
         'already-enabled' => 'Two-factor authentication is enabled. You can close this dialog.',
@@ -23,22 +23,23 @@ return [
         'invalid-code' => 'The provided two factor authentication code was invalid.',
     ],
 
+    'methods' => [
+        'column' => 'Method',
+        'last-used' => 'Last used',
+        'never-used' => 'Never used',
+        'last-used-at' => 'Last used :time',
+        'remove' => 'Remove method',
+        'remove-confirm-title' => 'Remove two-factor method?',
+        'remove-confirm-description' => 'You will no longer be able to use this method during sign in.',
+        'removed' => 'Two-factor method removed.',
+    ],
+
     'recovery-codes' => [
         'regenerate' => 'Regenerate codes',
         'regenerate-confirm-title' => 'Regenerate recovery codes?',
         'regenerate-confirm-description' => 'Your existing recovery codes will stop working and be replaced with a new set.',
         'regenerated' => 'Recovery codes regenerated.',
-    ],
-
-    'passkeys' => [
-        'column' => 'Passkey',
-        'last-used' => 'Last used',
-        'added' => 'Added :time',
-        'never-used' => 'Never used',
-        'last-used-at' => 'Last used :time',
-        'remove' => 'Remove passkey',
-        'remove-confirm-title' => 'Remove passkey?',
-        'remove-confirm-description' => 'You will no longer be able to use this passkey to sign in.',
-        'removed' => 'Passkey removed.',
+        'description' => 'Store these recovery codes in a safe place. Each code can be used once to sign in if you lose access to your other methods.',
+        'none' => 'There are no recovery codes to show. They are generated when you confirm your first two-factor method.',
     ],
 ];

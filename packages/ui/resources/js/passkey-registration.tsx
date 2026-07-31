@@ -1,4 +1,4 @@
-import { usePasskeyRegister } from "@laravel/passkeys/react";
+import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
 import { LATTICE_EVENT, type RendererComponent } from "@lattice-php/lattice";
 import { useT } from "@lattice-php/lattice/i18n";
 import { Button, Input, InputError, Label } from "@lattice-php/lattice/ui";
@@ -7,8 +7,8 @@ import { useState } from "react";
 declare module "@lattice-php/lattice" {
     interface ComponentProps {
         "oidc.passkey-registration": {
-            optionsUrl: string;
-            submitUrl: string;
+            beginUrl: string;
+            confirmUrl: string;
         };
     }
 }
@@ -27,25 +27,81 @@ function suggestedPasskeyName(connector: string): string {
     return [browser, os].filter(Boolean).join(` ${connector} `) || "";
 }
 
+function xsrfToken(): string {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+
+    return match ? decodeURIComponent(match[1]) : "";
+}
+
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+    const response = await fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "X-XSRF-TOKEN": xsrfToken(),
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+        let message = `Request failed with status ${response.status}`;
+        try {
+            const data = (await response.json()) as { message?: string };
+            if (typeof data?.message === "string") {
+                message = data.message;
+            }
+        } catch {
+            // Keep the status-based message.
+        }
+        throw new Error(message);
+    }
+
+    return (await response.json()) as T;
+}
+
 const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ node }) => {
     const { t } = useT("oidc-ui");
     const [name, setName] = useState(() => suggestedPasskeyName(t("passkey.on", "on")));
     const [showForm, setShowForm] = useState(false);
-    const { register, isLoading, error, isSupported } = usePasskeyRegister({
-        routes: {
-            options: node.props.optionsUrl,
-            submit: node.props.submitUrl,
-        },
-        onSuccess: () => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function register(passkeyName: string): Promise<void> {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // The generic webauthn enrollment ceremony: begin returns the
+            // creation options in the pending enrollment's metadata, confirm
+            // takes the attestation credential.
+            const begin = await postJson<{ metadata: { options: never } }>(node.props.beginUrl, {
+                name: passkeyName,
+            });
+            const credential = await startRegistration({ optionsJSON: begin.metadata.options });
+            await postJson(node.props.confirmUrl, {
+                enrollment_id: "pending",
+                credential,
+            });
+
             setName("");
             setShowForm(false);
             window.dispatchEvent(
                 new CustomEvent(LATTICE_EVENT.reloadComponent, {
-                    detail: { component: "oidc.passkeys" },
+                    detail: { component: "oidc.two-factor.methods" },
                 }),
             );
-        },
-    });
+        } catch (caught) {
+            setError(
+                caught instanceof Error
+                    ? caught.message
+                    : t("passkey.error", "Passkey registration failed. Please try again."),
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     async function handleSubmit(event: React.FormEvent): Promise<void> {
         event.preventDefault();
@@ -55,7 +111,7 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
         }
     }
 
-    if (!isSupported) {
+    if (!browserSupportsWebAuthn()) {
         return (
             <div className="text-sm text-lt-muted-fg">
                 {t("passkey.not-supported", "Passkeys are not supported in this browser.")}

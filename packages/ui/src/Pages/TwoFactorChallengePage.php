@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Ui\Pages;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
+use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,11 @@ use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\OtpInput;
 use Lattice\Lattice\Forms\Components\TextInput;
+use Lattice\Lattice\Ui\Components\Link;
+use Lattice\Lattice\Ui\Components\Stack;
+use Lattice\Lattice\Ui\Components\Text;
+use Lattice\Lattice\Ui\Enums\Align;
+use Lattice\Lattice\Ui\Enums\Gap;
 use Symfony\Component\HttpFoundation\Response;
 
 class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
@@ -67,6 +73,62 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
                         ->visibleWhen('use_recovery_code', true),
                     Checkbox::make('use_recovery_code', __('oidc-ui::auth.two-factor.use-recovery')),
                 ]),
+            ...$this->factorSwitcher(),
         ]);
+    }
+
+    /**
+     * Links to re-challenge with another enrolled method, rendered only when
+     * the prompt offers more than the active enrollment. Providers with a
+     * single enrollment get one link; multiple enrollments of the same
+     * provider are listed individually by their label.
+     *
+     * @return list<Stack>
+     */
+    private function factorSwitcher(): array
+    {
+        if (! Route::has('identity.two-factor.login.factor')) {
+            return [];
+        }
+
+        $available = $this->prompt->availableFactors ?? [];
+        $countPerProvider = array_count_values(array_map(
+            fn ($enrollment): string => $enrollment->providerKey,
+            $available,
+        ));
+
+        $links = [];
+
+        foreach ($available as $enrollment) {
+            if ($enrollment->providerKey === $this->prompt?->factor
+                && ($this->prompt->factorId === null || $enrollment->id === $this->prompt->factorId)) {
+                continue;
+            }
+
+            $label = FactorMethodName::for($enrollment->providerKey);
+
+            if ($countPerProvider[$enrollment->providerKey] > 1) {
+                $label .= " ({$enrollment->label})";
+            }
+
+            $links[] = Link::make($label)->href(route('identity.two-factor.login.factor', [
+                'provider' => $enrollment->providerKey,
+                'enrollment' => $enrollment->id,
+            ], absolute: false));
+        }
+
+        if ($links === []) {
+            return [];
+        }
+
+        return [
+            Stack::make('two-factor-switcher')
+                ->align(Align::Center)
+                ->gap(Gap::ExtraSmall)
+                ->schema([
+                    Text::make(__('oidc-ui::auth.two-factor.use-another')),
+                    ...$links,
+                ]),
+        ];
     }
 }

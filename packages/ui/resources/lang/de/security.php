@@ -8,10 +8,10 @@ return [
     'already-verified' => 'Deine E-Mail-Adresse ist bereits bestätigt.',
 
     'two-factor' => [
-        'enable' => '2FA aktivieren',
-        'disable' => '2FA deaktivieren',
+        'enable' => ':method hinzufügen',
+        'disable' => 'Zwei-Faktor-Authentifizierung deaktivieren',
         'disable-confirm-title' => 'Zwei-Faktor-Authentifizierung deaktivieren?',
-        'disable-confirm-description' => 'Dein Konto erfordert bei der Anmeldung keinen Einmalcode mehr.',
+        'disable-confirm-description' => 'Alle Zwei-Faktor-Methoden außer Passkeys werden entfernt; die Anmeldung erfordert keinen zweiten Schritt mehr.',
         'setup-started' => 'Einrichtung der Zwei-Faktor-Authentifizierung gestartet.',
         'setup-key' => 'Oder gib diesen Einrichtungsschlüssel in deiner Authenticator-App ein:',
         'already-enabled' => 'Die Zwei-Faktor-Authentifizierung ist aktiviert. Du kannst diesen Dialog schließen.',
@@ -23,22 +23,23 @@ return [
         'invalid-code' => 'Der eingegebene Zwei-Faktor-Authentifizierungscode war ungültig.',
     ],
 
+    'methods' => [
+        'column' => 'Methode',
+        'last-used' => 'Zuletzt verwendet',
+        'never-used' => 'Nie verwendet',
+        'last-used-at' => 'Zuletzt verwendet :time',
+        'remove' => 'Methode entfernen',
+        'remove-confirm-title' => 'Zwei-Faktor-Methode entfernen?',
+        'remove-confirm-description' => 'Du kannst diese Methode dann nicht mehr bei der Anmeldung verwenden.',
+        'removed' => 'Zwei-Faktor-Methode entfernt.',
+    ],
+
     'recovery-codes' => [
         'regenerate' => 'Codes neu generieren',
         'regenerate-confirm-title' => 'Wiederherstellungscodes neu generieren?',
         'regenerate-confirm-description' => 'Deine bestehenden Wiederherstellungscodes werden ungültig und durch einen neuen Satz ersetzt.',
         'regenerated' => 'Wiederherstellungscodes neu generiert.',
-    ],
-
-    'passkeys' => [
-        'column' => 'Passkey',
-        'last-used' => 'Zuletzt verwendet',
-        'added' => 'Hinzugefügt :time',
-        'never-used' => 'Nie verwendet',
-        'last-used-at' => 'Zuletzt verwendet :time',
-        'remove' => 'Passkey entfernen',
-        'remove-confirm-title' => 'Passkey entfernen?',
-        'remove-confirm-description' => 'Du kannst diesen Passkey dann nicht mehr zur Anmeldung verwenden.',
-        'removed' => 'Passkey entfernt.',
+        'description' => 'Bewahre diese Wiederherstellungscodes an einem sicheren Ort auf. Jeder Code kann einmal verwendet werden, falls du den Zugriff auf deine anderen Methoden verlierst.',
+        'none' => 'Keine Wiederherstellungscodes vorhanden. Sie werden generiert, sobald du deine erste Zwei-Faktor-Methode bestätigst.',
     ],
 ];

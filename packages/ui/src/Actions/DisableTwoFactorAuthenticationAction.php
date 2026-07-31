@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\EnrollmentPolicy;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
@@ -38,13 +40,23 @@ class DisableTwoFactorAuthenticationAction extends ActionDefinition
             );
     }
 
+    /**
+     * Disabling revokes every enrollment of every enrollable provider —
+     * except passkeys, which double as a first-factor sign-in method and are
+     * removed individually instead.
+     */
     public function handle(Request $request): ActionResult
     {
         $user = $this->twoFactorUser();
-        $enrollable = $this->totpEnrollable($this->factors);
 
-        foreach ($enrollable->enrollments($user) as $enrollment) {
-            $enrollable->revoke($user, $enrollment);
+        foreach ($this->factors->providers() as $provider) {
+            if (! $provider instanceof EnrollableFactorProvider || $provider instanceof WebAuthnFactorProvider) {
+                continue;
+            }
+
+            foreach ($provider->enrollments($user) as $enrollment) {
+                $provider->revoke($user, $enrollment);
+            }
         }
 
         $this->policy->factorRevoked($user);

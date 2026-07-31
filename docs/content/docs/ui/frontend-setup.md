@@ -19,6 +19,18 @@ top of every auth-flow page. It resolves against your app's own Lattice SVG spri
 sprite must define a symbol with a matching name — there is no bundled icon. See
 [Overriding views](/ui/overriding/) for changing the icon name itself.
 
+## Components for custom factors
+
+A custom factor whose challenge or setup needs browser interaction (a push approval, a
+hardware token, ...) plugs in the same way the passkey components do: register a React
+component in your app's own Lattice component registry (or in a package via
+`extra.lattice.plugin`), wrap it in a PHP `Component` subclass that sets the matching
+`type()`, and compose it where it is needed — a rebound `TwoFactorChallengeView` for the
+challenge (the prompt's `factor` key tells you when your provider is active), or your own
+setup fragment/modal on the settings page. Code-based factors need no frontend work at all:
+the challenge page falls back to the OTP code form for unknown provider keys, and the setup
+fragment renders a pending enrollment's scalar metadata with the confirm form.
+
 ## Passkey UI strings
 
 The passkey components pull their copy from the `oidc-ui` i18n namespace via `useT("oidc-ui")`,
