@@ -41,23 +41,22 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $webauthn = $this->prompt?->factor === 'webauthn'
-            && Route::has('identity.two-factor.login.options')
-            && Route::has('identity.two-factor.login.store');
+        $passkey = $this->prompt?->factor === 'webauthn'
+            ? PasskeyVerify::makeIfAvailable(
+                'identity.two-factor.login.options',
+                'identity.two-factor.login.store',
+                label: __('oidc-ui::auth.two-factor.passkey-label'),
+                loadingLabel: __('oidc-ui::auth.two-factor.passkey-loading'),
+                separator: __('oidc-ui::auth.two-factor.passkey-separator'),
+            )
+            : null;
+        $webauthn = $passkey !== null;
 
         return $schema->schema([
             $this->heading('two-factor-challenge-heading', __('oidc-ui::auth.two-factor.heading'), $webauthn
                 ? __('oidc-ui::auth.two-factor.subtitle-passkey')
                 : __('oidc-ui::auth.two-factor.subtitle')),
-            ...($webauthn ? [
-                PasskeyVerify::make(
-                    route('identity.two-factor.login.options', absolute: false),
-                    route('identity.two-factor.login.store', absolute: false),
-                )
-                    ->label(__('oidc-ui::auth.two-factor.passkey-label'))
-                    ->loadingLabel(__('oidc-ui::auth.two-factor.passkey-loading'))
-                    ->separator(__('oidc-ui::auth.two-factor.passkey-separator')),
-            ] : []),
+            ...($webauthn ? [$passkey] : []),
             Form::make('two-factor-challenge')
                 ->action(route('identity.two-factor.login.store', absolute: false))
                 ->submitLabel(__('oidc-ui::auth.two-factor.continue'))

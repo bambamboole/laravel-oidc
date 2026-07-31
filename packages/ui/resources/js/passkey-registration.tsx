@@ -13,20 +13,6 @@ declare module "@lattice-php/lattice" {
     }
 }
 
-function suggestedPasskeyName(connector: string): string {
-    const ua = navigator.userAgent;
-
-    const browser = ["Chrome", "Firefox", "Safari", "Edge", "Opera"].find((candidate) =>
-        ua.includes(candidate),
-    );
-
-    const os = ["iPhone", "iPad", "Android", "Mac", "Windows"].find((candidate) =>
-        ua.includes(candidate),
-    );
-
-    return [browser, os].filter(Boolean).join(` ${connector} `) || "";
-}
-
 function xsrfToken(): string {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
 
@@ -63,7 +49,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ node }) => {
     const { t } = useT("oidc-ui");
-    const [name, setName] = useState(() => suggestedPasskeyName(t("passkey.on", "on")));
+    const [name, setName] = useState("");
     const [showForm, setShowForm] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -106,9 +92,7 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
     async function handleSubmit(event: React.FormEvent): Promise<void> {
         event.preventDefault();
 
-        if (name.trim()) {
-            await register(name);
-        }
+        await register(name);
     }
 
     if (!browserSupportsWebAuthn()) {
@@ -142,6 +126,7 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
                     placeholder={t("passkey.name-placeholder", "e.g., MacBook Pro, iPhone")}
                     className="mt-1 block w-full"
                     autoFocus
+                    required
                 />
                 <p className="text-xs text-lt-muted-fg">
                     {t("passkey.name-help", "A name helps you identify this passkey later.")}
@@ -151,7 +136,7 @@ const PasskeyRegistration: RendererComponent<"oidc.passkey-registration"> = ({ n
             {error && <InputError message={error} />}
 
             <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading || !name.trim()}>
+                <Button type="submit" disabled={isLoading}>
                     {isLoading
                         ? t("passkey.registering", "Registering...")
                         : t("passkey.register", "Register passkey")}

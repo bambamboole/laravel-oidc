@@ -20,7 +20,7 @@ implements:
 | `isBackup(): bool` | Whether this factor is a fallback (backup factors are excluded from the primary challenge list) |
 | `enrollments($user): list<FactorEnrollment>` | The user's enrollments for this factor |
 | `beginChallenge($user, $enrollment): FactorChallenge` | Produce a challenge (public data for the browser + private state) |
-| `verify($user, $challenge, $response): FactorVerification` | Verify a response; returns `verified`, the satisfied `amr`, and metadata |
+| `verify($user, $challenge, $input): FactorVerification` | Verify the submitted input array; returns `verified` and the satisfied `amr` |
 
 `EnrollableFactorProvider` extends it with `beginEnrollment(...)` and `revoke(...)` for factors the
 user can add and remove themselves.
@@ -40,6 +40,9 @@ them. Two lookups matter for login:
 - `challengeableEnrollments($user, $providerKeys)` — enrollments that are **confirmed**
   (`confirmedAt !== null`), from providers that are **not backup**, optionally filtered to a set of
   provider keys.
+
+`hasChallengeableFactors($user)` is the "does this user have 2FA?" check — `true` when at least
+one confirmed, challengeable enrollment exists.
 
 Providers are registered from `config('oidc.auth.factors')`, which defaults to all three shipped
 providers:

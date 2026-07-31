@@ -9,7 +9,6 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
@@ -45,18 +44,11 @@ class LoginPage extends AuthPage implements LoginView
 
     public function render(PageSchema $schema): PageSchema
     {
-        // The passkey handlers can be disabled via oidc.handlers; the login
-        // page must keep rendering without them.
-        $passkey = Route::has('identity.passkey.login-options') && Route::has('identity.passkey.login')
-            ? [PasskeyVerify::make(
-                route('identity.passkey.login-options', absolute: false),
-                route('identity.passkey.login', absolute: false),
-            )]
-            : [];
+        $passkey = PasskeyVerify::makeIfAvailable('identity.passkey.login-options', 'identity.passkey.login');
 
         return $schema->schema([
             $this->heading('login-heading', __('oidc-ui::auth.login.heading'), __('oidc-ui::auth.login.subtitle')),
-            ...$passkey,
+            ...($passkey === null ? [] : [$passkey]),
             Form::make('login-form')
                 ->action(route('identity.login.store', absolute: false))
                 ->method(HttpMethod::Post)

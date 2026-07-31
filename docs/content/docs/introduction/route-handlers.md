@@ -40,15 +40,15 @@ are `Handler::Userinfo`, `Handler::Logout`, `Handler::Introspect`, and `Handler:
 
 ## Resolving a handler's config
 
-Resolve a handler's configuration anywhere via the facade instead of reading config directly —
-it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
+Resolve a handler's configuration anywhere via the `Handler` enum instead of reading config
+directly — it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Issuer;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 
-$config = Oidc::handlerConfig(Handler::Userinfo); // HandlerConfig|false
-$issuer = Oidc::issuer();                          // issuer URL
+$config = Handler::Userinfo->config(); // HandlerConfig|false
+$issuer = Issuer::url();               // issuer URL
 ```
 
 ## What lives in the handler map

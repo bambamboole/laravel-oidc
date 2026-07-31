@@ -29,10 +29,8 @@ abstract class TokenValidator
 
     private readonly Validator $signatureValidator;
 
-    public function __construct(
-        private readonly JwksKeyResolver $keys,
-        private readonly ValidatorConfig $config,
-    ) {
+    public function __construct(private readonly JwksKeyResolver $keys)
+    {
         $this->parser = new Parser(new JoseEncoder);
         $this->signatureValidator = new Validator;
     }
@@ -64,8 +62,8 @@ abstract class TokenValidator
             throw new OidcClientException("The {$name} has no kid header.");
         }
 
-        $key = $this->keys->signingKey($kid);
-        $constraint = new SignedWith($this->signer($key->algorithm), InMemory::plainText($key->pem));
+        [$pem, $algorithm] = $this->keys->signingKey($kid);
+        $constraint = new SignedWith($this->signer($algorithm), InMemory::plainText($pem));
 
         // SignedWith also rejects tokens whose alg header differs from the
         // JWK's algorithm, so a downgraded header (none, HS256, ...) can never
@@ -96,7 +94,7 @@ abstract class TokenValidator
 
     protected function assertIssuer(UnencryptedToken $token): void
     {
-        if (rtrim((string) $token->claims()->get('iss'), '/') !== rtrim($this->config->issuer, '/')) {
+        if (rtrim((string) $token->claims()->get('iss'), '/') !== rtrim((string) config('oidc-client.issuer'), '/')) {
             throw new OidcClientException("The {$this->tokenName()} issuer does not match.");
         }
     }
@@ -110,21 +108,11 @@ abstract class TokenValidator
     {
         $audience = (array) $token->claims()->get('aud', []);
 
-        if (! in_array($this->clientId(), $audience, true)) {
+        if (! in_array((string) config('oidc-client.client_id'), $audience, true)) {
             throw new OidcClientException("The {$this->tokenName()} audience does not include this client.");
         }
 
         return $audience;
-    }
-
-    protected function clientId(): string
-    {
-        return $this->config->clientId;
-    }
-
-    protected function leeway(): int
-    {
-        return $this->config->leeway;
     }
 
     protected function timestamp(mixed $value, string $claim, bool $required = false): ?int

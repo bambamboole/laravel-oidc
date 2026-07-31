@@ -22,7 +22,8 @@ class BackchannelLogoutFlowTest extends BackchannelLogoutEnabledTestCase
 
         $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
-        $logoutToken = $fake->forUser($user)->logoutToken(['sid' => 'sess-e2e']);
+        $fake->loginAs($user);
+        $logoutToken = $fake->logoutToken(['sid' => 'sess-e2e']);
 
         // The user is authenticated with a session carrying the provider's sid.
         $this->actingAs($user)->withSession(['oidc-client.sid' => 'sess-e2e']);

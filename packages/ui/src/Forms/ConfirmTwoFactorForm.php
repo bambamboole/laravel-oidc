@@ -6,9 +6,9 @@ namespace Bambamboole\LaravelOidc\Ui\Forms;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\EnrollmentPolicy;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorResponse;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Lattice\Lattice\Attributes\AsForm;
 use Lattice\Lattice\Effects\Builtin\OpenModal;
@@ -43,19 +43,14 @@ class ConfirmTwoFactorForm extends FormDefinition
     public function handle(Request $request): LatticeResponse
     {
         $user = $this->twoFactorUser();
-        $enrollable = $this->enrollableProvider($this->factors);
+        $enrollable = $this->factors->enrollable($this->providerKey()) ?? abort(404);
 
-        $pending = null;
-        foreach ($enrollable->enrollments($user) as $enrollment) {
-            if ($enrollment->confirmedAt === null) {
-                $pending = $enrollment;
-            }
-        }
+        $pending = Arr::last($enrollable->enrollments($user), fn (FactorEnrollment $enrollment): bool => $enrollment->confirmedAt === null);
 
         $confirmed = $pending instanceof FactorEnrollment && $enrollable->confirmEnrollment(
             $user,
             $pending,
-            new FactorResponse(['code' => (string) $request->input('code')]),
+            ['code' => (string) $request->input('code')],
         );
 
         if (! $confirmed) {

@@ -12,17 +12,26 @@ use Throwable;
 
 class JwksKeyResolver
 {
-    /** @var array<string, SigningKey> */
+    /** @var array<string, array{0: string, 1: string}> */
     private array $keysByKid = [];
 
     public function __construct(private readonly OidcDiscovery $discovery) {}
 
-    public function signingKey(string $kid): SigningKey
+    /**
+     * The verification material for a JWKS entry: the public key PEM and the
+     * JWA algorithm it signs with.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public function signingKey(string $kid): array
     {
         return $this->keysByKid[$kid] ??= $this->resolve($kid);
     }
 
-    private function resolve(string $kid): SigningKey
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function resolve(string $kid): array
     {
         return $this->findKeyInJwks($kid, $this->discovery->jwks())
             ?? $this->findKeyInJwks($kid, $this->discovery->jwks(fresh: true))
@@ -31,15 +40,16 @@ class JwksKeyResolver
 
     /**
      * @param  array<int, array<string, mixed>>  $jwks
+     * @return array{0: string, 1: string}|null
      */
-    private function findKeyInJwks(string $kid, array $jwks): ?SigningKey
+    private function findKeyInJwks(string $kid, array $jwks): ?array
     {
         foreach ($jwks as $jwk) {
             if (($jwk['kid'] ?? null) !== $kid) {
                 continue;
             }
 
-            return new SigningKey($this->publicKeyPem($kid, $jwk), $this->algorithm($kid, $jwk));
+            return [$this->publicKeyPem($kid, $jwk), $this->algorithm($kid, $jwk)];
         }
 
         return null;

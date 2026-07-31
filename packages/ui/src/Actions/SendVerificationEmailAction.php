@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Lattice\Lattice\Actions\ActionDefinition;
@@ -17,8 +16,6 @@ use Lattice\Lattice\Ui\Enums\Variant;
 #[AsAction('oidc.send-verification-email')]
 class SendVerificationEmailAction extends ActionDefinition
 {
-    use ResolvesAuthenticatedUser;
-
     public function definition(ActionComponent $action): ActionComponent
     {
         return $action
@@ -29,7 +26,7 @@ class SendVerificationEmailAction extends ActionDefinition
 
     public function handle(Request $request): ActionResult
     {
-        $user = $this->currentUser();
+        $user = auth()->user();
 
         abort_unless($user instanceof MustVerifyEmail, 403);
 

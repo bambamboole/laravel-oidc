@@ -9,8 +9,8 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyRegistration;
-use Bambamboole\LaravelOidc\Ui\Concerns\ResolvesAuthenticatedUser;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
+use Illuminate\Support\Arr;
 use Lattice\Lattice\Attributes\AsFragment;
 use Lattice\Lattice\Core\PageSchema;
 use Lattice\Lattice\Forms\Components\Form;
@@ -25,13 +25,14 @@ use Lattice\Lattice\Ui\Enums\Gap;
 #[AsFragment('oidc.two-factor-setup')]
 class TwoFactorSetupFragment extends FragmentDefinition
 {
-    use ResolvesAuthenticatedUser;
-
     public function __construct(private readonly FactorRegistry $factors) {}
 
     public function schema(PageSchema $schema): PageSchema
     {
-        $user = $this->currentUser();
+        $user = auth()->user();
+
+        abort_unless($user !== null, 403);
+
         $provider = $this->factors->enrollable((string) $this->context('provider', 'totp')) ?? abort(404);
 
         if ($provider instanceof TotpFactorProvider) {
@@ -63,12 +64,7 @@ class TwoFactorSetupFragment extends FragmentDefinition
             ]);
         }
 
-        $pending = null;
-        foreach ($provider->enrollments($user) as $enrollment) {
-            if ($enrollment->confirmedAt === null) {
-                $pending = $enrollment;
-            }
-        }
+        $pending = Arr::last($provider->enrollments($user), fn (FactorEnrollment $enrollment): bool => $enrollment->confirmedAt === null);
 
         if (! $pending instanceof FactorEnrollment) {
             return $schema->schema([

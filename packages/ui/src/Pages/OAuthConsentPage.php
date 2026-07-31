@@ -19,6 +19,7 @@ use Lattice\Lattice\Ui\Components\Stack;
 use Lattice\Lattice\Ui\Components\Text;
 use Lattice\Lattice\Ui\Enums\Gap;
 use Lattice\Lattice\Ui\Enums\HttpMethod;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
 class OAuthConsentPage extends AuthPage implements ConsentView
@@ -34,21 +35,25 @@ class OAuthConsentPage extends AuthPage implements ConsentView
 
     public function title(): string
     {
-        return __('oidc-ui::oauth.consent.heading', ['client' => $this->clientName()]);
+        return __('oidc-ui::oauth.consent.heading', ['client' => (string) $this->prompt?->client->getAttribute('name')]);
     }
 
     public function render(PageSchema $schema): PageSchema
     {
+        $prompt = $this->prompt ?? throw new LogicException(self::class.' rendered without its prompt; respond() must supply one before render() runs.');
+        $user = $prompt->user;
+        $userEmail = $user instanceof Model ? (string) $user->getAttribute('email') : '';
+
         return $schema->schema([
             Stack::make('oauth-consent-heading')
                 ->gap(Gap::Small)
                 ->schema([
-                    Heading::make(__('oidc-ui::oauth.consent.heading', ['client' => $this->clientName()]), 2),
-                    Text::make(__('oidc-ui::oauth.consent.signed-in-as', ['email' => $this->userEmail()])),
+                    Heading::make(__('oidc-ui::oauth.consent.heading', ['client' => (string) $prompt->client->getAttribute('name')]), 2),
+                    Text::make(__('oidc-ui::oauth.consent.signed-in-as', ['email' => $userEmail])),
                 ]),
             Stack::make('oauth-consent-scopes')
                 ->gap(Gap::Small)
-                ->schema($this->scopeSchema()),
+                ->schema($this->scopeSchema($prompt)),
             Stack::make('oauth-consent-actions')
                 ->gap(Gap::Small)
                 ->schema([
@@ -57,7 +62,7 @@ class OAuthConsentPage extends AuthPage implements ConsentView
                         ->method(HttpMethod::Post)
                         ->withoutSubmitButton()
                         ->schema([
-                            HiddenInput::make('auth_token')->value($this->authToken()),
+                            HiddenInput::make('auth_token')->value($prompt->authToken),
                             Button::make(__('oidc-ui::oauth.consent.approve'))->submit(),
                         ]),
                     Form::make('oauth-consent-deny')
@@ -65,44 +70,22 @@ class OAuthConsentPage extends AuthPage implements ConsentView
                         ->method(HttpMethod::Delete)
                         ->withoutSubmitButton()
                         ->schema([
-                            HiddenInput::make('auth_token')->value($this->authToken()),
+                            HiddenInput::make('auth_token')->value($prompt->authToken),
                             Button::make(__('oidc-ui::oauth.consent.deny'))->submit(),
                         ]),
                 ]),
         ]);
     }
 
-    private function prompt(): ConsentPrompt
-    {
-        return $this->requirePrompt($this->prompt);
-    }
-
-    private function clientName(): string
-    {
-        return (string) $this->prompt()->client->getAttribute('name');
-    }
-
-    private function userEmail(): string
-    {
-        $user = $this->prompt()->user;
-
-        return $user instanceof Model ? (string) $user->getAttribute('email') : '';
-    }
-
-    private function authToken(): string
-    {
-        return $this->prompt()->authToken;
-    }
-
     /**
      * @return array<int, Component>
      */
-    private function scopeSchema(): array
+    private function scopeSchema(ConsentPrompt $prompt): array
     {
         // Hidden scopes are excluded from discovery on purpose; the consent
         // page must not disclose them either.
         $visible = array_values(array_filter(
-            $this->prompt()->scopes,
+            $prompt->scopes,
             fn (Scope $scope): bool => ! $scope->hidden,
         ));
 

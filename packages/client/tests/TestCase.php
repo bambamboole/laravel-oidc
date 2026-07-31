@@ -44,9 +44,4 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('session.driver', 'array');
         $app['config']->set('oidc-client.enabled', true);
     }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        $this->loadMigrationsFrom(dirname(__DIR__).'/database/migrations');
-    }
 }

@@ -80,21 +80,6 @@ class OidcClientFake
         return $fake;
     }
 
-    public function forUser(Authenticatable $user): static
-    {
-        $this->subject = (string) $user->getAuthIdentifier();
-
-        return $this;
-    }
-
-    public function issuer(string $issuer): static
-    {
-        $this->issuer = rtrim($issuer, '/');
-        $this->reset();
-
-        return $this;
-    }
-
     public function clientId(string $clientId): static
     {
         $this->clientId = $clientId;

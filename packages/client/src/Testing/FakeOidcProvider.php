@@ -81,8 +81,28 @@ class FakeOidcProvider
      */
     public function idToken(array $claims, string $kid, string $algorithm = 'RS256'): string
     {
-        $builder = new Builder(new JoseEncoder, ChainedFormatter::default());
-        $builder = $builder->withHeader('kid', $kid);
+        return $this->build($claims, $kid, $algorithm);
+    }
+
+    /**
+     * @param  array<string, mixed>  $claims
+     */
+    public function logoutToken(array $claims, string $kid): string
+    {
+        return $this->build($claims, $kid, headers: ['typ' => 'logout+jwt']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $claims
+     * @param  array<string, string>  $headers
+     */
+    private function build(array $claims, string $kid, string $algorithm = 'RS256', array $headers = []): string
+    {
+        $builder = (new Builder(new JoseEncoder, ChainedFormatter::default()))->withHeader('kid', $kid);
+
+        foreach ($headers as $name => $value) {
+            $builder = $builder->withHeader($name, $value);
+        }
 
         foreach ($claims as $name => $value) {
             $builder = match ($name) {
@@ -117,30 +137,6 @@ class FakeOidcProvider
     /**
      * @param  array<string, mixed>  $claims
      */
-    public function logoutToken(array $claims, string $kid): string
-    {
-        $builder = (new Builder(new JoseEncoder, ChainedFormatter::default()))
-            ->withHeader('kid', $kid)
-            ->withHeader('typ', 'logout+jwt');
-
-        foreach ($claims as $name => $value) {
-            $builder = match ($name) {
-                'iss' => $builder->issuedBy((string) $value),
-                'sub' => $builder->relatedTo((string) $value),
-                'aud' => $builder->permittedFor(...(array) $value),
-                'exp' => $builder->expiresAt($this->toDateTime($value)),
-                'iat' => $builder->issuedAt($this->toDateTime($value)),
-                'jti' => $builder->identifiedBy((string) $value),
-                default => $builder->withClaim($name, $value),
-            };
-        }
-
-        return $builder->getToken(new Sha256, InMemory::plainText((string) $this->privateKey->toString('PKCS8')))->toString();
-    }
-
-    /**
-     * @param  array<string, mixed>  $claims
-     */
     public function rawIdToken(array $claims, string $kid): string
     {
         $header = $this->base64Url((string) json_encode(['alg' => 'RS256', 'typ' => 'JWT', 'kid' => $kid], JSON_THROW_ON_ERROR));
@@ -156,7 +152,7 @@ class FakeOidcProvider
 
     private function base64Url(string $bytes): string
     {
-        return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+        return (new JoseEncoder)->base64UrlEncode($bytes);
     }
 
     private function toDateTime(mixed $value): DateTimeImmutable

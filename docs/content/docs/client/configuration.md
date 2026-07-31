@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Every key in config/oidc-client.php, including the route handler map.
+description: Every key in config/oidc-client.php and the routes the package registers.
 ---
 
 Publish the config with `php artisan vendor:publish --tag=oidc-client-config`. Every key is
@@ -38,29 +38,16 @@ See [Back-channel logout](/client/backchannel-logout/) for how these fit togethe
 | `backchannel_logout.middleware_group` | `web` | The group the enforcement middleware is appended to. |
 | `backchannel_logout.retention_minutes` | `SESSION_LIFETIME`, else `120` (`OIDC_RP_BACKCHANNEL_LOGOUT_RETENTION`) | How long the session pointer and revocation marker live in cache. |
 
-## Route handlers
+## Routes
 
-Route defaults live in code; `oidc-client.handlers` is a sparse override map keyed by
-route name — the same pattern as the provider's
-[route handlers](/introduction/route-handlers/). An absent entry registers the endpoint
-with its package defaults (so upgrades can add endpoints), `false` disables it, and a
-partial entry overrides only the keys you set (`route`, `controller`, `middleware`).
-`oidc-client.routes.prefix` and `oidc-client.routes.middleware` apply to every registered
-endpoint. The HTTP verb is intrinsic to each endpoint and is not configurable.
+The package registers four fixed routes. None are registered while `enabled` is off.
 
-```php
-'handlers' => [
-    Handler::Login->value => ['route' => 'sign-in'],
-    Handler::Logout->value => false,
-],
-```
-
-| Route name | Verb | Default path | Purpose |
-| --- | --- | --- | --- |
-| `login` | `GET` | `login` | Starts the authorization redirect |
-| `login.callback` | `GET` | `login/callback` | Handles the provider's redirect back |
-| `logout` | `POST` | `logout` | Local + RP-initiated logout |
-| `oidc.backchannel-logout` | `POST` | `oidc/backchannel-logout` | Accepts provider-pushed logout tokens (`throttle:60,1`) |
+| Route name | Verb | Path | Middleware | Purpose |
+| --- | --- | --- | --- | --- |
+| `login` | `GET` | `login` | `web` | Starts the authorization redirect |
+| `login.callback` | `GET` | `login/callback` | `web` | Handles the provider's redirect back |
+| `logout` | `POST` | `logout` | `web` | Local + RP-initiated logout |
+| `oidc.backchannel-logout` | `POST` | `oidc/backchannel-logout` | `throttle:60,1` | Accepts provider-pushed logout tokens |
 
 The `login` and `logout` route names are Laravel's conventional ones, so framework
 redirects (`route('login')`, auth middleware) resolve to the OIDC flow without extra
