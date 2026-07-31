@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Auth\MultiFactor;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
@@ -15,8 +14,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
  */
 class EnrollmentPolicy
 {
-    use InteractsWithFactorUser;
-
     public function __construct(
         private readonly FactorRegistry $factors,
         private readonly RecoveryCodeProvider $recoveryCodes,
@@ -40,7 +37,7 @@ class EnrollmentPolicy
     public function factorRevoked(Authenticatable $user): void
     {
         if ($this->factors->challengeableEnrollments($user) === []) {
-            $this->factorUser($user)->recoveryCodes()->delete();
+            $this->recoveryCodes->clear($user);
         }
     }
 }

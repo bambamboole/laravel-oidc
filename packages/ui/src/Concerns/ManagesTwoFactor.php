@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Concerns;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorAuthenticatable;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 
 trait ManagesTwoFactor
 {
     use ResolvesAuthenticatedUser;
 
-    protected function twoFactorUser(): FactorAuthenticatable
+    /**
+     * Factor providers build their own morph relations, so any Eloquent
+     * authenticatable qualifies for two-factor management.
+     */
+    protected function twoFactorUser(): Authenticatable&Model
     {
         $user = $this->currentUser();
 
-        abort_unless($user instanceof FactorAuthenticatable, 403);
+        abort_unless($user instanceof Model, 403);
 
         return $user;
     }

@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Auth\MultiFactor;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Concerns\InteractsWithFactorUser;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Models\RecoveryCode;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use LogicException;
 
 class RecoveryCodeProvider implements EnrollableFactorProvider
 {
-    use InteractsWithFactorUser;
-
     public function key(): string
     {
         return 'recovery_code';
@@ -30,15 +31,14 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
      */
     public function generate(Authenticatable $user): array
     {
-        $user = $this->factorUser($user);
         $codes = collect()->times(
             (int) config('oidc.auth.two_factor.recovery_codes', 8),
             static fn (): string => Str::random(10).'-'.Str::random(10),
         )->all();
 
         DB::transaction(function () use ($user, $codes): void {
-            $user->recoveryCodes()->delete();
-            $user->recoveryCodes()->createMany(array_map(
+            $this->recoveryCodes($user)->delete();
+            $this->recoveryCodes($user)->createMany(array_map(
                 static fn (string $code): array => ['code' => $code],
                 $codes,
             ));
@@ -54,7 +54,7 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
      */
     public function codes(Authenticatable $user): array
     {
-        return $this->factorUser($user)->recoveryCodes()
+        return $this->recoveryCodes($user)
             ->whereNull('used_at')
             ->pluck('code')
             ->all();
@@ -70,7 +70,7 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
      */
     public function enrollments(Authenticatable $user): array
     {
-        if (! $this->factorUser($user)->recoveryCodes()->exists()) {
+        if (! $this->recoveryCodes($user)->exists()) {
             return [];
         }
 
@@ -95,7 +95,12 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
 
     public function revoke(Authenticatable $user, FactorEnrollment $enrollment): void
     {
-        $this->factorUser($user)->recoveryCodes()->delete();
+        $this->clear($user);
+    }
+
+    public function clear(Authenticatable $user): void
+    {
+        $this->recoveryCodes($user)->delete();
     }
 
     public function beginChallenge(Authenticatable $user, FactorEnrollment $enrollment): FactorChallenge
@@ -105,7 +110,6 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
 
     public function verify(Authenticatable $user, FactorChallenge $challenge, FactorResponse $response): FactorVerification
     {
-        $user = $this->factorUser($user);
         $submittedCode = $response->string('recovery_code');
 
         if ($submittedCode === '') {
@@ -115,7 +119,7 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
         $lockKey = 'oidc.recovery_codes.'.md5($user::class.':'.$user->getAuthIdentifier());
         $verified = Cache::lock($lockKey, 10)->block(10, function () use ($user, $submittedCode): bool {
             return DB::transaction(function () use ($user, $submittedCode): bool {
-                $codes = $user->recoveryCodes()->whereNull('used_at')->lockForUpdate()->get();
+                $codes = $this->recoveryCodes($user)->whereNull('used_at')->lockForUpdate()->get();
 
                 foreach ($codes as $code) {
                     if (! hash_equals($code->code, $submittedCode)) {
@@ -132,5 +136,21 @@ class RecoveryCodeProvider implements EnrollableFactorProvider
         });
 
         return new FactorVerification($verified, $verified ? ['otp'] : [], ['backup' => true]);
+    }
+
+    /**
+     * The provider owns its storage: the relation is built here, so the user
+     * model needs no factor-specific methods — any Eloquent authenticatable
+     * works.
+     *
+     * @return MorphMany<RecoveryCode, covariant Model>
+     */
+    private function recoveryCodes(Authenticatable $user): MorphMany
+    {
+        if (! $user instanceof Model) {
+            throw new LogicException('The authenticatable must be an Eloquent model to store recovery codes.');
+        }
+
+        return $user->morphMany(RecoveryCode::class, 'authenticatable');
     }
 }

@@ -25,6 +25,12 @@ implements:
 `EnrollableFactorProvider` extends it with `beginEnrollment(...)` and `revoke(...)` for factors the
 user can add and remove themselves.
 
+Each provider owns its storage and builds its own morph relations, so any Eloquent
+authenticatable works — the user model needs no factor-specific methods. The
+`HasAuthenticationFactors` trait is a convenience: it adds `totpFactors()` / `recoveryCodes()`
+relations for your own queries, cascades factor deletion when the user is deleted, and pulls in
+`PasskeyAuthenticatable` (webauthn additionally requires the `PasskeyUser` contract).
+
 ### `FactorRegistry`
 
 `FactorRegistry` registers providers by key (duplicate keys throw a `LogicException`) and resolves
