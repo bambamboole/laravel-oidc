@@ -36,7 +36,7 @@ it('renders the two-factor challenge through the package view seam', function ()
     });
     [$user] = confirmedTotpUser();
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->get(route('identity.two-factor.login'))
         ->assertOk()
         ->assertSee('two-factor-view');
@@ -63,7 +63,7 @@ it('defers guard login until a confirmed factor is verified', function () {
     $this->assertAuthenticatedAs($user, 'identity');
 });
 
-it('returns the Fortify-compatible JSON challenge response', function () {
+it('returns the JSON challenge signal for JSON clients', function () {
     [$user] = confirmedTotpUser();
 
     $this->postJson(route('identity.login.store'), [
@@ -77,19 +77,19 @@ it('returns the Fortify-compatible JSON challenge response', function () {
 it('rejects invalid and replayed TOTP codes', function () {
     [$user, $factor] = confirmedTotpUser();
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['code' => '000000'])
         ->assertSessionHasErrors('code');
 
     $code = app(Google2FA::class)->getCurrentOtp($factor->secret);
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['code' => $code])
         ->assertRedirect('/dashboard');
 
     auth('identity')->logout();
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['code' => $code])
         ->assertSessionHasErrors('code');
 });
@@ -98,7 +98,7 @@ it('consumes one recovery code and logs the challenged user in', function () {
     [$user] = confirmedTotpUser();
     $recoveryCode = $user->recoveryCodes()->firstOrFail()->code;
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['recovery_code' => $recoveryCode])
         ->assertRedirect('/dashboard');
 
@@ -107,7 +107,7 @@ it('consumes one recovery code and logs the challenged user in', function () {
 
     auth('identity')->logout();
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['recovery_code' => $recoveryCode])
         ->assertSessionHasErrors('recovery_code');
 });
@@ -117,7 +117,7 @@ it('appends the otp method after a successful totp challenge', function () {
 
     $code = app(Google2FA::class)->getCurrentOtp($factor->secret);
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'oidc.amr' => ['pwd']])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp', 'oidc.amr' => ['pwd']])
         ->post(route('identity.two-factor.login.store'), ['code' => $code])
         ->assertRedirect('/dashboard');
 
@@ -128,7 +128,7 @@ it('appends the otp method after a successful recovery code challenge', function
     [$user] = confirmedTotpUser();
     $recoveryCode = $user->recoveryCodes()->firstOrFail()->code;
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'oidc.amr' => ['pwd']])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp', 'oidc.amr' => ['pwd']])
         ->post(route('identity.two-factor.login.store'), ['recovery_code' => $recoveryCode])
         ->assertRedirect('/dashboard');
 
@@ -150,7 +150,7 @@ it('exposes the available factors on the challenge prompt', function () {
     [$user] = confirmedTotpUser();
     $user->passkeys()->create(['name' => 'Key', 'credential_id' => 'credential-id', 'credential' => []]);
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->get(route('identity.two-factor.login'))
         ->assertOk()
         ->assertJson(['factor' => 'totp'])
@@ -223,11 +223,11 @@ it('throttles repeated two-factor challenge attempts', function () {
     [$user] = confirmedTotpUser();
 
     foreach (range(1, 5) as $ignored) {
-        $this->withSession(['login.id' => $user->getAuthIdentifier()])
+        $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
             ->post(route('identity.two-factor.login.store'), ['code' => '000000']);
     }
 
-    $this->withSession(['login.id' => $user->getAuthIdentifier()])
+    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
         ->post(route('identity.two-factor.login.store'), ['code' => '000000'])
         ->assertStatus(429);
 });

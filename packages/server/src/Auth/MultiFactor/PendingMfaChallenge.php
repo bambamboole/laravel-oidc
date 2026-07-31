@@ -45,22 +45,22 @@ final readonly class PendingMfaChallenge
     }
 
     /**
-     * The factor falls back to `totp` when the session never recorded one, so
-     * a challenge seeded with only a user id verifies against the default
-     * provider.
+     * A pending challenge requires both the user id and the selected factor —
+     * a session without a recorded factor is not a valid challenge.
      */
     public static function find(): ?self
     {
         $userId = session()->get(self::USER_ID_KEY);
+        $factor = session()->get(self::FACTOR_KEY);
 
-        if (! is_int($userId) && ! is_string($userId)) {
+        if ((! is_int($userId) && ! is_string($userId)) || ! is_string($factor) || $factor === '') {
             return null;
         }
 
         return new self(
             userId: $userId,
             remember: (bool) session()->get(self::REMEMBER_KEY, false),
-            factor: (string) session()->get(self::FACTOR_KEY, 'totp'),
+            factor: $factor,
             factorId: (string) session()->get(self::FACTOR_ID_KEY, ''),
         );
     }

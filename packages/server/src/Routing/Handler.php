@@ -35,7 +35,6 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
-use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
 use Laravel\Passport\Http\Controllers\TransientTokenController;
 
@@ -78,9 +77,6 @@ enum Handler: string
     case PasskeyLogin = 'identity.passkey.login';
     case PasskeyConfirmOptions = 'identity.passkey.confirm-options';
     case PasskeyConfirm = 'identity.passkey.confirm';
-    case PasskeyRegistrationOptions = 'identity.passkey.registration-options';
-    case PasskeyStore = 'identity.passkey.store';
-    case PasskeyDestroy = 'identity.passkey.destroy';
 
     case SocialRedirect = 'identity.social.redirect';
     case SocialCallback = 'identity.social.callback';
@@ -244,12 +240,12 @@ enum Handler: string
             self::TwoFactorEnroll => new HandlerConfig(
                 route: 'auth/user/two-factor/{provider}',
                 controller: [FactorEnrollmentController::class, 'store'],
-                middleware: ['web', $authenticated, $passwordConfirmed],
+                middleware: ['web', $authenticated, $passwordConfirmed, 'throttle:5,1'],
             ),
             self::TwoFactorEnrollConfirm => new HandlerConfig(
                 route: 'auth/user/two-factor/{provider}/confirm',
                 controller: [FactorEnrollmentController::class, 'confirm'],
-                middleware: ['web', $authenticated, $passwordConfirmed],
+                middleware: ['web', $authenticated, $passwordConfirmed, 'throttle:5,1'],
             ),
             self::TwoFactorRevoke => new HandlerConfig(
                 route: 'auth/user/two-factor/{provider}/{enrollment}',
@@ -275,21 +271,6 @@ enum Handler: string
                 route: 'auth/passkeys/confirm',
                 controller: [PasskeyConfirmationController::class, 'store'],
                 middleware: ['web', $authenticated, 'throttle:5,1'],
-            ),
-            self::PasskeyRegistrationOptions => new HandlerConfig(
-                route: 'auth/user/passkeys/options',
-                controller: [PasskeyRegistrationController::class, 'index'],
-                middleware: ['web', $authenticated, $passwordConfirmed, 'throttle:5,1'],
-            ),
-            self::PasskeyStore => new HandlerConfig(
-                route: 'auth/user/passkeys',
-                controller: [PasskeyRegistrationController::class, 'store'],
-                middleware: ['web', $authenticated, $passwordConfirmed, 'throttle:5,1'],
-            ),
-            self::PasskeyDestroy => new HandlerConfig(
-                route: 'auth/user/passkeys/{passkey}',
-                controller: [PasskeyRegistrationController::class, 'destroy'],
-                middleware: ['web', $authenticated, $passwordConfirmed],
             ),
             self::SocialRedirect => new HandlerConfig(
                 route: 'auth/social/{provider}',
@@ -394,13 +375,12 @@ enum Handler: string
             self::TwoFactorEnrollConfirm,
             self::PasskeyLogin,
             self::PasskeyConfirm,
-            self::PasskeyStore,
             self::Introspect,
             self::Revoke,
             self::IssueToken,
             self::TokenRefresh,
             self::Approve => 'post',
-            self::Deny, self::TwoFactorRevoke, self::PasskeyDestroy, self::SocialDestroy => 'delete',
+            self::Deny, self::TwoFactorRevoke, self::SocialDestroy => 'delete',
             self::Userinfo, self::Logout, self::SocialCallback => ['get', 'post'],
             default => 'get',
         };

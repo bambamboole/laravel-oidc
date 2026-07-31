@@ -157,19 +157,17 @@ same registration as a standalone browser ceremony.
 
 ### Passkey management
 
-Passkeys are registered and removed through `laravel/passkeys`. The registration and delete
-endpoints are gated the same way (`identity` session + `RequirePassword`); the confirm
-endpoints require only an authenticated session — they *are* a password-confirmation
-mechanism, so they cannot demand a prior confirmation themselves. The options/store/confirm
-endpoints also carry `throttle:5,1`:
+Passkey registration, listing, and removal all run through the generic
+[provider-keyed endpoints](#provider-keyed-enrollment) with `provider=webauthn` — there are
+no separate registration routes. What remains from `laravel/passkeys` are the
+password-confirmation ceremony endpoints, which require only an authenticated session —
+they *are* a password-confirmation mechanism, so they cannot demand a prior confirmation
+themselves (both carry `throttle:5,1`):
 
-| Route name | Verb | Path | `RequirePassword` |
-| --- | --- | --- | --- |
-| `identity.passkey.registration-options` | `GET` | `auth/user/passkeys/options` | yes |
-| `identity.passkey.store` | `POST` | `auth/user/passkeys` | yes |
-| `identity.passkey.destroy` | `DELETE` | `auth/user/passkeys/{passkey}` | yes |
-| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` | no |
-| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` | no |
+| Route name | Verb | Path |
+| --- | --- | --- |
+| `identity.passkey.confirm-options` | `GET` | `auth/passkeys/confirm/options` |
+| `identity.passkey.confirm` | `POST` | `auth/passkeys/confirm` |
 
 (Passkey *login* — the passwordless sign-in path — lives on the [login page](/auth/login/).)
 

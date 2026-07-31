@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 it('configures native passkey routes from package auth settings', function () {
     expect(route('identity.passkey.login-options'))->toEndWith('/auth/passkeys/login/options')
-        ->and(route('identity.passkey.store'))->toEndWith('/auth/user/passkeys')
+        ->and(route('identity.passkey.confirm'))->toEndWith('/auth/passkeys/confirm')
         ->and(config('passkeys.guard'))->toBe(config('oidc.auth.guard'))
         ->and(config('passkeys.redirect'))->toBe(config('oidc.auth.home'));
+});
+
+it('does not register the vendor passkey registration routes', function () {
+    expect(Route::has('identity.passkey.registration-options'))->toBeFalse()
+        ->and(Route::has('identity.passkey.store'))->toBeFalse()
+        ->and(Route::has('identity.passkey.destroy'))->toBeFalse();
 });
 
 it('exposes passkeys as webauthn factor enrollments', function () {

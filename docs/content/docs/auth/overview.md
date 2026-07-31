@@ -3,7 +3,7 @@ title: Auth engine overview & seams
 description: How the package owns the authentication flows while your app fills the view and action seams.
 ---
 
-Beyond the OIDC protocol layer, the package ships a **Fortify-equivalent auth engine**. All the
+Beyond the OIDC protocol layer, the package ships a **complete auth engine**. All the
 authentication *logic* lives in the package — login, registration, password reset, email
 verification, password confirmation, and multi-factor. Your application fills two kinds of
 **seams**: the views to render, and a couple of domain actions.
