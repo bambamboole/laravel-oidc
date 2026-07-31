@@ -31,10 +31,10 @@ class EnableTwoFactorAuthenticationAction extends ActionDefinition
     {
         $user = $this->twoFactorUser();
 
-        $this->totpEnrollable($this->factors)->beginEnrollment($user);
+        $this->enrollableProvider($this->factors)->beginEnrollment($user);
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.two-factor.setup-started'), Variant::Info)
-            ->openModal('oidc.two-factor-setup');
+            ->openModal((string) $this->context('modal', 'oidc.two-factor-setup'));
     }
 }

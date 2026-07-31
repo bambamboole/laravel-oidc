@@ -74,6 +74,11 @@ return [
         'passkey-label' => 'Verify with a passkey',
         'passkey-loading' => 'Verifying...',
         'passkey-separator' => 'Or use a recovery code',
+        'use-another' => 'Or use another method:',
+        'method' => [
+            'totp' => 'Authenticator app',
+            'webauthn' => 'Passkey',
+        ],
     ],
 
 ];

@@ -21,8 +21,17 @@ trait ManagesTwoFactor
         return $user;
     }
 
-    protected function totpEnrollable(FactorRegistry $factors): EnrollableFactorProvider
+    /**
+     * The enrollable provider selected via the component's `provider` context,
+     * defaulting to totp so existing compositions keep working.
+     */
+    protected function enrollableProvider(FactorRegistry $factors): EnrollableFactorProvider
     {
-        return $factors->enrollable('totp') ?? abort(404);
+        return $factors->enrollable($this->providerKey()) ?? abort(404);
+    }
+
+    protected function providerKey(): string
+    {
+        return (string) $this->context('provider', 'totp');
     }
 }

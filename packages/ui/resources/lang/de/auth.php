@@ -74,6 +74,11 @@ return [
         'passkey-label' => 'Mit Passkey bestätigen',
         'passkey-loading' => 'Wird überprüft...',
         'passkey-separator' => 'Oder einen Wiederherstellungscode verwenden',
+        'use-another' => 'Oder eine andere Methode verwenden:',
+        'method' => [
+            'totp' => 'Authenticator-App',
+            'webauthn' => 'Passkey',
+        ],
     ],
 
 ];

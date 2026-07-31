@@ -41,7 +41,7 @@ class DisableTwoFactorAuthenticationAction extends ActionDefinition
     public function handle(Request $request): ActionResult
     {
         $user = $this->twoFactorUser();
-        $enrollable = $this->totpEnrollable($this->factors);
+        $enrollable = $this->enrollableProvider($this->factors);
 
         foreach ($enrollable->enrollments($user) as $enrollment) {
             $enrollable->revoke($user, $enrollment);

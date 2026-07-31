@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
@@ -116,6 +117,38 @@ it('offers only the recovery-code input on the two-factor challenge for a webaut
         ->and($webauthn)->toContain('recovery_code')
         ->and($webauthn)->not->toContain('field.otp')
         ->and($webauthn)->not->toContain('use_recovery_code');
+});
+
+it('offers the other enrolled methods on a multi-provider challenge', function () {
+    $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
+        new FactorEnrollment('totp', '1', 'Authenticator', now(), null),
+        new FactorEnrollment('webauthn', '2', 'Security key', now(), null),
+    ])));
+
+    expect($content)->toContain(__('oidc-ui::auth.two-factor.use-another'))
+        ->and($content)->toContain(__('oidc-ui::auth.two-factor.method.webauthn'))
+        // Inertia JSON escapes forward slashes, so match the escaped href.
+        ->and($content)->toContain('two-factor-challenge\/factor\/webauthn')
+        ->and($content)->not->toContain('two-factor-challenge\/factor\/totp');
+});
+
+it('renders no method switcher for a single-provider challenge', function () {
+    $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
+        new FactorEnrollment('totp', '1', 'Authenticator', now(), null),
+    ])));
+
+    expect($content)->not->toContain(__('oidc-ui::auth.two-factor.use-another'));
+});
+
+it('falls back to the code form and raw key label for an unknown provider', function () {
+    $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'sms', availableFactors: [
+        new FactorEnrollment('sms', '1', 'Phone', now(), null),
+        new FactorEnrollment('totp', '2', 'Authenticator', now(), null),
+    ])));
+
+    expect($content)->toContain('field.otp')
+        ->and($content)->not->toContain('passkey-verify')
+        ->and($content)->toContain(__('oidc-ui::auth.two-factor.method.totp'));
 });
 
 it('links back to the login page from the register page', function () {

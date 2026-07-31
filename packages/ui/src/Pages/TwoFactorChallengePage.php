@@ -15,6 +15,11 @@ use Lattice\Lattice\Forms\Components\Checkbox;
 use Lattice\Lattice\Forms\Components\Form;
 use Lattice\Lattice\Forms\Components\OtpInput;
 use Lattice\Lattice\Forms\Components\TextInput;
+use Lattice\Lattice\Ui\Components\Link;
+use Lattice\Lattice\Ui\Components\Stack;
+use Lattice\Lattice\Ui\Components\Text;
+use Lattice\Lattice\Ui\Enums\Align;
+use Lattice\Lattice\Ui\Enums\Gap;
 use Symfony\Component\HttpFoundation\Response;
 
 class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
@@ -67,6 +72,55 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
                         ->visibleWhen('use_recovery_code', true),
                     Checkbox::make('use_recovery_code', __('oidc-ui::auth.two-factor.use-recovery')),
                 ]),
+            ...$this->factorSwitcher(),
         ]);
+    }
+
+    /**
+     * Links to re-challenge with another enrolled method, rendered only when
+     * the prompt offers more than the active provider.
+     *
+     * @return list<Stack>
+     */
+    private function factorSwitcher(): array
+    {
+        if (! Route::has('identity.two-factor.login.factor')) {
+            return [];
+        }
+
+        $providerKeys = array_values(array_unique(array_map(
+            fn ($enrollment) => $enrollment->providerKey,
+            $this->prompt->availableFactors ?? [],
+        )));
+        $otherKeys = array_values(array_diff($providerKeys, [(string) $this->prompt?->factor]));
+
+        if ($otherKeys === [] || count($providerKeys) < 2) {
+            return [];
+        }
+
+        return [
+            Stack::make('two-factor-switcher')
+                ->align(Align::Center)
+                ->gap(Gap::ExtraSmall)
+                ->schema([
+                    Text::make(__('oidc-ui::auth.two-factor.use-another')),
+                    ...array_map(
+                        fn (string $key) => Link::make($this->providerLabel($key))
+                            ->href(route('identity.two-factor.login.factor', ['provider' => $key], absolute: false)),
+                        $otherKeys,
+                    ),
+                ]),
+        ];
+    }
+
+    /**
+     * Falls back to the raw provider key so host-registered providers render
+     * without package translations.
+     */
+    private function providerLabel(string $key): string
+    {
+        $labelKey = "oidc-ui::auth.two-factor.method.{$key}";
+
+        return trans()->has($labelKey) ? __($labelKey) : $key;
     }
 }

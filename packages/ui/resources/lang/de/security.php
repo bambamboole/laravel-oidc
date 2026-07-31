@@ -23,6 +23,17 @@ return [
         'invalid-code' => 'Der eingegebene Zwei-Faktor-Authentifizierungscode war ungültig.',
     ],
 
+    'methods' => [
+        'column' => 'Methode',
+        'last-used' => 'Zuletzt verwendet',
+        'never-used' => 'Nie verwendet',
+        'last-used-at' => 'Zuletzt verwendet :time',
+        'remove' => 'Methode entfernen',
+        'remove-confirm-title' => 'Zwei-Faktor-Methode entfernen?',
+        'remove-confirm-description' => 'Du kannst diese Methode dann nicht mehr bei der Anmeldung verwenden.',
+        'removed' => 'Zwei-Faktor-Methode entfernt.',
+    ],
+
     'recovery-codes' => [
         'regenerate' => 'Codes neu generieren',
         'regenerate-confirm-title' => 'Wiederherstellungscodes neu generieren?',

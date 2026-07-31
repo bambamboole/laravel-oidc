@@ -23,6 +23,17 @@ return [
         'invalid-code' => 'The provided two factor authentication code was invalid.',
     ],
 
+    'methods' => [
+        'column' => 'Method',
+        'last-used' => 'Last used',
+        'never-used' => 'Never used',
+        'last-used-at' => 'Last used :time',
+        'remove' => 'Remove method',
+        'remove-confirm-title' => 'Remove two-factor method?',
+        'remove-confirm-description' => 'You will no longer be able to use this method during sign in.',
+        'removed' => 'Two-factor method removed.',
+    ],
+
     'recovery-codes' => [
         'regenerate' => 'Regenerate codes',
         'regenerate-confirm-title' => 'Regenerate recovery codes?',

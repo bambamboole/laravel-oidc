@@ -42,7 +42,7 @@ class ConfirmTwoFactorForm extends FormDefinition
     public function handle(Request $request): LatticeResponse
     {
         $user = $this->twoFactorUser();
-        $enrollable = $this->totpEnrollable($this->factors);
+        $enrollable = $this->enrollableProvider($this->factors);
 
         $pending = null;
         foreach ($enrollable->enrollments($user) as $enrollment) {
