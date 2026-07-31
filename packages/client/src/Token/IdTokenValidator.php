@@ -29,7 +29,7 @@ class IdTokenValidator extends TokenValidator
     private function assertClaims(UnencryptedToken $token, string $expectedNonce): void
     {
         $claims = $token->claims();
-        $leeway = $this->leeway();
+        $leeway = (int) config('oidc-client.leeway', 60);
         $now = time();
 
         $this->assertIssuer($token);
@@ -40,7 +40,7 @@ class IdTokenValidator extends TokenValidator
         }
 
         $audience = $this->assertAudience($token);
-        $clientId = $this->clientId();
+        $clientId = (string) config('oidc-client.client_id');
 
         $azp = $claims->get('azp');
         if (count($audience) > 1) {

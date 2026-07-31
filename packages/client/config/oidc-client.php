@@ -30,42 +30,6 @@ return [
 
     'login_guard' => env('OIDC_RP_LOGIN_GUARD', 'web'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Route handlers
-    |--------------------------------------------------------------------------
-    |
-    | Sparse overrides for the endpoints the package registers, keyed by route
-    | name (see the Handler enum). An absent entry registers the endpoint with
-    | its package defaults, `false` disables it, and a partial entry overrides
-    | only the given keys (`route`, `controller`, `middleware`). The HTTP verb
-    | is intrinsic to the endpoint and lives in code, not here. Routes are
-    | only registered when `enabled` is true.
-    |
-    | 'handlers' => [
-    |     Handler::Login->value => ['route' => 'sign-in'],
-    |     Handler::Logout->value => false,
-    | ],
-    |
-    */
-
-    'handlers' => [],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Route defaults
-    |--------------------------------------------------------------------------
-    |
-    | Applied to every registered endpoint: `prefix` is prepended to each
-    | route path, `middleware` is appended after each endpoint's own stack.
-    |
-    */
-
-    'routes' => [
-        'prefix' => '',
-        'middleware' => [],
-    ],
-
     'redirect_after_login' => env('OIDC_RP_HOME', '/dashboard'),
 
     'post_logout_redirect_uri' => env('OIDC_RP_POST_LOGOUT_REDIRECT_URI'),

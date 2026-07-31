@@ -19,7 +19,7 @@ class LogoutTokenValidator extends TokenValidator
         $token = $this->parseAndVerifySignature($logoutToken);
 
         $claims = $token->claims();
-        $leeway = $this->leeway();
+        $leeway = (int) config('oidc-client.leeway', 60);
         $now = time();
 
         $this->assertIssuer($token);
