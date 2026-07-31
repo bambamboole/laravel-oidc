@@ -83,7 +83,7 @@ unasserted, so error paths stay testable:
 $result = $this->authorizeAndApprove($user, $misconfiguredClient);
 
 $result->response->assertStatus(401);
-$result->json('error'); // invalid_client
+$result->response->json('error'); // invalid_client
 ```
 
 `params:` overrides any authorize query parameter (`state`, `nonce`,

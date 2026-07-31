@@ -88,9 +88,38 @@ $fake->assertBackchannelLogoutProcessed('s1');
 This route only exists when `oidc-client.backchannel_logout.enabled` is on —
 see [Back-channel logout](/client/backchannel-logout/).
 
+## Testing self-SSO (provider and relying party in one app)
+
+When the same application runs the server package as its identity provider
+and the client package for its own web session, point the client at the app
+itself and let the fake stand in for the provider:
+
+```php
+config(['oidc-client.issuer' => config('app.url')]);
+
+$fake = OidcClient::fake();
+
+// The login redirect goes through the REAL authorize route — Http::fake()
+// only intercepts the relying party's outbound calls (discovery, JWKS,
+// token), not requests made through the test kernel:
+$fake->assertRedirectedToProvider($this->get(route('login')));
+
+// The callback exchanges the code against the fake token endpoint:
+$this->withSession($fake->callbackContext())
+    ->get($fake->loginAs($user))
+    ->assertRedirect('/dashboard');
+
+$fake->assertLoggedIn($user);
+```
+
+`OidcClient::fake()` resets the client's resolved services and discovery/JWKS
+caches itself, so `config()->set()` calls in the test take effect without any
+`forgetInstance()` bookkeeping. Failure paths (`failTokenExchange()`,
+`withInvalidSignature()`, tampered `state`) work the same as against an
+external provider.
+
 ## Customizing the provider
 
-- `forUser($user)` — default subject for minted id_tokens
-- `issuer($url)` / `clientId($id)` — override the fake issuer or client
+- `clientId($id)` — override the fake client id
 - `idToken($claims)` / `logoutToken($claims)` — mint a signed token directly
 - `withoutEndSessionEndpoint()` — drop `end_session_endpoint` from discovery

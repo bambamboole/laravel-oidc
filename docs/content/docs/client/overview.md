@@ -63,8 +63,8 @@ context is pulled from the session exactly once, so a replayed callback fails. S
 
 - [Installation](/client/installation/) — install, enable, and register the client at the
   provider.
-- [Configuration](/client/configuration/) — every `config/oidc-client.php` key, including
-  the route handlers.
+- [Configuration](/client/configuration/) — every `config/oidc-client.php` key and the
+  routes the package registers.
 - [Login & logout](/client/login-and-logout/) — the flow in detail and the user-resolution
   seam.
 - [Back-channel logout](/client/backchannel-logout/) — provider-pushed session teardown.

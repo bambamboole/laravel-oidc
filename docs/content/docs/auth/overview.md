@@ -36,11 +36,11 @@ Eight contracts cover every auth surface:
 | Contract | Prompt | Renders for |
 | --- | --- | --- |
 | `LoginView` | `LoginPrompt` (`status`) | [Login](/auth/login/) |
-| `RegisterView` | `RegisterPrompt` | [Registration](/auth/registration/) |
+| `RegisterView` | — (`respond(Request $request)`) | [Registration](/auth/registration/) |
 | `PasswordResetRequestView` | `PasswordResetRequestPrompt` (`status`) | [Password reset](/auth/passwords/) request step |
 | `PasswordResetView` | `PasswordResetPrompt` (`token`, `email`, `status`) | [Password reset](/auth/passwords/) reset step |
 | `EmailVerificationView` | `EmailVerificationPrompt` (`status`) | [Email verification](/auth/email-verification/) |
-| `PasswordConfirmationView` | `PasswordConfirmationPrompt` | [Password confirmation](/auth/passwords/) |
+| `PasswordConfirmationView` | — (`respond(Request $request)`) | [Password confirmation](/auth/passwords/) |
 | `TwoFactorChallengeView` | `TwoFactorChallengePrompt` | [Multi-factor challenge](/auth/multi-factor/) |
 | `ConsentView` | `ConsentPrompt` (`client`, `user`, `scopes`, `authToken`) | [OAuth consent](/provider/endpoints/#consent-view-required) |
 
