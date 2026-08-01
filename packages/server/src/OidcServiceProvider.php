@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server;
 
+use Bababoole\LaravelOidc\Server\Token\OidcAccessTokenRepository;
+use Bababoole\LaravelOidc\Server\Token\SigningKeyStore;
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
@@ -60,8 +62,8 @@ use Bambamboole\LaravelOidc\Server\Session\SessionTokenGuard;
 use Bambamboole\LaravelOidc\Server\Session\StartOidcSession;
 use Bambamboole\LaravelOidc\Server\Support\EnvironmentFile;
 use Bambamboole\LaravelOidc\Server\Token\AccessTokenMinter;
+use Bambamboole\LaravelOidc\Server\Token\EnvSigningKeyStore;
 use Bambamboole\LaravelOidc\Server\Token\OidcAccessToken;
-use Bambamboole\LaravelOidc\Server\Token\OidcAccessTokenRepository;
 use DateInterval;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -147,6 +149,7 @@ class OidcServiceProvider extends ServiceProvider
         );
         $this->app->singleton(FirstPartyClientProvisioner::class);
         $this->app->singleton(EnvironmentFile::class);
+        $this->app->singleton(SigningKeyStore::class, EnvSigningKeyStore::class);
         $this->app->singleton(OidcManager::class);
         $this->app->singleton(ExchangePolicy::class, DefaultExchangePolicy::class);
         $this->app->singleton(AccessTokenMinter::class);
