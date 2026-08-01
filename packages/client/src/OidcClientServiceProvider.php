@@ -24,6 +24,7 @@ class OidcClientServiceProvider extends ServiceProvider
         $this->app->singleton(IdTokenValidator::class);
         $this->app->singleton(LogoutTokenValidator::class);
         $this->app->singleton(RelyingParty::class);
+        $this->app->singleton(ApiTokenBroker::class);
     }
 
     public function boot(): void
