@@ -266,6 +266,44 @@ it('rejects a public client with invalid_client', function () {
         ->assertJsonPath('error', 'invalid_client');
 });
 
+it('allows a trusted public client to exchange its own token', function () {
+    $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Mobile', ['https://rp.test/cb'], confidential: false);
+    $client->forceFill([
+        'grant_types' => [...(array) $client->getAttribute('grant_types'), TestCase::TOKEN_EXCHANGE_GRANT],
+        'allowed_exchange_audiences' => json_encode(['https://api.example.com']),
+    ])->save();
+    config()->set('oidc.trusted_clients', [(string) $client->getKey()]);
+
+    $subject = mintExchangeSubjectToken((string) $client->getKey(), $this->user->getKey(), ['openid']);
+
+    $response = $this->post('/oauth/token', [
+        'grant_type' => TestCase::TOKEN_EXCHANGE_GRANT,
+        'client_id' => (string) $client->getKey(),
+        'subject_token' => $subject,
+        'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
+        'audience' => 'https://api.example.com',
+    ]);
+
+    $response->assertOk();
+    expect($response->json('access_token'))->toBeString();
+});
+
+it('rejects a trusted public client whose grant_types lack token exchange', function () {
+    $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient('Mobile', ['https://rp.test/cb'], confidential: false);
+    $client->forceFill(['allowed_exchange_audiences' => json_encode(['https://api.example.com'])])->save();
+    config()->set('oidc.trusted_clients', [(string) $client->getKey()]);
+
+    $subject = mintExchangeSubjectToken((string) $client->getKey(), $this->user->getKey(), ['openid']);
+
+    $this->post('/oauth/token', [
+        'grant_type' => TestCase::TOKEN_EXCHANGE_GRANT,
+        'client_id' => (string) $client->getKey(),
+        'subject_token' => $subject,
+        'subject_token_type' => 'urn:ietf:params:oauth:token-type:access_token',
+        'audience' => 'https://api.example.com',
+    ])->assertStatus(400)->assertJsonPath('error', 'unauthorized_client');
+});
+
 // RFC 8693 §3 (token type identifiers)
 it('rejects a wrong subject_token_type with invalid_request', function () {
     $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);

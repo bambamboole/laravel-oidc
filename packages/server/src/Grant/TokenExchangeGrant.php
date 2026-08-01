@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Grant;
 
+use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Server\Exchange\TokenExchanger;
 use DateInterval;
 use Laravel\Passport\Passport;
@@ -35,7 +36,7 @@ class TokenExchangeGrant extends AbstractGrant
     ): ResponseTypeInterface {
         $client = $this->validateClient($request);
 
-        if (! $client->isConfidential()) {
+        if (! $client->isConfidential() && ! resolve(FirstPartyClientConfig::class)->isTrusted($client->getIdentifier())) {
             throw OAuthServerException::invalidClient($request);
         }
 
@@ -59,6 +60,11 @@ class TokenExchangeGrant extends AbstractGrant
 
         $passportClient = Passport::client()->newQuery()->find($client->getIdentifier());
         if ($passportClient === null) {
+            throw OAuthServerException::invalidClient($request);
+        }
+
+        // League skips all client validation for public clients, so the grant-type check must happen here.
+        if (! $client->isConfidential() && ! $passportClient->hasGrantType(self::GRANT_URN)) {
             throw OAuthServerException::invalidClient($request);
         }
 
