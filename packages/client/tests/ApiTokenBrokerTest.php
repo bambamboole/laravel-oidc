@@ -41,6 +41,17 @@ it('exchanges the login token with extension parameters and the issuer as defaul
         && $request['tenant'] === 'acme');
 });
 
+it('strips a trailing slash from the issuer when it is used as the default audience', function () {
+    config()->set('oidc-client.issuer', 'https://id.example.com/');
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+
+    app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
+        && $request['audience'] === 'https://id.example.com');
+});
+
 it('uses an explicit audience and caches it separately', function () {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'issuer-token', 'expires_in' => 300])

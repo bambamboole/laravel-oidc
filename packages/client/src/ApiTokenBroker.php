@@ -26,7 +26,7 @@ class ApiTokenBroker
      */
     public function accessToken(array $parameters = [], ?string $audience = null): string
     {
-        $audience ??= (string) config('oidc-client.issuer');
+        $audience ??= rtrim((string) config('oidc-client.issuer'), '/');
         $key = $this->cacheKey($audience, $parameters);
         $cached = session('oidc-client.exchanged.'.$key);
 
