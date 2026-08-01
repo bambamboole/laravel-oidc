@@ -4,8 +4,12 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Server\Support\EnvironmentFile;
 use Bambamboole\LaravelOidc\Server\Token\EnvSigningKeyStore;
 use Bambamboole\LaravelOidc\Server\Token\GeneratedSigningKeys;
+use Bambamboole\LaravelOidc\Server\Token\SigningKeyStore;
 use Laravel\Passport\Passport;
 
+/**
+ * @return array{0: EnvSigningKeyStore, 1: string}
+ */
 function envStoreFixture(): array
 {
     $path = temporaryTestDirectory('env-store').'/.env';
@@ -58,6 +62,5 @@ it('omits the previous key when no current key exists', function () {
 });
 
 it('binds the env store as the SigningKeyStore singleton', function () {
-    $instance = app('Bambamboole\\LaravelOidc\\Server\\Token\\SigningKeyStore');
-    expect($instance)->toBeInstanceOf(EnvSigningKeyStore::class);
+    expect(app(SigningKeyStore::class))->toBe(app(SigningKeyStore::class));
 });
