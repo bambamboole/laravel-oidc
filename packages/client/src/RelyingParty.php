@@ -118,6 +118,7 @@ class RelyingParty
             'access_token' => $response->json('access_token'),
             'refresh_token' => $response->json('refresh_token'),
             'id_token' => $idToken,
+            'expires_at' => is_numeric($response->json('expires_in')) ? time() + (int) $response->json('expires_in') : null,
         ]);
 
         $request->session()->regenerate();
