@@ -42,7 +42,7 @@ function withDisabledHandlers(array $disabled): void
     Route::swap($router);
     app(HandlerRegistrar::class)->register();
 
-    foreach ($previous as $route) {
+    foreach ($previous->getRoutes() as $route) {
         if (! str_starts_with((string) $route->getName(), 'identity.')) {
             $router->getRoutes()->add($route);
         }
