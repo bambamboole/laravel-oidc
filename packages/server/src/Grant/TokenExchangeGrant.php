@@ -68,15 +68,6 @@ class TokenExchangeGrant extends AbstractGrant
             throw OAuthServerException::invalidClient($request);
         }
 
-        // Defense-in-depth: League's own validateClient() -> getClientEntityOrFail() already checks
-        // supportsGrantType() unconditionally for both confidential and public clients and rejects
-        // with unauthorized_client/400 first, so this branch is unreachable on the normal HTTP path.
-        // It guards respondToAccessTokenRequest() against ever being reached with a public/untrusted
-        // -for-grant client through some other path.
-        if (! $client->isConfidential() && ! $passportClient->hasGrantType(self::GRANT_URN)) {
-            throw OAuthServerException::invalidClient($request);
-        }
-
         $accessToken = $this->exchanger->exchange(
             $subjectTokenJwt,
             $passportClient,
