@@ -56,3 +56,8 @@ it('omits the previous key when no current key exists', function () {
 
     expect((string) file_get_contents($path))->not->toContain('OIDC_PREVIOUS_PUBLIC_KEY=');
 });
+
+it('binds the env store as the SigningKeyStore singleton', function () {
+    $instance = app('Bambamboole\\LaravelOidc\\Server\\Token\\SigningKeyStore');
+    expect($instance)->toBeInstanceOf(EnvSigningKeyStore::class);
+});
