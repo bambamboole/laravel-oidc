@@ -45,6 +45,25 @@ $client->forceFill([
 - `allowed_exchange_audiences` is a JSON array of audience strings the client is permitted to
   request. Anything outside it is rejected.
 
+### Public clients
+
+A **public** (non-confidential) client may use this grant too, but only when it is trusted: either
+it is the configured first-party client (`oidc.first_party.client_id` with
+`oidc.first_party.trusted = true`) or it is listed in `oidc.trusted_clients`. An untrusted public
+client is rejected with `invalid_client` before its `grant_types` are even checked. A trusted
+public client still needs the exchange URN in `grant_types`, same as a confidential one. A public
+client authenticates by possession of the subject token alone — it never presents a
+`client_secret`.
+
+## Extension parameters
+
+Any POST field on `/oauth/token` that isn't one of the standard exchange parameters (`grant_type`,
+`client_id`, `client_secret`, `subject_token`, `subject_token_type`, `requested_token_type`,
+`audience`, `scope`, `resource`, `actor_token`, `actor_token_type`) is collected into
+`ExchangeRequest->parameters` and handed to the `ExchangePolicy`. A client sending `tenant=acme`
+alongside the standard fields, for example, lets a custom policy read
+`$request->parameters['tenant']` to enforce a tenant-scoped rule.
+
 ## Request and response
 
 ```text

@@ -7,6 +7,19 @@ A resource server receives an audience-scoped RFC 9068 `at+jwt` access token (fo
 example the `accessToken` from an [`IssuedToken`](/advanced/browser-fetch/)) and must
 validate it before serving the request. There are three ways to do that.
 
+## The `auth:api` guard also accepts resource-audience tokens
+
+If the resource server *is* this same app, Passport's `auth:api` guard already recognizes an
+exchanged token: when a bearer token's `aud` names this server — the issuer URL, or an entry in
+`oidc.resource.audiences` — the guard resolves the acting client from the token's RFC 9068
+`client_id` claim instead of `aud[0]`. A classic (non-exchanged) token, whose `aud` is already the
+client id, is unaffected. A token whose `aud` names some other resource server still 401s, and a
+revoked exchanged token still 401s, exactly as any revoked token would.
+
+This makes `auth:api` usable directly on routes that only need *a* valid authenticated user,
+regardless of which audience the token was exchanged for. Use `CheckAudience` instead — see below —
+when a route must enforce a *specific* audience, not just any recognized one.
+
 ## Three validation options
 
 - **JWKS (stateless).** Fetch `GET /.well-known/openid-configuration`, follow

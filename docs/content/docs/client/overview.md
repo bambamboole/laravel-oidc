@@ -55,6 +55,9 @@ context is pulled from the session exactly once, so a replayed callback fails. S
   `retrieveById($sub)`.
 - **RP-initiated logout** — `POST /logout` ends the local session and forwards to the
   provider's end-session endpoint with `id_token_hint`.
+- **An API token broker** — `ApiTokenBroker::accessToken()` trades the session's login token
+  for short-lived, per-audience API tokens via RFC 8693 token exchange. See
+  [API token broker](/client/api-token-broker/).
 - **Back-channel logout** — an opt-in endpoint that accepts logout tokens pushed by the
   provider and tears down the matching local session. See
   [Back-channel logout](/client/backchannel-logout/).
@@ -67,4 +70,6 @@ context is pulled from the session exactly once, so a replayed callback fails. S
   routes the package registers.
 - [Login & logout](/client/login-and-logout/) — the flow in detail and the user-resolution
   seam.
+- [API token broker](/client/api-token-broker/) — cached, per-audience API tokens from the
+  login session.
 - [Back-channel logout](/client/backchannel-logout/) — provider-pushed session teardown.
