@@ -67,7 +67,7 @@ it('aborts without writing when the confirmation is declined', function () {
     $before = (string) file_get_contents($env);
 
     $this->artisan('oidc:rotate-keys')
-        ->expectsConfirmation('Generate a new signing keypair and write it to .env?', 'no')
+        ->expectsConfirmation('Generate a new signing keypair and store it?', 'no')
         ->assertSuccessful();
 
     expect((string) file_get_contents($env))->toBe($before);
