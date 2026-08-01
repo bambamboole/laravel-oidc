@@ -23,7 +23,7 @@ callback context is single-use, so a replayed or duplicated callback fails. It t
 3. Validates the returned `id_token` (below).
 4. Resolves the local user and logs them into `login_guard`.
 5. Stores the token set in the session (`oidc-client.tokens`: `access_token`,
-   `refresh_token`, `id_token`) and **regenerates the session id**.
+   `refresh_token`, `id_token`, `expires_at`) and **regenerates the session id**.
 6. Redirects via `redirect()->intended(...)` to `redirect_after_login`.
 
 Any failure redirects back to the `login` route with a generic `oidc` error message —

@@ -132,3 +132,12 @@ it('rejects an id token with a tampered signature and does not log in', function
 
     $this->assertGuest();
 });
+
+it('stores the access token expiry alongside the tokens', function () {
+    $this->withSession($this->fake->callbackContext())->get($this->fake->loginAs($this->user));
+
+    expect(session('oidc-client.tokens.expires_at'))
+        ->toBeInt()
+        ->toBeGreaterThanOrEqual(time() + 3590)
+        ->toBeLessThanOrEqual(time() + 3610);
+});

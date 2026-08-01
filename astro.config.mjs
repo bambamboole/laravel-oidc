@@ -107,6 +107,7 @@ export default defineConfig({
             { label: "Installation", link: "/client/installation/" },
             { label: "Configuration", link: "/client/configuration/" },
             { label: "Login & logout", link: "/client/login-and-logout/" },
+            { label: "API token broker", link: "/client/api-token-broker/" },
             { label: "Back-channel logout", link: "/client/backchannel-logout/" },
             { label: "Testing", link: "/client/testing/" },
           ],
