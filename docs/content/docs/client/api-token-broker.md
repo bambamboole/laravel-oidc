@@ -17,13 +17,23 @@ $token = app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 
 `accessToken(array $parameters = [], ?string $audience = null): string` exchanges the session's
 login access token (via [RFC 8693 token exchange](/provider/token-exchange/)) for a token scoped
-to `$audience`, defaulting to `config('oidc-client.issuer')` when omitted. `$parameters` are sent
-as extra POST fields on the exchange request — a provider-side `ExchangePolicy` can read them back
-as [extension parameters](/provider/token-exchange/#extension-parameters), e.g. `tenant` above.
+to `$audience`, defaulting to `config('oidc-client.issuer')` (with a trailing slash stripped) when
+omitted. `$parameters` are sent as extra POST fields on the exchange request — a provider-side
+`ExchangePolicy` can read them back as
+[extension parameters](/provider/token-exchange/#extension-parameters), e.g. `tenant` above.
 
 The result is cached in the session under a key derived from the audience and the (sorted)
 parameter set, so repeated calls with the same arguments reuse the cached token until it is within
 30 seconds of its `expires_in`, rather than exchanging again.
+
+The default audience must equal the provider's issuer identifier — the same value the server
+exposes via `oidc.issuer` (`Issuer::url()`) — or exchanges targeting a different audience must be
+requested explicitly via `$audience`. Either way, the exchanging client's own
+`allowed_exchange_audiences` must include whatever audience is requested, or the token endpoint
+rejects the exchange with `invalid_target`; see
+[resource servers](/advanced/resource-servers/) for the corresponding server-side configuration.
+This is a configuration contract between the two independently-configured packages, not something
+either package enforces on your behalf.
 
 Before exchanging, `accessToken()` checks the session's login token
 (`oidc-client.tokens.expires_at`, recorded by the [login callback](/client/login-and-logout/)). If
@@ -40,6 +50,16 @@ app(ApiTokenBroker::class)->forget();
 
 Clears every cached exchanged token (all audiences and parameter sets) from the session. Call this
 on logout alongside clearing the login session itself.
+
+## Concurrency
+
+The server rotates refresh tokens on use, and Laravel's default session driver writes the full
+session back at request-terminate without merging concurrent changes. If two requests in the same
+session both find the login token expired, both refresh, and the loser's stale session write can
+overwrite the winner's freshly-stored tokens with its now-revoked ones — breaking the session until
+the next re-login. Guard routes that use the broker with Laravel's session-locking middleware
+(`->block()`, or the `block` session middleware) to serialize concurrent requests per session and
+avoid this.
 
 ## Failures
 

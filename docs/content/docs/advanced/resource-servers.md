@@ -20,6 +20,10 @@ This makes `auth:api` usable directly on routes that only need *a* valid authent
 regardless of which audience the token was exchanged for. Use `CheckAudience` instead — see below —
 when a route must enforce a *specific* audience, not just any recognized one.
 
+See the [API token broker](/client/api-token-broker/) for the client-side half of this contract —
+the audience it requests must match what a route here accepts, and be listed in the requesting
+client's `allowed_exchange_audiences`.
+
 ## Three validation options
 
 - **JWKS (stateless).** Fetch `GET /.well-known/openid-configuration`, follow
