@@ -51,7 +51,7 @@ class ApiTokenBroker
         $expiresAt = $tokens['expires_at'] ?? null;
 
         if (! is_int($expiresAt) || $expiresAt <= time() + self::EXPIRY_SKEW) {
-            throw new OidcClientException('The OIDC access token is missing or expired.');
+            $tokens = $this->refresh($tokens);
         }
 
         $accessToken = $tokens['access_token'] ?? null;
@@ -61,6 +61,50 @@ class ApiTokenBroker
         }
 
         return $accessToken;
+    }
+
+    /**
+     * @param  array<string, mixed>  $tokens
+     * @return array<string, mixed>
+     */
+    private function refresh(array $tokens): array
+    {
+        $refreshToken = $tokens['refresh_token'] ?? null;
+
+        if (! is_string($refreshToken) || $refreshToken === '') {
+            throw new OidcClientException('No refresh token is available to renew the session tokens.');
+        }
+
+        $payload = [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+            'client_id' => (string) config('oidc-client.client_id'),
+        ];
+
+        $clientSecret = config('oidc-client.client_secret');
+
+        if (is_string($clientSecret) && $clientSecret !== '') {
+            $payload['client_secret'] = $clientSecret;
+        }
+
+        $response = $this->http->asForm()->post($this->discovery->metadata()->tokenEndpoint, $payload);
+
+        $accessToken = $response->json('access_token');
+
+        if ($response->failed() || ! is_string($accessToken) || $accessToken === '') {
+            throw new OidcClientException('The token endpoint rejected the refresh.');
+        }
+
+        $renewed = [
+            'access_token' => $accessToken,
+            'refresh_token' => is_string($response->json('refresh_token')) ? $response->json('refresh_token') : $refreshToken,
+            'id_token' => is_string($response->json('id_token')) ? $response->json('id_token') : ($tokens['id_token'] ?? null),
+            'expires_at' => is_numeric($response->json('expires_in')) ? time() + (int) $response->json('expires_in') : null,
+        ];
+
+        session()->put('oidc-client.tokens', $renewed);
+
+        return $renewed;
     }
 
     /**
