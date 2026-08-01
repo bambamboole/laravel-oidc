@@ -27,7 +27,9 @@ use Workbench\App\Models\User;
 /**
  * Re-registers the identity routes with the given handlers disabled, swapping
  * both the router and the URL generator's collection so route() and
- * Route::has() agree on what exists.
+ * Route::has() agree on what exists. Non-identity routes are carried over from
+ * the original router: packages resolve their own routes while rendering (e.g.
+ * lattice's refresh endpoint), so only the identity routes may be rebuilt.
  *
  * @param  list<Handler>  $disabled
  */
@@ -35,9 +37,17 @@ function withDisabledHandlers(array $disabled): void
 {
     config(['oidc.handlers' => array_fill_keys(array_map(fn (Handler $handler) => $handler->value, $disabled), false)]);
 
+    $previous = Route::getRoutes();
     $router = new Router(new Dispatcher, app());
     Route::swap($router);
     app(HandlerRegistrar::class)->register();
+
+    foreach ($previous->getRoutes() as $route) {
+        if (! str_starts_with((string) $route->getName(), 'identity.')) {
+            $router->getRoutes()->add($route);
+        }
+    }
+
     $router->getRoutes()->refreshNameLookups();
     app('url')->setRoutes($router->getRoutes());
 }
