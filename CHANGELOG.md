@@ -5,6 +5,33 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.12.0](https://github.com/bambamboole/laravel-oidc/compare/v0.11.0...v0.12.0) (2026-08-01)
+
+
+### Features
+
+* **server:** add SigningKeyStore contract with env-backed implementation ([62ee015](https://github.com/bambamboole/laravel-oidc/commit/62ee01535cb82bc15157b24f9e66bc6ddf5c6cb2))
+* **server:** rotate signing keys through the bound key store ([83fe4f8](https://github.com/bambamboole/laravel-oidc/commit/83fe4f8cd114cfd6a3685a37603ff26e234af559))
+* **server:** swappable signing-key storage + CRLF-safe env encoding ([a8ef6ab](https://github.com/bambamboole/laravel-oidc/commit/a8ef6abeee2a9ae45c484d0aea04e1f554c089dc))
+
+
+### Bug Fixes
+
+* **server:** correct namespace typo in provider imports ([3ace789](https://github.com/bambamboole/laravel-oidc/commit/3ace7894098651ae959a9628e995d96a4c610fd5))
+* **server:** normalize CRLF line endings when encoding env values ([1b46243](https://github.com/bambamboole/laravel-oidc/commit/1b46243b7976a47263e08193110e4833cb56e725))
+
+
+### Refactoring
+
+* **server:** resolve signing keys through the bound SigningKeyStore ([4a69cfa](https://github.com/bambamboole/laravel-oidc/commit/4a69cfa4182cd0d068f690ad243c983416ed5589))
+
+
+### Documentation
+
+* document swappable production key storage ([accc370](https://github.com/bambamboole/laravel-oidc/commit/accc370e8e4145e5ea3efcafc90ba66e5e27d8d8))
+* drop the upgrade guide page ([b321393](https://github.com/bambamboole/laravel-oidc/commit/b321393bf8bd9a613d4e126c232e024d05f492a0))
+* drop the upgrade guide page ([36c88fa](https://github.com/bambamboole/laravel-oidc/commit/36c88fa9ca735012a81a69baf64709400749710c))
+
 ## [0.11.0](https://github.com/bambamboole/laravel-oidc/compare/v0.10.2...v0.11.0) (2026-07-31)
 
 
