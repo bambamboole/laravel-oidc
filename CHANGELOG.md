@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.12.1](https://github.com/bambamboole/laravel-oidc/compare/v0.12.0...v0.12.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* answer Inertia consent approve/deny with 409 + X-Inertia-Location ([19dae53](https://github.com/bambamboole/laravel-oidc/commit/19dae539b19d7edf6f1fc63db1895c8e1afa6046))
+* answer Inertia consent approve/deny with 409 + X-Inertia-Location ([f405df2](https://github.com/bambamboole/laravel-oidc/commit/f405df2c1dfa226cfc4290ee2d4caa7b2380606c))
+
 ## [0.12.0](https://github.com/bambamboole/laravel-oidc/compare/v0.11.0...v0.12.0) (2026-08-01)
 
 
