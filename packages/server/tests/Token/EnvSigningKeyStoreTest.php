@@ -62,5 +62,8 @@ it('omits the previous key when no current key exists', function () {
 });
 
 it('binds the env store as the SigningKeyStore singleton', function () {
-    expect(app(SigningKeyStore::class))->toBe(app(SigningKeyStore::class));
+    $first = app(SigningKeyStore::class);
+
+    expect($first::class)->toBe(EnvSigningKeyStore::class)
+        ->and($first)->toBe(app(SigningKeyStore::class));
 });
