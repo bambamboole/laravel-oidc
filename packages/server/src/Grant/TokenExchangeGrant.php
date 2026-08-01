@@ -20,6 +20,11 @@ class TokenExchangeGrant extends AbstractGrant
 
     private const string ACCESS_TOKEN_URN = 'urn:ietf:params:oauth:token-type:access_token';
 
+    private const array RESERVED_PARAMETERS = [
+        'grant_type', 'client_id', 'client_secret', 'subject_token', 'subject_token_type',
+        'requested_token_type', 'audience', 'scope', 'resource', 'actor_token', 'actor_token_type',
+    ];
+
     public function __construct(
         private readonly TokenExchanger $exchanger,
     ) {}
@@ -78,6 +83,7 @@ class TokenExchangeGrant extends AbstractGrant
             $audience,
             $this->scopeParam($request),
             $accessTokenTTL,
+            $this->extensionParameters($request),
         );
 
         $this->getEmitter()->emit(new RequestEvent(RequestEvent::ACCESS_TOKEN_ISSUED, $request));
@@ -93,5 +99,11 @@ class TokenExchangeGrant extends AbstractGrant
         $scope = $this->getRequestParameter('scope', $request);
 
         return $scope === null ? null : array_values(array_filter(explode(' ', $scope)));
+    }
+
+    /** @return array<string, mixed> */
+    private function extensionParameters(ServerRequestInterface $request): array
+    {
+        return array_diff_key((array) $request->getParsedBody(), array_flip(self::RESERVED_PARAMETERS));
     }
 }

@@ -8,6 +8,9 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\TokenExchangeEvent;
+use Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy;
+use Bambamboole\LaravelOidc\Server\Exchange\ExchangeGrantResult;
+use Bambamboole\LaravelOidc\Server\Exchange\ExchangeRequest;
 use Bambamboole\LaravelOidc\Server\Exchange\TokenExchanger;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
@@ -326,6 +329,40 @@ it('rejects a client without the grant', function () {
         'grant_type' => TestCase::TOKEN_EXCHANGE_GRANT, 'client_id' => $other->id, 'client_secret' => $other->plainSecret,
         'subject_token' => $subject, 'subject_token_type' => ACCESS_TOKEN_URN, 'audience' => 'https://api.internal/orders',
     ])->assertStatus(400);
+});
+
+it('passes extension parameters to the exchange policy', function () {
+    $spy = new class implements ExchangePolicy
+    {
+        public ?ExchangeRequest $request = null;
+
+        public function authorize(ExchangeRequest $request): ExchangeGrantResult
+        {
+            $this->request = $request;
+
+            return new ExchangeGrantResult(
+                userId: (string) $request->subjectClaims['sub'],
+                scopes: [],
+                audience: [(string) $request->requestedAudience],
+                expiresAt: $request->subjectExpiresAt,
+            );
+        }
+    };
+    app()->instance(ExchangePolicy::class, $spy);
+
+    $subject = mintExchangeSubjectToken((string) $this->client->id, (string) $this->user->id, ['openid']);
+
+    $this->post('/oauth/token', [
+        'grant_type' => TestCase::TOKEN_EXCHANGE_GRANT,
+        'client_id' => $this->client->id,
+        'client_secret' => $this->secret,
+        'subject_token' => $subject,
+        'subject_token_type' => ACCESS_TOKEN_URN,
+        'audience' => 'https://api.internal/orders',
+        'tenant' => 'acme',
+    ])->assertOk();
+
+    expect($spy->request?->parameters)->toBe(['tenant' => 'acme']);
 });
 
 // RFC 8414 §2 (grant_types_supported)
