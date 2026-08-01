@@ -159,9 +159,13 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(AccessTokenMinter::class);
         $this->app->singleton(TokenExchanger::class);
         // Passport registers ResourceServer with the stock BearerTokenValidator, which is not
-        // swappable after construction; re-register it so auth:api also accepts an exchanged
-        // token whose aud names this server instead of a client id.
-        $this->app->singleton(ResourceServer::class, fn (Application $app): ResourceServer => new ResourceServer(
+        // swappable after construction; extend() (not singleton()) rebuilds it because provider
+        // registration order is alphabetical in a real app (this package sorts before
+        // laravel/passport), so PassportServiceProvider::register() may run its own competing
+        // singleton() bind after ours. extend() survives that: Container::bind()/singleton() only
+        // clear `instances`/`aliases` via dropStaleInstances(), never `extenders`, so this decorator
+        // still applies on resolution regardless of which provider's register() ran last.
+        $this->app->extend(ResourceServer::class, fn (ResourceServer $server, Application $app): ResourceServer => new ResourceServer(
             $app->make(PassportBridgeAccessTokenRepository::class),
             new CryptKey(SigningKeys::publicKey(), null, false),
             new ResourceAudienceBearerTokenValidator($app->make(PassportBridgeAccessTokenRepository::class)),

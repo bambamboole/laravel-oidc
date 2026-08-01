@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Issuer;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
@@ -65,4 +66,20 @@ it('still authenticates a classic token whose aud is the client id', function ()
     $token = mintExchangeSubjectToken((string) $this->client->getKey(), $this->user->getKey(), ['openid']);
 
     $this->getJson('/probe', ['Authorization' => 'Bearer '.$token])->assertOk();
+});
+
+it('rejects a revoked exchanged token', function () {
+    $token = exchangedTokenFor($this, Issuer::url());
+
+    $this->getJson('/probe', ['Authorization' => 'Bearer '.$token])->assertOk();
+
+    $jti = parseAccessToken($token)->claims()->get('jti');
+    Passport::token()->newQuery()->whereKey($jti)->update(['revoked' => true]);
+
+    // TokenGuard caches the resolved user on itself after the first call, so a second
+    // request in the same test would silently reuse it instead of re-validating; drop
+    // the cached guard instance to force a fresh ResourceServer round trip.
+    Auth::forgetGuards();
+
+    $this->getJson('/probe', ['Authorization' => 'Bearer '.$token])->assertUnauthorized();
 });
