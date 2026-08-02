@@ -6,15 +6,18 @@ namespace Bambamboole\LaravelOidc\Client\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\Concerns\RespondsToInertiaExternalRedirects;
 use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class OidcLogoutController
 {
-    public function __invoke(Request $request, OidcDiscovery $discovery, OidcClientManager $manager): RedirectResponse
+    use RespondsToInertiaExternalRedirects;
+
+    public function __invoke(Request $request, OidcDiscovery $discovery, OidcClientManager $manager): Response
     {
         $idToken = $request->session()->get('oidc-client.tokens.id_token');
 
@@ -39,6 +42,6 @@ class OidcLogoutController
 
         $separator = str_contains($endSession, '?') ? '&' : '?';
 
-        return redirect()->away($endSession.$separator.$query);
+        return $this->respondToInertia($request, redirect()->away($endSession.$separator.$query));
     }
 }
