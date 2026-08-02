@@ -16,9 +16,11 @@ server can select the right key to verify the signature.
 Standard claims: `iss`, `aud`, `sub`, `client_id`, `iat`, `nbf`, `exp`, `jti`, and a
 space-delimited `scope` string (e.g. `"openid email"`).
 
-The legacy `scopes` array claim (`["openid", "email"]`) is retained alongside `scope`. It is kept
-because Passport's `auth:api` guard and this package's userinfo endpoint read it — dropping it
-would break authentication. Both claims describe the same grant; `scope` is the RFC 9068 form and
+The legacy `scopes` array claim (`["openid", "email"]`) is retained alongside `scope` for
+compatibility with Passport's own native token guard (`driver: passport`) — league's
+`BearerTokenValidator` reads a token's scopes straight from this claim. This package's own
+`auth:oidc` guard and userinfo endpoint don't depend on it; they read scopes off the persisted
+token record instead. Both claims describe the same grant; `scope` is the RFC 9068 form and
 `scopes` is the compatibility form.
 
 `aud` defaults to the requesting client's id. It is overridden by
