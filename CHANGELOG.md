@@ -5,6 +5,15 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.13.1](https://github.com/bambamboole/laravel-oidc/compare/v0.13.0...v0.13.1) (2026-08-02)
+
+
+### Bug Fixes
+
+* guard every external OIDC redirect against Inertia, not just authorize() ([41099eb](https://github.com/bambamboole/laravel-oidc/commit/41099eb289bfe8be9f98ebe946852a6076d5d9f4))
+* **server:** guard the trusted-client authorize redirect against Inertia ([c08bed7](https://github.com/bambamboole/laravel-oidc/commit/c08bed721b8880113f620d006de20e8fdc100b5b))
+* **server:** guard the trusted-client authorize redirect against Inertia ([80647d7](https://github.com/bambamboole/laravel-oidc/commit/80647d722068c70b0e771ba94be0391d4e7878e4))
+
 ## [0.13.0](https://github.com/bambamboole/laravel-oidc/compare/v0.12.1...v0.13.0) (2026-08-02)
 
 
