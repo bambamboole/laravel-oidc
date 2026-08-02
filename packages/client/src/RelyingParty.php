@@ -6,15 +6,19 @@ namespace Bambamboole\LaravelOidc\Client;
 
 use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Bambamboole\LaravelOidc\Client\Http\Controllers\Concerns\RespondsToInertiaExternalRedirects;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Lcobucci\JWT\Encoding\JoseEncoder;
+use Symfony\Component\HttpFoundation\Response;
 
 class RelyingParty
 {
+    use RespondsToInertiaExternalRedirects;
+
     public function __construct(
         private readonly OidcDiscovery $discovery,
         private readonly Http $http,
@@ -23,7 +27,7 @@ class RelyingParty
         private readonly BackchannelLogoutStore $backchannelLogout,
     ) {}
 
-    public function redirect(): RedirectResponse
+    public function redirect(Request $request): Response
     {
         $metadata = $this->discovery->metadata();
 
@@ -49,7 +53,7 @@ class RelyingParty
             'code_challenge_method' => 'S256',
         ]);
 
-        return redirect()->away($metadata->authorizationEndpoint.'?'.$query);
+        return $this->respondToInertia($request, redirect()->away($metadata->authorizationEndpoint.'?'.$query));
     }
 
     public function handleCallback(Request $request): RedirectResponse

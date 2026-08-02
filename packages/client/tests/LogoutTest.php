@@ -25,6 +25,19 @@ it('logs out and redirects to the provider end-session endpoint', function () {
     $this->assertGuest();
 });
 
+it('answers an Inertia logout request with a 409 + X-Inertia-Location instead of a redirect', function () {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+
+    $response = $this->actingAs($user)
+        ->withSession(['oidc-client.tokens' => ['id_token' => 'the-id-token']])
+        ->post(route('logout'), [], ['X-Inertia' => 'true']);
+
+    $response->assertStatus(409);
+    expect($response->headers->get('X-Inertia-Location'))
+        ->toStartWith(config('oidc-client.issuer').'/oauth/logout');
+    $this->assertGuest();
+});
+
 it('redirects home when the provider has no end-session endpoint', function () {
     $this->fake->withoutEndSessionEndpoint();
 

@@ -17,6 +17,14 @@ it('redirects to the provider authorization endpoint with pkce', function () {
     $this->assertNotNull(session('oidc-client.code_verifier'));
 });
 
+it('answers an Inertia login request with a 409 + X-Inertia-Location instead of a redirect', function () {
+    $response = $this->get(route('login'), ['X-Inertia' => 'true']);
+
+    $response->assertStatus(409);
+    expect($response->headers->get('X-Inertia-Location'))
+        ->toStartWith(config('oidc-client.issuer').'/oauth/authorize?');
+});
+
 it('sends an authenticated user straight home', function () {
     config()->set('oidc-client.redirect_after_login', '/dashboard');
 
