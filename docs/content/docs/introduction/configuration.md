@@ -22,7 +22,7 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `api_guard` | `env('OIDC_API_GUARD', 'api')` | The guard the userinfo endpoint authenticates against. |
+| `api_guard` | `env('OIDC_API_GUARD', 'oidc')` | The guard the userinfo endpoint (and resource-server routes using `auth:oidc`) authenticates against. Registered automatically if absent, the same way `auth.guard` is. |
 | `claims_supported` | standard set | Claims advertised in the discovery document. |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
 | `handlers` | `[]` | Sparse per-endpoint overrides, merged over the package's built-in endpoint map. See [Route handlers](/introduction/route-handlers/). |
@@ -85,7 +85,8 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 
 ## Assumptions
 
-- The `api` guard uses the `passport` driver (the OAuth2 token guard).
+- The `oidc.api_guard` guard uses the package's `oidc` driver (the RFC 9068 resource-server guard
+  — see [Resource servers (CheckAudience)](/advanced/resource-servers/)).
 - The interactive authorization and logout flows run through the `identity` guard the package
   registers (`oidc.auth.guard`).
 - Signing keys are RS256 — see [Key rotation](/provider/key-rotation/). Token headers carry a

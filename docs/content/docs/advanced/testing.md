@@ -45,8 +45,10 @@ When no client is given, a default authorization-code client is created once
 per test and reused.
 
 A token minted with a custom `audience:` does not authenticate on plain
-`auth:api` routes — Passport resolves the client from `aud[0]`, not from the
-audience — it is for routes guarded by the package's audience middleware; see
+`auth:oidc` routes unless that audience is the issuer URL or listed in
+`oidc.resource.audiences` — the `auth:oidc` guard accepts a token only when its `aud`
+intersects those, or carries the token's own `client_id`, and an arbitrary custom
+audience does neither. It is for routes guarded by the package's audience middleware; see
 [Resource servers (CheckAudience)](/advanced/resource-servers/).
 
 ## Clients

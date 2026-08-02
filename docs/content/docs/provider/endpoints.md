@@ -55,7 +55,7 @@ sequenceDiagram
 ## The UserInfo endpoint
 
 UserInfo authenticates the bearer token against the guard named by `config('oidc.api_guard')`
-(default `api`), and requires the `openid` scope. The claims it returns are the token's granted
+(default `oidc`), and requires the `openid` scope. The claims it returns are the token's granted
 scopes resolved through the `ClaimsResolver` — see [Scopes & claims](/provider/scopes-and-claims/).
 
 ## What discovery advertises
