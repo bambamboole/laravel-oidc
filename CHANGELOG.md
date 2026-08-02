@@ -5,6 +5,36 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.13.0](https://github.com/bambamboole/laravel-oidc/compare/v0.12.1...v0.13.0) (2026-08-02)
+
+
+### Features
+
+* **client:** add ApiTokenBroker for cached RFC 8693 token exchange ([13a0fe5](https://github.com/bambamboole/laravel-oidc/commit/13a0fe5286d54378d14602b10b900ccb820a1410))
+* **client:** record the access token expiry in the session ([a965455](https://github.com/bambamboole/laravel-oidc/commit/a9654550bcb36dee005f96553e9f7048ce4f0eb5))
+* **client:** refresh expired login tokens inside ApiTokenBroker ([d2a834c](https://github.com/bambamboole/laravel-oidc/commit/d2a834c17ef2af8f73e3a0b04714a6f9b4b6831e))
+* public-client token exchange and client-side ApiTokenBroker ([2922fed](https://github.com/bambamboole/laravel-oidc/commit/2922fed6e524215fb3d24be9c8ffdfe20d888e6c))
+* **server:** allow trusted public clients to use token exchange ([6f13bc7](https://github.com/bambamboole/laravel-oidc/commit/6f13bc75d50f8e2dcb0edab0a3c0e8371c54e079))
+* **server:** authenticate resource-audience tokens through the api guard ([8b44794](https://github.com/bambamboole/laravel-oidc/commit/8b4479451304dd3b65498c99fe402359212246e3))
+* **server:** pass token exchange extension parameters to the policy ([1af02bd](https://github.com/bambamboole/laravel-oidc/commit/1af02bdb3815b63758abc874a9115e668ff8f2f0))
+* **server:** replace the auth:api resource-audience patch with a purpose-built auth:oidc guard ([7e1ac42](https://github.com/bambamboole/laravel-oidc/commit/7e1ac42e26fde2d105e598a9a28059a9ce024124))
+* **server:** replace the auth:api resource-audience patch with a purpose-built auth:oidc guard ([538de06](https://github.com/bambamboole/laravel-oidc/commit/538de066cb26717e5bc6c2e84455b28d781ee8b7))
+
+
+### Bug Fixes
+
+* **client:** normalize the issuer used as ApiTokenBroker's default audience ([f1576c7](https://github.com/bambamboole/laravel-oidc/commit/f1576c70c7dde39c3057d5b5f8f32f282239e284))
+* **server:** correct misleading comment on the token-exchange grant-type guard ([7b29a4f](https://github.com/bambamboole/laravel-oidc/commit/7b29a4f3d24a0d661ae2ec4da76580cc8cb927ab))
+* **server:** drop dead grant guard and correct CheckAudience docblock ([7fb0f27](https://github.com/bambamboole/laravel-oidc/commit/7fb0f277032228298d883b9e5b9e66471b168780))
+* **server:** extend the existing ResourceServer instead of racing Passport's registration ([3dd6102](https://github.com/bambamboole/laravel-oidc/commit/3dd610207b46aa0e1a0087e8c23a93e8a4f8b820))
+
+
+### Documentation
+
+* correct token-exchange rejection ordering ([ae71eba](https://github.com/bambamboole/laravel-oidc/commit/ae71eba353c6fdf3122141175e4351cdeb1bb052))
+* cover public-client token exchange, resource audiences, and the ApiTokenBroker ([61af943](https://github.com/bambamboole/laravel-oidc/commit/61af9433c6e16ed9bfc4a2437f0e148ecdc9dba4))
+* document the client/server audience contract and refresh concurrency ([32cf409](https://github.com/bambamboole/laravel-oidc/commit/32cf40912ea9d80f274cd898ffa18fd0566615e0))
+
 ## [0.12.1](https://github.com/bambamboole/laravel-oidc/compare/v0.12.0...v0.12.1) (2026-08-01)
 
 
