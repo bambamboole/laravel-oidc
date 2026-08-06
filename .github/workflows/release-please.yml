@@ -15,8 +15,12 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - id: release
+        uses: googleapis/release-please-action@v4
         with:
           # The default GITHUB_TOKEN is fine. Supply a PAT via secrets.RELEASE_TOKEN
           # if you want the release PR itself to trigger the tests workflow
@@ -24,3 +28,38 @@ jobs:
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Runs on every push to main: the split action no-ops for packages whose
+  # contents are unchanged, and only pushes the tag when a release was created.
+  # Chaining off release-please means a release merge produces exactly ONE
+  # split run (branch + tag together), so the old branch-mode/tag-mode race
+  # ("cannot lock ref 'refs/heads/main'") cannot happen by construction.
+  split:
+    needs: release-please
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.MONOREPO_SPLIT_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - local_path: server
+            split_repository: laravel-oidc-server
+          - local_path: client
+            split_repository: laravel-oidc-client
+          - local_path: ui
+            split_repository: laravel-oidc-ui
+    name: Split ${{ matrix.package.split_repository }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Split ${{ matrix.package.split_repository }}
+        uses: danharrin/monorepo-split-github-action@v2.4.0
+        with:
+          tag: ${{ needs.release-please.outputs.release_created == 'true' && needs.release-please.outputs.tag_name || '' }}
+          package_directory: 'packages/${{ matrix.package.local_path }}'
+          repository_organization: 'bambamboole'
+          repository_name: '${{ matrix.package.split_repository }}'
+          user_name: 'Manuel Christlieb'
+          user_email: 'manuel@christlieb.eu'
