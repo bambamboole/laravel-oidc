@@ -1,9 +1,9 @@
 import { router } from "@inertiajs/react";
 import { usePasskeyVerify } from "@laravel/passkeys/react";
 import type { RendererComponent } from "@lattice-php/lattice";
-import { IconRenderer } from "@lattice-php/lattice/icons";
-import { useT } from "@lattice-php/lattice/i18n";
-import { Button, InputError, Spinner } from "@lattice-php/lattice/ui";
+import { IconRenderer } from "@lattice-php/ui/icons";
+import { useT } from "@lattice-php/ui/i18n";
+import { Button, InputError, Spinner } from "@lattice-php/ui";
 
 declare module "@lattice-php/lattice" {
     interface ComponentProps {

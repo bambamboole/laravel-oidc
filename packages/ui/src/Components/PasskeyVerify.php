@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Components;
 
 use Illuminate\Support\Facades\Route;
-use Lattice\Lattice\Ui\Components\Component;
+use Lattice\Ui\Components\Component;
 
 class PasskeyVerify extends Component
 {

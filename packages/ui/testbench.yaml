@@ -4,7 +4,7 @@ providers:
   - Laravel\Passport\PassportServiceProvider
   - Laravel\Passkeys\PasskeysServiceProvider
   - Bambamboole\LaravelOidc\Server\OidcServiceProvider
-  - Lattice\Lattice\LatticeServiceProvider
+  - Lattice\LatticeServiceProvider
   - Bambamboole\LaravelOidc\Ui\UiServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
 

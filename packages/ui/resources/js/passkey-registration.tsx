@@ -1,7 +1,7 @@
 import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
 import { LATTICE_EVENT, type RendererComponent } from "@lattice-php/lattice";
-import { useT } from "@lattice-php/lattice/i18n";
-import { Button, Input, InputError, Label } from "@lattice-php/lattice/ui";
+import { useT } from "@lattice-php/ui/i18n";
+import { Button, Input, InputError, Label } from "@lattice-php/ui";
 import { useState } from "react";
 
 declare module "@lattice-php/lattice" {

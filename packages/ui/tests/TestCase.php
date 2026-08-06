@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Ui\Tests;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passkeys\Passkeys;
 use Laravel\Passport\Passport;
-use Lattice\Lattice\Support\Testing\InteractsWithLatticeComponents;
+use Lattice\Support\Testing\InteractsWithLatticeComponents;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;

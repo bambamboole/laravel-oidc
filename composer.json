@@ -1,10 +1,18 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "bambamboole/laravel-oidc",
-    "description": "OpenID Connect suite for Laravel — identity provider (server), relying party (client), and auth UI",
+    "description": "OpenID Connect suite for Laravel \u2014 identity provider (server), relying party (client), and auth UI",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "passport", "oidc", "openid-connect", "oauth2", "sso", "relying-party"],
+    "keywords": [
+        "laravel",
+        "passport",
+        "oidc",
+        "openid-connect",
+        "oauth2",
+        "sso",
+        "relying-party"
+    ],
     "authors": [
         {
             "name": "Manuel Christlieb",
@@ -29,7 +37,7 @@
         "illuminate/view": "^12.0 || ^13.0",
         "laravel/passkeys": "^0.2.1",
         "laravel/passport": "^13.4",
-        "lattice-php/lattice": ">=0.28 <1.0",
+        "lattice-php/lattice": ">=0.40 <1.0",
         "lcobucci/clock": "^3.2",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15",
@@ -61,7 +69,9 @@
             ]
         },
         "lattice": {
-            "discover": ["packages/ui/src"],
+            "discover": [
+                "packages/ui/src"
+            ],
             "plugin": "packages/ui/resources/js/plugin.ts"
         }
     },
