@@ -5,6 +5,16 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.13.2](https://github.com/bambamboole/laravel-oidc/compare/v0.13.1...v0.13.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* adopt the lattice 0.40 split-package namespaces in the ui package ([33e0074](https://github.com/bambamboole/laravel-oidc/commit/33e0074bf302fd410f89a4c7e22b10828077db9e))
+* adopt the lattice 0.41 split-package namespaces in the ui package ([7911826](https://github.com/bambamboole/laravel-oidc/commit/79118266a8ee213b063f62950266a6d3da9b3fa4))
+* **ci:** use the lattice 0.41 discovery namespace in the master integrity gate ([3311aba](https://github.com/bambamboole/laravel-oidc/commit/3311abaf31e643d569267f5c38262ae988cfeac9))
+* require lattice 0.41 ([b7dd334](https://github.com/bambamboole/laravel-oidc/commit/b7dd33472953220a96acad56eafd3af7eceb65f8))
+
 ## [0.13.1](https://github.com/bambamboole/laravel-oidc/compare/v0.13.0...v0.13.1) (2026-08-02)
 
 
