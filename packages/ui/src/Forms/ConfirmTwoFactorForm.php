@@ -10,13 +10,14 @@ use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
-use Lattice\Lattice\Attributes\AsForm;
-use Lattice\Lattice\Effects\Builtin\OpenModal;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Forms\Components\OtpInput;
-use Lattice\Lattice\Forms\FormDefinition;
-use Lattice\Lattice\Http\LatticeResponse;
-use Lattice\Lattice\Ui\Enums\Variant;
+use Lattice\Facades\Effects;
+use Lattice\Form\Attributes\AsForm;
+use Lattice\Form\Components\Form;
+use Lattice\Form\Components\OtpInput;
+use Lattice\Form\FormDefinition;
+use Lattice\Http\LatticeResponse;
+use Lattice\Ui\Effects\Builtin\OpenModal;
+use Lattice\Ui\Enums\Variant;
 
 #[AsForm('oidc.two-factor.confirm')]
 class ConfirmTwoFactorForm extends FormDefinition
@@ -61,7 +62,7 @@ class ConfirmTwoFactorForm extends FormDefinition
 
         $backfilledCodes = $this->policy->factorConfirmed($user);
 
-        $response = $this->toast(__('oidc-ui::security.two-factor.enabled-toast'), Variant::Success);
+        $response = Effects::respond()->toast(__('oidc-ui::security.two-factor.enabled-toast'), Variant::Success);
 
         // Freshly generated recovery codes are shown once — right after the
         // first factor is confirmed.

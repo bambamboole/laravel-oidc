@@ -15,8 +15,8 @@ use Bambamboole\LaravelOidc\Ui\Tables\TwoFactorMethodsTable;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
-use Lattice\Lattice\Effects\Builtin\OpenModal;
-use Lattice\Lattice\Facades\Effects;
+use Lattice\Facades\Effects;
+use Lattice\Ui\Effects\Builtin\OpenModal;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 

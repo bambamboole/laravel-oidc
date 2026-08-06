@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
-use Lattice\Lattice\Attributes\AsFragment;
-use Lattice\Lattice\Core\PageSchema;
-use Lattice\Lattice\Fragments\FragmentDefinition;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
+use Lattice\Core\Attributes\AsFragment;
+use Lattice\Fragments\FragmentDefinition;
+use Lattice\Ui\Components\Stack;
+use Lattice\Ui\Components\Text;
+use Lattice\Ui\Enums\Align;
+use Lattice\Ui\Enums\Gap;
+use Lattice\Ui\PageSchema;
 
 /**
  * The user's unused recovery codes — the only shipped surface that renders

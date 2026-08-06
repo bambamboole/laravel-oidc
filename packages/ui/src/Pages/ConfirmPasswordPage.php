@@ -8,13 +8,13 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
-use Lattice\Lattice\Core\PageSchema;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Forms\Components\PasswordInput;
-use Lattice\Lattice\Ui\Components\Button;
-use Lattice\Lattice\Ui\Components\Component;
-use Lattice\Lattice\Ui\Components\Grid;
-use Lattice\Lattice\Ui\Enums\HttpMethod;
+use Lattice\Form\Components\Form;
+use Lattice\Form\Components\PasswordInput;
+use Lattice\Ui\Components\Button;
+use Lattice\Ui\Components\Component;
+use Lattice\Ui\Components\Grid;
+use Lattice\Ui\Enums\HttpMethod;
+use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
 
 class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView

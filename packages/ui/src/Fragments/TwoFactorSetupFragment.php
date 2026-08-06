@@ -11,16 +11,16 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\WebAuthnFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyRegistration;
 use Bambamboole\LaravelOidc\Ui\Forms\ConfirmTwoFactorForm;
 use Illuminate\Support\Arr;
-use Lattice\Lattice\Attributes\AsFragment;
-use Lattice\Lattice\Core\PageSchema;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Fragments\FragmentDefinition;
-use Lattice\Lattice\Ui\Components\Component;
-use Lattice\Lattice\Ui\Components\RawBlock;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
+use Lattice\Core\Attributes\AsFragment;
+use Lattice\Form\Components\Form;
+use Lattice\Fragments\FragmentDefinition;
+use Lattice\Ui\Components\Component;
+use Lattice\Ui\Components\RawBlock;
+use Lattice\Ui\Components\Stack;
+use Lattice\Ui\Components\Text;
+use Lattice\Ui\Enums\Align;
+use Lattice\Ui\Enums\Gap;
+use Lattice\Ui\PageSchema;
 
 #[AsFragment('oidc.two-factor-setup')]
 class TwoFactorSetupFragment extends FragmentDefinition

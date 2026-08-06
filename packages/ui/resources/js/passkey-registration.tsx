@@ -1,10 +1,11 @@
 import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
-import { LATTICE_EVENT, type RendererComponent } from "@lattice-php/lattice";
-import { useT } from "@lattice-php/lattice/i18n";
-import { Button, Input, InputError, Label } from "@lattice-php/lattice/ui";
+import type { RendererComponent } from "@lattice-php/core";
+import { LATTICE_EVENT } from "@lattice-php/core/event-names";
+import { Button, Input, InputError, Label } from "@lattice-php/ui";
+import { useT } from "@lattice-php/ui/i18n";
 import { useState } from "react";
 
-declare module "@lattice-php/lattice" {
+declare module "@lattice-php/core" {
     interface ComponentProps {
         "oidc.passkey-registration": {
             beginUrl: string;

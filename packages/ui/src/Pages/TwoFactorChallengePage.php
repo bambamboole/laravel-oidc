@@ -11,16 +11,16 @@ use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lattice\Lattice\Core\PageSchema;
-use Lattice\Lattice\Forms\Components\Checkbox;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Forms\Components\OtpInput;
-use Lattice\Lattice\Forms\Components\TextInput;
-use Lattice\Lattice\Ui\Components\Link;
-use Lattice\Lattice\Ui\Components\Stack;
-use Lattice\Lattice\Ui\Components\Text;
-use Lattice\Lattice\Ui\Enums\Align;
-use Lattice\Lattice\Ui\Enums\Gap;
+use Lattice\Form\Components\Checkbox;
+use Lattice\Form\Components\Form;
+use Lattice\Form\Components\OtpInput;
+use Lattice\Form\Components\TextInput;
+use Lattice\Ui\Components\Link;
+use Lattice\Ui\Components\Stack;
+use Lattice\Ui\Components\Text;
+use Lattice\Ui\Enums\Align;
+use Lattice\Ui\Enums\Gap;
+use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
 
 class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView

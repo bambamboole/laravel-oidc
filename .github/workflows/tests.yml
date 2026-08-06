@@ -126,11 +126,11 @@ jobs:
           php -r '
           require "vendor/autoload.php";
           $version = Composer\InstalledVersions::getVersion("lattice-php/lattice");
-          if ($version === null || version_compare($version, "0.26.0", "<")) {
+          if ($version === null || version_compare($version, "0.41.0", "<")) {
               fwrite(STDERR, "lattice-php/lattice version too low: ".var_export($version, true)."\n");
               exit(1);
           }
-          $roots = Lattice\Lattice\Core\Discovery\ComponentPackages::discoverRoots();
+          $roots = Lattice\Core\Discovery\ComponentPackages::discoverRoots();
           foreach ($roots as $root) {
               if (str_ends_with($root, "packages/ui/src")) {
                   exit(0);
