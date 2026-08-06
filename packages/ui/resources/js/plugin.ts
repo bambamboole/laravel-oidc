@@ -1,8 +1,8 @@
-import { createPlugin, eagerComponent } from "@lattice-php/lattice";
+import { eagerComponent, type Plugin } from "@lattice-php/core/registry";
 import PasskeyRegistration from "./passkey-registration";
 import PasskeyVerify from "./passkey-verify";
 
-export default createPlugin({
+export default {
     name: "oidc-ui",
     components: {
         "oidc.passkey-verify": eagerComponent(PasskeyVerify),
@@ -11,4 +11,4 @@ export default createPlugin({
     i18n: {
         namespace: "oidc-ui",
     },
-});
+} satisfies Plugin;

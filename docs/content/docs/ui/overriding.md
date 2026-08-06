@@ -41,7 +41,7 @@ explicit registrations layer over the discovered manifest, regardless of which p
 first:
 
 ```php
-use Lattice\Lattice\Layouts\LayoutRegistry;
+use Lattice\Layouts\LayoutRegistry;
 
 $this->app->make(LayoutRegistry::class)->register(App\Auth\Layouts\CustomAuthLayout::class);
 ```

@@ -71,11 +71,11 @@ use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Fragments\RecoveryCodesFragment;
 use Bambamboole\LaravelOidc\Ui\Fragments\TwoFactorSetupFragment;
 use Bambamboole\LaravelOidc\Ui\Tables\TwoFactorMethodsTable;
-use Lattice\Lattice\Actions\Components\Action;
-use Lattice\Lattice\Fragments\Components\Fragment;
-use Lattice\Lattice\Tables\Components\Table;
-use Lattice\Lattice\Ui\Components\Modal;
-use Lattice\Lattice\Ui\Components\Stack;
+use Lattice\Actions\Components\Action;
+use Lattice\Fragments\Components\Fragment;
+use Lattice\Table\Components\Table;
+use Lattice\Ui\Components\Modal;
+use Lattice\Ui\Components\Stack;
 
 Stack::make('two-factor')->schema([
     Action::use(EnableTwoFactorAuthenticationAction::class),                       // "Add authenticator app"

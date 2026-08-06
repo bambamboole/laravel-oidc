@@ -9,11 +9,11 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Lattice\Lattice\Core\PageSchema;
-use Lattice\Lattice\Forms\Components\Form;
-use Lattice\Lattice\Ui\Components\Button;
-use Lattice\Lattice\Ui\Components\Link;
-use Lattice\Lattice\Ui\Enums\HttpMethod;
+use Lattice\Form\Components\Form;
+use Lattice\Ui\Components\Button;
+use Lattice\Ui\Components\Link;
+use Lattice\Ui\Enums\HttpMethod;
+use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
 
 class VerifyEmailPage extends AuthPage implements EmailVerificationView
