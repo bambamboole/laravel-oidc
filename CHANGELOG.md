@@ -5,6 +5,15 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.13.3](https://github.com/bambamboole/laravel-oidc/compare/v0.13.2...v0.13.3) (2026-08-08)
+
+
+### Bug Fixes
+
+* **server:** add a generic context bag to AccessTokenApi ([e68b13c](https://github.com/bambamboole/laravel-oidc/commit/e68b13c3596b1f5955d11451ac7a56fbebe491ee))
+* **server:** add a generic context bag to AccessTokenApi ([091564e](https://github.com/bambamboole/laravel-oidc/commit/091564e6c295b66be5e14ebaa98b20435ae5a956))
+* **server:** thread ExchangeGrantResult context into the token-exchange pipeline ([cba246f](https://github.com/bambamboole/laravel-oidc/commit/cba246f2e6dbc6665c98b6c4e2d702b1e4d40901))
+
 ## [0.13.2](https://github.com/bambamboole/laravel-oidc/compare/v0.13.1...v0.13.2) (2026-08-06)
 
 
