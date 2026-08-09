@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.13.4](https://github.com/bambamboole/laravel-oidc/compare/v0.13.3...v0.13.4) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ui:** allow subclasses to override LoginPage's email field ([35c6ab7](https://github.com/bambamboole/laravel-oidc/commit/35c6ab7dac838a19bde7af037cd521170079f06b))
+* **ui:** allow subclasses to override LoginPage's email field ([e9aead3](https://github.com/bambamboole/laravel-oidc/commit/e9aead37a18e0bf8be0efcac4c2ec09c03a41cdc))
+
 ## [0.13.3](https://github.com/bambamboole/laravel-oidc/compare/v0.13.2...v0.13.3) (2026-08-08)
 
 
