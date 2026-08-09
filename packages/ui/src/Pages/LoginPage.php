@@ -64,12 +64,7 @@ class LoginPage extends AuthPage implements LoginView
      */
     private function formSchema(): array
     {
-        $email = TextInput::make('email', __('oidc-ui::common.field.email-address'))
-            ->email()
-            ->autoComplete('email')
-            ->autoFocus()
-            ->placeholder(__('oidc-ui::common.placeholder.email'))
-            ->required();
+        $email = $this->emailField();
 
         $password = $this->passwordInput();
 
@@ -94,7 +89,17 @@ class LoginPage extends AuthPage implements LoginView
         ];
     }
 
-    private function passwordInput(): PasswordInput
+    protected function emailField(): TextInput
+    {
+        return TextInput::make('email', __('oidc-ui::common.field.email-address'))
+            ->email()
+            ->autoComplete('email')
+            ->autoFocus()
+            ->placeholder(__('oidc-ui::common.placeholder.email'))
+            ->required();
+    }
+
+    protected function passwordInput(): PasswordInput
     {
         return PasswordInput::make('password', __('oidc-ui::common.field.password'))
             ->autoComplete('current-password')
