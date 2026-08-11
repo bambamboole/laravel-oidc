@@ -24,13 +24,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OAuthConsentPage extends AuthPage implements ConsentView
 {
-    public function __construct(
-        private readonly ?ConsentPrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?ConsentPrompt $prompt = null,
     ) {}
 
     public function respond(ConsentPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string
@@ -63,6 +63,7 @@ class OAuthConsentPage extends AuthPage implements ConsentView
                         ->withoutSubmitButton()
                         ->schema([
                             HiddenInput::make('auth_token')->value($prompt->authToken),
+                            ...$this->approveFields($prompt),
                             Button::make(__('oidc-ui::oauth.consent.approve'))->submit(),
                         ]),
                     Form::make('oauth-consent-deny')
@@ -75,6 +76,17 @@ class OAuthConsentPage extends AuthPage implements ConsentView
                         ]),
                 ]),
         ]);
+    }
+
+    /**
+     * Extension point for host apps: extra fields rendered inside the approve
+     * form, submitted alongside `auth_token` to the `oidc.approve` endpoint.
+     *
+     * @return array<int, Component>
+     */
+    protected function approveFields(ConsentPrompt $prompt): array
+    {
+        return [];
     }
 
     /**
