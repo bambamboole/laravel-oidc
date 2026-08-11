@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;
+use Lattice\Form\Components\Select;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
@@ -116,4 +117,32 @@ it('redirects guests to login', function () {
         'code_challenge' => $pkce->challenge,
         'code_challenge_method' => 'S256',
     ]))->assertRedirect(route('identity.login'));
+});
+
+it('renders subclass-provided approve fields inside the approve form and responds as the subclass', function () {
+    $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
+
+    $page = new class extends OAuthConsentPage
+    {
+        protected function approveFields(ConsentPrompt $prompt): array
+        {
+            return [Select::make('tenant', 'Tenant')->options(['acme' => 'Acme'])];
+        }
+    };
+
+    $prompt = new ConsentPrompt(
+        client: $client,
+        user: new GenericUser(['id' => 1]),
+        scopes: [new Scope('openid', 'OpenID Connect')],
+        authToken: 'test-auth-token',
+    );
+
+    $request = Request::create('/', 'GET');
+    $request->headers->set('X-Inertia', 'true');
+
+    $content = $page->respond($prompt, $request)->getContent();
+
+    expect($content)->toContain('tenant')
+        ->and($content)->toContain('Acme')
+        ->and((new OAuthConsentPage($prompt))->toResponse($request)->getContent())->not->toContain('Acme');
 });

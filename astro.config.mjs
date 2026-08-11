@@ -66,6 +66,7 @@ export default defineConfig({
                 { label: "Custom claims & triggers", link: "/provider/claim-hooks/" },
                 { label: "Access tokens (RFC 9068)", link: "/provider/access-tokens/" },
                 { label: "Token exchange (RFC 8693)", link: "/provider/token-exchange/" },
+                { label: "Dynamic client registration & MCP (RFC 7591)", link: "/provider/dynamic-client-registration/" },
                 { label: "Logout", link: "/provider/logout/" },
                 { label: "Key rotation", link: "/provider/key-rotation/" },
                 { label: "Scheduled maintenance", link: "/provider/scheduled-maintenance/" },
