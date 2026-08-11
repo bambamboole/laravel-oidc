@@ -5,6 +5,15 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.14.0](https://github.com/bambamboole/laravel-oidc/compare/v0.13.4...v0.14.0) (2026-08-11)
+
+
+### Features
+
+* **server:** RFC 8414/9728 discovery and RFC 7591 dynamic client registration ([4d314bf](https://github.com/bambamboole/laravel-oidc/commit/4d314bf6a97490efe881cb3135a61fe4d21fea24))
+* **server:** RFC 8414/9728 discovery and RFC 7591 dynamic client registration ([da68671](https://github.com/bambamboole/laravel-oidc/commit/da68671e7dd22b4e983493924dc7338c2719c886))
+* **ui:** approveFields() extension point on the consent page ([bc5b9c8](https://github.com/bambamboole/laravel-oidc/commit/bc5b9c84d9c174384e01bc31d0397210ad1d1a09))
+
 ## [0.13.4](https://github.com/bambamboole/laravel-oidc/compare/v0.13.3...v0.13.4) (2026-08-09)
 
 
