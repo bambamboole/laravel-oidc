@@ -12,9 +12,12 @@ The provider registers the full OAuth2/OIDC endpoint surface itself from
 | Endpoint | Route | Purpose |
 | --- | --- | --- |
 | Discovery | `GET /.well-known/openid-configuration` | OIDC provider metadata |
+| AS metadata | `GET /.well-known/oauth-authorization-server/{path?}` | RFC 8414 authorization server metadata (same document as Discovery) |
+| Protected resource | `GET /.well-known/oauth-protected-resource/{path?}` | RFC 9728 protected resource metadata — see [Dynamic client registration & MCP](/provider/dynamic-client-registration/) |
 | JWKS | `GET /.well-known/jwks.json` | Public signing keys (RS256) |
 | Authorize | `GET /oauth/authorize` | Authorization request (PKCE `S256` required) |
 | Token | `POST /oauth/token` | Token endpoint (all grants) |
+| Register | `POST /oauth/register` | RFC 7591 dynamic client registration (disabled by default) |
 | UserInfo | `GET\|POST /oauth/userinfo` | Claims for the bearer token |
 | End session | `GET\|POST /oauth/logout` | RP-initiated logout — see [Logout](/provider/logout/) |
 | Introspection | `POST /oauth/introspect` | RFC 7662 token introspection (client-authenticated) |
@@ -23,7 +26,13 @@ The provider registers the full OAuth2/OIDC endpoint surface itself from
 UserInfo, End session, Introspection, and Revocation can each be toggled off by setting its
 handler to `false` in `config('oidc.handlers')` (`oidc.userinfo`, `oidc.logout`,
 `oidc.introspect`, `oidc.revoke`). When an endpoint is disabled it is also dropped from the
-discovery document.
+discovery document. Registration (`oidc.register`) is additionally gated behind
+`config('oidc.dcr.enabled')` and only registered — and advertised as `registration_endpoint`
+in both metadata documents — when that flag is on.
+
+The three `.well-known` documents (`oidc.discovery`, `oidc.authorization-server`,
+`oidc.protected-resource`) are never prefixed by `oidc.routes.prefix`: RFC 8414 and RFC 9728
+clients construct those URLs from the issuer origin themselves.
 
 ## The authorization code flow
 
