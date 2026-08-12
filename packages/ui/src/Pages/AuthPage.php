@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Lattice\Core\Enums\PageContainer;
 use Lattice\Core\Enums\PageLayout;
 use Lattice\Http\Page;
 use Lattice\Ui\Components\Heading;
@@ -18,11 +17,6 @@ abstract class AuthPage extends Page
     public function layout(): PageLayout|string|null
     {
         return PageLayout::Auth;
-    }
-
-    public function container(): PageContainer|string|null
-    {
-        return PageContainer::Default;
     }
 
     protected function heading(string $name, string $heading, ?string $subtitle = null): Stack
