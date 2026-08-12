@@ -5,6 +5,13 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.14.1](https://github.com/bambamboole/laravel-oidc/compare/v0.14.0...v0.14.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* require lattice 0.48 ([782467e](https://github.com/bambamboole/laravel-oidc/commit/782467e14836513c1a0a01ed4e7425e01e7bc601))
+
 ## [0.14.0](https://github.com/bambamboole/laravel-oidc/compare/v0.13.4...v0.14.0) (2026-08-11)
 
 
