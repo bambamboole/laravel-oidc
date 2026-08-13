@@ -6,6 +6,8 @@ namespace Bambamboole\LaravelOidc\Server;
 
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Audit\LogSink;
+use Bambamboole\LaravelOidc\Server\Audit\RecordLoginAudit;
+use Bambamboole\LaravelOidc\Server\Audit\RecordLogoutAudit;
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
@@ -301,8 +303,13 @@ class OidcServiceProvider extends ServiceProvider
             ),
         );
 
+        // RecordLoginAudit runs after StartOidcSession so the sid it captures
+        // exists; RecordLogoutAudit runs before the teardown listeners so the
+        // sid is still readable from the session.
         Event::listen(Login::class, EstablishSessionToken::class);
         Event::listen(Login::class, StartOidcSession::class);
+        Event::listen(Login::class, RecordLoginAudit::class);
+        Event::listen(Logout::class, RecordLogoutAudit::class);
         Event::listen(Logout::class, ForgetSessionToken::class);
         Event::listen(Logout::class, EndOidcSession::class);
 
