@@ -105,6 +105,6 @@ class LoginPage extends AuthPage implements LoginView
             ->autoComplete('current-password')
             ->placeholder(__('oidc-ui::common.placeholder.password'))
             ->required()
-            ->labelAction(__('oidc-ui::auth.login.forgot-password'), route('identity.password.request', absolute: false));
+            ->labelAction(Link::make(__('oidc-ui::auth.login.forgot-password'))->href(route('identity.password.request', absolute: false)));
     }
 }
