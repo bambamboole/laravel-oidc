@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server;
 
+use Bambamboole\LaravelOidc\Server\Audit\Auditor;
+use Bambamboole\LaravelOidc\Server\Audit\LogSink;
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\FactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
@@ -37,6 +39,7 @@ use Bambamboole\LaravelOidc\Server\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Server\Console\RotateKeysCommand;
 use Bambamboole\LaravelOidc\Server\Context\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Server\Context\AuthenticationContextStore;
+use Bambamboole\LaravelOidc\Server\Contracts\AuditSink;
 use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy;
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
@@ -183,6 +186,10 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->singleton(BackChannelLogoutNotifier::class);
         $this->app->singleton(AccessTokenContextLink::class);
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
+        $this->app->singleton(AuditSink::class, fn (Application $app): AuditSink => $app->make(
+            (string) config('oidc.audit.sink', LogSink::class),
+        ));
+        $this->app->singleton(Auditor::class);
 
         $this->registerDefaultAuthViewBindings();
 
