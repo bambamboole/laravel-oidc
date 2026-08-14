@@ -5,6 +5,24 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.15.0](https://github.com/bambamboole/laravel-oidc/compare/v0.14.2...v0.15.0) (2026-08-14)
+
+
+### Features
+
+* **client:** scope narrowing and expiry access for the ApiTokenBroker ([603dc41](https://github.com/bambamboole/laravel-oidc/commit/603dc41783ace14f0423acdffa5e660cb37a04b3))
+* **client:** scope narrowing and expiry access for the ApiTokenBroker ([ae6c24a](https://github.com/bambamboole/laravel-oidc/commit/ae6c24a05e891b0910befdcabf8f424ec9015563))
+* **server:** add audit event core with sink contract and log sink ([39086dd](https://github.com/bambamboole/laravel-oidc/commit/39086ddf738e4141bc558a414e6c21264645bcf0))
+* **server:** audit client administration events ([ec4758e](https://github.com/bambamboole/laravel-oidc/commit/ec4758e1b229a47b19d1a285cce6016c11a4ced4))
+* **server:** audit interactive authentication events ([8f99dae](https://github.com/bambamboole/laravel-oidc/commit/8f99dae7fab9474ecea7d516fa6a365c9951240a))
+* **server:** audit logging ([12ba3f0](https://github.com/bambamboole/laravel-oidc/commit/12ba3f08156cd07340842c9e9209d27d32c06be1))
+* **server:** audit oauth protocol events ([c8f64b3](https://github.com/bambamboole/laravel-oidc/commit/c8f64b38bd847ac59b95694d8f3125ac99efac6e))
+
+
+### Documentation
+
+* document audit logging ([36473db](https://github.com/bambamboole/laravel-oidc/commit/36473db0c9bf4d5fad1ae5e14ec383d9a459a1a7))
+
 ## [0.14.2](https://github.com/bambamboole/laravel-oidc/compare/v0.14.1...v0.14.2) (2026-08-13)
 
 
