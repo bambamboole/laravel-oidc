@@ -23,21 +23,32 @@ class ApiTokenBroker
 
     /**
      * @param  array<string, string>  $parameters
+     * @param  list<string>|null  $scopes
      */
-    public function accessToken(array $parameters = [], ?string $audience = null): string
+    public function accessToken(array $parameters = [], ?string $audience = null, ?array $scopes = null): string
     {
+        return $this->exchangedToken($parameters, $audience, $scopes)->accessToken;
+    }
+
+    /**
+     * @param  array<string, string>  $parameters
+     * @param  list<string>|null  $scopes
+     */
+    public function exchangedToken(array $parameters = [], ?string $audience = null, ?array $scopes = null): ExchangedToken
+    {
+        $scopes = $scopes === [] ? null : $scopes;
         $audience ??= rtrim((string) config('oidc-client.issuer'), '/');
-        $key = $this->cacheKey($audience, $parameters);
+        $key = $this->cacheKey($audience, $parameters, $scopes);
         $cached = session('oidc-client.exchanged.'.$key);
 
         if (is_array($cached) && is_string($cached['access_token'] ?? null) && (int) ($cached['expires_at'] ?? 0) > time() + self::EXPIRY_SKEW) {
-            return $cached['access_token'];
+            return new ExchangedToken($cached['access_token'], (int) $cached['expires_at']);
         }
 
-        $issued = $this->exchange($this->subjectToken(), $audience, $parameters);
+        $issued = $this->exchange($this->subjectToken(), $audience, $parameters, $scopes);
         session()->put('oidc-client.exchanged.'.$key, $issued);
 
-        return $issued['access_token'];
+        return new ExchangedToken($issued['access_token'], $issued['expires_at']);
     }
 
     public function forget(): void
@@ -109,18 +120,25 @@ class ApiTokenBroker
 
     /**
      * @param  array<string, string>  $parameters
+     * @param  list<string>|null  $scopes
      * @return array{access_token: string, expires_at: int}
      */
-    private function exchange(string $subjectToken, string $audience, array $parameters): array
+    private function exchange(string $subjectToken, string $audience, array $parameters, ?array $scopes): array
     {
-        $response = $this->http->asForm()->post($this->discovery->metadata()->tokenEndpoint, [
+        $payload = [
             ...$parameters,
             'grant_type' => self::EXCHANGE_GRANT,
             'client_id' => (string) config('oidc-client.client_id'),
             'subject_token' => $subjectToken,
             'subject_token_type' => self::ACCESS_TOKEN_TYPE,
             'audience' => $audience,
-        ]);
+        ];
+
+        if ($scopes !== null && $scopes !== []) {
+            $payload['scope'] = implode(' ', $scopes);
+        }
+
+        $response = $this->http->asForm()->post($this->discovery->metadata()->tokenEndpoint, $payload);
 
         $accessToken = $response->json('access_token');
 
@@ -138,11 +156,16 @@ class ApiTokenBroker
 
     /**
      * @param  array<string, string>  $parameters
+     * @param  list<string>|null  $scopes
      */
-    private function cacheKey(string $audience, array $parameters): string
+    private function cacheKey(string $audience, array $parameters, ?array $scopes): string
     {
         ksort($parameters);
 
-        return hash('sha256', json_encode([$audience, $parameters], JSON_THROW_ON_ERROR));
+        if ($scopes !== null) {
+            sort($scopes);
+        }
+
+        return hash('sha256', json_encode([$audience, $parameters, $scopes], JSON_THROW_ON_ERROR));
     }
 }

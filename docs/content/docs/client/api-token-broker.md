@@ -15,16 +15,33 @@ use Bambamboole\LaravelOidc\Client\ApiTokenBroker;
 $token = app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 ```
 
-`accessToken(array $parameters = [], ?string $audience = null): string` exchanges the session's
-login access token (via [RFC 8693 token exchange](/provider/token-exchange/)) for a token scoped
-to `$audience`, defaulting to `config('oidc-client.issuer')` (with a trailing slash stripped) when
-omitted. `$parameters` are sent as extra POST fields on the exchange request — a provider-side
+`accessToken(array $parameters = [], ?string $audience = null, ?array $scopes = null): string`
+exchanges the session's login access token (via
+[RFC 8693 token exchange](/provider/token-exchange/)) for a token scoped to `$audience`,
+defaulting to `config('oidc-client.issuer')` (with a trailing slash stripped) when omitted.
+`$parameters` are sent as extra POST fields on the exchange request — a provider-side
 `ExchangePolicy` can read them back as
 [extension parameters](/provider/token-exchange/#extension-parameters), e.g. `tenant` above.
 
-The result is cached in the session under a key derived from the audience and the (sorted)
-parameter set, so repeated calls with the same arguments reuse the cached token until it is within
-30 seconds of its `expires_in`, rather than exchanging again.
+`$scopes` narrows the exchanged token: the list is sent space-joined as the `scope` request
+parameter, which the provider passes to its `ExchangePolicy` as `requestedScopes`. Omitting it (or
+passing an empty list) leaves the scope decision entirely to the provider.
+
+When the caller needs the token's expiry as well — for example to hand `expires_in` on to a
+browser client — use `exchangedToken()`, which takes the same arguments and returns an
+`ExchangedToken` value object:
+
+```php
+$token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
+
+$token->accessToken; // the exchanged access token
+$token->expiresAt;   // unix timestamp
+$token->expiresIn(); // remaining seconds, never negative
+```
+
+The result is cached in the session under a key derived from the audience, the (sorted) parameter
+set, and the (sorted) scope list, so repeated calls with the same arguments reuse the cached token
+until it is within 30 seconds of its `expires_in`, rather than exchanging again.
 
 The default audience must equal the provider's issuer identifier — the same value the server
 exposes via `oidc.issuer` (`Issuer::url()`) — or exchanges targeting a different audience must be

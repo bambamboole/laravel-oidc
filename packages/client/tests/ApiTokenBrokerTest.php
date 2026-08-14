@@ -96,6 +96,60 @@ it('caches per parameter set', function () {
         ->and($broker->accessToken(['tenant' => 'acme']))->toBe('acme-token');
 });
 
+it('sends requested scopes space-joined', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+
+    app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme'], scopes: ['crm:view', 'catalog:view']);
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
+        && $request['scope'] === 'crm:view catalog:view');
+});
+
+it('omits the scope parameter when no scopes are requested', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+
+    app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme'], scopes: []);
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
+        && ! isset($request['scope']));
+});
+
+it('caches per scope set regardless of scope order', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
+        ->push(['access_token' => 'narrow-token', 'expires_in' => 300])
+        ->push(['access_token' => 'wide-token', 'expires_in' => 300])]);
+    $broker = app(ApiTokenBroker::class);
+
+    expect($broker->accessToken(['tenant' => 'acme'], scopes: ['crm:view']))->toBe('narrow-token')
+        ->and($broker->accessToken(['tenant' => 'acme'], scopes: ['crm:view', 'crm:manage']))->toBe('wide-token')
+        ->and($broker->accessToken(['tenant' => 'acme'], scopes: ['crm:manage', 'crm:view']))->toBe('wide-token');
+});
+
+it('returns the exchanged token with its expiry', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+
+    $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
+
+    expect($token->accessToken)->toBe('api-token')
+        ->and($token->expiresAt)->toBeGreaterThan(time() + 290)
+        ->and($token->expiresAt)->toBeLessThanOrEqual(time() + 300)
+        ->and($token->expiresIn())->toBeGreaterThan(290);
+});
+
+it('keeps the cached expiry when serving an exchanged token from the cache', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+    $broker = app(ApiTokenBroker::class);
+
+    $first = $broker->exchangedToken(['tenant' => 'acme']);
+    $second = $broker->exchangedToken(['tenant' => 'acme']);
+
+    expect($second->accessToken)->toBe('api-token')
+        ->and($second->expiresAt)->toBe($first->expiresAt);
+    Http::assertSentCount(2);
+});
+
 it('forgets cached tokens', function () {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'api-token', 'expires_in' => 300])
