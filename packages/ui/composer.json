@@ -60,7 +60,8 @@
             "discover": [
                 "src"
             ],
-            "plugin": "resources/js/plugin.ts"
+            "plugin": "resources/js/plugin.ts",
+            "icons": "resources/icons"
         }
     },
     "scripts": {

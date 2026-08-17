@@ -5,13 +5,4 @@ return [
     'authenticating' => 'Wird authentifiziert …',
     'sign-in' => 'Mit Passkey anmelden',
     'separator' => 'Oder weiter mit E-Mail',
-    'not-supported' => 'Passkeys werden in diesem Browser nicht unterstützt.',
-    'add' => 'Passkey hinzufügen',
-    'name-label' => 'Passkey-Name',
-    'name-placeholder' => 'z. B. MacBook Pro, iPhone',
-    'name-help' => 'Ein Name hilft dir, diesen Passkey später wiederzuerkennen.',
-    'registering' => 'Wird registriert …',
-    'error' => 'Passkey-Registrierung fehlgeschlagen. Bitte versuche es erneut.',
-    'register' => 'Passkey registrieren',
-    'cancel' => 'Abbrechen',
 ];

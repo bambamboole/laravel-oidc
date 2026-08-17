@@ -1,12 +1,12 @@
 import { eagerComponent, type Plugin } from "@lattice-php/core/registry";
-import PasskeyRegistration from "./passkey-registration";
 import PasskeyVerify from "./passkey-verify";
+import TwoFactorSetup from "./two-factor-setup";
 
 export default {
     name: "oidc-ui",
     components: {
         "oidc.passkey-verify": eagerComponent(PasskeyVerify),
-        "oidc.passkey-registration": eagerComponent(PasskeyRegistration),
+        "field.oidc.two-factor-setup": eagerComponent(TwoFactorSetup),
     },
     i18n: {
         namespace: "oidc-ui",

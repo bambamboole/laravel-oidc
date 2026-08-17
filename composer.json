@@ -62,7 +62,8 @@
         },
         "lattice": {
             "discover": ["packages/ui/src"],
-            "plugin": "packages/ui/resources/js/plugin.ts"
+            "plugin": "packages/ui/resources/js/plugin.ts",
+            "icons": "packages/ui/resources/icons"
         }
     },
     "scripts": {
