@@ -65,7 +65,9 @@ test('the methods table lists confirmed enrollments across providers with their 
     app(TotpFactorProvider::class)->enroll($user, 'Pending phone');
     $user->passkeys()->create(['name' => 'Yubikey', 'credential_id' => 'credential-id', 'credential' => []]);
 
-    $rows = collect($this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data'));
+    /** @var array<int, array<string, mixed>> $data */
+    $data = $this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data');
+    $rows = collect($data);
 
     expect($rows->pluck('label')->all())->toBe(['Work phone', 'Yubikey'])
         ->and($rows->firstWhere('label', 'Work phone')['role'])->toBe(__('oidc-ui::security.role.second-factor-only'))
@@ -79,7 +81,9 @@ test('the methods table backs the list with a recovery-codes row', function () {
     $user->totpFactors()->update(['confirmed_at' => now()]);
     app(RecoveryCodeProvider::class)->generate($user);
 
-    $rows = collect($this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data'));
+    /** @var array<int, array<string, mixed>> $data */
+    $data = $this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data');
+    $rows = collect($data);
     $backup = $rows->firstWhere('label', __('oidc-ui::security.recovery-codes.heading'));
 
     expect($backup['description'])->toBe(__('oidc-ui::security.recovery-codes.remaining', ['remaining' => 8, 'total' => 8]))

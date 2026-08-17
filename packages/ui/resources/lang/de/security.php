@@ -39,6 +39,8 @@ return [
         'create' => 'Weiter',
         'creating' => 'Warte auf deinen Browser …',
         'created' => 'Bereit — zum Hinzufügen abschließen.',
+        'cancelled' => 'Abgebrochen, oder kein passendes Gerät hat geantwortet. Stelle sicher, dass dein Sicherheitsschlüssel eingesteckt ist, und versuche es erneut.',
+        'already-registered' => 'Dieses Gerät ist bereits registriert.',
         'failed' => 'Das hat nicht funktioniert. Bitte versuche es erneut.',
         'unsupported' => 'Dieser Browser kann keine Passkeys erstellen.',
     ],

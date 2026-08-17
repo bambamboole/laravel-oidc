@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { RendererComponent } from "@lattice-php/core";
 import { SimpleField } from "@lattice-php/form/components/fields/simple-field";
 import type { ControlledField } from "@lattice-php/form/hooks/use-controlled-field";
+import { useResolvedNode } from "@lattice-php/form/hooks/resolved-nodes";
 import { fieldProps } from "@lattice-php/form/lib/field-props";
 import { Button, Input, InputError, Label } from "@lattice-php/ui";
 import { useT } from "@lattice-php/ui/i18n";
@@ -22,6 +23,30 @@ declare module "@lattice-php/core" {
 }
 
 type Translate = (key: string, fallback: string) => string;
+
+/**
+ * What the browser throws is written for a developer reading a console, not for
+ * someone deciding what to do next — and it arrives in the browser's language,
+ * not the app's. `NotAllowedError` in particular covers everything from "you
+ * closed the dialog" to "no security key is plugged in", so it earns a sentence
+ * that names both.
+ */
+function ceremonyError(caught: unknown, t: Translate): string {
+    const name = caught instanceof Error ? caught.name : "";
+
+    if (name === "NotAllowedError" || name === "AbortError") {
+        return t(
+            "security.setup.cancelled",
+            "Cancelled, or no matching device answered. Make sure your security key is plugged in, then try again.",
+        );
+    }
+
+    if (name === "InvalidStateError") {
+        return t("security.setup.already-registered", "This device is already registered.");
+    }
+
+    return t("security.setup.failed", "That did not work. Please try again.");
+}
 
 /**
  * Step two of the setup wizard. The server has already begun the enrollment and
@@ -76,14 +101,16 @@ function CodeSetup({
                 </div>
             )}
 
-            <InputOTP
-                data-test={field.testId}
-                disabled={field.disabled || field.readOnly}
-                length={length}
-                name={field.name}
-                onChange={(next) => field.commit(next)}
-                value={field.value}
-            />
+            <div className="flex justify-center">
+                <InputOTP
+                    data-test={field.testId}
+                    disabled={field.disabled || field.readOnly}
+                    length={length}
+                    name={field.name}
+                    onChange={(next) => field.commit(next)}
+                    value={field.value}
+                />
+            </div>
         </div>
     );
 }
@@ -122,11 +149,7 @@ function CeremonySetup({
             setCredential(await startRegistration({ optionsJSON: options as never }));
         } catch (caught) {
             setCredential(null);
-            setError(
-                caught instanceof Error
-                    ? caught.message
-                    : t("security.setup.failed", "That did not work. Please try again."),
-            );
+            setError(ceremonyError(caught, t));
         } finally {
             setBusy(false);
         }
@@ -180,7 +203,9 @@ function CeremonySetup({
 
 const TwoFactorSetup: RendererComponent<"field.oidc.two-factor-setup"> = ({ node }) => {
     const { t } = useT("oidc-ui");
-    const props = node.props;
+    // The payload only exists after the resolve `option` triggers; the node the
+    // renderer hands down still carries the schema's empty props.
+    const props = useResolvedNode(node).props;
 
     return (
         <SimpleField label={fieldProps(node).label ?? ""} node={node}>

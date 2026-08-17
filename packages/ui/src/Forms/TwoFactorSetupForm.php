@@ -35,6 +35,7 @@ use Lattice\Ui\Enums\Gap;
 use Lattice\Ui\Enums\Size;
 use Lattice\Ui\Enums\StackDirection;
 use Lattice\Ui\Enums\Variant;
+use Lattice\Ui\Enums\Width;
 
 /**
  * Adding a second factor: pick a method, then configure it.
@@ -68,6 +69,11 @@ class TwoFactorSetupForm extends FormDefinition
                         Choice::make('option', __('oidc-ui::security.setup.method'))
                             ->options(array_map($this->pickerOption(...), $options))
                             ->optionSchema($this->pickerCard())
+                            // The registry sorts the recommended option first and
+                            // the picker shows it checked. Saying so on the wire is
+                            // what makes step two resolve for a user who accepts
+                            // the recommendation instead of clicking a card.
+                            ->value($options[0]->id ?? null)
                             ->rules(['required', Rule::in(array_column($options, 'id'))]),
                     ]),
                 WizardStep::make('configure', __('oidc-ui::security.setup.step-configure'))
@@ -75,7 +81,7 @@ class TwoFactorSetupForm extends FormDefinition
                     ->schema([
                         TwoFactorSetupField::make('setup', __('oidc-ui::security.setup.confirmation')),
                     ]),
-            ]),
+            ])->align(Align::Center),
         ]);
     }
 
@@ -137,7 +143,11 @@ class TwoFactorSetupForm extends FormDefinition
                 ->gap(Gap::Medium)
                 ->schema([
                     Icon::make('')->dataKey('name', 'icon')->size(Size::Lg),
+                    // A row is a wrapping flex box and a stack is full-width by
+                    // default, so the text column has to claim the remaining space
+                    // instead — otherwise it wraps under the icon.
                     Stack::make()
+                        ->width(Width::Fill)
                         ->gap(Gap::Small)
                         ->schema([
                             Stack::make()

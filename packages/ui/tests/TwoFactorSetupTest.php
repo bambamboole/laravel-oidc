@@ -6,6 +6,7 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
 use Lattice\Core\Support\Wire;
 use Lattice\Facades\Effects;
+use Lattice\Form\Components\Choice;
 use Lattice\Form\Components\Form;
 use Lattice\Ui\Effects\Builtin\OpenModal;
 use PragmaRX\Google2FA\Google2FA;
@@ -22,6 +23,19 @@ function setupUser(): User
     return User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 }
 
+/** The step-one picker, narrowed from the field list so its options are typed. */
+function pickerChoice(): Choice
+{
+    $choice = app(TwoFactorSetupForm::class)
+        ->definition(Form::make('form'), request())
+        ->fields()
+        ->firstWhere(fn ($field): bool => $field->name() === 'option');
+
+    assert($choice instanceof Choice);
+
+    return $choice;
+}
+
 /**
  * @return array<string, mixed>
  */
@@ -34,8 +48,7 @@ function resolveSetupField(mixed $test, User $user, string $option): array
 }
 
 test('the picker offers every enrollment option with what it is good for', function () {
-    $form = app(TwoFactorSetupForm::class)->definition(Form::make('form'), request());
-    $choice = $form->fields()->firstWhere(fn ($field): bool => $field->name() === 'option');
+    $choice = pickerChoice();
 
     expect(array_column($choice->options, 'value'))->toBe(['passkey', 'security_key', 'totp'])
         ->and($choice->options[0]->data['recommended'])->toBeTrue()
@@ -45,9 +58,14 @@ test('the picker offers every enrollment option with what it is good for', funct
         ->and($choice->options[2]->data['description'])->toBe(__('oidc-ui::security.option.totp.description'));
 });
 
+test('the picker carries the recommended option as its value', function () {
+    $choice = pickerChoice();
+
+    expect($choice->value)->toBe('passkey');
+});
+
 test('the picker renders each option as a card bound to its data', function () {
-    $form = app(TwoFactorSetupForm::class)->definition(Form::make('form'), request());
-    $choice = $form->fields()->firstWhere(fn ($field): bool => $field->name() === 'option');
+    $choice = pickerChoice();
 
     /** @var array<string, mixed> $node */
     $node = json_decode((string) json_encode(Wire::toWire([$choice])[0]), true);

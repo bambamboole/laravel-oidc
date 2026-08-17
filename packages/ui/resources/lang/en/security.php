@@ -39,6 +39,8 @@ return [
         'create' => 'Continue',
         'creating' => 'Waiting for your browser…',
         'created' => 'Ready — finish to add it.',
+        'cancelled' => 'Cancelled, or no matching device answered. Make sure your security key is plugged in, then try again.',
+        'already-registered' => 'This device is already registered.',
         'failed' => 'That did not work. Please try again.',
         'unsupported' => 'This browser cannot create passkeys.',
     ],
