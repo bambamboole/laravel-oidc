@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
+use Lattice\Core\Support\Wire;
 use Lattice\Facades\Effects;
 use Lattice\Form\Components\Form;
 use Lattice\Ui\Effects\Builtin\OpenModal;
@@ -42,6 +43,30 @@ test('the picker offers every enrollment option with what it is good for', funct
         ->and($choice->options[0]->data['icon'])->toBe('fingerprint')
         ->and($choice->options[2]->data['role'])->toBe(__('oidc-ui::security.role.second-factor-only'))
         ->and($choice->options[2]->data['description'])->toBe(__('oidc-ui::security.option.totp.description'));
+});
+
+test('the picker renders each option as a card bound to its data', function () {
+    $form = app(TwoFactorSetupForm::class)->definition(Form::make('form'), request());
+    $choice = $form->fields()->firstWhere(fn ($field): bool => $field->name() === 'option');
+
+    /** @var array<string, mixed> $node */
+    $node = json_decode((string) json_encode(Wire::toWire([$choice])[0]), true);
+
+    $bound = [];
+    $collect = function (array $nodes) use (&$collect, &$bound): void {
+        foreach ($nodes as $child) {
+            foreach ($child['props']['dataBindings'] ?? [] as $key) {
+                $bound[] = $key;
+            }
+            $collect($child['schema'] ?? []);
+        }
+    };
+    $collect($node['props']['optionSchema']);
+
+    // The schema ships once and binds per option, so adding a provider needs no
+    // rendering code of its own.
+    expect($node['props']['optionSchema'])->toHaveCount(1)
+        ->and($bound)->toEqualCanonicalizing(['icon', 'label', 'role', 'description']);
 });
 
 test('resolving a code option begins the enrollment and returns its setup payload', function () {

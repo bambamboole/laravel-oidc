@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Lattice\Core\Enums\ColorName;
 use Lattice\Core\Option;
 use Lattice\Facades\Effects;
 use Lattice\Form\Attributes\AsForm;
@@ -24,6 +25,15 @@ use Lattice\Form\Components\Wizard;
 use Lattice\Form\Components\WizardStep;
 use Lattice\Form\FormDefinition;
 use Lattice\Http\LatticeResponse;
+use Lattice\Ui\Components\Badge;
+use Lattice\Ui\Components\Component;
+use Lattice\Ui\Components\Icon;
+use Lattice\Ui\Components\Stack;
+use Lattice\Ui\Components\Text;
+use Lattice\Ui\Enums\Align;
+use Lattice\Ui\Enums\Gap;
+use Lattice\Ui\Enums\Size;
+use Lattice\Ui\Enums\StackDirection;
 use Lattice\Ui\Enums\Variant;
 
 /**
@@ -57,6 +67,7 @@ class TwoFactorSetupForm extends FormDefinition
                     ->schema([
                         Choice::make('option', __('oidc-ui::security.setup.method'))
                             ->options(array_map($this->pickerOption(...), $options))
+                            ->optionSchema($this->pickerCard())
                             ->rules(['required', Rule::in(array_column($options, 'id'))]),
                     ]),
                 WizardStep::make('configure', __('oidc-ui::security.setup.step-configure'))
@@ -106,8 +117,49 @@ class TwoFactorSetupForm extends FormDefinition
     }
 
     /**
-     * The option's data rides along for a card-style picker to bind against; a
-     * plain pill renderer ignores everything but the label.
+     * One card per option: icon, name, what it is good for, and a sentence of
+     * plain language. The schema ships once — the options carry only data.
+     *
+     * There is deliberately no "recommended" badge: a component's visibility is
+     * decided when the schema is built, not per option, so a badge bound to a
+     * boolean would render an empty pill for every other choice. The
+     * recommendation is carried by order instead — the registry sorts the
+     * recommended option first, and a Choice preselects its first option.
+     *
+     * @return array<int, Component>
+     */
+    private function pickerCard(): array
+    {
+        return [
+            Stack::make()
+                ->direction(StackDirection::Row)
+                ->align(Align::Center)
+                ->gap(Gap::Medium)
+                ->schema([
+                    Icon::make('')->dataKey('name', 'icon')->size(Size::Lg),
+                    Stack::make()
+                        ->gap(Gap::Small)
+                        ->schema([
+                            Stack::make()
+                                ->direction(StackDirection::Row)
+                                ->align(Align::Center)
+                                ->gap(Gap::Small)
+                                ->schema([
+                                    Text::make('')->dataKey('text', 'label'),
+                                    Badge::make('')->dataKey('label', 'role'),
+                                ]),
+                            Text::make('')
+                                ->dataKey('text', 'description')
+                                ->size(Size::Sm)
+                                ->color(ColorName::Muted),
+                        ]),
+                ]),
+        ];
+    }
+
+    /**
+     * The option's data is what the card schema binds against; a plain pill
+     * renderer ignores everything but the label.
      */
     private function pickerOption(EnrollmentOption $option): Option
     {
