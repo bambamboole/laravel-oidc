@@ -5,6 +5,27 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.16.0](https://github.com/bambamboole/laravel-oidc/compare/v0.15.0...v0.16.0) (2026-08-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* EnrollableFactorProvider now extends OffersEnrollment, and beginEnrollment() takes the chosen EnrollmentOption before the name.
+* **server:** a reset request without a matching `password_confirmation` is now rejected. Clients posting `password` alone to `identity.password.update` must send the confirmation field.
+
+### Features
+
+* replace the two-factor enrollment surface with a setup wizard ([#91](https://github.com/bambamboole/laravel-oidc/issues/91)) ([a1c794a](https://github.com/bambamboole/laravel-oidc/commit/a1c794ac183dc27648a3e7098393ea73a0acb25f))
+* **server:** throttle the auth write endpoints by default ([63dcad2](https://github.com/bambamboole/laravel-oidc/commit/63dcad2db033e8f1edfd6a80b9ad78b4a61b7bf3))
+* **server:** throttle the auth write endpoints by default ([1df9317](https://github.com/bambamboole/laravel-oidc/commit/1df93172b4ebb640334f48b91571f57af91bd64e))
+
+
+### Bug Fixes
+
+* honor subclassed auth pages, enforce reset password confirmation, close test gaps ([95fb086](https://github.com/bambamboole/laravel-oidc/commit/95fb086f43309bb640144abe5995a4980215ffb7))
+* **server:** enforce password confirmation on the reset request ([009e0e8](https://github.com/bambamboole/laravel-oidc/commit/009e0e81a56bc82ae4b9b0fc54e811b8cf4d30ed)), closes [#86](https://github.com/bambamboole/laravel-oidc/issues/86)
+* **ui:** honor subclassed auth pages in respond() ([0929cb9](https://github.com/bambamboole/laravel-oidc/commit/0929cb9452bb0c93e61927ab48c6bff0d443030d)), closes [#87](https://github.com/bambamboole/laravel-oidc/issues/87)
+
 ## [0.15.0](https://github.com/bambamboole/laravel-oidc/compare/v0.14.2...v0.15.0) (2026-08-14)
 
 
