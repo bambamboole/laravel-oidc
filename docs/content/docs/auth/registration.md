@@ -12,12 +12,14 @@ dispatch, sign-in, and session regeneration.
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.register` | `GET` | `auth/register` | `web`, `guest:identity` |
-| `identity.register.store` | `POST` | `auth/register` | `web`, `guest:identity` |
+| `identity.register.store` | `POST` | `auth/register` | `web`, `guest:identity`, `throttle:5,1` |
 
 `GET identity.register` renders through the bound `RegisterView` contract. If none is bound,
 hitting the route throws `MissingAuthViewException`.
 
 ## The registration flow (`POST identity.register.store`)
+
+The store action is throttled to **5 requests per minute**, then runs the following steps:
 
 1. The full request input is collected, with `email` **lowercased**.
 2. The [`createUsersUsing`](/auth/overview/) action is invoked with that input array and must

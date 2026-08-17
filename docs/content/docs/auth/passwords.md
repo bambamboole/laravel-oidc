@@ -17,17 +17,18 @@ Reset is built on Laravel's `Password` broker (`config('auth.defaults.passwords'
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.password.request` | `GET` | `auth/forgot-password` | `web`, `guest:identity` |
-| `identity.password.email` | `POST` | `auth/forgot-password` | `web`, `guest:identity` |
+| `identity.password.email` | `POST` | `auth/forgot-password` | `web`, `guest:identity`, `throttle:5,1` |
 | `identity.password.reset` | `GET` | `auth/reset-password/{token}` | `web`, `guest:identity` |
-| `identity.password.update` | `POST` | `auth/reset-password` | `web`, `guest:identity` |
+| `identity.password.update` | `POST` | `auth/reset-password` | `web`, `guest:identity`, `throttle:5,1` |
 
 ### Request-link flow
 
 `GET identity.password.request` renders through the bound `PasswordResetRequestView` contract.
 
-`POST identity.password.email` validates `email` (`required|email`), lowercases it, and calls the
-broker's `sendResetLink`. The broker itself enforces the per-user throttle window (returning
-`RESET_THROTTLED`). On `RESET_LINK_SENT`:
+`POST identity.password.email` is throttled to **5 requests per minute**, validates `email`
+(`required|email`), lowercases it, and calls the broker's `sendResetLink`. The route throttle caps
+how often the endpoint can be hit at all; the broker additionally enforces its own per-user window
+(returning `RESET_THROTTLED`). On `RESET_LINK_SENT`:
 
 - A JSON request receives `{"status": "..."}` with **`200`**.
 - A browser request is redirected `back()` with the translated status in the session.
@@ -44,11 +45,12 @@ yourself.
 `GET identity.password.reset` renders through the bound `PasswordResetView` contract (the
 `{token}` is in the URL, and reaches the view as `PasswordResetPrompt::$token`).
 
-`POST identity.password.update` validates `token`, `email` (`required|email`), and `password`
-(`required|confirmed`), then calls the broker's `reset`. `confirmed` means the request must carry a
-matching `password_confirmation` field — the shipped reset page renders one, and without the rule a
-typo would silently commit the first value. It is the only password rule the package enforces;
-length, strength and history stay with your action. Inside the broker callback the package:
+`POST identity.password.update` is throttled to **5 requests per minute**, validates `token`, `email`
+(`required|email`), and `password` (`required|confirmed`), then calls the broker's `reset`.
+`confirmed` means the request must carry a matching `password_confirmation` field — the shipped reset
+page renders one, and without the rule a typo would silently commit the first value. It is the only
+password rule the package enforces; length, strength and history stay with your action. Inside the
+broker callback the package:
 
 1. Invokes your `resetUserPasswordsUsing` action with the user and full input (your action owns the
    remaining password rules and persistence).
@@ -76,12 +78,14 @@ so sensitive actions can require a recent confirmation. It is the mechanism behi
 | Route name | Verb | Path | Middleware |
 | --- | --- | --- | --- |
 | `identity.password.confirm` | `GET` | `auth/user/confirm-password` | `web`, `AuthenticateIdentity:identity` |
-| `identity.password.confirm.store` | `POST` | `auth/user/confirm-password` | `web`, `AuthenticateIdentity:identity` |
+| `identity.password.confirm.store` | `POST` | `auth/user/confirm-password` | `web`, `AuthenticateIdentity:identity`, `throttle:5,1` |
 | `identity.password.confirmation` | `GET` | `auth/user/confirmed-password-status` | `web`, `AuthenticateIdentity:identity` |
 
 `GET identity.password.confirm` renders through the bound `PasswordConfirmationView` contract.
 
-`POST identity.password.confirm.store` validates `password` and `Hash::check`s it against the current
+`POST identity.password.confirm.store` is throttled to **5 requests per minute** — it verifies a
+credential, so an unlimited endpoint would be a password oracle for a hijacked session — validates
+`password` and `Hash::check`s it against the current
 user's stored password. On success it writes `auth.password_confirmed_at` (the current timestamp) to
 the session, then returns an empty **`201`** (JSON) or a `redirect()->intended(...)` to the home URL
 (browser). A wrong password throws a validation error with the `auth.password` message.
