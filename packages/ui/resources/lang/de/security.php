@@ -8,23 +8,12 @@ return [
     'already-verified' => 'Deine E-Mail-Adresse ist bereits bestätigt.',
 
     'two-factor' => [
-        'enable' => ':method hinzufügen',
-        'disable' => 'Zwei-Faktor-Authentifizierung deaktivieren',
-        'disable-confirm-title' => 'Zwei-Faktor-Authentifizierung deaktivieren?',
-        'disable-confirm-description' => 'Alle Zwei-Faktor-Methoden außer Passkeys werden entfernt; die Anmeldung erfordert keinen zweiten Schritt mehr.',
-        'setup-started' => 'Einrichtung der Zwei-Faktor-Authentifizierung gestartet.',
         'setup-key' => 'Oder gib diesen Einrichtungsschlüssel in deiner Authenticator-App ein:',
-        'already-enabled' => 'Die Zwei-Faktor-Authentifizierung ist aktiviert. Du kannst diesen Dialog schließen.',
-        'confirm' => 'Bestätigen',
-        'code' => 'Authentifizierungscode',
-        'code-help' => 'Gib den Code aus deiner Authenticator-App ein.',
-        'enabled-toast' => 'Zwei-Faktor-Authentifizierung aktiviert.',
-        'disabled-toast' => 'Zwei-Faktor-Authentifizierung deaktiviert.',
-        'invalid-code' => 'Der eingegebene Zwei-Faktor-Authentifizierungscode war ungültig.',
     ],
 
     'methods' => [
         'column' => 'Methode',
+        'role' => 'Gut für',
         'last-used' => 'Zuletzt verwendet',
         'never-used' => 'Nie verwendet',
         'last-used-at' => 'Zuletzt verwendet :time',
@@ -34,7 +23,52 @@ return [
         'removed' => 'Zwei-Faktor-Methode entfernt.',
     ],
 
+    'setup' => [
+        'step-method' => 'Methode',
+        'step-method-description' => 'Womit du dich ausweisen möchtest',
+        'step-configure' => 'Einrichten',
+        'step-configure-description' => 'Abschließen und bestätigen',
+        'method' => 'Wie möchtest du dich zusätzlich ausweisen?',
+        'confirmation' => 'Bestätigung',
+        'confirmed' => ':method hinzugefügt.',
+        'invalid' => 'Damit ließ sich die neue Methode nicht bestätigen. Bitte versuche es erneut.',
+        'scan' => 'Scanne den Code mit deiner Authenticator-App und gib die sechs Ziffern ein, die sie anzeigt.',
+        'pick-method' => 'Wähle im vorherigen Schritt eine Methode.',
+        'device-name' => 'Name',
+        'device-name-help' => 'Nur für dich, damit du dieses Gerät später wiedererkennst.',
+        'create' => 'Weiter',
+        'creating' => 'Warte auf deinen Browser …',
+        'created' => 'Bereit — zum Hinzufügen abschließen.',
+        'cancelled' => 'Abgebrochen, oder kein passendes Gerät hat geantwortet. Stelle sicher, dass dein Sicherheitsschlüssel eingesteckt ist, und versuche es erneut.',
+        'already-registered' => 'Dieses Gerät ist bereits registriert.',
+        'failed' => 'Das hat nicht funktioniert. Bitte versuche es erneut.',
+        'unsupported' => 'Dieser Browser kann keine Passkeys erstellen.',
+    ],
+
+    'role' => [
+        'login-and-second-factor' => 'Anmeldung + 2FA',
+        'second-factor-only' => 'Nur 2FA',
+        'backup' => 'Notfall',
+    ],
+
+    'option' => [
+        'passkey' => [
+            'label' => 'Passkey',
+            'description' => 'Face ID, Touch ID oder Windows Hello. Ersetzt beim Anmelden das Passwort und zählt als zweiter Faktor.',
+        ],
+        'security_key' => [
+            'label' => 'Sicherheitsschlüssel',
+            'description' => 'Ein YubiKey oder ein anderer FIDO2-Schlüssel, den du einsteckst oder auflegst.',
+        ],
+        'totp' => [
+            'label' => 'Authenticator-App',
+            'description' => 'Ein sechsstelliger Code aus 1Password, Authy, Google Authenticator oder ähnlich.',
+        ],
+    ],
+
     'recovery-codes' => [
+        'heading' => 'Wiederherstellungscodes',
+        'remaining' => ':remaining von :total übrig',
         'regenerate' => 'Codes neu generieren',
         'regenerate-confirm-title' => 'Wiederherstellungscodes neu generieren?',
         'regenerate-confirm-description' => 'Deine bestehenden Wiederherstellungscodes werden ungültig und durch einen neuen Satz ersetzt.',

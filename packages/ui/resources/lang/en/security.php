@@ -8,23 +8,12 @@ return [
     'already-verified' => 'Your email address is already verified.',
 
     'two-factor' => [
-        'enable' => 'Add :method',
-        'disable' => 'Disable two-factor authentication',
-        'disable-confirm-title' => 'Disable two-factor authentication?',
-        'disable-confirm-description' => 'All two-factor methods except passkeys will be removed, and sign-in will no longer require a second step.',
-        'setup-started' => 'Two-factor authentication setup started.',
         'setup-key' => 'Or enter this setup key in your authenticator app:',
-        'already-enabled' => 'Two-factor authentication is enabled. You can close this dialog.',
-        'confirm' => 'Confirm',
-        'code' => 'Authentication code',
-        'code-help' => 'Enter the code from your authenticator application.',
-        'enabled-toast' => 'Two-factor authentication enabled.',
-        'disabled-toast' => 'Two-factor authentication disabled.',
-        'invalid-code' => 'The provided two factor authentication code was invalid.',
     ],
 
     'methods' => [
         'column' => 'Method',
+        'role' => 'Good for',
         'last-used' => 'Last used',
         'never-used' => 'Never used',
         'last-used-at' => 'Last used :time',
@@ -34,7 +23,52 @@ return [
         'removed' => 'Two-factor method removed.',
     ],
 
+    'setup' => [
+        'step-method' => 'Method',
+        'step-method-description' => 'How you want to prove it is you',
+        'step-configure' => 'Set up',
+        'step-configure-description' => 'Finish and confirm',
+        'method' => 'How would you like to verify yourself?',
+        'confirmation' => 'Confirmation',
+        'confirmed' => ':method added.',
+        'invalid' => 'That did not confirm the new method. Please try again.',
+        'scan' => 'Scan this code with your authenticator app, then enter the six digits it shows.',
+        'pick-method' => 'Pick a method in the previous step.',
+        'device-name' => 'Name',
+        'device-name-help' => 'Only for you, so you can tell this device apart later.',
+        'create' => 'Continue',
+        'creating' => 'Waiting for your browser…',
+        'created' => 'Ready — finish to add it.',
+        'cancelled' => 'Cancelled, or no matching device answered. Make sure your security key is plugged in, then try again.',
+        'already-registered' => 'This device is already registered.',
+        'failed' => 'That did not work. Please try again.',
+        'unsupported' => 'This browser cannot create passkeys.',
+    ],
+
+    'role' => [
+        'login-and-second-factor' => 'Sign-in + 2FA',
+        'second-factor-only' => '2FA only',
+        'backup' => 'Backup',
+    ],
+
+    'option' => [
+        'passkey' => [
+            'label' => 'Passkey',
+            'description' => 'Face ID, Touch ID, or Windows Hello. Replaces your password at sign-in and counts as a second factor.',
+        ],
+        'security_key' => [
+            'label' => 'Security key',
+            'description' => 'A YubiKey or another FIDO2 key you plug in or tap.',
+        ],
+        'totp' => [
+            'label' => 'Authenticator app',
+            'description' => 'A six digit code from 1Password, Authy, Google Authenticator, or similar.',
+        ],
+    ],
+
     'recovery-codes' => [
+        'heading' => 'Recovery codes',
+        'remaining' => ':remaining of :total left',
         'regenerate' => 'Regenerate codes',
         'regenerate-confirm-title' => 'Regenerate recovery codes?',
         'regenerate-confirm-description' => 'Your existing recovery codes will stop working and be replaced with a new set.',
