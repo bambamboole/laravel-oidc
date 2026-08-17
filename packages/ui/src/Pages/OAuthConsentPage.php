@@ -40,7 +40,7 @@ class OAuthConsentPage extends AuthPage implements ConsentView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $prompt = $this->prompt ?? throw new LogicException(self::class.' rendered without its prompt; respond() must supply one before render() runs.');
+        $prompt = $this->prompt ?? throw new LogicException(static::class.' rendered without its prompt; respond() must supply one before render() runs.');
         $user = $prompt->user;
         $userEmail = $user instanceof Model ? (string) $user->getAttribute('email') : '';
 

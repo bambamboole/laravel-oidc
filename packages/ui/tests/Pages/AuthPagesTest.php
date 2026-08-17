@@ -61,6 +61,26 @@ function renderPage(object $page): string
 }
 
 /**
+ * The `two-factor-challenge` form's fields, keyed by input name, as the client
+ * receives them. The recovery-code reveal is a client-side toggle driven by
+ * server-declared `conditions` metadata, so the payload is where its wiring can
+ * be asserted without a browser.
+ *
+ * @return array<string, array<string, mixed>>
+ */
+function twoFactorChallengeFields(TwoFactorChallengePrompt $prompt): array
+{
+    $payload = json_decode(renderPage(new TwoFactorChallengePage($prompt)), true, flags: JSON_THROW_ON_ERROR);
+    $schema = data_get($payload, 'props.lattice.schema');
+    $form = collect(is_array($schema) ? $schema : [])->firstWhere('id', 'two-factor-challenge');
+    $fields = data_get($form, 'schema');
+
+    return collect(is_array($fields) ? $fields : [])
+        ->mapWithKeys(fn (mixed $field): array => [(string) data_get($field, 'props.name') => (array) data_get($field, 'props')])
+        ->all();
+}
+
+/**
  * Every auth view contract renders through the server package's real
  * `identity.*` routes, resolved from the container. Requests are sent with
  * the `X-Inertia` header so Inertia returns the page payload as JSON instead
@@ -127,6 +147,31 @@ it('offers only the recovery-code input on the two-factor challenge for a webaut
         ->and($webauthn)->toContain('recovery_code')
         ->and($webauthn)->not->toContain('field.otp')
         ->and($webauthn)->not->toContain('use_recovery_code');
+});
+
+it('wires the recovery-code reveal toggle on a code-based challenge', function () {
+    $fields = twoFactorChallengeFields(new TwoFactorChallengePrompt(factor: 'totp'));
+
+    expect(array_keys($fields))->toBe(['code', 'recovery_code', 'use_recovery_code'])
+        // The checkbox drives the reveal, so it must stay unconditional itself —
+        // a condition on it could hide the only way back to the code input.
+        ->and($fields['use_recovery_code']['conditions'])->toBeNull()
+        // Exactly inverse conditions: one field is showing at any time.
+        ->and($fields['code']['conditions'])->toMatchArray([
+            'visible' => [['field' => 'use_recovery_code', 'operator' => 'eq', 'value' => false]],
+        ])
+        ->and($fields['recovery_code']['conditions'])->toMatchArray([
+            'visible' => [['field' => 'use_recovery_code', 'operator' => 'eq', 'value' => true]],
+        ]);
+});
+
+it('reveals the recovery-code input unconditionally on a webauthn challenge', function () {
+    // The passkey ceremony replaces the code input, so there is nothing to
+    // toggle between and the recovery code must be visible outright.
+    $fields = twoFactorChallengeFields(new TwoFactorChallengePrompt(factor: 'webauthn'));
+
+    expect(array_keys($fields))->toBe(['recovery_code'])
+        ->and($fields['recovery_code']['conditions'])->toBeNull();
 });
 
 it('offers the other enrolled methods on a multi-provider challenge', function () {

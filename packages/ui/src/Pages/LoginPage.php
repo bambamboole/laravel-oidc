@@ -28,13 +28,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LoginPage extends AuthPage implements LoginView
 {
-    public function __construct(
-        private readonly ?LoginPrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?LoginPrompt $prompt = null,
     ) {}
 
     public function respond(LoginPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string

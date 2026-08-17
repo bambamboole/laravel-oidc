@@ -25,13 +25,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 {
-    public function __construct(
-        private readonly ?TwoFactorChallengePrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?TwoFactorChallengePrompt $prompt = null,
     ) {}
 
     public function respond(TwoFactorChallengePrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string

@@ -45,10 +45,13 @@ yourself.
 `{token}` is in the URL, and reaches the view as `PasswordResetPrompt::$token`).
 
 `POST identity.password.update` validates `token`, `email` (`required|email`), and `password`
-(`required`), then calls the broker's `reset`. Inside the broker callback the package:
+(`required|confirmed`), then calls the broker's `reset`. `confirmed` means the request must carry a
+matching `password_confirmation` field — the shipped reset page renders one, and without the rule a
+typo would silently commit the first value. It is the only password rule the package enforces;
+length, strength and history stay with your action. Inside the broker callback the package:
 
 1. Invokes your `resetUserPasswordsUsing` action with the user and full input (your action owns the
-   password rules and persistence).
+   remaining password rules and persistence).
 2. Rotates the user's remember token and saves.
 3. Fires `Illuminate\Auth\Events\PasswordReset`.
 4. Logs the user in on the `identity` guard.
