@@ -22,13 +22,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResetPasswordPage extends AuthPage implements PasswordResetView
 {
-    public function __construct(
-        private readonly ?PasswordResetPrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?PasswordResetPrompt $prompt = null,
     ) {}
 
     public function respond(PasswordResetPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string
@@ -38,7 +38,7 @@ class ResetPasswordPage extends AuthPage implements PasswordResetView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $prompt = $this->prompt ?? throw new LogicException(self::class.' rendered without its prompt; respond() must supply one before render() runs.');
+        $prompt = $this->prompt ?? throw new LogicException(static::class.' rendered without its prompt; respond() must supply one before render() runs.');
         $token = $prompt->token;
         $email = $prompt->email ?? '';
 

@@ -18,13 +18,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerifyEmailPage extends AuthPage implements EmailVerificationView
 {
-    public function __construct(
-        private readonly ?EmailVerificationPrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?EmailVerificationPrompt $prompt = null,
     ) {}
 
     public function respond(EmailVerificationPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string

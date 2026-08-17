@@ -19,9 +19,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
 {
+    /**
+     * `final` so `respond()` can construct `new static` without a subclass
+     * being able to widen the signature into required arguments.
+     */
+    final public function __construct() {}
+
     public function respond(Request $request): Responsable|Response
     {
-        return (new self)->toResponse($request);
+        return (new static)->toResponse($request);
     }
 
     public function title(): string

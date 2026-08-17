@@ -25,13 +25,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ForgotPasswordPage extends AuthPage implements PasswordResetRequestView
 {
-    public function __construct(
-        private readonly ?PasswordResetRequestPrompt $prompt = null,
+    final public function __construct(
+        protected readonly ?PasswordResetRequestPrompt $prompt = null,
     ) {}
 
     public function respond(PasswordResetRequestPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new self($prompt))->toResponse($request);
+        return (new static($prompt))->toResponse($request);
     }
 
     public function title(): string

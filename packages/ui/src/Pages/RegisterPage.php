@@ -25,9 +25,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RegisterPage extends AuthPage implements RegisterView
 {
+    /**
+     * `final` so `respond()` can construct `new static` without a subclass
+     * being able to widen the signature into required arguments.
+     */
+    final public function __construct() {}
+
     public function respond(Request $request): Responsable|Response
     {
-        return (new self)->toResponse($request);
+        return (new static)->toResponse($request);
     }
 
     public function title(): string

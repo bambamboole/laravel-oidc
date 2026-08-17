@@ -29,6 +29,34 @@ The OAuth consent page is not a special case — it is bound the same way, throu
 (see [Endpoints & discovery](/provider/endpoints/#consent-view-required)); rebind it identically,
 in your own provider.
 
+## Extending a shipped page
+
+Reimplementing a contract from scratch is the heavy option. When you only want to change part of
+a page, extend the one this package ships and bind the subclass to the same contract — the page
+that renders is your subclass, and `protected` members are the extension points:
+
+```php
+use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
+use Lattice\Form\Components\TextInput;
+
+final class DevLoginPage extends LoginPage
+{
+    #[\Override]
+    protected function emailField(): TextInput
+    {
+        return parent::emailField()->value('test@example.com');
+    }
+}
+
+// In your provider's register() or boot():
+$this->app->bind(LoginView::class, DevLoginPage::class);
+```
+
+The prompt is available as `$this->prompt` (nullable — it is only set once `respond()` has run,
+so `render()` is the earliest place it is safe to read). Page constructors are `final`: `respond()`
+builds the rendering instance itself, so a subclass cannot take constructor arguments. Resolve
+your own dependencies from the container inside `render()` instead.
+
 ## Overriding the `auth` layout
 
 `AuthLayout` is discovered, not bound in `UiServiceProvider::register()` — this package's
