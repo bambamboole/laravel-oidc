@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.17.1](https://github.com/bambamboole/laravel-oidc/compare/v0.17.0...v0.17.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* **ui:** carry the webauthn setup ceremony result into the wizard submit ([8439607](https://github.com/bambamboole/laravel-oidc/commit/843960720721644b01788470c34536daff5798e8))
+* **ui:** carry the webauthn setup ceremony result into the wizard submit ([3f827a6](https://github.com/bambamboole/laravel-oidc/commit/3f827a61060d60eb251cab0bada4bfc2400efe1b))
+
 ## [0.17.0](https://github.com/bambamboole/laravel-oidc/compare/v0.16.0...v0.17.0) (2026-08-19)
 
 
