@@ -190,7 +190,9 @@ class TwoFactorSetupForm extends FormDefinition
 
     /**
      * A ceremony submits both halves — the attestation the browser produced and
-     * the label the user typed while it was in flight.
+     * the label the user typed while it was in flight. The credential travels as
+     * a JSON string in a hidden input, because Inertia serializes the DOM on
+     * submit and a nested object cannot be mounted as one.
      *
      * @return array<string, mixed>
      */
@@ -202,9 +204,14 @@ class TwoFactorSetupForm extends FormDefinition
 
         $submitted = is_array($value) ? $value : [];
         $name = $submitted['name'] ?? null;
+        $credential = $submitted['credential'] ?? null;
+
+        if (is_string($credential)) {
+            $credential = json_decode($credential, true);
+        }
 
         return [
-            'credential' => is_array($submitted['credential'] ?? null) ? $submitted['credential'] : [],
+            'credential' => is_array($credential) ? $credential : [],
             'name' => is_string($name) ? $name : null,
         ];
     }

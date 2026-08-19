@@ -38,7 +38,7 @@ return [
         'device-name-help' => 'Nur für dich, damit du dieses Gerät später wiedererkennst.',
         'create' => 'Weiter',
         'creating' => 'Warte auf deinen Browser …',
-        'created' => 'Bereit — zum Hinzufügen abschließen.',
+        'created' => 'Bereit — klicke auf „Fertigstellen“, um die Methode hinzuzufügen.',
         'cancelled' => 'Abgebrochen, oder kein passendes Gerät hat geantwortet. Stelle sicher, dass dein Sicherheitsschlüssel eingesteckt ist, und versuche es erneut.',
         'already-registered' => 'Dieses Gerät ist bereits registriert.',
         'failed' => 'Das hat nicht funktioniert. Bitte versuche es erneut.',

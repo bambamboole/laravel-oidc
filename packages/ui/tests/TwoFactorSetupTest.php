@@ -1,9 +1,18 @@
 <?php
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Data\EnrollmentOption;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorRole;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorSetupKind;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorChallenge;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorVerification;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Lattice\Core\Support\Wire;
 use Lattice\Facades\Effects;
 use Lattice\Form\Components\Choice;
@@ -240,6 +249,76 @@ test('the host can point the wizard at its own recovery codes modal', function (
         static fn (OpenModal $effect): ?string => $effect->node->componentId(),
         array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
     ))->toBe(['host.custom-codes']);
+});
+
+test('a ceremony credential submitted as a JSON string reaches the provider decoded', function () {
+    $provider = new class implements EnrollableFactorProvider
+    {
+        /** @var array<string, mixed>|null */
+        public ?array $confirmedWith = null;
+
+        public function key(): string
+        {
+            return 'fake-ceremony';
+        }
+
+        public function isBackup(): bool
+        {
+            return false;
+        }
+
+        public function enrollmentOptions(): array
+        {
+            return [new EnrollmentOption('fake_ceremony', $this->key(), FactorRole::SecondFactorOnly, FactorSetupKind::Ceremony)];
+        }
+
+        public function enrollments(Authenticatable $user): array
+        {
+            return [new FactorEnrollment($this->key(), 'pending', 'Fake', null, null)];
+        }
+
+        public function beginEnrollment(Authenticatable $user, ?EnrollmentOption $option = null, ?string $name = null): FactorEnrollment
+        {
+            return $this->enrollments($user)[0];
+        }
+
+        public function confirmEnrollment(Authenticatable $user, FactorEnrollment $enrollment, array $input): bool
+        {
+            $this->confirmedWith = $input;
+
+            return true;
+        }
+
+        public function revoke(Authenticatable $user, FactorEnrollment $enrollment): void {}
+
+        public function beginChallenge(Authenticatable $user, FactorEnrollment $enrollment): FactorChallenge
+        {
+            return new FactorChallenge($enrollment);
+        }
+
+        public function verify(Authenticatable $user, FactorChallenge $challenge, array $input): FactorVerification
+        {
+            return new FactorVerification(false);
+        }
+    };
+    app(FactorRegistry::class)->register($provider);
+
+    // The browser's attestation is a nested object, which the client submits as
+    // a JSON string in a hidden input — Inertia serializes the DOM, and a nested
+    // object cannot be mounted as one.
+    $credential = ['id' => 'abc', 'response' => ['clientDataJSON' => 'payload']];
+
+    $this->actingAs(setupUser())
+        ->submitForm(TwoFactorSetupForm::class, [
+            'option' => 'fake_ceremony',
+            'setup' => [
+                'credential' => (string) json_encode($credential),
+                'name' => 'My key',
+            ],
+        ])
+        ->assertRedirect();
+
+    expect($provider->confirmedWith)->toBe(['credential' => $credential, 'name' => 'My key']);
 });
 
 test('an unknown enrollment option is rejected', function () {
