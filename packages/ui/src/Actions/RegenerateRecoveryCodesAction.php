@@ -5,6 +5,7 @@ namespace Bambamboole\LaravelOidc\Ui\Actions;
 
 use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
+use Bambamboole\LaravelOidc\Ui\Support\RecoveryCodesModal;
 use Illuminate\Http\Request;
 use Lattice\Actions\ActionDefinition;
 use Lattice\Actions\ActionResult;
@@ -41,6 +42,8 @@ class RegenerateRecoveryCodesAction extends ActionDefinition
 
         return ActionResult::success()
             ->toast(__('oidc-ui::security.recovery-codes.regenerated'), Variant::Success)
-            ->openModal((string) $this->context('modal', 'oidc.recovery-codes'));
+            ->openModal(RecoveryCodesModal::make(
+                (string) $this->context('modal', RecoveryCodesModal::DEFAULT_ID),
+            ));
     }
 }

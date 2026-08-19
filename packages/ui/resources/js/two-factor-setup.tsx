@@ -5,9 +5,8 @@ import { SimpleField } from "@lattice-php/form/components/fields/simple-field";
 import type { ControlledField } from "@lattice-php/form/hooks/use-controlled-field";
 import { useResolvedNode } from "@lattice-php/form/hooks/resolved-nodes";
 import { fieldProps } from "@lattice-php/form/lib/field-props";
-import { Button, Input, InputError, Label } from "@lattice-php/ui";
+import { Button, Input, InputError, InputOTP, Label } from "@lattice-php/ui";
 import { useT } from "@lattice-php/ui/i18n";
-import { InputOTP } from "@lattice-php/ui/input-otp";
 
 declare module "@lattice-php/core" {
     interface ComponentProps {

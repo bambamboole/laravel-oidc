@@ -11,6 +11,7 @@ use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Bambamboole\LaravelOidc\Ui\Fields\TwoFactorSetupField;
 use Bambamboole\LaravelOidc\Ui\Support\EnrollmentOptionLabels;
+use Bambamboole\LaravelOidc\Ui\Support\RecoveryCodesModal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -116,7 +117,9 @@ class TwoFactorSetupForm extends FormDefinition
         // Freshly generated recovery codes are shown once — right after the first
         // factor of any kind is confirmed.
         if ($this->policy->factorConfirmed($user)) {
-            $response = $response->openModal((string) $this->context('recovery_codes_modal', 'oidc.recovery-codes'));
+            $response = $response->openModal(RecoveryCodesModal::make(
+                (string) $this->context('recovery_codes_modal', RecoveryCodesModal::DEFAULT_ID),
+            ));
         }
 
         return $response->back();

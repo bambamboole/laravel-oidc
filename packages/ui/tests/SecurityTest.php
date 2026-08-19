@@ -52,10 +52,19 @@ test('the regenerate action opens the recovery codes modal', function () {
     app(TotpFactorProvider::class)->enroll($user);
     app(RecoveryCodeProvider::class)->generate($user);
 
-    $this->actingAs($user)
+    $response = $this->actingAs($user)
         ->callAction(RegenerateRecoveryCodesAction::class)
         ->assertSuccessful()
-        ->assertJsonFragment(['type' => 'open-modal', 'modal' => 'oidc.recovery-codes']);
+        ->assertOpensModal('oidc.recovery-codes');
+
+    // The effect carries the dialog itself, so the codes fragment rides along with
+    // it — a host composes nothing for this to render.
+    /** @var array<int, array<string, mixed>> $effects */
+    $effects = $response->json('effects');
+    $modal = collect($effects)->firstWhere('type', 'open-modal');
+
+    expect($modal['props']['node']['schema'][0])
+        ->toMatchArray(['type' => 'fragment', 'id' => 'oidc.recovery-codes']);
 });
 
 test('the methods table lists confirmed enrollments across providers with their role', function () {
