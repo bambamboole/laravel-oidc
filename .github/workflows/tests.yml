@@ -126,7 +126,7 @@ jobs:
           php -r '
           require "vendor/autoload.php";
           $version = Composer\InstalledVersions::getVersion("lattice-php/lattice");
-          if ($version === null || version_compare($version, "0.48.0", "<")) {
+          if ($version === null || version_compare($version, "0.57.0", "<")) {
               fwrite(STDERR, "lattice-php/lattice version too low: ".var_export($version, true)."\n");
               exit(1);
           }

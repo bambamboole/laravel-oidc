@@ -63,11 +63,13 @@ translations.
   carries `oidc.two-factor.regenerate-recovery-codes`.
 - **Turning two-factor off** is revoking the last challengeable enrollment. `EnrollmentPolicy`
   clears the recovery codes at that point, so the backup never outlives what it backs up.
-- **`oidc.recovery-codes`** renders the unused recovery codes (copyable). It is opened
-  automatically — once, when confirming the first factor backfills codes, and by
-  `oidc.two-factor.regenerate-recovery-codes` — so compose a `Modal` with that id. Both ids
-  are context-overridable (`recovery_codes_modal` on the setup form, `modal` on the
-  regenerate action).
+- **`oidc.recovery-codes`** renders the unused recovery codes (copyable). It is shown
+  automatically — once, when confirming the first factor backfills codes, and again by
+  `oidc.two-factor.regenerate-recovery-codes`. Both surfaces ship the dialog with the
+  open-modal effect (`Support\RecoveryCodesModal`), so there is nothing for you to compose;
+  render the fragment yourself only if you want the codes somewhere else. The dialog's id
+  stays context-overridable (`recovery_codes_modal` on the setup form, `modal` on the
+  regenerate action) for hosts that address or close it themselves.
 - **`oidc.send-verification-email`** is a no-op toast (`already-verified`) when the user's
   email is already verified.
 
@@ -75,28 +77,23 @@ translations.
 
 ```php
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
-use Bambamboole\LaravelOidc\Ui\Fragments\RecoveryCodesFragment;
 use Bambamboole\LaravelOidc\Ui\Tables\TwoFactorMethodsTable;
 use Lattice\Form\Components\Form;
-use Lattice\Fragments\Components\Fragment;
 use Lattice\Table\Components\Table;
 use Lattice\Ui\Components\Button;
 use Lattice\Ui\Components\Modal;
 use Lattice\Ui\Components\Stack;
-use Lattice\Ui\Effects\Builtin\OpenModal;
 
 Stack::make('two-factor')->schema([
     Table::lazy(TwoFactorMethodsTable::class),
-    Button::make('Add method')->effects(new OpenModal('oidc.two-factor-setup')),
+    Button::make('Add method')->modal(
+        Modal::make('oidc.two-factor-setup')
+            ->title('Add a two-factor method')
+            ->schema([Form::use(TwoFactorSetupForm::class)]),
+    ),
 ]);
-
-Modal::make('oidc.two-factor-setup')
-    ->schema([Form::use(TwoFactorSetupForm::class)]);
-
-Modal::make('oidc.recovery-codes')
-    ->schema([Fragment::lazy(RecoveryCodesFragment::class)]);
 ```
 
-The setup modal's id is yours to choose — the button opens it — but `oidc.recovery-codes`
-must match what the form opens, or pass your own id as the form's `recovery_codes_modal`
-context.
+The setup modal is yours: the button carries it, so its id and chrome are your choice. The
+recovery-codes dialog needs no counterpart here — the form and the regenerate action both
+ship it with the effect that opens it.

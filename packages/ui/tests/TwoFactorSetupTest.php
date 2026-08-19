@@ -159,7 +159,7 @@ test('finishing the wizard confirms the factor and shows the fresh recovery code
         ->assertRedirect();
 
     $openedModals = array_map(
-        static fn (OpenModal $effect): string => $effect->modal,
+        static fn (OpenModal $effect): ?string => $effect->node->componentId(),
         array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
     );
 
@@ -237,7 +237,7 @@ test('the host can point the wizard at its own recovery codes modal', function (
     ], $context)->assertRedirect();
 
     expect(array_map(
-        static fn (OpenModal $effect): string => $effect->modal,
+        static fn (OpenModal $effect): ?string => $effect->node->componentId(),
         array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
     ))->toBe(['host.custom-codes']);
 });

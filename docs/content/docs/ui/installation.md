@@ -11,7 +11,7 @@ two-factor challenge, and OAuth consent, rendered as Lattice pages instead of Bl
 
 - PHP `^8.4`
 - `bambamboole/laravel-oidc-server` `^0.7` — the OIDC provider this UI renders views for
-- `laravel/passport` `^13.4`, `laravel/passkeys` `^0.2`, `lattice-php/lattice` `^0.26`
+- `laravel/passport` `^13.4`, `laravel/passkeys` `^0.2`, `lattice-php/lattice` `>=0.57`
 
 ## Install
 
