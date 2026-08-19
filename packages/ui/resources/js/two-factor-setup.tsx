@@ -130,7 +130,8 @@ function CeremonySetup({
 
     // The value carries both halves: the attestation the browser produced and the
     // label the user typed for it, which cannot have been known when the server
-    // began the ceremony.
+    // began the ceremony. The store commit drives resolves and precognition; the
+    // hidden inputs below are what the submit actually serializes.
     useEffect(() => {
         field.commit(credential === null ? "" : { credential, name });
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,9 +191,21 @@ function CeremonySetup({
                         : t("security.setup.create", "Continue")}
                 </Button>
             ) : (
-                <p className="text-sm" data-test={`${field.testId}-ready`}>
-                    {t("security.setup.created", "Ready — finish to add it.")}
-                </p>
+                <>
+                    <p className="text-sm" data-test={`${field.testId}-ready`}>
+                        {t("security.setup.created", "Ready — finish to add it.")}
+                    </p>
+                    {/* Inertia serializes the live DOM on submit, so the ceremony's
+                        result must be mounted as inputs — the store commit above never
+                        reaches the wire. Mounted only once a credential exists, so the
+                        server's `required` rule still gates an unfinished ceremony. */}
+                    <input
+                        name={`${field.name}[credential]`}
+                        type="hidden"
+                        value={JSON.stringify(credential)}
+                    />
+                    <input name={`${field.name}[name]`} type="hidden" value={name} />
+                </>
             )}
 
             {error !== null && <InputError message={error} />}
