@@ -1,11 +1,12 @@
 import { browserSupportsWebAuthn, startRegistration } from "@simplewebauthn/browser";
 import { useEffect, useState } from "react";
 import type { RendererComponent } from "@lattice-php/core";
-import { SimpleField } from "@lattice-php/form/components/fields/simple-field";
+import { SimpleField } from "@lattice-php/form/components/base/simple-field";
 import type { ControlledField } from "@lattice-php/form/hooks/use-controlled-field";
 import { useResolvedNode } from "@lattice-php/form/hooks/resolved-nodes";
 import { fieldProps } from "@lattice-php/form/lib/field-props";
-import { Button, Input, InputError, InputOTP, Label } from "@lattice-php/ui";
+import { Input, InputError, InputOTP, Label } from "@lattice-php/form";
+import { Button } from "@lattice-php/ui";
 import { useT } from "@lattice-php/ui/i18n";
 
 declare module "@lattice-php/core" {
