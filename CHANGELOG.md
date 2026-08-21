@@ -5,6 +5,13 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.17.2](https://github.com/bambamboole/laravel-oidc/compare/v0.17.1...v0.17.2) (2026-08-21)
+
+
+### Bug Fixes
+
+* **ui:** import form controls from @lattice-php/form for lattice 0.62 ([a6c85cf](https://github.com/bambamboole/laravel-oidc/commit/a6c85cfc5c6d2384e54223f5050eba312992f297))
+
 ## [0.17.1](https://github.com/bambamboole/laravel-oidc/compare/v0.17.0...v0.17.1) (2026-08-19)
 
 
