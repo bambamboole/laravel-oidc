@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.17.3](https://github.com/bambamboole/laravel-oidc/compare/v0.17.2...v0.17.3) (2026-08-29)
+
+
+### Bug Fixes
+
+* **ui:** carry the reset token as the hidden field value ([dd66905](https://github.com/bambamboole/laravel-oidc/commit/dd669058ea380d16a0888b257634fd8a690e66aa))
+* **ui:** carry the reset token as the hidden field value ([fa527d3](https://github.com/bambamboole/laravel-oidc/commit/fa527d3105f40cb928517eb7761f3e90cc2e34d3))
+
 ## [0.17.2](https://github.com/bambamboole/laravel-oidc/compare/v0.17.1...v0.17.2) (2026-08-21)
 
 
