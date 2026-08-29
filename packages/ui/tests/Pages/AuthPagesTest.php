@@ -222,7 +222,8 @@ it('threads the prompt status through the forgot-password form', function () {
 it('prefills the reset-password form with the prompt token and email', function () {
     $content = renderPage(new ResetPasswordPage(new PasswordResetPrompt(token: 'reset-token-123', email: 'reset-user@example.com')));
 
-    expect($content)->toContain('reset-token-123')
+    expect($content)->toContain('"name":"token"')
+        ->and($content)->toContain('"value":"reset-token-123"')
         ->and($content)->toContain('reset-user@example.com');
 });
 

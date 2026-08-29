@@ -62,7 +62,7 @@ class ResetPasswordPage extends AuthPage implements PasswordResetView
             Grid::make('reset-password-fields')
                 ->columns(1)
                 ->schema([
-                    HiddenInput::make('token', $token),
+                    HiddenInput::make('token')->value($token),
                     TextInput::make('email', __('oidc-ui::common.field.email-address'))
                         ->email()
                         ->autoComplete('email')
