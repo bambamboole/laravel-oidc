@@ -222,7 +222,13 @@ it('threads the prompt status through the forgot-password form', function () {
 it('prefills the reset-password form with the prompt token and email', function () {
     $content = renderPage(new ResetPasswordPage(new PasswordResetPrompt(token: 'reset-token-123', email: 'reset-user@example.com')));
 
-    expect($content)->toContain('reset-token-123')
+    $hiddenToken = collect(json_decode($content, true)['props']['lattice']['schema'])
+        ->flatMap(fn (array $node): array => $node['schema'] ?? [])
+        ->flatMap(fn (array $node): array => $node['schema'] ?? [])
+        ->firstWhere('type', 'field.hidden-input');
+
+    expect($hiddenToken['props']['name'])->toBe('token')
+        ->and($hiddenToken['props']['value'])->toBe('reset-token-123')
         ->and($content)->toContain('reset-user@example.com');
 });
 
