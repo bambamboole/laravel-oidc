@@ -70,21 +70,25 @@
         "install:all": [
             "@composer --working-dir=packages/server install",
             "@composer --working-dir=packages/client install",
+            "@composer --working-dir=packages/mautic install",
             "@install:ui"
         ],
         "install:ui": "cp packages/ui/composer.json packages/ui/composer.json.bak && composer --working-dir=packages/ui config repositories.server \"$(php -r 'echo json_encode([\"type\" => \"path\", \"url\" => \"../server\", \"options\" => [\"symlink\" => true, \"versions\" => [\"bambamboole/laravel-oidc-server\" => json_decode(file_get_contents(\".release-please-manifest.json\"), true)[\".\"]]]]);')\" && composer --working-dir=packages/ui install; rc=$?; mv packages/ui/composer.json.bak packages/ui/composer.json; exit $rc",
         "check": [
             "@check:server",
             "@check:client",
-            "@check:ui"
+            "@check:ui",
+            "@check:mautic"
         ],
         "check:server": "@composer --working-dir=packages/server check",
         "check:client": "@composer --working-dir=packages/client check",
         "check:ui": "@composer --working-dir=packages/ui check",
+        "check:mautic": "@composer --working-dir=packages/mautic check",
         "test": [
             "@composer --working-dir=packages/server test",
             "@composer --working-dir=packages/client test",
-            "@composer --working-dir=packages/ui test"
+            "@composer --working-dir=packages/ui test",
+            "@composer --working-dir=packages/mautic test"
         ]
     },
     "config": {
