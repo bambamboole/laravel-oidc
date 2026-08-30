@@ -5,6 +5,19 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.18.0](https://github.com/bambamboole/laravel-oidc/compare/v0.17.3...v0.18.0) (2026-08-30)
+
+
+### Features
+
+* **mautic:** add OpenID Connect login plugin for Mautic ([d8959fb](https://github.com/bambamboole/laravel-oidc/commit/d8959fb54c7e5a99c5d7420dea8b416bb2ad1cb0))
+* **mautic:** add OpenID Connect login plugin for Mautic ([29da144](https://github.com/bambamboole/laravel-oidc/commit/29da1440755c737b925192835627429ff49f1456))
+
+
+### Bug Fixes
+
+* **mautic:** keep value objects out of the service container ([8186bf8](https://github.com/bambamboole/laravel-oidc/commit/8186bf8a645cf49c7ac5147eb5270529e005480a))
+
 ## [0.17.3](https://github.com/bambamboole/laravel-oidc/compare/v0.17.2...v0.17.3) (2026-08-29)
 
 
