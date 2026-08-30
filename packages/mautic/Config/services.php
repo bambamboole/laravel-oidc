@@ -14,7 +14,7 @@ return function (ContainerConfigurator $configurator): void {
         ->public();
 
     $services->load('MauticPlugin\\LaravelOidcBundle\\', '../')
-        ->exclude('../{'.implode(',', MauticCoreExtension::DEFAULT_EXCLUDES).'}');
+        ->exclude('../{'.implode(',', [...MauticCoreExtension::DEFAULT_EXCLUDES, 'Claims', 'Discovery', 'Security', 'User']).'}');
 
     $services->alias('mautic.integration.laraveloidc', LaravelOidcIntegration::class);
 };
