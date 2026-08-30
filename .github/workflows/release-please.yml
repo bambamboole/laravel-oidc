@@ -49,6 +49,8 @@ jobs:
             split_repository: laravel-oidc-client
           - local_path: ui
             split_repository: laravel-oidc-ui
+          - local_path: mautic
+            split_repository: laravel-oidc-mautic
     name: Split ${{ matrix.package.split_repository }}
     steps:
       - name: Checkout code

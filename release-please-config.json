@@ -18,6 +18,10 @@
           "type": "json",
           "path": "packages/ui/composer.json",
           "jsonpath": "$.require['bambamboole/laravel-oidc-server']"
+        },
+        {
+          "type": "generic",
+          "path": "packages/mautic/Config/config.php"
         }
       ]
     }
