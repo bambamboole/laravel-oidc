@@ -96,6 +96,22 @@ final class OidcBearerTokenStorageTest extends TestCase
         self::assertNull($storage->getAccessToken($this->idp->accessToken(['client_id' => 'artisan-os'])));
     }
 
+    public function test_it_enforces_the_configured_audience(): void
+    {
+        $parameters = [
+            'oidc_api_user_email' => 'api@example.com',
+            'oidc_api_allowed_client_ids' => ['artisan-os'],
+            'oidc_api_audience' => 'https://mail.test',
+        ];
+        $this->userProvider->method('loadUserByIdentifier')->willReturn($this->apiUser);
+
+        $bound = $this->idp->accessToken(['client_id' => 'artisan-os', 'aud' => ['https://mail.test']]);
+        self::assertInstanceOf(AccessToken::class, $this->storage($parameters)->getAccessToken($bound));
+
+        $unbound = $this->idp->accessToken(['client_id' => 'artisan-os']);
+        self::assertNull($this->storage($parameters)->getAccessToken($unbound));
+    }
+
     public function test_it_ignores_opaque_tokens_that_are_not_jwts(): void
     {
         $this->integrationHelper->expects(self::never())->method('getIntegrationObject');

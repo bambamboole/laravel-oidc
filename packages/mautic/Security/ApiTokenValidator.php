@@ -16,14 +16,15 @@ final class ApiTokenValidator
     /**
      * Validates an RFC 9068 access token issued by the configured provider and
      * returns its claims. Only RS256 is accepted — pinning the algorithm to
-     * what the JWKS can prove defuses alg-substitution tokens.
+     * what the JWKS can prove defuses alg-substitution tokens. When an
+     * expected audience is given, the token's `aud` claim must contain it.
      *
      * @param  list<string>  $allowedClientIds
      * @return array<string, mixed>
      *
      * @throws AuthenticationException when the token is not valid
      */
-    public function validate(string $token, ProviderMetadata $metadata, array $allowedClientIds): array
+    public function validate(string $token, ProviderMetadata $metadata, array $allowedClientIds, ?string $expectedAudience = null): array
     {
         if ($allowedClientIds === []) {
             throw new AuthenticationException('No API client is allowed.');
@@ -84,6 +85,15 @@ final class ApiTokenValidator
 
         if (! is_string($clientId) || ! in_array($clientId, $allowedClientIds, true)) {
             throw new AuthenticationException('The API token client is not allowed.');
+        }
+
+        if ($expectedAudience !== null && $expectedAudience !== '') {
+            $audience = $claims['aud'] ?? [];
+            $audience = array_filter(is_array($audience) ? $audience : [$audience], is_string(...));
+
+            if (! in_array($expectedAudience, $audience, true)) {
+                throw new AuthenticationException('The API token is not intended for this audience.');
+            }
         }
 
         return $claims;

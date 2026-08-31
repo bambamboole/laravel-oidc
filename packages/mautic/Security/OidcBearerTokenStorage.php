@@ -72,11 +72,14 @@ class OidcBearerTokenStorage extends OAuthStorage
             return null;
         }
 
+        $audience = $this->coreParametersHelper->get('oidc_api_audience');
+        $audience = is_string($audience) && trim($audience) !== '' ? trim($audience) : null;
+
         try {
             $httpClient = $this->httpClient ??= new HttpClient;
             $metadata = (new MetadataResolver($httpClient, $this->cacheStorageHelper))->resolve($issuer);
             $claims = (new ApiTokenValidator(new JwksKeySet($httpClient, $this->cacheStorageHelper)))
-                ->validate($token, $metadata, $allowedClientIds);
+                ->validate($token, $metadata, $allowedClientIds, $audience);
             $user = $this->userProvider->loadUserByIdentifier(trim($apiUserEmail));
         } catch (AuthenticationException) {
             return null;

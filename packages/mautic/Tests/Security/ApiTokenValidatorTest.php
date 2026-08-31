@@ -110,6 +110,49 @@ final class ApiTokenValidatorTest extends TestCase
         $this->validator()->validate($token, $this->metadata(), ['test-client']);
     }
 
+    public function test_it_accepts_a_token_whose_audience_contains_the_expected_one(): void
+    {
+        $token = $this->idp->accessToken(['aud' => ['https://mail.test', 'other'], 'client_id' => 'test-client']);
+
+        $claims = $this->validator()->validate($token, $this->metadata(), ['test-client'], 'https://mail.test');
+
+        self::assertSame(['https://mail.test', 'other'], $claims['aud']);
+    }
+
+    public function test_it_accepts_a_string_audience_claim(): void
+    {
+        $token = $this->idp->accessToken(['aud' => 'https://mail.test']);
+
+        $claims = $this->validator()->validate($token, $this->metadata(), ['test-client'], 'https://mail.test');
+
+        self::assertSame('https://mail.test', $claims['aud']);
+    }
+
+    public function test_it_rejects_a_token_for_another_audience(): void
+    {
+        $token = $this->idp->accessToken(['aud' => ['https://somewhere-else.test']]);
+
+        $this->expectException(AuthenticationException::class);
+        $this->expectExceptionMessage('audience');
+
+        $this->validator()->validate($token, $this->metadata(), ['test-client'], 'https://mail.test');
+    }
+
+    public function test_it_rejects_a_token_without_audience_when_one_is_expected(): void
+    {
+        $this->expectException(AuthenticationException::class);
+        $this->expectExceptionMessage('audience');
+
+        $this->validator()->validate($this->idp->accessToken(), $this->metadata(), ['test-client'], 'https://mail.test');
+    }
+
+    public function test_it_ignores_the_audience_while_none_is_configured(): void
+    {
+        $claims = $this->validator()->validate($this->idp->accessToken(), $this->metadata(), ['test-client'], null);
+
+        self::assertSame('test-client', $claims['client_id']);
+    }
+
     public function test_it_rejects_a_token_that_is_not_a_jwt(): void
     {
         $this->expectException(AuthenticationException::class);
