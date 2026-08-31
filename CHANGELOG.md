@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.20.0](https://github.com/bambamboole/laravel-oidc/compare/v0.19.0...v0.20.0) (2026-08-31)
+
+
+### Features
+
+* **client:** mint machine tokens through the ApiTokenBroker ([13f59c7](https://github.com/bambamboole/laravel-oidc/commit/13f59c7a6002bc7c12637dc0dd8f3f7d3eb4fd0c))
+* **client:** mint machine tokens through the ApiTokenBroker ([df0a96b](https://github.com/bambamboole/laravel-oidc/commit/df0a96bfbdd52d0c4b90f7786d83243c84612665))
+
 ## [0.19.0](https://github.com/bambamboole/laravel-oidc/compare/v0.18.0...v0.19.0) (2026-08-31)
 
 
