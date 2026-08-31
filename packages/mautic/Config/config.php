@@ -18,5 +18,7 @@ return [
         'oidc_required_claims' => [],
         'oidc_role_claim' => null,
         'oidc_role_mapping' => [],
+        'oidc_api_user_email' => null,
+        'oidc_api_allowed_client_ids' => [],
     ],
 ];
