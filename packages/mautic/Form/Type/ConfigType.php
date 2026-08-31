@@ -27,6 +27,8 @@ class ConfigType extends AbstractType
         $this->addLines($builder, 'oidc_required_claims', 'plugin.laraveloidc.config.required_claims', 'plugin.laraveloidc.config.required_claims.tooltip');
         $this->addText($builder, 'oidc_role_claim', 'plugin.laraveloidc.config.role_claim', 'plugin.laraveloidc.config.role_claim.tooltip', required: false);
         $this->addLines($builder, 'oidc_role_mapping', 'plugin.laraveloidc.config.role_mapping', 'plugin.laraveloidc.config.role_mapping.tooltip');
+        $this->addText($builder, 'oidc_api_user_email', 'plugin.laraveloidc.config.api_user_email', 'plugin.laraveloidc.config.api_user_email.tooltip', required: false);
+        $this->addLines($builder, 'oidc_api_allowed_client_ids', 'plugin.laraveloidc.config.api_allowed_client_ids', 'plugin.laraveloidc.config.api_allowed_client_ids.tooltip');
     }
 
     public function getBlockPrefix(): string

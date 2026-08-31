@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LaravelOidcBundle\Tests\EventListener;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
@@ -12,10 +16,12 @@ use Mautic\UserBundle\Security\Provider\UserProvider;
 use Mautic\UserBundle\UserEvents;
 use MauticPlugin\LaravelOidcBundle\EventListener\UserSubscriber;
 use MauticPlugin\LaravelOidcBundle\Integration\LaravelOidcIntegration;
+use MauticPlugin\LaravelOidcBundle\Tests\Support\TestIdp;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 final class UserSubscriberTest extends TestCase
 {
@@ -77,13 +83,92 @@ final class UserSubscriberTest extends TestCase
         self::assertNull($event->getResponse());
     }
 
-    private function event(bool $isLoginCheck, string $service = LaravelOidcIntegration::NAME): AuthenticationEvent
+    public function test_it_authenticates_an_api_request_with_a_valid_provider_token(): void
+    {
+        $idp = TestIdp::make();
+        $subscriber = $this->apiSubscriber($idp, [
+            'oidc_api_user_email' => 'api@example.com',
+            'oidc_api_allowed_client_ids' => ['artisan-os'],
+        ]);
+
+        $apiUser = (new User)->setUsername('api@example.com');
+        $this->integration->method('getDecryptedApiKeys')->willReturn(['issuer' => $idp->issuer]);
+        $this->userProvider->method('loadUserByIdentifier')->with('api@example.com')->willReturn($apiUser);
+        $this->userProvider->expects(self::never())->method('saveUser');
+
+        $event = $this->event(isLoginCheck: false, service: '', request: $this->apiRequest($idp->accessToken(['client_id' => 'artisan-os'])));
+
+        $subscriber->onUserAuthentication($event);
+
+        self::assertTrue($event->isAuthenticated());
+        self::assertSame($apiUser, $event->getUser());
+    }
+
+    public function test_it_rejects_an_api_token_from_a_client_that_is_not_allowed(): void
+    {
+        $idp = TestIdp::make();
+        $subscriber = $this->apiSubscriber($idp, [
+            'oidc_api_user_email' => 'api@example.com',
+            'oidc_api_allowed_client_ids' => ['artisan-os'],
+        ]);
+
+        $this->integration->method('getDecryptedApiKeys')->willReturn(['issuer' => $idp->issuer]);
+
+        $event = $this->event(isLoginCheck: false, service: '', request: $this->apiRequest($idp->accessToken(['client_id' => 'stranger'])));
+
+        $this->expectException(AuthenticationException::class);
+
+        $subscriber->onUserAuthentication($event);
+    }
+
+    public function test_it_leaves_an_api_request_alone_while_api_auth_is_not_configured(): void
+    {
+        $idp = TestIdp::make();
+        $subscriber = $this->apiSubscriber($idp, [
+            'oidc_api_user_email' => null,
+            'oidc_api_allowed_client_ids' => [],
+        ]);
+
+        $event = $this->event(isLoginCheck: false, service: '', request: $this->apiRequest($idp->accessToken()));
+
+        $subscriber->onUserAuthentication($event);
+
+        self::assertFalse($event->isAuthenticated());
+    }
+
+    /**
+     * @param  array<string, mixed>  $parameters
+     */
+    private function apiSubscriber(TestIdp $idp, array $parameters): UserSubscriber
+    {
+        $parametersHelper = $this->createMock(CoreParametersHelper::class);
+        $parametersHelper->method('get')->willReturnCallback(
+            static fn (string $name): mixed => $parameters[$name] ?? null,
+        );
+
+        $mock = new MockHandler([
+            new Response(200, [], json_encode($idp->discoveryDocument(), JSON_THROW_ON_ERROR)),
+            new Response(200, [], json_encode($idp->jwksDocument(), JSON_THROW_ON_ERROR)),
+        ]);
+
+        return new UserSubscriber($parametersHelper, null, new Client(['handler' => HandlerStack::create($mock)]));
+    }
+
+    private function apiRequest(string $token): Request
+    {
+        $request = new Request;
+        $request->headers->set(UserSubscriber::API_TOKEN_HEADER, $token);
+
+        return $request;
+    }
+
+    private function event(bool $isLoginCheck, string $service = LaravelOidcIntegration::NAME, ?Request $request = null): AuthenticationEvent
     {
         return new AuthenticationEvent(
             null,
             new PluginToken('main', $service),
             $this->userProvider,
-            new Request,
+            $request ?? new Request,
             $isLoginCheck,
             $service,
             [LaravelOidcIntegration::NAME => $this->integration],
