@@ -6,7 +6,9 @@ namespace Bambamboole\LaravelOidc\Client;
 
 use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
+use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Http\Client\Factory as Http;
+use SensitiveParameter;
 
 class ApiTokenBroker
 {
@@ -19,6 +21,7 @@ class ApiTokenBroker
     public function __construct(
         private readonly OidcDiscovery $discovery,
         private readonly Http $http,
+        private readonly Cache $cache,
     ) {}
 
     /**
@@ -51,9 +54,81 @@ class ApiTokenBroker
         return new ExchangedToken($issued['access_token'], $issued['expires_at']);
     }
 
+    /**
+     * Machine token for server-to-server calls: a client_credentials grant
+     * that needs no login session, so it also works in queue workers and
+     * commands. An audience becomes the RFC 8707 `resource` parameter (the
+     * client's allowed audience list on the provider governs it); client
+     * credentials default to this app's own oidc-client configuration.
+     *
+     * @param  list<string>|null  $scopes
+     */
+    public function machineToken(?string $audience = null, ?array $scopes = null, ?string $clientId = null, #[SensitiveParameter] ?string $clientSecret = null): string
+    {
+        return $this->machineExchangedToken($audience, $scopes, $clientId, $clientSecret)->accessToken;
+    }
+
+    /**
+     * @param  list<string>|null  $scopes
+     */
+    public function machineExchangedToken(?string $audience = null, ?array $scopes = null, ?string $clientId = null, #[SensitiveParameter] ?string $clientSecret = null): ExchangedToken
+    {
+        $scopes = $scopes === [] ? null : $scopes;
+        $clientId ??= (string) config('oidc-client.client_id');
+        $clientSecret ??= (string) config('oidc-client.client_secret');
+        $key = 'oidc-client:machine:'.$this->cacheKey($audience ?? '', ['client_id' => $clientId], $scopes);
+        $cached = $this->cache->get($key);
+
+        if (is_array($cached) && is_string($cached['access_token'] ?? null) && (int) ($cached['expires_at'] ?? 0) > time() + self::EXPIRY_SKEW) {
+            return new ExchangedToken($cached['access_token'], (int) $cached['expires_at']);
+        }
+
+        $issued = $this->clientCredentials($clientId, $clientSecret, $audience, $scopes);
+        $ttl = max($issued['expires_at'] - time() - self::EXPIRY_SKEW, 0);
+        $this->cache->put($key, $issued, $ttl);
+
+        return new ExchangedToken($issued['access_token'], $issued['expires_at']);
+    }
+
     public function forget(): void
     {
         session()->forget('oidc-client.exchanged');
+    }
+
+    /**
+     * @param  list<string>|null  $scopes
+     * @return array{access_token: string, expires_at: int}
+     */
+    private function clientCredentials(string $clientId, #[SensitiveParameter] string $clientSecret, ?string $audience, ?array $scopes): array
+    {
+        $payload = [
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+        ];
+
+        if ($audience !== null && $audience !== '') {
+            $payload['resource'] = $audience;
+        }
+
+        if ($scopes !== null && $scopes !== []) {
+            $payload['scope'] = implode(' ', $scopes);
+        }
+
+        $response = $this->http->asForm()->post($this->discovery->metadata()->tokenEndpoint, $payload);
+
+        $accessToken = $response->json('access_token');
+
+        if ($response->failed() || ! is_string($accessToken) || $accessToken === '') {
+            throw new OidcClientException('The token endpoint rejected the client-credentials request.');
+        }
+
+        $expiresIn = is_numeric($response->json('expires_in')) ? (int) $response->json('expires_in') : 60;
+
+        return [
+            'access_token' => $accessToken,
+            'expires_at' => time() + $expiresIn,
+        ];
     }
 
     private function subjectToken(): string

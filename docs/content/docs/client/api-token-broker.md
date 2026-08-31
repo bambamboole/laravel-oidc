@@ -59,6 +59,25 @@ it is missing or within 30 seconds of expiry, it is transparently refreshed via 
 provider's refresh response omits `refresh_token` or `id_token`, the previous values are kept
 rather than dropped.
 
+## Machine tokens
+
+```php
+$token = app(ApiTokenBroker::class)->machineToken(audience: 'https://mail.example.com');
+```
+
+`machineToken(?string $audience = null, ?array $scopes = null, ?string $clientId = null, ?string $clientSecret = null): string`
+mints a token via the `client_credentials` grant — no login session involved, so it also works in
+queue workers and scheduled commands. The client credentials default to this app's own
+`oidc-client.client_id`/`client_secret`; pass both explicitly to act as a dedicated
+machine client. An `$audience` is sent as the RFC 8707 `resource` parameter and must be on the
+requesting client's `allowed_exchange_audiences` list at the provider, or the request is rejected
+with `invalid_target`. Without an audience the provider defaults the token's `aud` to the client
+itself.
+
+Results are cached in the application cache (not the session) per client, audience, and scope
+set, and reused until 30 seconds before expiry. `machineExchangedToken()` takes the same
+arguments and returns the `ExchangedToken` value object when the caller needs the expiry.
+
 ## Forgetting cached tokens
 
 ```php
