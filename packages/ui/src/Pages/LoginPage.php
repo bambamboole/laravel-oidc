@@ -9,6 +9,7 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Lattice\Form\Components\Checkbox;
 use Lattice\Form\Components\Form;
 use Lattice\Form\Components\PasswordInput;
@@ -68,7 +69,7 @@ class LoginPage extends AuthPage implements LoginView
 
         $password = $this->passwordInput();
 
-        return [
+        $schema = [
             Grid::make('login-fields')
                 ->columns(1)
                 ->schema([
@@ -77,7 +78,12 @@ class LoginPage extends AuthPage implements LoginView
                     Checkbox::make('remember', __('oidc-ui::auth.login.remember')),
                 ]),
             Button::make(__('oidc-ui::common.action.log-in'))->submit(),
-            Stack::make('login-register-prompt')
+        ];
+
+        // A host application can disable the register handler; the sign-up
+        // prompt would then link to a route that does not exist.
+        if (Route::has('identity.register')) {
+            $schema[] = Stack::make('login-register-prompt')
                 ->align(Align::Center)
                 ->direction(StackDirection::Row)
                 ->gap(Gap::ExtraSmall)
@@ -85,8 +91,10 @@ class LoginPage extends AuthPage implements LoginView
                     Text::make(__('oidc-ui::auth.login.no-account')),
                     Link::make(__('oidc-ui::auth.login.sign-up'))
                         ->href(route('identity.register', absolute: false)),
-                ]),
-        ];
+                ]);
+        }
+
+        return $schema;
     }
 
     protected function emailField(): TextInput

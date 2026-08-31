@@ -104,6 +104,16 @@ it('renders the login page without passkeys when the passkey handlers are disabl
     expect(renderPage(new LoginPage))->not->toContain('passkey-verify');
 });
 
+it('offers the sign-up prompt on the login page when the register handler is registered', function () {
+    expect(renderPage(new LoginPage))->toContain(__('oidc-ui::auth.login.sign-up'));
+});
+
+it('renders the login page without the sign-up prompt when the register handler is disabled', function () {
+    withDisabledHandlers([Handler::Register, Handler::RegisterStore]);
+
+    expect(renderPage(new LoginPage))->not->toContain(__('oidc-ui::auth.login.sign-up'));
+});
+
 it('renders the confirm-password page without passkeys when the passkey handlers are disabled', function () {
     withDisabledHandlers([Handler::PasskeyConfirmOptions, Handler::PasskeyConfirm]);
 
