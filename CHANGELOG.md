@@ -5,6 +5,22 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.19.0](https://github.com/bambamboole/laravel-oidc/compare/v0.18.0...v0.19.0) (2026-08-31)
+
+
+### Features
+
+* **mautic:** authenticate API requests with issuer-signed Bearer tokens ([2c9fd4d](https://github.com/bambamboole/laravel-oidc/commit/2c9fd4dece4be904bba4bdbef36bb0b743840685))
+* **mautic:** authenticate API requests with issuer-signed Bearer tokens ([b8aadbe](https://github.com/bambamboole/laravel-oidc/commit/b8aadbe786c7e3cc2c31b1c646897084b461384b))
+* **mautic:** optionally enforce an expected audience on API tokens ([c3c4342](https://github.com/bambamboole/laravel-oidc/commit/c3c43421309cac661e883014f6b84a2971ff7bf2))
+* **server:** bind client-credentials tokens to requested resources (RFC 8707) ([5840ac1](https://github.com/bambamboole/laravel-oidc/commit/5840ac1c63f65638e00b60e526ff64a44cbd52ba))
+
+
+### Bug Fixes
+
+* **ui:** omit the login page sign-up prompt when the register handler is disabled ([6275158](https://github.com/bambamboole/laravel-oidc/commit/6275158d6d9edccc67555390c8f31f43fce0cb18))
+* **ui:** omit the login page sign-up prompt when the register handler is disabled ([fed05f9](https://github.com/bambamboole/laravel-oidc/commit/fed05f9af7f052d4ecdc38a8eddc280c7d801248))
+
 ## [0.18.0](https://github.com/bambamboole/laravel-oidc/compare/v0.17.3...v0.18.0) (2026-08-30)
 
 
