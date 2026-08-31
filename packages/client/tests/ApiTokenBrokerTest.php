@@ -217,3 +217,68 @@ it('throws when the login token is expired and no refresh token exists', functio
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 })->throws(OidcClientException::class);
+
+it('mints a machine token via client credentials without any login session', function () {
+    session()->forget('oidc-client.tokens');
+    config()->set('oidc-client.client_secret', 'secret-123');
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
+
+    expect(app(ApiTokenBroker::class)->machineToken(audience: 'https://mail.example.com'))->toBe('machine-token');
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['grant_type'] === 'client_credentials'
+        && $request['client_id'] === 'client-123'
+        && $request['client_secret'] === 'secret-123'
+        && $request['resource'] === 'https://mail.example.com');
+});
+
+it('omits the resource parameter without an audience and sends requested scopes', function () {
+    config()->set('oidc-client.client_secret', 'secret-123');
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
+
+    app(ApiTokenBroker::class)->machineToken(scopes: ['contacts:write']);
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['grant_type'] === 'client_credentials'
+        && ! isset($request['resource'])
+        && $request['scope'] === 'contacts:write');
+});
+
+it('caches machine tokens in the application cache per client and audience', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
+        ->push(['access_token' => 'first-token', 'expires_in' => 3600])
+        ->push(['access_token' => 'other-client-token', 'expires_in' => 3600])]);
+    $broker = app(ApiTokenBroker::class);
+
+    expect($broker->machineToken(audience: 'https://mail.example.com'))->toBe('first-token')
+        ->and($broker->machineToken(audience: 'https://mail.example.com'))->toBe('first-token')
+        ->and($broker->machineToken(audience: 'https://mail.example.com', clientId: 'other-client', clientSecret: 'other-secret'))->toBe('other-client-token');
+
+    Http::assertSentCount(3);
+});
+
+it('uses explicit client credentials over the configured ones', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
+
+    app(ApiTokenBroker::class)->machineToken(clientId: 'm2m-client', clientSecret: 'm2m-secret');
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+        && $request['client_id'] === 'm2m-client'
+        && $request['client_secret'] === 'm2m-secret');
+});
+
+it('throws when the client-credentials request is rejected', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['error' => 'invalid_client'], 401)]);
+
+    app(ApiTokenBroker::class)->machineToken();
+})->throws(OidcClientException::class);
+
+it('exposes the machine token expiry through the exchanged token value object', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 300])]);
+
+    $token = app(ApiTokenBroker::class)->machineExchangedToken();
+
+    expect($token->accessToken)->toBe('machine-token')
+        ->and($token->expiresIn())->toBeGreaterThan(250)
+        ->and($token->expiresIn())->toBeLessThanOrEqual(300);
+});
