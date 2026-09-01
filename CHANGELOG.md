@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.21.0](https://github.com/bambamboole/laravel-oidc/compare/v0.20.0...v0.21.0) (2026-09-01)
+
+
+### Features
+
+* **ui:** render social provider login buttons on the login page ([7931420](https://github.com/bambamboole/laravel-oidc/commit/79314201790db522057058e30b6c18604bb8b7ab))
+* **ui:** render social provider login buttons on the login page ([d0505cf](https://github.com/bambamboole/laravel-oidc/commit/d0505cfa50dc8d5ba72ee515025fb3b4d70fe520))
+
 ## [0.20.0](https://github.com/bambamboole/laravel-oidc/compare/v0.19.0...v0.20.0) (2026-08-31)
 
 
