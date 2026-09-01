@@ -17,6 +17,13 @@ return [
         'forgot-password' => 'Passwort vergessen?',
         'no-account' => 'Noch kein Konto?',
         'sign-up' => 'Registrieren',
+        'social' => [
+            'divider' => 'oder weiter mit',
+            'google' => 'Mit Google anmelden',
+            'apple' => 'Mit Apple anmelden',
+            'github' => 'Mit GitHub anmelden',
+            'fallback' => 'Mit :provider anmelden',
+        ],
     ],
 
     'register' => [

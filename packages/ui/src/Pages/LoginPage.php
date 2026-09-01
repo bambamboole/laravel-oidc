@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Server\Auth\Social\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Lattice\Core\Enums\ColorName;
 use Lattice\Form\Components\Checkbox;
 use Lattice\Form\Components\Form;
 use Lattice\Form\Components\PasswordInput;
@@ -23,6 +27,7 @@ use Lattice\Ui\Components\Text;
 use Lattice\Ui\Enums\Align;
 use Lattice\Ui\Enums\Gap;
 use Lattice\Ui\Enums\HttpMethod;
+use Lattice\Ui\Enums\Size;
 use Lattice\Ui\Enums\StackDirection;
 use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
@@ -57,7 +62,56 @@ class LoginPage extends AuthPage implements LoginView
                 ->resetOnSuccess(['password'])
                 ->withoutSubmitButton()
                 ->status($this->prompt?->status),
+            ...$this->socialButtons(),
         ]);
+    }
+
+    /**
+     * One button per enabled social provider, below the credentials form.
+     *
+     * @return array<int, Component>
+     */
+    protected function socialButtons(): array
+    {
+        $providers = array_keys(app(SocialProviderRegistry::class)->enabled());
+
+        if ($providers === []) {
+            return [];
+        }
+
+        $buttons = array_map(function (string $provider): Button {
+            $button = Button::make($this->socialButtonLabel($provider), "login-social-{$provider}")
+                ->href(route('identity.social.redirect', ['provider' => $provider], absolute: false));
+
+            // Rendered from the consuming app's SVG sprite, like brand_icon;
+            // set oidc-ui.social_icons.{provider} to '' to drop the icon.
+            $icon = config()->string("oidc-ui.social_icons.{$provider}", $provider);
+
+            return $icon === '' ? $button : $button->icon($icon);
+        }, $providers);
+
+        return [
+            Stack::make('login-social')
+                ->gap(Gap::Small)
+                ->schema([
+                    Text::make(__('oidc-ui::auth.login.social.divider'))
+                        ->color(ColorName::Muted)
+                        ->size(Size::Sm)
+                        ->align(Align::Center),
+                    ...$buttons,
+                ]),
+        ];
+    }
+
+    protected function socialButtonLabel(string $provider): string
+    {
+        $key = "oidc-ui::auth.login.social.{$provider}";
+
+        if (Lang::has($key)) {
+            return (string) __($key);
+        }
+
+        return (string) __('oidc-ui::auth.login.social.fallback', ['provider' => Str::headline($provider)]);
     }
 
     /**

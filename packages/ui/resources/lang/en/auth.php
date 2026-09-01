@@ -17,6 +17,13 @@ return [
         'forgot-password' => 'Forgot your password?',
         'no-account' => "Don't have an account?",
         'sign-up' => 'Sign up',
+        'social' => [
+            'divider' => 'or continue with',
+            'google' => 'Continue with Google',
+            'apple' => 'Continue with Apple',
+            'github' => 'Continue with GitHub',
+            'fallback' => 'Continue with :provider',
+        ],
     ],
 
     'register' => [
