@@ -27,8 +27,9 @@ use Lattice\Ui\Components\Text;
 use Lattice\Ui\Enums\Align;
 use Lattice\Ui\Enums\Gap;
 use Lattice\Ui\Enums\HttpMethod;
+use Lattice\Ui\Enums\Orientation;
 use Lattice\Ui\Enums\Size;
-use Lattice\Ui\Enums\StackDirection;
+use Lattice\Ui\Enums\TextAlign;
 use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -97,7 +98,7 @@ class LoginPage extends AuthPage implements LoginView
                     Text::make(__('oidc-ui::auth.login.social.divider'))
                         ->color(ColorName::Muted)
                         ->size(Size::Sm)
-                        ->align(Align::Center),
+                        ->align(TextAlign::Center),
                     ...$buttons,
                 ]),
         ];
@@ -139,7 +140,7 @@ class LoginPage extends AuthPage implements LoginView
         if (Route::has('identity.register')) {
             $schema[] = Stack::make('login-register-prompt')
                 ->align(Align::Center)
-                ->direction(StackDirection::Row)
+                ->direction(Orientation::Horizontal)
                 ->gap(Gap::ExtraSmall)
                 ->schema([
                     Text::make(__('oidc-ui::auth.login.no-account')),

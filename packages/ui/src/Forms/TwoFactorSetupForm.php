@@ -33,8 +33,8 @@ use Lattice\Ui\Components\Stack;
 use Lattice\Ui\Components\Text;
 use Lattice\Ui\Enums\Align;
 use Lattice\Ui\Enums\Gap;
+use Lattice\Ui\Enums\Orientation;
 use Lattice\Ui\Enums\Size;
-use Lattice\Ui\Enums\StackDirection;
 use Lattice\Ui\Enums\Variant;
 use Lattice\Ui\Enums\Width;
 
@@ -141,7 +141,7 @@ class TwoFactorSetupForm extends FormDefinition
     {
         return [
             Stack::make()
-                ->direction(StackDirection::Row)
+                ->direction(Orientation::Horizontal)
                 ->align(Align::Center)
                 ->gap(Gap::Medium)
                 ->schema([
@@ -154,7 +154,7 @@ class TwoFactorSetupForm extends FormDefinition
                         ->gap(Gap::Small)
                         ->schema([
                             Stack::make()
-                                ->direction(StackDirection::Row)
+                                ->direction(Orientation::Horizontal)
                                 ->align(Align::Center)
                                 ->gap(Gap::Small)
                                 ->schema([

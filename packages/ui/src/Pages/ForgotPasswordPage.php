@@ -19,7 +19,7 @@ use Lattice\Ui\Components\Text;
 use Lattice\Ui\Enums\Align;
 use Lattice\Ui\Enums\Gap;
 use Lattice\Ui\Enums\HttpMethod;
-use Lattice\Ui\Enums\StackDirection;
+use Lattice\Ui\Enums\Orientation;
 use Lattice\Ui\PageSchema;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -72,7 +72,7 @@ class ForgotPasswordPage extends AuthPage implements PasswordResetRequestView
             Button::make(__('oidc-ui::auth.forgot-password.submit'))->submit(),
             Stack::make('forgot-password-login-prompt')
                 ->align(Align::Center)
-                ->direction(StackDirection::Row)
+                ->direction(Orientation::Horizontal)
                 ->gap(Gap::ExtraSmall)
                 ->schema([
                     Text::make(__('oidc-ui::auth.forgot-password.return')),
