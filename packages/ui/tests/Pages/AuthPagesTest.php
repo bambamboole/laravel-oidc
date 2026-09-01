@@ -98,6 +98,39 @@ it('offers passkey sign-in on the login page when the handlers are registered', 
     expect(renderPage(new LoginPage))->toContain('passkey-verify');
 });
 
+it('renders the login page without social buttons when no provider is configured', function () {
+    expect(renderPage(new LoginPage))->not->toContain('login-social');
+});
+
+it('renders a login button per enabled social provider', function () {
+    config()->set('oidc.social.providers.github.client_id', 'client-id');
+    config()->set('oidc.social.providers.google.client_id', 'client-id');
+
+    $payload = renderPage(new LoginPage);
+
+    expect($payload)
+        ->toContain(__('oidc-ui::auth.login.social.divider'))
+        ->toContain(__('oidc-ui::auth.login.social.github'))
+        ->toContain(__('oidc-ui::auth.login.social.google'))
+        ->toContain(str_replace('/', '\/', route('identity.social.redirect', ['provider' => 'github'], absolute: false)));
+});
+
+it('labels an unknown social provider with the fallback translation', function () {
+    config()->set('oidc.social.providers.corp-sso', ['driver' => 'github', 'client_id' => 'client-id']);
+
+    expect(renderPage(new LoginPage))
+        ->toContain(__('oidc-ui::auth.login.social.fallback', ['provider' => 'Corp Sso']));
+});
+
+it('drops the social button icon when the provider icon is set to an empty string', function () {
+    config()->set('oidc.social.providers.github.client_id', 'client-id');
+    config()->set('oidc-ui.social_icons.github', '');
+
+    expect(renderPage(new LoginPage))
+        ->toContain(__('oidc-ui::auth.login.social.github'))
+        ->not->toContain('"icon":"github"');
+});
+
 it('renders the login page without passkeys when the passkey handlers are disabled', function () {
     withDisabledHandlers([Handler::PasskeyLoginOptions, Handler::PasskeyLogin]);
 

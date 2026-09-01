@@ -161,6 +161,7 @@ test('finishing the wizard confirms the factor and shows the fresh recovery code
     $factor = app(TotpFactorProvider::class)->latestPendingFactor($user);
 
     $this->actingAs($user)
+        ->withHeader('X-Inertia', 'true')
         ->submitForm(TwoFactorSetupForm::class, [
             'option' => 'totp',
             'setup' => app(Google2FA::class)->getCurrentOtp($factor->secret),
@@ -188,6 +189,7 @@ test('a second factor is confirmed without reissuing recovery codes', function (
     $pending = app(TotpFactorProvider::class)->latestPendingFactor($user);
 
     $this->actingAs($user)
+        ->withHeader('X-Inertia', 'true')
         ->submitForm(TwoFactorSetupForm::class, [
             'option' => 'totp',
             'setup' => app(Google2FA::class)->getCurrentOtp($pending->secret),
@@ -240,7 +242,7 @@ test('the host can point the wizard at its own recovery codes modal', function (
     $this->actingAs($user)->submitForm(TwoFactorSetupForm::class, ['_sub' => 'resolve', 'option' => 'totp'], $context);
     $factor = app(TotpFactorProvider::class)->latestPendingFactor($user);
 
-    $this->actingAs($user)->submitForm(TwoFactorSetupForm::class, [
+    $this->actingAs($user)->withHeader('X-Inertia', 'true')->submitForm(TwoFactorSetupForm::class, [
         'option' => 'totp',
         'setup' => app(Google2FA::class)->getCurrentOtp($factor->secret),
     ], $context)->assertRedirect();
@@ -309,6 +311,7 @@ test('a ceremony credential submitted as a JSON string reaches the provider deco
     $credential = ['id' => 'abc', 'response' => ['clientDataJSON' => 'payload']];
 
     $this->actingAs(setupUser())
+        ->withHeader('X-Inertia', 'true')
         ->submitForm(TwoFactorSetupForm::class, [
             'option' => 'fake_ceremony',
             'setup' => [
