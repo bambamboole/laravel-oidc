@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.21.1](https://github.com/bambamboole/laravel-oidc/compare/v0.21.0...v0.21.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* treat social provisioning rejections as failed logins ([ccd8142](https://github.com/bambamboole/laravel-oidc/commit/ccd8142604b78ea284a17fc69701842c21928d44))
+* treat social provisioning rejections as failed logins ([1a0f867](https://github.com/bambamboole/laravel-oidc/commit/1a0f8675a4f6c35093ad3cee63bf1b9764180744))
+
 ## [0.21.0](https://github.com/bambamboole/laravel-oidc/compare/v0.20.0...v0.21.0) (2026-09-01)
 
 
