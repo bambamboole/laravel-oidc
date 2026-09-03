@@ -45,13 +45,13 @@ class ApiTokenBroker
         $cached = session('oidc-client.exchanged.'.$key);
 
         if (is_array($cached) && is_string($cached['access_token'] ?? null) && (int) ($cached['expires_at'] ?? 0) > time() + self::EXPIRY_SKEW) {
-            return new ExchangedToken($cached['access_token'], (int) $cached['expires_at']);
+            return $this->exchangedTokenFrom($cached);
         }
 
         $issued = $this->exchange($this->subjectToken(), $audience, $parameters, $scopes);
         session()->put('oidc-client.exchanged.'.$key, $issued);
 
-        return new ExchangedToken($issued['access_token'], $issued['expires_at']);
+        return $this->exchangedTokenFrom($issued);
     }
 
     /**
@@ -80,14 +80,14 @@ class ApiTokenBroker
         $cached = $this->cache->get($key);
 
         if (is_array($cached) && is_string($cached['access_token'] ?? null) && (int) ($cached['expires_at'] ?? 0) > time() + self::EXPIRY_SKEW) {
-            return new ExchangedToken($cached['access_token'], (int) $cached['expires_at']);
+            return $this->exchangedTokenFrom($cached);
         }
 
         $issued = $this->clientCredentials($clientId, $clientSecret, $audience, $scopes);
         $ttl = max($issued['expires_at'] - time() - self::EXPIRY_SKEW, 0);
         $this->cache->put($key, $issued, $ttl);
 
-        return new ExchangedToken($issued['access_token'], $issued['expires_at']);
+        return $this->exchangedTokenFrom($issued);
     }
 
     public function forget(): void
@@ -128,6 +128,7 @@ class ApiTokenBroker
         return [
             'access_token' => $accessToken,
             'expires_at' => time() + $expiresIn,
+            'scopes' => $this->grantedScopes($response->json('scope')),
         ];
     }
 
@@ -226,7 +227,37 @@ class ApiTokenBroker
         return [
             'access_token' => $accessToken,
             'expires_at' => time() + $expiresIn,
+            'scopes' => $this->grantedScopes($response->json('scope')),
         ];
+    }
+
+    /**
+     * @param  array{access_token: string, expires_at: int, scopes?: list<string>|null}  $issued
+     */
+    private function exchangedTokenFrom(array $issued): ExchangedToken
+    {
+        $scopes = $issued['scopes'] ?? null;
+
+        return new ExchangedToken(
+            $issued['access_token'],
+            (int) $issued['expires_at'],
+            is_array($scopes) ? array_values(array_filter($scopes, is_string(...))) : null,
+        );
+    }
+
+    /**
+     * The space-delimited `scope` response parameter (RFC 6749 §5.1, RFC 8693 §2.2.1)
+     * as a list, or null when the token endpoint did not report granted scopes.
+     *
+     * @return list<string>|null
+     */
+    private function grantedScopes(mixed $scope): ?array
+    {
+        if (! is_string($scope)) {
+            return null;
+        }
+
+        return array_values(array_filter(explode(' ', $scope), fn (string $value): bool => $value !== ''));
     }
 
     /**

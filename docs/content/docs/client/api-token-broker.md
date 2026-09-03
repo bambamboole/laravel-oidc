@@ -34,10 +34,17 @@ browser client — use `exchangedToken()`, which takes the same arguments and re
 ```php
 $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
 
-$token->accessToken; // the exchanged access token
-$token->expiresAt;   // unix timestamp
-$token->expiresIn(); // remaining seconds, never negative
+$token->accessToken;          // the exchanged access token
+$token->expiresAt;            // unix timestamp
+$token->expiresIn();          // remaining seconds, never negative
+$token->scopes;               // scopes the provider granted, e.g. ['crm:view']
+$token->hasScope('crm:view'); // true when the provider granted the scope
 ```
+
+`scopes` comes from the token endpoint's `scope` response parameter. The provider narrows an
+exchange to what its `ExchangePolicy` allows, so the granted list can be smaller than the one
+requested — a client can use it to hide destinations the token cannot reach. It is `null` (and
+`hasScope()` is `false`) when the response carried no `scope` parameter.
 
 The result is cached in the session under a key derived from the audience, the (sorted) parameter
 set, and the (sorted) scope list, so repeated calls with the same arguments reuse the cached token
@@ -76,7 +83,8 @@ itself.
 
 Results are cached in the application cache (not the session) per client, audience, and scope
 set, and reused until 30 seconds before expiry. `machineExchangedToken()` takes the same
-arguments and returns the `ExchangedToken` value object when the caller needs the expiry.
+arguments and returns the `ExchangedToken` value object when the caller needs the expiry or the
+granted scopes.
 
 ## Forgetting cached tokens
 
