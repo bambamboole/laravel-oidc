@@ -282,3 +282,44 @@ it('exposes the machine token expiry through the exchanged token value object', 
         ->and($token->expiresIn())->toBeGreaterThan(250)
         ->and($token->expiresIn())->toBeLessThanOrEqual(300);
 });
+
+it('exposes the scopes the token endpoint granted on the exchange', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300, 'scope' => 'crm:view catalog:view'])]);
+
+    $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view', 'catalog:view', 'crm:manage']);
+
+    expect($token->scopes)->toBe(['crm:view', 'catalog:view'])
+        ->and($token->hasScope('crm:view'))->toBeTrue()
+        ->and($token->hasScope('crm:manage'))->toBeFalse();
+});
+
+it('serves the granted scopes from the session cache', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300, 'scope' => 'crm:view'])]);
+    $broker = app(ApiTokenBroker::class);
+
+    $broker->exchangedToken(['tenant' => 'acme']);
+    $cached = $broker->exchangedToken(['tenant' => 'acme']);
+
+    expect($cached->scopes)->toBe(['crm:view']);
+    Http::assertSentCount(2);
+});
+
+it('leaves the granted scopes unknown when the exchange response omits scope', function () {
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
+
+    $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
+
+    expect($token->scopes)->toBeNull()
+        ->and($token->hasScope('crm:view'))->toBeFalse();
+});
+
+it('exposes the scopes granted to a machine token', function () {
+    config()->set('oidc-client.client_secret', 'secret-456');
+    session()->forget('oidc-client.tokens');
+    Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 300, 'scope' => 'sync:run'])]);
+
+    $token = app(ApiTokenBroker::class)->machineExchangedToken(scopes: ['sync:run', 'sync:admin']);
+
+    expect($token->scopes)->toBe(['sync:run'])
+        ->and($token->hasScope('sync:run'))->toBeTrue();
+});
