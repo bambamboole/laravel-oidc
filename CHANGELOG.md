@@ -5,6 +5,14 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.22.0](https://github.com/bambamboole/laravel-oidc/compare/v0.21.2...v0.22.0) (2026-09-03)
+
+
+### Features
+
+* **client:** expose granted scopes on ExchangedToken ([bad5dc4](https://github.com/bambamboole/laravel-oidc/commit/bad5dc45de30f1e8cf7f8bbb6db24cdd640d4ad2))
+* **client:** expose granted scopes on ExchangedToken ([dc27dbb](https://github.com/bambamboole/laravel-oidc/commit/dc27dbb7c817fd3e02a387fbecf9b94f888336e6))
+
 ## [0.21.2](https://github.com/bambamboole/laravel-oidc/compare/v0.21.1...v0.21.2) (2026-09-01)
 
 
