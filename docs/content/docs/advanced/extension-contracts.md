@@ -74,19 +74,21 @@ $this->app->singleton(
 
 ## `ClaimsResolver`
 
-`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` maps an authenticated user to a
-`ClaimSet`.
+`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the
+claims to emit.
 
 ```php
 interface ClaimsResolver
 {
-    public function resolve(Authenticatable $user): ClaimSet;
+    /** @return array<string, mixed> */
+    public function resolve(ClaimsRequest $request): array;
 }
 ```
 
-A `ClaimSet` is constructed from a `scope => [claim => value]` map; both the `id_token`
-builder and the userinfo endpoint call `forScopes()` on it with the token's granted
-scopes, so a claim is only emitted when its scope was granted (null values are dropped).
+The request carries the user, the requesting client (`clientId`), the granted `scopes`, and
+the `audience` being built (`ClaimsAudience::IdToken` or `::Userinfo`), so a resolver can vary
+claims per client and per surface. `ClaimSet` remains available for the common scope-gated
+case — see [Scopes & claims](/provider/scopes-and-claims/) for both shapes.
 The default is `DefaultClaimsResolver`. Bind your own:
 
 ```php

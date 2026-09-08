@@ -50,30 +50,65 @@ The scope catalog is provided by the `ScopeRepository` contract — see
 
 ## Claims
 
-`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` maps an authenticated user to a `ClaimSet`. A
-`ClaimSet` is constructed from a `scope => [claim => value]` map. Both the `id_token` builder and
-the userinfo endpoint call `forScopes()` on it with the token's granted scopes, so a claim is only
-emitted when its scope was granted — and null values are dropped.
+`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the claim
+map to emit. The request carries the authenticated user, the requesting client, the granted
+scopes, and which surface is being built — so a resolver can vary claims per client, or emit a
+claim into the `id_token` but not userinfo.
+
+```php
+final readonly class ClaimsRequest
+{
+    public Authenticatable $user;
+    public ClaimsAudience $audience;   // IdToken | Userinfo
+    public ?string $clientId;
+    /** @var list<string> */
+    public array $scopes;
+
+    public function hasScope(string $scope): bool;
+}
+```
+
+`ClaimSet` remains available for the common scope-gated case: construct it from a
+`scope => [claim => value]` map and call `forScopes()` with the request's scopes, so a claim is
+only emitted when its scope was granted — null values are dropped.
 
 ```php
 use Bambamboole\LaravelOidc\Server\Claims\ClaimSet;
+use Bambamboole\LaravelOidc\Server\Claims\ClaimsRequest;
 use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class AppClaimsResolver implements ClaimsResolver
 {
-    public function resolve(Authenticatable $user): ClaimSet
+    public function resolve(ClaimsRequest $request): array
     {
-        return new ClaimSet([
+        $user = $request->user;
+
+        return (new ClaimSet([
             'profile' => ['name' => $user->name],
             'email' => [
                 'email' => $user->email,
                 'email_verified' => $user->hasVerifiedEmail(),
             ],
-        ]);
+        ]))->forScopes($request->scopes);
     }
 }
 ```
+
+A resolver is free to ignore scopes entirely and key off the client or the audience instead:
+
+```php
+public function resolve(ClaimsRequest $request): array
+{
+    if ($request->audience !== ClaimsAudience::IdToken) {
+        return [];
+    }
+
+    return ['tenant' => $this->tenantFor($request->clientId)];
+}
+```
+
+`clientId` is null only where the caller cannot attribute the request to a client. Protocol claims
+the caller owns — `sub`, `iss`, `aud`, and friends — are ignored if a resolver returns them.
 
 Bind your resolver so the provider uses it:
 
