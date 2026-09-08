@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Grant;
 
-use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;
+use Bambamboole\LaravelOidc\Server\Clients\TrustedClients;
 use Bambamboole\LaravelOidc\Server\Exchange\TokenExchanger;
 use DateInterval;
 use Laravel\Passport\Passport;
@@ -41,7 +41,7 @@ class TokenExchangeGrant extends AbstractGrant
     ): ResponseTypeInterface {
         $client = $this->validateClient($request);
 
-        if (! $client->isConfidential() && ! resolve(FirstPartyClientConfig::class)->isTrusted($client->getIdentifier())) {
+        if (! $client->isConfidential() && ! resolve(TrustedClients::class)->isTrusted($client->getIdentifier())) {
             throw OAuthServerException::invalidClient($request);
         }
 
