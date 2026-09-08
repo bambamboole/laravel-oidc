@@ -40,10 +40,11 @@ its claims are stamped after the context's, so a trigger can override a stale lo
 
 ## Userinfo claims
 
-The userinfo endpoint returns `sub` plus the result of
-`ClaimsResolver::resolve($user)->forScopes($grantedScopes)`. Bind a custom implementation of
-`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` to add application-specific, scope-filtered
-claims to both userinfo and ID tokens.
+The userinfo endpoint returns `sub` plus whatever `ClaimsResolver::resolve()` returns for a
+`ClaimsRequest` carrying `ClaimsAudience::Userinfo`, the token's client and its granted scopes.
+Bind a custom implementation of `Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` to add
+application-specific claims to userinfo and ID tokens — see
+[Scopes & claims](/provider/scopes-and-claims/).
 
 ## Protected claims
 
