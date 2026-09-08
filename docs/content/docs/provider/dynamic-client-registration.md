@@ -79,8 +79,7 @@ with a host matching `allowed_redirect_domains`, or use a scheme listed in
 `cursor://anysphere.cursor-retrieval/…` passes while `cursor:/callback` is rejected).
 
 When `default_scopes` is non-empty the registered client is restricted to those scopes via
-Passport's client `scopes` column (shipped as a package migration); an empty list leaves the
-client unrestricted, which is Passport's default. A successful registration returns `201`:
+the client's `scopes` column; an empty list leaves the client unrestricted. A successful registration returns `201`:
 
 ```json
 {

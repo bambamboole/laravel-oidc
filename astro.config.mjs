@@ -54,6 +54,7 @@ export default defineConfig({
                 { label: "What is laravel-oidc?", link: "/introduction/what-is-laravel-oidc/" },
                 { label: "Installation", link: "/introduction/installation/" },
                 { label: "Configuration", link: "/introduction/configuration/" },
+                { label: "Upgrading", link: "/introduction/upgrading/" },
                 { label: "Route handlers", link: "/introduction/route-handlers/" },
               ],
             },

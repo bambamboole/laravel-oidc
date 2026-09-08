@@ -43,7 +43,8 @@ class Client extends Model
 
     protected $hidden = ['secret'];
 
-    private ?string $plainSecret = null;
+    /** Readable only on the instance that set it; the column holds a hash. */
+    public ?string $plainSecret = null;
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -90,16 +91,6 @@ class Client extends Model
         );
     }
 
-    /**
-     * Readable only on the instance that set it; the column holds a hash.
-     *
-     * @return Attribute<?string, never>
-     */
-    protected function plainSecret(): Attribute
-    {
-        return Attribute::make(get: fn (): ?string => $this->plainSecret);
-    }
-
     /** A client nobody owns is first party. */
     public function firstParty(): bool
     {
@@ -109,6 +100,12 @@ class Client extends Model
     public function confidential(): bool
     {
         return ! empty($this->getAttributes()['secret'] ?? null);
+    }
+
+    /** A client may be configured to bypass the consent screen entirely. */
+    public function skipsConsent(): bool
+    {
+        return ! $this->consent_required;
     }
 
     public function hasGrantType(string $grantType): bool

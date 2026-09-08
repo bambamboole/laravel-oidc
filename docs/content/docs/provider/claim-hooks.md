@@ -14,7 +14,7 @@ Four access-token triggers are available:
 | --- | --- | --- |
 | `Oidc::clientCredentials()` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
 | `Oidc::tokenExchange()` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
-| `Oidc::personalAccessToken()` | Passport personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
+| `Oidc::personalAccessToken()` | Personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
 | `Oidc::authorizationCode()` | `authorization_code` grant and every `refresh_token` reissue | `AuthorizationCodeEvent` — `user`, `client`, finalized `scopes`, and `grantType` |
 
 Each callback also receives an `AccessTokenApi`. Use `setAccessTokenClaim()` to add a custom claim,

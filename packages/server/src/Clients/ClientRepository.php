@@ -87,9 +87,12 @@ class ClientRepository
         ?string $clientId = null,
     ): Client {
         $client = new Client;
+        $client->setAttribute($client->getKeyName(), $client->newUniqueId());
 
         $client->forceFill([
-            'client_id' => $clientId ?? (string) Str::uuid(),
+            // A generated client answers to its own key until someone gives it a
+            // readable name; the two stay separate so renaming never touches tokens.
+            'client_id' => $clientId ?? $client->getKey(),
             'name' => $name,
             'provider' => $provider,
             'redirect_uris' => $redirectUris,

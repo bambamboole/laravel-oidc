@@ -30,7 +30,7 @@ sequenceDiagram
 
 ## Enabling it per client
 
-A client must opt in on two columns of `oauth_clients` — Passport's own `grant_types` and the
+A client must opt in on two columns of `oidc_clients` — `grant_types` and the
 `allowed_exchange_audiences` column added by this package's migration:
 
 ```php

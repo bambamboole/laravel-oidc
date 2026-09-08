@@ -5,7 +5,6 @@ namespace Bambamboole\LaravelOidc\Ui\Tests;
 
 use Illuminate\Support\Facades\Http;
 use Laravel\Passkeys\Passkeys;
-use Laravel\Passport\Passport;
 use Lattice\Support\Testing\InteractsWithLatticeComponents;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -34,8 +33,7 @@ abstract class TestCase extends BaseTestCase
 
         Http::preventStrayRequests();
 
-        Passport::$validateKeyPermissions = false;
-        Passport::loadKeysFrom(__DIR__.'/fixtures');
+        config(['oidc.keys.path' => __DIR__.'/fixtures']);
     }
 
     protected function defineDatabaseMigrations(): void

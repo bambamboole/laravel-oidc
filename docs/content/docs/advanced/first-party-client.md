@@ -63,7 +63,7 @@ It returns a `FirstPartyClientProvisioningResult`:
 ```php
 final readonly class FirstPartyClientProvisioningResult
 {
-    public Client $client;                             // the oauth_clients model (Laravel\Passport\Client)
+    public Client $client;                             // the oidc_clients model
     public string $clientId;
     public ?string $clientSecret;                      // plaintext, only when newly created or rotated
     public bool $wasCreated;                           // a new client row was created (rollback() deletes it)

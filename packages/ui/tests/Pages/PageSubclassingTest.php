@@ -9,6 +9,7 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Models\Client;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
@@ -19,7 +20,6 @@ use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
 use Bambamboole\LaravelOidc\Ui\Pages\VerifyEmailPage;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;
-use Laravel\Passport\Client;
 use Lattice\Form\Components\TextInput;
 
 /**

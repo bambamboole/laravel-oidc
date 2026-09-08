@@ -35,31 +35,28 @@ flowchart TB
             AE["Auth engine<br/>login · registration · MFA · post-login pipeline"]
             OP["OIDC provider<br/>authorize · token · discovery · JWKS · userinfo · logout"]
         end
-        Passport["Laravel Passport 13<br/>(OAuth2 core)"]
+        League["league/oauth2-server<br/>(OAuth2 core)"]
     end
     AE --> OP
-    OP --> Passport
+    OP --> League
 ```
 
-## Built on Passport
+## Built on league/oauth2-server
 
-The OAuth2 core underneath is **Laravel Passport 13** — the package extends and reconfigures
-it rather than reimplementing an authorization server.
+The OAuth2 core underneath is **`league/oauth2-server`**. The package owns everything above it:
+its own client, token, refresh-token and authorization-code tables and models, its own
+repositories and grants, and the full `/oauth/*` route surface registered from the unified
+`oidc.handlers` config. This means:
 
-On registration the package calls `Passport::ignoreRoutes()` and registers the **full
-`/oauth/*` route surface itself** from the unified `oidc.handlers` config. This means:
-
-- The authorization, token, approve/deny, and token-refresh routes are registered by this
-  package using its own controllers (so `max_age`, OIDC scopes, and the `id_token` response
-  type are wired in).
+- The authorization, token and approve/deny routes are registered by this package using its own
+  controllers, so `max_age`, `prompt`, OIDC scopes and the `id_token` response type are wired in.
 - **PKCE (`code_challenge`) is required on every authorization request**, per OAuth 2.1
   §4.1.1/§7.6 — for confidential clients as well as public ones. A request missing it is
   rejected with `invalid_request`.
-- **Passport's optional JSON API management routes are *not* registered** (client CRUD,
-  personal-access-token management, scope listing, etc.). If your app relies on those, register
-  them yourself.
-- The access-token entity is swapped to `OidcAccessToken` and the authorization-server response
-  type to `IdTokenResponse`.
+- The authorization server is built **per request**, so a signing-key rotation takes effect
+  without restarting the workers.
+- No client-management JSON API ships with the package. Provision clients with
+  `oidc:provision-client`, or through [dynamic client registration](/provider/dynamic-client-registration/).
 
 The package also registers a dedicated **`identity` guard** (session driver, `users` provider
 by default) and routes the interactive authorization and auth-engine flows through it, so
