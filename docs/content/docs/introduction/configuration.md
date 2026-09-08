@@ -41,8 +41,9 @@ below with its default and the environment variable that overrides it.
 | Key | Default | Description |
 | --- | --- | --- |
 | `token_exchange.enabled` | `true` (`OIDC_TOKEN_EXCHANGE_ENABLED`) | Enables the RFC 8693 token-exchange grant. |
+| `keys.store` | `EnvSigningKeyStore::class` | Class-string of the `SigningKeyStore` that holds the signing keypair; `DatabaseSigningKeyStore::class` keeps it in `oidc_signing_keys` — see [Key rotation](/provider/key-rotation/). |
 | `key_size` | `2048` (`OIDC_KEY_SIZE`) | RSA key size `oidc:rotate-keys` generates. |
-| `additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys published in JWKS; defaults to the previous signing key during rotation — see [Key rotation](/provider/key-rotation/). |
+| `additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys the env store retains for verification and JWKS; defaults to the previous signing key during rotation. Ignored by `DatabaseSigningKeyStore`, which retains keys as rows — see [Key rotation](/provider/key-rotation/). |
 
 ## Session token (browser-fetch)
 

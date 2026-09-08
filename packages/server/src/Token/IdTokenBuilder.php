@@ -19,6 +19,7 @@ class IdTokenBuilder
     public function __construct(
         private readonly ClaimsResolver $claims,
         private readonly IssuerResolver $issuer,
+        private readonly SigningKeys $signingKeys,
     ) {}
 
     /**
@@ -27,7 +28,7 @@ class IdTokenBuilder
      */
     public function build(AccessTokenEntityInterface $accessToken, ?string $nonce, ?int $authTime, array $amr = [], array $idTokenClaims = [], ?string $sid = null): string
     {
-        $config = SigningKeys::signingConfiguration();
+        $config = $this->signingKeys->signingConfiguration();
 
         $clientId = $accessToken->getClient()->getIdentifier();
         $scopes = array_map(
@@ -37,7 +38,7 @@ class IdTokenBuilder
         $now = new DateTimeImmutable;
 
         $builder = $config->builder()
-            ->withHeader('kid', SigningKeys::signingKid())
+            ->withHeader('kid', $this->signingKeys->signingKid())
             ->issuedBy($this->issuer->url())
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())
