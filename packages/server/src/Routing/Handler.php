@@ -19,6 +19,7 @@ use Bambamboole\LaravelOidc\Server\Auth\Controllers\SocialAuthenticationControll
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\TwoFactorChallengeController;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\VerifyEmailController;
 use Bambamboole\LaravelOidc\Server\Auth\Middleware\AuthenticateIdentity;
+use Bambamboole\LaravelOidc\Server\Http\Controllers\AdminClientController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\ApproveAuthorizationController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationServerMetadataController;
@@ -31,6 +32,7 @@ use Bambamboole\LaravelOidc\Server\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\ProtectedResourceController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\RevocationController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\UserinfoController;
+use Bambamboole\LaravelOidc\Server\Http\Middleware\AuthenticateAdminClient;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -101,6 +103,13 @@ enum Handler: string
     case Approve = 'oidc.approve';
     case Deny = 'oidc.deny';
 
+    case AdminClientIndex = 'oidc.admin.clients.index';
+    case AdminClientStore = 'oidc.admin.clients.store';
+    case AdminClientShow = 'oidc.admin.clients.show';
+    case AdminClientUpdate = 'oidc.admin.clients.update';
+    case AdminClientDestroy = 'oidc.admin.clients.destroy';
+    case AdminClientSecret = 'oidc.admin.clients.secret';
+
     /**
      * Resolve this handler's package defaults, sparse override, and global
      * route settings, or `false` when it is explicitly disabled.
@@ -108,6 +117,10 @@ enum Handler: string
     public function config(): HandlerConfig|false
     {
         if ($this === self::ClientRegistration && ! config('oidc.dcr.enabled', false)) {
+            return false;
+        }
+
+        if ($this->isAdmin() && ! config('oidc.admin.enabled', false)) {
             return false;
         }
 
@@ -155,6 +168,7 @@ enum Handler: string
         $guest = 'guest:'.$guard;
         $authenticated = AuthenticateIdentity::class.':'.$guard;
         $passwordConfirmed = RequirePassword::using(self::PasswordConfirm->value);
+        $admin = [AuthenticateAdminClient::class, 'throttle'];
 
         return match ($this) {
             self::Login => new HandlerConfig(
@@ -384,6 +398,49 @@ enum Handler: string
                 controller: [DenyAuthorizationController::class, 'deny'],
                 middleware: ['web', $authenticated],
             ),
+            self::AdminClientIndex => new HandlerConfig(
+                route: 'oauth/admin/clients',
+                controller: [AdminClientController::class, 'index'],
+                middleware: $admin,
+            ),
+            self::AdminClientStore => new HandlerConfig(
+                route: 'oauth/admin/clients',
+                controller: [AdminClientController::class, 'store'],
+                middleware: $admin,
+            ),
+            self::AdminClientShow => new HandlerConfig(
+                route: 'oauth/admin/clients/{client}',
+                controller: [AdminClientController::class, 'show'],
+                middleware: $admin,
+            ),
+            self::AdminClientUpdate => new HandlerConfig(
+                route: 'oauth/admin/clients/{client}',
+                controller: [AdminClientController::class, 'update'],
+                middleware: $admin,
+            ),
+            self::AdminClientDestroy => new HandlerConfig(
+                route: 'oauth/admin/clients/{client}',
+                controller: [AdminClientController::class, 'destroy'],
+                middleware: $admin,
+            ),
+            self::AdminClientSecret => new HandlerConfig(
+                route: 'oauth/admin/clients/{client}/secret',
+                controller: [AdminClientController::class, 'rotateSecret'],
+                middleware: $admin,
+            ),
+        };
+    }
+
+    public function isAdmin(): bool
+    {
+        return match ($this) {
+            self::AdminClientIndex,
+            self::AdminClientStore,
+            self::AdminClientShow,
+            self::AdminClientUpdate,
+            self::AdminClientDestroy,
+            self::AdminClientSecret => true,
+            default => false,
         };
     }
 
@@ -412,8 +469,11 @@ enum Handler: string
             self::IssueToken,
             self::TokenRefresh,
             self::ClientRegistration,
+            self::AdminClientStore,
+            self::AdminClientSecret,
             self::Approve => 'post',
-            self::Deny, self::TwoFactorRevoke, self::SocialDestroy => 'delete',
+            self::AdminClientUpdate => 'patch',
+            self::Deny, self::TwoFactorRevoke, self::SocialDestroy, self::AdminClientDestroy => 'delete',
             self::Userinfo, self::Logout, self::SocialCallback => ['get', 'post'],
             default => 'get',
         };
