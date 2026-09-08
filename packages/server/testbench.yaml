@@ -4,6 +4,8 @@ providers:
   - Laravel\Passport\PassportServiceProvider
   - Laravel\Passkeys\PasskeysServiceProvider
   - Bambamboole\LaravelOidc\Server\OidcServiceProvider
+  - Dedoc\Scramble\ScrambleServiceProvider
+  - Bambamboole\Spectacular\SpectacularServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
 
 workbench:

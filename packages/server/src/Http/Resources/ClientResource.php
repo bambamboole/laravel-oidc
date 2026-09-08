@@ -38,13 +38,22 @@ final class ClientResource extends JsonResource
             'client_name' => $definition->name,
             /** Whether the client authenticates with a secret. Public clients only arrive through dynamic registration. */
             'confidential' => $this->resource->confidential(),
+            /** @var list<string> */
             'grant_types' => $definition->grantTypes,
+            /** @var list<string> */
             'redirect_uris' => $definition->redirectUris,
+            /** @var list<string> */
             'post_logout_redirect_uris' => $definition->postLogoutRedirectUris,
+            /** @var string|null */
             'backchannel_logout_uri' => $definition->backchannelLogoutUri,
             'backchannel_logout_session_required' => $definition->backchannelLogoutSessionRequired,
-            /** Null leaves the client unrestricted; an empty list allows no scope at all. */
+            /**
+             * Null leaves the client unrestricted; an empty list allows no scope at all.
+             *
+             * @var list<string>|null
+             */
             'scopes' => $definition->scopes,
+            /** @var list<string> */
             'allowed_exchange_audiences' => $definition->allowedExchangeAudiences,
             'trusted' => $definition->trusted,
             'created_at' => $this->timestamp('created_at'),

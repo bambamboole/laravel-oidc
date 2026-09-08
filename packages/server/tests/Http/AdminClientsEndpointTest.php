@@ -6,6 +6,8 @@ use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
+use Bambamboole\LaravelOidc\Server\Tests\TestCase;
+use Bambamboole\Spectacular\OpenApi\Testing\ValidatesOpenApiSpec;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
@@ -14,6 +16,8 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\User;
+
+uses(ValidatesOpenApiSpec::class);
 
 function enableClientAdministration(): void
 {
@@ -33,7 +37,7 @@ function administrationClient(string $name = 'IaC runner'): Client
 
 function administrationBearer(mixed $test, Client $client, string $scope = 'oidc:admin'): string
 {
-    return (string) $test->post('/oauth/token', [
+    return (string) undocumented($test)->post('/oauth/token', [
         'grant_type' => 'client_credentials',
         'client_id' => $client->getKey(),
         'client_secret' => $client->plainSecret,
@@ -55,7 +59,36 @@ function clientPayload(array $overrides = []): array
     ];
 }
 
+/**
+ * The committed document is OpenAPI 3.1, but the request/response validator
+ * only understands 3.0: it rejects `type: [T, "null"]` unions, so the suite
+ * validates against a copy that expresses them as `nullable: true`.
+ */
+function validatorFriendlySpec(): string
+{
+    $downgrade = function (mixed $node) use (&$downgrade): mixed {
+        if (! is_array($node)) {
+            return $node;
+        }
+
+        if (isset($node['type']) && is_array($node['type']) && in_array('null', $node['type'], true)) {
+            $types = array_values(array_diff($node['type'], ['null']));
+            $node['type'] = count($types) === 1 ? $types[0] : $types;
+            $node['nullable'] = true;
+        }
+
+        return array_map($downgrade, $node);
+    };
+
+    $document = $downgrade(json_decode((string) file_get_contents(TestCase::openApiSpecPath()), true, flags: JSON_THROW_ON_ERROR));
+    $path = sys_get_temp_dir().'/laravel-oidc-client-administration-'.getmypid().'.json';
+    file_put_contents($path, json_encode($document, JSON_THROW_ON_ERROR));
+
+    return $path;
+}
+
 beforeEach(function () {
+    config(['spectacular.openapi.validation.path' => validatorFriendlySpec()]);
     enableClientAdministration();
 
     $this->admin = administrationClient();
@@ -65,6 +98,18 @@ beforeEach(function () {
 function asAdmin(mixed $test): mixed
 {
     return $test->withToken($test->bearer);
+}
+
+/** A request that leaves the documented surface and is therefore not validated against the spec. */
+function undocumented(mixed $test): mixed
+{
+    return $test->withoutValidation();
+}
+
+/** A deliberately invalid request whose response is still validated against the spec. */
+function invalidRequest(mixed $test): mixed
+{
+    return $test->withoutRequestValidation();
 }
 
 /**
@@ -161,7 +206,7 @@ it('distinguishes omitted, null and empty scopes', function () {
 });
 
 it('rejects invalid input with field errors', function (array $overrides, string $field) {
-    asAdmin($this)->postJson('/oauth/admin/clients', clientPayload($overrides))
+    invalidRequest(asAdmin($this))->postJson('/oauth/admin/clients', clientPayload($overrides))
         ->assertUnprocessable()
         ->assertJsonValidationErrors($field);
 })->with([
@@ -181,11 +226,11 @@ it('rejects invalid input with field errors', function (array $overrides, string
 it('rejects a body that is not a JSON object', function () {
     $server = ['CONTENT_TYPE' => 'application/json', 'HTTP_AUTHORIZATION' => 'Bearer '.$this->bearer];
 
-    $this->call('POST', '/oauth/admin/clients', [], [], [], $server, '{not json')
+    invalidRequest($this)->call('POST', '/oauth/admin/clients', [], [], [], $server, '{not json')
         ->assertStatus(400)
         ->assertJsonPath('message', 'The request body must be a JSON object.');
 
-    $this->call('POST', '/oauth/admin/clients', [], [], [], $server, '["a"]')
+    invalidRequest($this)->call('POST', '/oauth/admin/clients', [], [], [], $server, '["a"]')
         ->assertStatus(400);
 });
 
@@ -253,7 +298,7 @@ it('rotates the secret and returns it once', function () {
 
     expect($rotated['client_secret'])->not->toBe($created['client_secret']);
 
-    $token = fn (string $secret): TestResponse => $this->post('/oauth/token', [
+    $token = fn (string $secret): TestResponse => undocumented($this)->post('/oauth/token', [
         'grant_type' => 'client_credentials',
         'client_id' => $created['client_id'],
         'client_secret' => $secret,
@@ -306,7 +351,7 @@ it('lists clients with cursor pagination', function () {
         ->and($second->json('meta.next_cursor'))->toBeNull()
         ->and($first->json('data.1'))->not->toHaveKey('client_secret');
 
-    asAdmin($this)->getJson('/oauth/admin/clients?per_page=0')->assertUnprocessable()->assertJsonValidationErrors('per_page');
+    invalidRequest(asAdmin($this))->getJson('/oauth/admin/clients?per_page=0')->assertUnprocessable()->assertJsonValidationErrors('per_page');
 });
 
 it('audits administrative changes with the acting client', function () {

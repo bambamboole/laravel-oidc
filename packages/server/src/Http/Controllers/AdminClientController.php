@@ -11,6 +11,7 @@ use Bambamboole\LaravelOidc\Server\Http\Middleware\AuthenticateAdminClient;
 use Bambamboole\LaravelOidc\Server\Http\Requests\StoreClientRequest;
 use Bambamboole\LaravelOidc\Server\Http\Requests\UpdateClientRequest;
 use Bambamboole\LaravelOidc\Server\Http\Resources\ClientResource;
+use Dedoc\Scramble\Attributes\Response as DocumentedResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,6 +32,8 @@ class AdminClientController
      *
      * Non-revoked, owner-less clients ordered by creation, cursor paginated.
      */
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function index(Request $request): AnonymousResourceCollection
     {
         $request->validate(['per_page' => ['sometimes', 'integer', 'min:1', 'max:100']]);
@@ -49,6 +52,9 @@ class AdminClientController
      * Creates a confidential client. The response is the only place the
      * plaintext `client_secret` appears until it is rotated.
      */
+    #[DocumentedResponse(400, 'The request body is not a JSON object.', type: 'array{message: string}')]
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function store(StoreClientRequest $request): JsonResponse
     {
         $definition = (new ClientDefinition(name: ''))->with($request->definitionChanges());
@@ -60,6 +66,9 @@ class AdminClientController
     /**
      * Get a client.
      */
+    #[DocumentedResponse(404, 'The client does not exist, is revoked, or is owned by a user.', type: 'array{message: string}')]
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function show(string $client): ClientResource
     {
         return new ClientResource($this->find($client));
@@ -70,6 +79,11 @@ class AdminClientController
      *
      * Only the fields present in the body change; an empty object is a no-op.
      */
+    #[DocumentedResponse(400, 'The request body is not a JSON object.', type: 'array{message: string}')]
+    #[DocumentedResponse(404, 'The client does not exist, is revoked, or is owned by a user.', type: 'array{message: string}')]
+    #[DocumentedResponse(409, 'The client is managed by an artisan command and cannot be modified through the API.', type: 'array{message: string}')]
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function update(UpdateClientRequest $request, string $client): ClientResource
     {
         $model = $this->find($client);
@@ -84,6 +98,10 @@ class AdminClientController
      * Revokes the client and every token issued to it. A revoked client no
      * longer exists for this API.
      */
+    #[DocumentedResponse(404, 'The client does not exist, is revoked, or is owned by a user.', type: 'array{message: string}')]
+    #[DocumentedResponse(409, 'The client is managed by an artisan command, or it is the acting client itself.', type: 'array{message: string}')]
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function destroy(Request $request, string $client): Response
     {
         $model = $this->find($client);
@@ -98,6 +116,10 @@ class AdminClientController
      * Issues a new secret and returns it once. Tokens issued with the old
      * secret stay valid.
      */
+    #[DocumentedResponse(404, 'The client does not exist, is revoked, or is owned by a user.', type: 'array{message: string}')]
+    #[DocumentedResponse(409, 'The client is public and has no secret to rotate.', type: 'array{message: string}')]
+    #[DocumentedResponse(401, 'The bearer token is missing, invalid, expired, revoked, bound to a user, or addressed to another resource.', type: 'array{error: string}')]
+    #[DocumentedResponse(403, 'The token or its client does not carry the admin scope.', type: 'array{error: string}')]
     public function rotateSecret(Request $request, string $client): ClientResource
     {
         $model = $this->find($client);
@@ -108,7 +130,13 @@ class AdminClientController
 
     private function find(string $clientId): Client
     {
-        return $this->clients->find($clientId) ?? abort(404, 'The client does not exist.');
+        $client = $this->clients->find($clientId);
+
+        if ($client === null) {
+            abort(404, 'The client does not exist.');
+        }
+
+        return $client;
     }
 
     private function actor(Request $request): ?string
