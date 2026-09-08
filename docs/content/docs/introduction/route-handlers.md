@@ -53,10 +53,13 @@ $issuer = Issuer::url();               // issuer URL
 
 ## What lives in the handler map
 
-The map covers two groups of endpoints:
+The map covers three groups of endpoints:
 
 - **Protocol** — authorize, token, token refresh, approve/deny, userinfo, logout, introspect,
   revoke, discovery, JWKS.
+- **Administration** — the six `oidc.admin.clients.*` routes of the
+  [client administration API](/provider/client-administration/), registered only while
+  `config('oidc.admin.enabled')` is on, like `oidc.register`.
 - **Auth engine** — login, register, forgot/reset password, password confirmation, email
   verification, two-factor challenge and management, passkey registration/login/confirmation.
 

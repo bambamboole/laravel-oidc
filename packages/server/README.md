@@ -27,6 +27,8 @@ views and actions.
   RFC 7009 revocation.
 - **RFC 9068** structured `at+jwt` access tokens.
 - **RFC 8693** token exchange, with a self-contained `CheckAudience` resource-server middleware.
+- A **client administration API** for infrastructure as code, authenticated by client credentials and
+  documented by a shipped OpenAPI document.
 - Capability-scoped token triggers and a swappable `ClaimsResolver` / `ScopeRepository` / `ExchangePolicy`.
 - Env-based signing keys (`OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY`) with a built-in rotation
   command.

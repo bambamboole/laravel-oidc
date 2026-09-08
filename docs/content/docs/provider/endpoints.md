@@ -34,6 +34,13 @@ The three `.well-known` documents (`oidc.discovery`, `oidc.authorization-server`
 `oidc.protected-resource`) are never prefixed by `oidc.routes.prefix`: RFC 8414 and RFC 9728
 clients construct those URLs from the issuer origin themselves.
 
+### Administration endpoints
+
+With `config('oidc.admin.enabled')` on, six further routes manage OAuth clients under
+`/oauth/admin/clients` (`oidc.admin.clients.index`, `.store`, `.show`, `.update`, `.destroy`,
+`.secret`). They authenticate with a client credentials token carrying the admin scope and are
+not advertised in the discovery document. See [Client administration API](/provider/client-administration/).
+
 ## The authorization code flow
 
 How the endpoints fit together for an interactive login:

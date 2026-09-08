@@ -28,6 +28,8 @@ below with its default and the environment variable that overrides it.
 | `handlers` | `[]` | Sparse per-endpoint overrides, merged over the package's built-in endpoint map. See [Route handlers](/introduction/route-handlers/). |
 | `routes.prefix` | `''` | URI prefix applied to every registered handler route. |
 | `routes.middleware` | `[]` | Middleware prepended to every registered handler route. |
+| `admin.enabled` | `env('OIDC_ADMIN_ENABLED', false)` | Registers the client administration API under `oauth/admin/clients` and the admin scope. See [Client administration API](/provider/client-administration/). |
+| `admin.scope` | `oidc:admin` | The scope a client credentials token must carry to use the administration API. |
 
 ## Passport integration
 

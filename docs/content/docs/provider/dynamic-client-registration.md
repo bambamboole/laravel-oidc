@@ -8,6 +8,9 @@ the discovery documents resource servers and their clients need to find it (RFC 
 authorization server metadata, RFC 9728 protected resource metadata). Together these enable
 the connect flow MCP clients such as Claude or Cursor drive:
 
+Registered clients are public and self-service. Clients an operator manages, with a secret,
+belong to the [client administration API](/provider/client-administration/) instead.
+
 1. The client calls the protected resource (e.g. `POST /mcp`) without a token and receives a
    `401` whose `WWW-Authenticate` header points at the resource metadata.
 2. `GET /.well-known/oauth-protected-resource/mcp` names this provider as the authorization
