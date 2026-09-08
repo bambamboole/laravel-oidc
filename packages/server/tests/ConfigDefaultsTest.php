@@ -15,8 +15,9 @@ it('ships empty passport seams by default', function () {
         ->and(config('oidc.passport.scopes'))->toBe([]);
 });
 
-it('ships no protected resources and disabled dynamic client registration by default', function () {
+it('ships no protected resources and disabled dynamic client registration and administration by default', function () {
     expect(config('oidc.protected_resources'))->toBe([])
+        ->and(config('oidc.admin'))->toBe(['enabled' => false, 'scope' => 'oidc:admin'])
         ->and(config('oidc.dcr'))->toBe([
             'enabled' => false,
             'allowed_redirect_schemes' => [],

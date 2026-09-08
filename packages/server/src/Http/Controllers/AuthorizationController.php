@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Server\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\LoginDestination;
-use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;
+use Bambamboole\LaravelOidc\Server\Clients\TrustedClients;
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\Concerns\RespondsToInertiaExternalRedirects;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
@@ -35,7 +35,7 @@ class AuthorizationController extends PassportAuthorizationController
         ClientRepository $clients,
         protected ScopeRepository $scopeRepository,
         private readonly LoginDestination $loginDestination,
-        private readonly FirstPartyClientConfig $firstPartyClient,
+        private readonly TrustedClients $trustedClients,
         private readonly AuthSessionState $sessionState,
     ) {
         parent::__construct($server, $guard, $clients);
@@ -65,7 +65,7 @@ class AuthorizationController extends PassportAuthorizationController
 
     protected function hasGrantedScopes(Authenticatable $user, Client $client, array $scopes): bool
     {
-        return $this->isTrustedClient($client->getKey()) || parent::hasGrantedScopes($user, $client, $scopes);
+        return $this->trustedClients->isTrusted($client) || parent::hasGrantedScopes($user, $client, $scopes);
     }
 
     protected function promptForLogin(Request $request): never
@@ -158,6 +158,6 @@ class AuthorizationController extends PassportAuthorizationController
     private function isTrustedClient(mixed $clientId): bool
     {
         return (is_string($clientId) || is_int($clientId))
-            && $this->firstPartyClient->isTrusted($clientId);
+            && $this->trustedClients->isTrusted($clientId);
     }
 }

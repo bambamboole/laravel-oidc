@@ -24,6 +24,7 @@ final readonly class FirstPartyClientProvisioner
         private ClientRepository $clients,
         private Hasher $hasher,
         private Auditor $auditor,
+        private ClientMetadataNormalizer $normalizer,
     ) {}
 
     /**
@@ -41,9 +42,14 @@ final readonly class FirstPartyClientProvisioner
         #[SensitiveParameter] ?string $existingClientSecret = null,
     ): FirstPartyClientProvisioningResult {
         $name = trim($name);
-        $redirectUris = $this->normalizeUris($redirectUris, 'redirect URI');
-        $postLogoutRedirectUris = $this->normalizeUris($postLogoutRedirectUris, 'post-logout redirect URI');
-        $allowedExchangeAudiences = $this->normalizeAudiences($allowedExchangeAudiences);
+
+        try {
+            $redirectUris = $this->normalizer->uris($redirectUris, 'redirect URI');
+            $postLogoutRedirectUris = $this->normalizer->uris($postLogoutRedirectUris, 'post-logout redirect URI');
+            $allowedExchangeAudiences = $this->normalizer->audiences($allowedExchangeAudiences);
+        } catch (ClientMetadataException $exception) {
+            throw new FirstPartyClientProvisioningException($exception->getMessage(), previous: $exception);
+        }
 
         if ($name === '') {
             throw new FirstPartyClientProvisioningException('The first-party client name must not be empty.');
@@ -205,73 +211,5 @@ final readonly class FirstPartyClientProvisioner
         $sqlState = $exception->errorInfo[0] ?? null;
 
         return is_string($sqlState) && in_array($sqlState, ['23000', '23505'], true);
-    }
-
-    /**
-     * @param  mixed[]  $values
-     * @return string[]
-     */
-    private function normalizeUris(array $values, string $label): array
-    {
-        return $this->normalize($values, function (string $value) use ($label): void {
-            $parts = parse_url($value);
-
-            if (preg_match('/[\x00-\x20\x7F\\\\]|%(?![0-9A-Fa-f]{2})/', $value) === 1
-                || filter_var($value, FILTER_VALIDATE_URL) === false
-                || ! is_array($parts)
-                || ! in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)
-                || ! is_string($parts['host'] ?? null)
-                || $parts['host'] === ''
-                || isset($parts['user'])
-                || isset($parts['pass'])
-                || array_key_exists('fragment', $parts)) {
-                throw new FirstPartyClientProvisioningException("The {$label} [{$value}] must be an absolute HTTP(S) URI without user information or a fragment.");
-            }
-        });
-    }
-
-    /**
-     * @param  mixed[]  $values
-     * @return string[]
-     */
-    private function normalizeAudiences(array $values): array
-    {
-        return $this->normalize($values, function (string $value): void {
-            if (! str_starts_with(strtolower($value), 'urn:') && ! $this->isHttpUrl($value)) {
-                throw new FirstPartyClientProvisioningException("The audience [{$value}] must be an HTTP(S) URL or a urn: identifier.");
-            }
-        });
-    }
-
-    private function isHttpUrl(string $value): bool
-    {
-        $parts = parse_url($value);
-
-        return is_array($parts)
-            && in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)
-            && is_string($parts['host'] ?? null)
-            && $parts['host'] !== '';
-    }
-
-    /**
-     * @param  mixed[]  $values
-     * @param  callable(string): void  $validate
-     * @return string[]
-     */
-    private function normalize(array $values, callable $validate): array
-    {
-        $normalized = [];
-
-        foreach ($values as $value) {
-            if (! is_string($value) || trim($value) === '') {
-                throw new FirstPartyClientProvisioningException('Provisioning metadata values must be non-empty strings.');
-            }
-
-            $value = trim($value);
-            $validate($value);
-            $normalized[$value] = $value;
-        }
-
-        return array_values($normalized);
     }
 }

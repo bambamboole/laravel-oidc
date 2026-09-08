@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Tests;
 
+use Bambamboole\LaravelOidc\Server\Http\Middleware\AuthenticateAdminClient;
+use Bambamboole\LaravelOidc\Server\Scopes\AdminScope;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\ParallelTesting;
@@ -40,6 +43,45 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('auth.guards.api', ['driver' => 'passport', 'provider' => 'users']);
         $app['config']->set('session.driver', 'array');
+
+        $this->configureOpenApiGeneration($app);
+    }
+
+    /**
+     * Scramble and Spectacular only run in this harness: they generate and
+     * validate the client administration OpenAPI document, which ships as
+     * resources/openapi/client-administration.json.
+     *
+     * @param  Application  $app
+     */
+    private function configureOpenApiGeneration($app): void
+    {
+        $version = json_decode((string) file_get_contents(dirname(__DIR__, 3).'/.release-please-manifest.json'), true)['.'] ?? '0.0.0';
+
+        $app['config']->set('scramble.api_path', 'oauth/admin/*');
+        $app['config']->set('scramble.servers', ['Identity provider' => 'https://id.example.com']);
+        $app['config']->set('scramble.info.version', $version);
+        $app['config']->set('scramble.ui.title', 'laravel-oidc client administration API');
+        $app['config']->set('spectacular.openapi.info.description', 'Manage OAuth clients of a laravel-oidc identity provider from infrastructure as code.');
+        $app['config']->set('spectacular.openapi.validation.path', self::openApiSpecPath());
+        $app['config']->set('spectacular.openapi.security.middleware', [AuthenticateAdminClient::class]);
+        $app['config']->set('spectacular.openapi.security.schemes', [
+            'adminClient' => [
+                'type' => 'oauth2',
+                'description' => 'A client_credentials access token of a confidential client whose scopes list the admin scope.',
+                'flows' => [
+                    'clientCredentials' => [
+                        'token_url' => '/oauth/token',
+                        'scopes' => [AdminScope::DefaultId => 'Administer OAuth clients'],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public static function openApiSpecPath(): string
+    {
+        return dirname(__DIR__).'/resources/openapi/client-administration.json';
     }
 
     protected function setUp(): void

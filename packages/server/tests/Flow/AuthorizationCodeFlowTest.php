@@ -441,6 +441,25 @@ it('answers a trusted client\'s Inertia authorize request with a 409 + X-Inertia
     expect($response->headers->get('X-Inertia-Location'))->toStartWith('https://rp.test/callback?');
 });
 
+it('skips consent for a client trusted through its trusted column', function () {
+    $this->client->forceFill(['trusted' => true])->save();
+    $pkce = $this->pkce();
+
+    $response = $this->actingAsIdentity($this->user, authTime: time() - 60)
+        ->get('/oauth/authorize?'.http_build_query([
+            'client_id' => $this->client->id,
+            'redirect_uri' => 'https://rp.test/callback',
+            'response_type' => 'code',
+            'scope' => 'openid',
+            'state' => 'st4te',
+            'code_challenge' => $pkce->challenge,
+            'code_challenge_method' => 'S256',
+        ]));
+
+    $response->assertRedirect();
+    expect($response->headers->get('Location'))->toStartWith('https://rp.test/callback?')->toContain('code=');
+});
+
 /**
  * The authorize route runs on bare `web` middleware — no `auth` guard — so the
  * guest redirect is the controller's own `promptForLogin()`, sending the visitor

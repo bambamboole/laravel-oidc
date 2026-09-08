@@ -121,6 +121,23 @@ return [
         'default_scopes' => [],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Client administration API
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, confidential clients whose `scopes` column explicitly
+    | lists `scope` can obtain it through the client_credentials grant and
+    | manage OAuth clients under `/oauth/admin/clients`. A null (unrestricted)
+    | scopes column or `*` never grants it. Bootstrap the first admin client
+    | with `php artisan oidc:admin-client`.
+    |
+    */
+    'admin' => [
+        'enabled' => env('OIDC_ADMIN_ENABLED', false),
+        'scope' => 'oidc:admin',
+    ],
+
     'key_size' => (int) env('OIDC_KEY_SIZE', 2048),
 
     'additional_public_keys' => array_values(array_filter([

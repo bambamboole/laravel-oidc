@@ -38,7 +38,11 @@ segment is the category (`auth`, `oauth`, `admin`), available via `$type->catego
 | `TokenRevoked` | `oauth.token.revoked` | `token_type_hint`, `jti`, `refresh_token_jti` |
 | `ClientAuthenticationFailed` | `oauth.client_auth.failed` | `endpoint`, `reason` |
 | `ClientRegistered` | `admin.client.registered` | `client_name`, `redirect_uris` |
-| `ClientProvisioned` | `admin.client.provisioned` | `created`, `secret_rotated` |
+| `ClientProvisioned` | `admin.client.provisioned` | `created`, `secret_rotated`, `provisioning_key` (admin client only) |
+| `ClientCreated` | `admin.client.created` | `actor`, `name`, `grant_types`, `scopes`, `redirect_uris`, `trusted` |
+| `ClientUpdated` | `admin.client.updated` | `actor`, `changed` |
+| `ClientSecretRotated` | `admin.client.secret_rotated` | `actor` |
+| `ClientRevoked` | `admin.client.revoked` | `actor`, `name` |
 | `KeysRotated` | `admin.keys.rotated` | `kid` |
 
 All five grants surface as a single `TokenIssued` type — `context['grant_type']` distinguishes

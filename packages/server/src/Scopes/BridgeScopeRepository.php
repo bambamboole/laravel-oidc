@@ -38,17 +38,21 @@ class BridgeScopeRepository extends PassportBridgeScopeRepository
         ?string $userIdentifier = null,
         ?string $authCodeId = null
     ): array {
+        $client = $this->clients->findActive($clientEntity->getIdentifier());
+
         $entities = collect($scopes)
             ->unless(in_array($grantType, ['password', 'personal_access', 'client_credentials']),
                 fn (Collection $scopes): Collection => $scopes->reject(
                     fn (ScopeEntityInterface $scope): bool => $scope->getIdentifier() === '*'
                 )
             )
-            ->when($this->clients->findActive($clientEntity->getIdentifier()),
+            ->when($client,
                 fn (Collection $scopes, Client $client): Collection => $scopes->filter(
                     fn (ScopeEntityInterface $scope): bool => $client->hasScope($scope->getIdentifier())
                 )
-            );
+            )
+            ->reject(fn (ScopeEntityInterface $scope): bool => AdminScope::is($scope->getIdentifier())
+                && ! AdminScope::issuableTo($grantType, $client));
 
         $wildcard = $entities->contains(
             fn (ScopeEntityInterface $scope): bool => $scope->getIdentifier() === '*'

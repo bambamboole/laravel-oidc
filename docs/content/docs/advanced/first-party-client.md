@@ -8,6 +8,9 @@ behalf. It is not owned by any user, and it is the client that mints the session
 token and performs token exchanges for the [browser-fetch flow](/advanced/browser-fetch/).
 Its id belongs in `config('oidc.first_party.client_id')` (`OIDC_FIRST_PARTY_CLIENT`).
 
+This page covers that one client only. Every other client an operator manages belongs to the
+[client administration API](/provider/client-administration/).
+
 Provisioning is **idempotent**: the client is identified by an internal provisioning
 key (`first-party`) stored on `oauth_clients.oidc_provisioning_key`. Running the
 provisioner again reconciles the existing client's metadata rather than creating a

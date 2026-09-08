@@ -27,6 +27,10 @@ enum AuditEventType: string
 
     case ClientRegistered = 'admin.client.registered';
     case ClientProvisioned = 'admin.client.provisioned';
+    case ClientCreated = 'admin.client.created';
+    case ClientUpdated = 'admin.client.updated';
+    case ClientSecretRotated = 'admin.client.secret_rotated';
+    case ClientRevoked = 'admin.client.revoked';
     case KeysRotated = 'admin.keys.rotated';
 
     public function category(): string

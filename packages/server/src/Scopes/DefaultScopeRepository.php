@@ -29,11 +29,16 @@ class DefaultScopeRepository implements ScopeRepository
 
     public function all(): Collection
     {
-        return collect($this->catalog())
+        $scopes = collect($this->catalog())
             ->union(Passport::$scopes)
             ->union(self::OIDC_SCOPES)
-            ->map(fn (string $description, string $id) => new Scope($id, $description))
-            ->values();
+            ->map(fn (string $description, string $id) => new Scope($id, $description));
+
+        if (config('oidc.admin.enabled', false)) {
+            $scopes->put(AdminScope::id(), new Scope(AdminScope::id(), 'Administer OIDC clients', hidden: true));
+        }
+
+        return $scopes->values();
     }
 
     /**

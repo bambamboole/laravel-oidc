@@ -37,6 +37,7 @@ use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioner;
 use Bambamboole\LaravelOidc\Server\Console\DispatchExpiredSessionLogoutsCommand;
 use Bambamboole\LaravelOidc\Server\Console\InstallSelfCommand;
+use Bambamboole\LaravelOidc\Server\Console\ProvisionAdminClientCommand;
 use Bambamboole\LaravelOidc\Server\Console\ProvisionClientCommand;
 use Bambamboole\LaravelOidc\Server\Console\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Server\Console\RotateKeysCommand;
@@ -361,6 +362,7 @@ class OidcServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ProvisionClientCommand::class,
+                ProvisionAdminClientCommand::class,
                 InstallSelfCommand::class,
                 PruneAuthenticationContextsCommand::class,
                 DispatchExpiredSessionLogoutsCommand::class,

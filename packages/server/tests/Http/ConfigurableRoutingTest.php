@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\AuthenticatedSessionController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\DiscoveryController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\JwksController;
+use Bambamboole\LaravelOidc\Server\Http\Middleware\AuthenticateAdminClient;
 use Bambamboole\LaravelOidc\Server\Http\ProviderMetadata;
 use Bambamboole\LaravelOidc\Server\Issuer;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
@@ -47,7 +48,7 @@ it('authenticates userinfo via the configured oidc.api_guard', function () {
 });
 
 it('registers a route for every enabled handler', function () {
-    config(['oidc.handlers' => [], 'oidc.dcr.enabled' => true]);
+    config(['oidc.handlers' => [], 'oidc.dcr.enabled' => true, 'oidc.admin.enabled' => true]);
 
     $routes = registerHandlersInFreshRouter()->getRoutes();
 
@@ -220,6 +221,7 @@ it('prefixes every route except the well-known documents and advertises the regi
         'oidc.routes.prefix' => 'provider',
         'oidc.handlers' => [],
         'oidc.dcr.enabled' => true,
+        'oidc.admin.enabled' => true,
     ]);
 
     $wellKnown = [Handler::Discovery, Handler::AuthorizationServerMetadata, Handler::ProtectedResource];
@@ -296,4 +298,40 @@ it('exposes the issuer url', function () {
     config(['oidc.issuer' => 'https://id.example.com/']);
 
     expect(Issuer::url())->toBe('https://id.example.com');
+});
+
+it('registers the administration endpoints only while enabled, authenticated and throttled', function () {
+    $admin = array_values(array_filter(Handler::cases(), fn (Handler $handler): bool => $handler->isAdmin()));
+
+    expect($admin)->toHaveCount(6);
+
+    $disabled = registerHandlersInFreshRouter()->getRoutes();
+
+    foreach ($admin as $handler) {
+        expect($handler->config())->toBeFalse()
+            ->and($disabled->getByName($handler->value))->toBeNull();
+    }
+
+    config(['oidc.admin.enabled' => true]);
+    $routes = registerHandlersInFreshRouter()->getRoutes();
+
+    $verbs = [];
+
+    foreach ($admin as $handler) {
+        $route = $routes->getByName($handler->value);
+
+        expect($route)->not->toBeNull()
+            ->and($route->middleware())->toContain(AuthenticateAdminClient::class, 'throttle');
+
+        $verbs[$handler->value] = [$route->uri(), array_values(array_diff($route->methods(), ['HEAD']))];
+    }
+
+    expect($verbs)->toBe([
+        'oidc.admin.clients.index' => ['oauth/admin/clients', ['GET']],
+        'oidc.admin.clients.store' => ['oauth/admin/clients', ['POST']],
+        'oidc.admin.clients.show' => ['oauth/admin/clients/{client}', ['GET']],
+        'oidc.admin.clients.update' => ['oauth/admin/clients/{client}', ['PATCH']],
+        'oidc.admin.clients.destroy' => ['oauth/admin/clients/{client}', ['DELETE']],
+        'oidc.admin.clients.secret' => ['oauth/admin/clients/{client}/secret', ['POST']],
+    ]);
 });

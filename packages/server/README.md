@@ -27,6 +27,8 @@ views and actions.
   RFC 7009 revocation.
 - **RFC 9068** structured `at+jwt` access tokens.
 - **RFC 8693** token exchange, with a self-contained `CheckAudience` resource-server middleware.
+- A **client administration API** for infrastructure as code, authenticated by client credentials and
+  documented by a shipped OpenAPI document.
 - Capability-scoped token triggers and a swappable `ClaimsResolver` / `ScopeRepository` / `ExchangePolicy`.
 - Env-based signing keys (`OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY`) with a built-in rotation
   command.
@@ -42,7 +44,7 @@ views and actions.
 ## Requirements
 
 - PHP `^8.4`
-- Laravel 12 or 13
+- Laravel 13
 - `laravel/passport` `^13.4` — the OAuth2 core the package builds on
 
 ## Installation
@@ -98,7 +100,7 @@ serves it locally.
 composer check   # pint --test, phpstan (level 6), and the pest suite
 ```
 
-CI runs the suite across Laravel 12/13 on every push and pull request.
+CI runs the suite on Laravel 13 on every push and pull request.
 
 ## Changelog
 
