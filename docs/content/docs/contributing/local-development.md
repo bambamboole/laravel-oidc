@@ -60,7 +60,7 @@ composer lint        # Pint (applies fixes)
 ```
 
 Run `composer check` from the root before opening a pull request — CI runs the same tools
-across a Laravel 12 / 13 matrix.
+on Laravel 13 (the client package additionally on Laravel 12).
 
 ## The docs site
 
