@@ -51,7 +51,7 @@ set, and the (sorted) scope list, so repeated calls with the same arguments reus
 until it is within 30 seconds of its `expires_in`, rather than exchanging again.
 
 The default audience must equal the provider's issuer identifier — the same value the server
-exposes via `oidc.issuer` (`Issuer::url()`) — or exchanges targeting a different audience must be
+exposes via `oidc.issuer` (the server's `IssuerResolver`) — or exchanges targeting a different audience must be
 requested explicitly via `$audience`. Either way, the exchanging client's own
 `allowed_exchange_audiences` must include whatever audience is requested, or the token endpoint
 rejects the exchange with `invalid_target`; see
