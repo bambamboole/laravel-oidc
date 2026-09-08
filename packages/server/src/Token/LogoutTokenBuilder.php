@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Token;
 
 use Bambamboole\LaravelOidc\Server\Auth\Models\OidcSession;
-use Bambamboole\LaravelOidc\Server\Issuer;
+use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use DateTimeImmutable;
 
 class LogoutTokenBuilder
 {
     private const string EVENT = 'http://schemas.openid.net/event/backchannel-logout';
+
+    public function __construct(private readonly IssuerResolver $issuer) {}
 
     public function build(OidcSession $session, string $clientId): string
     {
@@ -21,7 +23,7 @@ class LogoutTokenBuilder
         $token = $config->builder()
             ->withHeader('typ', 'logout+jwt')
             ->withHeader('kid', SigningKeys::signingKid())
-            ->issuedBy(Issuer::url())
+            ->issuedBy($this->issuer->url())
             ->permittedFor($clientId)
             ->identifiedBy(bin2hex(random_bytes(16)))
             ->issuedAt($now)

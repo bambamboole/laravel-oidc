@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Server\Token;
 
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
-use Bambamboole\LaravelOidc\Server\Issuer;
+use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use DateTimeImmutable;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
@@ -18,6 +18,7 @@ class IdTokenBuilder
 
     public function __construct(
         private readonly ClaimsResolver $claims,
+        private readonly IssuerResolver $issuer,
     ) {}
 
     /**
@@ -37,7 +38,7 @@ class IdTokenBuilder
 
         $builder = $config->builder()
             ->withHeader('kid', SigningKeys::signingKid())
-            ->issuedBy(Issuer::url())
+            ->issuedBy($this->issuer->url())
             ->permittedFor($clientId)
             ->relatedTo((string) $accessToken->getUserIdentifier())
             ->issuedAt($now)

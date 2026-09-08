@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Contracts\AuditSink;
-use Bambamboole\LaravelOidc\Server\Issuer;
+use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Bambamboole\LaravelOidc\Server\Token\Jwk;
@@ -277,7 +277,7 @@ function persistedIdTokenAsBearer(mixed $test): string
 
     $jwt = $config->builder()
         ->withHeader('kid', Jwk::fromPem(SigningKeys::publicKey())['kid'])
-        ->issuedBy(Issuer::url())
+        ->issuedBy(app(IssuerResolver::class)->url())
         ->identifiedBy($tokenId)
         ->issuedAt($now)
         ->canOnlyBeUsedAfter($now)

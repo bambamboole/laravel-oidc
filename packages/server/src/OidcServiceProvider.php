@@ -45,6 +45,7 @@ use Bambamboole\LaravelOidc\Server\Context\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Server\Contracts\AuditSink;
 use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
 use Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy;
+use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Server\Contracts\SessionTokenProvider;
 use Bambamboole\LaravelOidc\Server\Exchange\DefaultExchangePolicy;
@@ -147,6 +148,7 @@ class OidcServiceProvider extends ServiceProvider
         Passport::useAccessTokenEntity(OidcAccessToken::class);
         Passkeys::ignoreRoutes();
 
+        $this->app->scoped(IssuerResolver::class, ConfiguredIssuerResolver::class);
         $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(PassportBridgeScopeRepository::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);

@@ -1,11 +1,41 @@
 ---
 title: Extension contracts
-description: The container-bound seams — ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer — and how to rebind each.
+description: The container-bound seams — IssuerResolver, ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer — and how to rebind each.
 ---
 
 Each of the package's extension points is a container-bound interface with a default
 implementation. Rebind any of them from a service provider's `register()` (or `boot()`)
 method to replace the behavior without touching a caller.
+
+## `IssuerResolver`
+
+`Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver` returns the issuer identifier every
+protocol surface builds on: the `iss` claim of `id_token`s, access tokens and logout tokens, the
+`issuer` and endpoint URLs in the discovery document, the audience the `oidc` guard accepts, and
+RFC 9728 resource metadata.
+
+```php
+interface IssuerResolver
+{
+    public function url(): string;
+}
+```
+
+The default `ConfiguredIssuerResolver` returns `oidc.issuer`, falling back to `app.url`, with any
+trailing slash trimmed. It is bound as a **scoped** binding, so a resolver may derive the issuer
+from the current request (a host or path segment) and still be reset per request under Octane.
+
+```php
+$this->app->scoped(
+    \Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver::class,
+    PerHostIssuerResolver::class,
+);
+```
+
+Every issuer URL the package emits or validates against goes through this contract, so a rebind
+changes them consistently. It does not move any route — endpoint paths still come from the
+[handler map](/introduction/route-handlers/), and the discovery document composes them onto the
+resolved issuer origin.
 
 ## `ScopeRepository`
 

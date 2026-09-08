@@ -44,11 +44,11 @@ Resolve a handler's configuration anywhere via the `Handler` enum instead of rea
 directly — it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Issuer;
+use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 
-$config = Handler::Userinfo->config(); // HandlerConfig|false
-$issuer = Issuer::url();               // issuer URL
+$config = Handler::Userinfo->config();        // HandlerConfig|false
+$issuer = app(IssuerResolver::class)->url();  // issuer URL
 ```
 
 ## What lives in the handler map
