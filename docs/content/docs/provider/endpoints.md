@@ -97,12 +97,12 @@ introspection and revocation entries each also advertise an
 ## Consent view (required)
 
 The authorization endpoint needs a consent view to render. It resolves through the `ConsentView`
-contract (`Bambamboole\LaravelOidc\Server\Forms\ConsentView`), lazily — only when consent
+contract (`Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView`), lazily — only when consent
 is actually shown. Bind the contract:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
-use Bambamboole\LaravelOidc\Server\Forms\ConsentView;
+use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
 use Illuminate\Http\Request;
 
 app()->bind(ConsentView::class, fn () => new class implements ConsentView {

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui;
 
-use Bambamboole\LaravelOidc\Server\Forms\ConsentView;
-use Bambamboole\LaravelOidc\Server\Forms\EmailVerificationView;
-use Bambamboole\LaravelOidc\Server\Forms\LoginView;
-use Bambamboole\LaravelOidc\Server\Forms\PasswordConfirmationView;
-use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestView;
-use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
-use Bambamboole\LaravelOidc\Server\Forms\RegisterView;
-use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengeView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\EmailVerificationView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetRequestView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
+use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengeView;
 use Illuminate\Support\ServiceProvider;
 
 /**

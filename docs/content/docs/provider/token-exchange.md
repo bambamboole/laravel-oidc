@@ -106,14 +106,14 @@ claim (`{"client_id": "..."}`) identifying the exchanging client as the actor.
 
 ## The `ExchangePolicy` contract
 
-Every exchange request is authorized by `Bambamboole\LaravelOidc\Server\Exchange\ExchangePolicy`, bound
+Every exchange request is authorized by `Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy`, bound
 by default to `DefaultExchangePolicy`:
 
 ```php
 namespace Bambamboole\LaravelOidc\Server\Contracts;
 
-use Bambamboole\LaravelOidc\Server\Exchange\ExchangeGrantResult;
-use Bambamboole\LaravelOidc\Server\Exchange\ExchangeRequest;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeGrantResult;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeRequest;
 
 interface ExchangePolicy
 {
@@ -129,9 +129,9 @@ RFC-shaped error. Replace the default to add tenant checks, custom scope rules, 
 allowlist source:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Exchange\ExchangePolicy;
-use Bambamboole\LaravelOidc\Server\Exchange\ExchangeGrantResult;
-use Bambamboole\LaravelOidc\Server\Exchange\ExchangeRequest;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeGrantResult;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeRequest;
 use League\OAuth2\Server\Exception\OAuthServerException;
 
 class TenantScopedExchangePolicy implements ExchangePolicy

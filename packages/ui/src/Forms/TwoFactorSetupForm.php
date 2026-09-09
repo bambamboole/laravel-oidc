@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Forms;
 
-use Bambamboole\LaravelOidc\Server\Credential\Data\EnrollmentOption;
-use Bambamboole\LaravelOidc\Server\Credential\EnrollmentPolicy;
-use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorSetupKind;
-use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
-use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Credentials\Data\EnrollmentOption;
+use Bambamboole\LaravelOidc\Server\Credentials\EnrollmentPolicy;
+use Bambamboole\LaravelOidc\Server\Credentials\Enums\FactorSetupKind;
+use Bambamboole\LaravelOidc\Server\Credentials\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Credentials\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Bambamboole\LaravelOidc\Ui\Fields\TwoFactorSetupField;
 use Bambamboole\LaravelOidc\Ui\Support\EnrollmentOptionLabels;

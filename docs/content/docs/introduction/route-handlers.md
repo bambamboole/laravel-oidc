@@ -22,7 +22,7 @@ Controllers are referenced by class name, so Laravel resolves them through the c
 your own implementation to swap one out:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Http\Controllers\UserinfoController;
+use Bambamboole\LaravelOidc\Server\Protocol\Controllers\UserinfoController;
 
 public function register(): void
 {

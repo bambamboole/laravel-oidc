@@ -50,7 +50,7 @@ document.
 Everything hangs off one contract:
 
 ```php
-namespace Bambamboole\LaravelOidc\Server\Realm;
+namespace Bambamboole\LaravelOidc\Server\Realms;
 
 interface RealmResolver
 {
@@ -63,7 +63,7 @@ The default `RouteRealmResolver` reads the `{realm}` route parameter and falls b
 own to derive it differently:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Realm\RealmResolver;
+use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 
 $this->app->scoped(RealmResolver::class, fn (): RealmResolver => new MyRealmResolver);
 ```

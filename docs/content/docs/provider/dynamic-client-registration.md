@@ -111,7 +111,7 @@ the flow:
   Alias it onto this package's controller in your routes file:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Http\Controllers\ProtectedResourceController;
+use Bambamboole\LaravelOidc\Server\Protocol\Controllers\ProtectedResourceController;
 
 Route::get('/.well-known/oauth-protected-resource/realms/{realm}/{path}', ProtectedResourceController::class)
     ->where('path', '.*')

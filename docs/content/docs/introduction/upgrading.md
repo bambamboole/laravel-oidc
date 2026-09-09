@@ -70,8 +70,8 @@ the cutover.
 ```diff
 -use Laravel\Passport\Contracts\OAuthenticatable;
 -use Laravel\Passport\HasApiTokens;
-+use Bambamboole\LaravelOidc\Server\User\Concerns\HasOidcTokens;
-+use Bambamboole\LaravelOidc\Server\User\OAuthenticatable;
++use Bambamboole\LaravelOidc\Server\Users\Concerns\HasOidcTokens;
++use Bambamboole\LaravelOidc\Server\Users\OAuthenticatable;
 
  class User extends Authenticatable implements OAuthenticatable
  {
@@ -110,7 +110,7 @@ and `oidc.keys.path` (was Passport's key path).
 | `Passport::tokensCan([...])` | `Oidc::tokensCan([...])` |
 | `Passport::actingAs($user, $scopes, $guard)` | `Oidc::actingAs($user, $scopes, $guard)` |
 | `Passport::authorizationView(...)` | bind the [`ConsentView` contract](/provider/endpoints/#consent-view-required) |
-| `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Http\Middleware\CheckScopes` |
+| `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckScopes` |
 | `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Clients\Client` / `Token` |
 | `Laravel\Passport\ClientRepository` | `Bambamboole\LaravelOidc\Server\Clients\ClientRepository` |
 

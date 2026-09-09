@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\OidcManager;
-use Bambamboole\LaravelOidc\Server\Session\SessionTokenProvider;
+use Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider;
 use Workbench\App\Models\User;
 
 it('honors first-party config mutated after the singletons were resolved', function () {

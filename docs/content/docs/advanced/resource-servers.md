@@ -45,7 +45,7 @@ client's `allowed_exchange_audiences`.
 
 ## `CheckAudience`
 
-`Bambamboole\LaravelOidc\Server\Http\Middleware\CheckAudience` narrows an already-authenticated
+`Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckAudience` narrows an already-authenticated
 request to a specific audience. It performs no signature, `typ`, expiry, or revocation checks of
 its own — that's `auth:oidc`'s job.
 
@@ -64,7 +64,7 @@ It validates, **in order**:
    otherwise `403 insufficient_scope`.
 
 ```php
-use Bambamboole\LaravelOidc\Server\Http\Middleware\CheckAudience;
+use Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckAudience;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Support;
 
-use Bambamboole\LaravelOidc\Server\Credential\Data\EnrollmentOption;
-use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorRole;
-use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorSetupKind;
+use Bambamboole\LaravelOidc\Server\Credentials\Data\EnrollmentOption;
+use Bambamboole\LaravelOidc\Server\Credentials\Enums\FactorRole;
+use Bambamboole\LaravelOidc\Server\Credentials\Enums\FactorSetupKind;
 
 /**
  * Presentation for an {@see EnrollmentOption}. The server package describes what

@@ -6,7 +6,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PersonalAccessTokenEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Token\Token;
+use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Workbench\App\Models\User;
 

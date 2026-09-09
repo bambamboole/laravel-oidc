@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Session\SessionTokenProvider;
-use Bambamboole\LaravelOidc\Server\Token\AccessTokenMinter;
+use Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider;
+use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
 
 it('registers hooks without signing keys and without resolving the token graph', function () {
     config([

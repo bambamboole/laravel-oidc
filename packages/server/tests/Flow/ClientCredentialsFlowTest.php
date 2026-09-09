@@ -10,7 +10,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Token\Token;
+use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
 
 beforeEach(function () {
     $this->client = app(ClientRepository::class)->createClientCredentialsGrantClient('M2M');
