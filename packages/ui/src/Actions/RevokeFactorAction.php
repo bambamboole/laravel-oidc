@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\EnrollmentPolicy;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Credential\EnrollmentPolicy;
+use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;

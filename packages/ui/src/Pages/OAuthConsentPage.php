@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView;
+use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\ConsentView;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;

@@ -96,7 +96,7 @@ a service provider's `boot()`:
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Illuminate\Support\Str;
 
-Oidc::createUsersFromSocialUsing(function (Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser $socialUser, string $provider) {
+Oidc::createUsersFromSocialUsing(function (Bambamboole\LaravelOidc\Server\Brokering\SocialUser $socialUser, string $provider) {
     return User::create([
         'name' => $socialUser->name,
         'email' => $socialUser->email,
@@ -180,7 +180,7 @@ Oidc::extendSocialProvider('my-driver', function (string $key, array $config) {
 ```
 
 The closure receives the provider's key (its entry name under `oidc.social.providers`) and its
-config array, and must return a `Bambamboole\LaravelOidc\Server\Auth\Social\Contracts\SocialProvider`
+config array, and must return a `Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider`
 implementation (`key()`, `redirect(Request $request, string $intent)`, and
 `user(Request $request, PendingAuthorization $pending): SocialUser`). Reference the entry with the
 matching `driver`:

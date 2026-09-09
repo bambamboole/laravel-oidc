@@ -70,7 +70,7 @@ the cutover.
 ```diff
 -use Laravel\Passport\Contracts\OAuthenticatable;
 -use Laravel\Passport\HasApiTokens;
-+use Bambamboole\LaravelOidc\Server\Auth\Concerns\HasOidcTokens;
++use Bambamboole\LaravelOidc\Server\User\Concerns\HasOidcTokens;
 +use Bambamboole\LaravelOidc\Server\Contracts\OAuthenticatable;
 
  class User extends Authenticatable implements OAuthenticatable

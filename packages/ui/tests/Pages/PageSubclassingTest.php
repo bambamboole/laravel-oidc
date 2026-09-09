@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\LoginPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\EmailVerificationPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\LoginView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Server\Models\Client;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
