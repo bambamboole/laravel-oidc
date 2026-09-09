@@ -1,6 +1,6 @@
 includes:
     - vendor/larastan/larastan/extension.neon
-    - vendor/mrpunyapal/peststan/extension.neon
+    - vendor/pestphp/pest-plugin-phpstan/extension.neon
 
 parameters:
     paths:
@@ -8,5 +8,3 @@ parameters:
         - tests
         - workbench/app
     level: 6
-    peststan:
-        testCaseClass: Bambamboole\LaravelOidc\Client\Tests\TestCase

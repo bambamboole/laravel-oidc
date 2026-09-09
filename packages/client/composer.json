@@ -13,22 +13,22 @@
     ],
     "require": {
         "php": "^8.4",
-        "illuminate/auth": "^12.0 || ^13.0",
-        "illuminate/contracts": "^12.0 || ^13.0",
-        "illuminate/http": "^12.0 || ^13.0",
-        "illuminate/support": "^12.0 || ^13.0",
+        "illuminate/auth": "^13.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
-        "laravel/boost": "^2.4",
+        "laravel/boost": "^2.6",
         "laravel/pint": "^1.16",
         "mockery/mockery": "^1.6",
-        "mrpunyapal/peststan": "^0.2.10",
-        "orchestra/testbench": "^10.0 || ^11.0",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^5.0",
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-phpstan": "^5.0"
     },
     "autoload": {
         "psr-4": {

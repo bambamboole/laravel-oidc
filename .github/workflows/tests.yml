@@ -39,7 +39,7 @@ jobs:
       matrix:
         package: [server, client, ui]
         php: ['8.4']
-        testbench: ['10.*', '11.*']
+        testbench: ['11.*']
         stability: [prefer-stable, prefer-lowest]
 
     name: ${{ matrix.package }} - PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
