@@ -51,10 +51,13 @@ interface ScopeRepository
     public function find(string $identifier): ?Scope;
 
     /**
+     * The last word on what a token gets: `$requested` is already limited to
+     * known scopes the client may hold.
+     *
      * @param  Scope[]  $requested
      * @return Scope[]
      */
-    public function finalize(array $requested, string $grantType, ClientEntityInterface $client, ?string $userIdentifier = null): array;
+    public function finalize(array $requested, string $grantType, ?Client $client, ?string $userIdentifier = null): array;
 }
 ```
 
@@ -112,8 +115,9 @@ interface ExchangePolicy
 The default `DefaultExchangePolicy` enforces audience reciprocity, the target
 allowlist, scope narrowing, same-subject, and a lifetime cap — see
 [Token exchange](/provider/token-exchange/) for the full rules. `authorize()` must
-return an `ExchangeGrantResult` or throw a
-`League\OAuth2\Server\Exception\OAuthServerException`. Rebind it to add tenant checks or
+return an `ExchangeGrantResult` or throw an
+`ExchangeDeniedException` carrying the RFC error code (`invalidGrant()`, `accessDenied()`,
+`invalidTarget()`, `invalidScope()`); the token endpoint renders it. Rebind it to add tenant checks or
 a different allowlist source:
 
 ```php

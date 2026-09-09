@@ -29,7 +29,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
 
 app(AccessTokenPipeline::class)->register('client_credentials', function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
-    $api->setAccessTokenClaim('tenant', $event->client->getIdentifier());
+    $api->setAccessTokenClaim('tenant', $event->client->client_id);
 });
 ```
 

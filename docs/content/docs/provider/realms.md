@@ -47,30 +47,85 @@ document.
 
 ## Resolving the realm
 
-Everything hangs off one contract:
+Everything hangs off two contracts in `Bambamboole\LaravelOidc\Server\Realms`:
 
 ```php
-namespace Bambamboole\LaravelOidc\Server\Realms;
-
 interface RealmResolver
 {
-    public function current(): string;
+    public function current(): Realm;
+}
+
+interface RealmRepository
+{
+    public function find(string $id): ?Realm;
 }
 ```
 
-The default `RouteRealmResolver` reads the `{realm}` route parameter and falls back to
-`config('oidc.realm')` when there is no matched route — console commands, queued jobs. Bind your
-own to derive it differently:
+The default `RouteRealmResolver` reads the `{realm}` route parameter, asks the bound
+`RealmRepository` for it, and answers 404 for an identifier the repository does not know. Outside
+a matched route — console commands, queued jobs — it falls back to `config('oidc.realm')`. The
+default `ConfiguredRealmRepository` accepts every identifier and serves it with the configured
+settings, so a deployment that only scopes data per tenant needs no code.
+
+An application with a realm model binds the repository:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
+use Bambamboole\LaravelOidc\Server\Realms\RealmRepository;
 
-$this->app->scoped(RealmResolver::class, fn (): RealmResolver => new MyRealmResolver);
+$this->app->singleton(RealmRepository::class, EloquentRealmRepository::class);
 ```
 
-Bind it **scoped**, not as a singleton — the realm is per request. Anything longer-lived than a
-request must call `current()` per use rather than hold the resolver; the signing key store does
-exactly that.
+Both contracts are singletons. A resolver must derive the realm from the current request on
+every call rather than remember it — under Octane one instance serves many requests.
+
+## Realm settings
+
+`Realm` is the contract your model implements. Beyond its identifier it exposes eight typed
+settings objects; every behavior that may differ between tenants reads from them instead of
+from `config('oidc.*')`:
+
+| Method | Settings object | Drives |
+| --- | --- | --- |
+| `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes |
+| `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes |
+| `login()` | `LoginSettings` | username field, home URL, login route, logout redirect |
+| `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count |
+| `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
+| `scopes()` | `ScopeSettings` | the scope catalog and the advertised `claims_supported` |
+| `clients()` | `ClientSettings` | dynamic registration and its redirect rules, token exchange, the first-party and trusted clients |
+| `keys()` | `KeySettings` | RSA key size for generated signing keys |
+
+The settings objects live in `Bambamboole\LaravelOidc\Server\Realms\Settings`; each is a
+`final readonly` value object with a `fromConfig()` constructor. `ConfiguredRealm` implements
+the whole contract from `config('oidc.*')`, so a model can delegate what it does not store:
+
+```php
+use Bambamboole\LaravelOidc\Server\Realms\ConfiguredRealm;
+use Bambamboole\LaravelOidc\Server\Realms\Realm;
+use Bambamboole\LaravelOidc\Server\Realms\Settings\TokenSettings;
+
+class Realm extends Model implements Realm
+{
+    public function id(): string
+    {
+        return $this->slug;
+    }
+
+    public function tokens(): TokenSettings
+    {
+        return new TokenSettings(
+            accessTokenLifetime: $this->access_token_lifetime,
+            refreshTokenLifetime: $this->refresh_token_lifetime,
+        );
+    }
+
+    // sessions(), login(), … delegate to (new ConfiguredRealm($this->slug))->sessions() etc.
+}
+```
+
+What stays in `config/oidc.php` is deployment-wide by nature: the issuer origin, guard and
+provider names, the signing key store and key material, the audit sink, route middleware,
+resource-server audiences, and the install-time first-party provisioning values.
 
 ### ResolveRealm
 
