@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Views;
+namespace Bambamboole\LaravelOidc\Server\Forms;
 
-final readonly class LoginPrompt
+final readonly class PasswordResetRequestPrompt
 {
     public function __construct(
         public ?string $status = null,

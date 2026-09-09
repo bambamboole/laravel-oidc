@@ -10,8 +10,8 @@ use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGua
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;

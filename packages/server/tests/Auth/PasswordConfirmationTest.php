@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\PasswordConfirmation;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordConfirmationView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;

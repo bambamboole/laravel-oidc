@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\EmailVerificationView;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestView;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetView;
-use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Forms\EmailVerificationPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\EmailVerificationView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestPrompt;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Forms\RegisterView;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\User;

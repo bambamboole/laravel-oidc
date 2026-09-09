@@ -10,7 +10,7 @@ use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGua
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
-use Bambamboole\LaravelOidc\Server\Auth\Views\RegisterView;
+use Bambamboole\LaravelOidc\Server\Forms\RegisterView;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;

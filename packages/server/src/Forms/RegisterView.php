@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Views;
+namespace Bambamboole\LaravelOidc\Server\Forms;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-interface PasswordConfirmationView
+interface RegisterView
 {
     public function respond(Request $request): Responsable|Response;
 }

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Server\Credential\Models\TotpFactor;
 use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengeView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use PragmaRX\Google2FA\Google2FA;

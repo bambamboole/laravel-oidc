@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Server\Auth\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Auth\PasswordConfirmation;
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordConfirmationView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Views;
+namespace Bambamboole\LaravelOidc\Server\Forms;
 
 final readonly class EmailVerificationPrompt
 {

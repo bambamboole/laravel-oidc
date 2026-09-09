@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Views;
+namespace Bambamboole\LaravelOidc\Server\Forms;
 
 use Bambamboole\LaravelOidc\Server\Models\Client;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;

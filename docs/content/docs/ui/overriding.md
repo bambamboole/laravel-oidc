@@ -15,7 +15,7 @@ package's default:
 
 ```php
 use App\Auth\Pages\CustomLoginPage;
-use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
+use Bambamboole\LaravelOidc\Server\Forms\LoginView;
 
 $this->app->bind(LoginView::class, CustomLoginPage::class);
 ```
