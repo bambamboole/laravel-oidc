@@ -127,8 +127,8 @@ Schema::create('oidc_audit_log', function (Blueprint $table) {
 ```php
 namespace App\Audit;
 
-use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
-use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditSink;
 use Illuminate\Support\Facades\DB;
 
 class EloquentAuditSink implements AuditSink
@@ -179,8 +179,8 @@ Every event is also dispatched through Laravel's dispatcher before the sink runs
 reactions don't need a sink at all:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
-use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEventType;
 
 Event::listen(AuditEvent::class, function (AuditEvent $event): void {
     match ($event->type) {
@@ -196,8 +196,8 @@ Event::listen(AuditEvent::class, function (AuditEvent $event): void {
 The package ships an in-memory fake for host-app test suites:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
-use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEventType;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditSink;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
 
 $sink = new FakeAuditSink;

@@ -9,7 +9,7 @@ method to replace the behavior without touching a caller.
 
 ## `IssuerResolver`
 
-`Bambamboole\LaravelOidc\Server\Realms\IssuerResolver` returns the issuer identifier every
+`Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver` returns the issuer identifier every
 protocol surface builds on: the `iss` claim of `id_token`s, access tokens and logout tokens, the
 `issuer` and endpoint URLs in the discovery document, the audience the `oidc` guard accepts, and
 RFC 9728 resource metadata.
@@ -27,7 +27,7 @@ from the current request (a host or path segment) and still be reset per request
 
 ```php
 $this->app->scoped(
-    \Bambamboole\LaravelOidc\Server\Realms\IssuerResolver::class,
+    \Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver::class,
     PerHostIssuerResolver::class,
 );
 ```

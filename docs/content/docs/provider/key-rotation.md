@@ -94,7 +94,7 @@ so it stays stable for the life of the key.
 ### A custom store
 
 All key material — signing, verification, JWKS — resolves through the
-`Bambamboole\LaravelOidc\Server\Keys\SigningKeyStore` contract:
+`Bambamboole\LaravelOidc\Server\Shared\Keys\SigningKeyStore` contract:
 
 ```php
 interface SigningKeyStore
