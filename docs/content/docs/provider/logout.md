@@ -21,10 +21,12 @@ to (stored in `oauth_clients.post_logout_redirect_uris`); otherwise the fallback
 
 ### Residual risk (accepted by design)
 
-`GET /realms/{realm}/oauth/authorize?max_age=0&client_id=<active client>` forces re-authentication for an
-already-authenticated victim when the attacker knows an active `client_id` (public client ids are
-discoverable). This is inherent to honoring `max_age` at the authorization endpoint — the effect
-is a forced re-login, never account compromise.
+A valid authorization request carrying `max_age=0` forces re-authentication for an
+already-authenticated victim. The request must pass validation first — an active `client_id`, a
+registered `redirect_uri`, `response_type=code` and a PKCE challenge — but all of that is
+constructible for a public client, whose ids and redirect URIs are discoverable. This is inherent
+to honoring `max_age` at the authorization endpoint — the effect is a forced re-login, never
+account compromise.
 
 ## Back-channel logout
 
