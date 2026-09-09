@@ -25,7 +25,7 @@ sequenceDiagram
     B->>App: Login
     App->>App: Mint session root token<br/>(kept server-side in the session)
     B->>App: Ask for an API token
-    App->>App: Oidc::issueScopedToken()<br/>exchanges the root token (RFC 8693)
+    App->>App: IssueScopedToken action<br/>exchanges the root token (RFC 8693)
     App->>B: Short-lived browser token<br/>(aud = the resource server)
     B->>RS: fetch() with Bearer browser token
     RS->>B: Response
@@ -41,7 +41,7 @@ recommended so the root token stays server-side.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `oidc.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](/provider/token-exchange/)) gates which audiences `issueScopedToken()` may mint for. |
+| `oidc.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](/provider/token-exchange/)) gates which audiences `IssueScopedToken` may mint for. |
 | `oidc.session_token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
 | `oidc.session_token.session_key` | `oidc.session_token` | Session key the root token (JWT, `jti`, `expires_at`, `user_id`) is stored under. |
 | `oidc.session_token.refresh_skew` | `60` | Seconds before expiry at which `currentToken()` re-mints instead of reusing the stored token. |
@@ -74,7 +74,7 @@ It is bound by default to `SessionMintTokenProvider`, which:
 
 Rebind the contract to change *how* the root token is obtained — e.g. sourcing it from
 a self-RP or an external SSO exchange — without touching any caller of
-`Oidc::issueScopedToken()`:
+the `IssueScopedToken` action:
 
 ```php
 $this->app->singleton(SessionTokenProvider::class, MyExternalSsoTokenProvider::class);
@@ -83,12 +83,12 @@ $this->app->singleton(SessionTokenProvider::class, MyExternalSsoTokenProvider::c
 ## Issuing a browser token
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Tokens\Actions\IssueScopedToken;
 
-$issued = Oidc::issueScopedToken('https://api.orders.test', ['openid']);
+$issued = app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 ```
 
-`issueScopedToken(string $audience, array $scopes): IssuedToken` reads the current
+`IssueScopedToken::__invoke(string $audience, array $scopes): IssuedToken` reads the current
 session root token, exchanges it (in-process, via the same RFC 8693 grant logic used by
 `/realms/{realm}/oauth/token`) for a token scoped to `$audience`, and returns an `IssuedToken`:
 

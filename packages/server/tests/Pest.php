@@ -2,9 +2,9 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Bambamboole\LaravelOidc\Server\Keys\SigningKeys;
 use Bambamboole\LaravelOidc\Server\Protocol\League\EncryptionKey;
@@ -17,6 +17,11 @@ use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckAudience;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\RefreshToken;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUserFromSocialAccount;
+use Bambamboole\LaravelOidc\Server\Users\Actions\ResetUserPassword;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -33,13 +38,48 @@ use League\OAuth2\Server\CryptTrait;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Symfony\Component\HttpFoundation\Response;
 
-// Passport::$scopes is a real PHP static that survives the per-test app
-// rebuild; without the afterEach reset, a file calling Oidc::tokensCan()
-// poisons every test that runs after it.
 uses(TestCase::class)
-    ->afterEach(fn () => Oidc::tokensCan([]))
     ->in(__DIR__);
 uses(RefreshDatabase::class)->in(__DIR__);
+
+function createUsersUsing(Closure $action): void
+{
+    app()->bind(CreateUser::class, fn (): CreateUser => new class($action) implements CreateUser
+    {
+        public function __construct(private readonly Closure $action) {}
+
+        public function __invoke(array $input): Authenticatable
+        {
+            return ($this->action)($input);
+        }
+    });
+}
+
+function resetUserPasswordsUsing(Closure $action): void
+{
+    app()->bind(ResetUserPassword::class, fn (): ResetUserPassword => new class($action) implements ResetUserPassword
+    {
+        public function __construct(private readonly Closure $action) {}
+
+        public function __invoke(CanResetPassword $user, array $input): void
+        {
+            ($this->action)($user, $input);
+        }
+    });
+}
+
+function createUsersFromSocialUsing(Closure $action): void
+{
+    app()->bind(CreateUserFromSocialAccount::class, fn (): CreateUserFromSocialAccount => new class($action) implements CreateUserFromSocialAccount
+    {
+        public function __construct(private readonly Closure $action) {}
+
+        public function __invoke(SocialUser $socialUser, string $provider): Authenticatable
+        {
+            return ($this->action)($socialUser, $provider);
+        }
+    });
+}
 
 /**
  * Re-runs the package's route file. Endpoints whose registration depends on

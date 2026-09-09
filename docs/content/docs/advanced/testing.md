@@ -30,6 +30,16 @@ $this->actingAsIdentity($user, amr: ['pwd', 'otp'], authTime: time() - 60);
 There is no `acr` parameter: the grant derives `acr` from `amr`
 (`1` for a single method, `2` for multiple).
 
+## Acting as a token user
+
+`actingAsOidcUser()` authenticates a user on the token guard with an
+unpersisted token that grants the listed scopes — for routes behind
+`auth:oidc` that only inspect scopes:
+
+```php
+$this->actingAsOidcUser($user, ['openid', 'email']);
+```
+
 ## Minting tokens without the HTTP dance
 
 `issueTokenFor()` returns a signed `at+jwt` access token with a persisted

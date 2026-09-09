@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Clients\Actions\ProvisionFirstPartyClient;
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientProvisioningException;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 it('provisions through the public facade', function () {
-    $result = Oidc::provisionFirstPartyClient(
+    $result = app(ProvisionFirstPartyClient::class)(
         name: 'First-party app',
         redirectUris: ['https://app.test/login/callback'],
         postLogoutRedirectUris: ['https://app.test'],
@@ -19,12 +19,12 @@ it('provisions through the public facade', function () {
 });
 
 it('reconciles a verified client credential through the public facade', function () {
-    $created = Oidc::provisionFirstPartyClient(
+    $created = app(ProvisionFirstPartyClient::class)(
         name: 'Old name',
         redirectUris: ['https://old.test/login/callback'],
     );
 
-    $result = Oidc::provisionFirstPartyClient(
+    $result = app(ProvisionFirstPartyClient::class)(
         name: 'New name',
         redirectUris: ['https://new.test/login/callback'],
         existingClientSecret: $created->clientSecret,
@@ -36,14 +36,14 @@ it('reconciles a verified client credential through the public facade', function
 });
 
 it('redacts the existing client credential from exception traces', function () {
-    Oidc::provisionFirstPartyClient(
+    app(ProvisionFirstPartyClient::class)(
         name: 'First-party app',
         redirectUris: ['https://app.test/login/callback'],
     );
     $existingClientSecret = 'trace-secret-that-must-be-redacted';
 
     try {
-        Oidc::provisionFirstPartyClient(
+        app(ProvisionFirstPartyClient::class)(
             name: 'First-party app',
             redirectUris: ['https://app.test/login/callback'],
             existingClientSecret: $existingClientSecret,

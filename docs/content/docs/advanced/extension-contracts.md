@@ -59,8 +59,7 @@ interface ScopeRepository
 ```
 
 The default `DefaultScopeRepository` merges scopes in order: first, the configured
-catalog (`oidc.scopes.catalog`); second, scopes registered via `Oidc::tokensCan()`;
-third, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
+catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
 The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
 (See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
 the catalog:
@@ -101,7 +100,7 @@ $this->app->singleton(
 ## `ExchangePolicy`
 
 `Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy` authorizes every RFC 8693 token
-exchange (and every `Oidc::issueScopedToken()` call).
+exchange (and every `IssueScopedToken` action call).
 
 ```php
 interface ExchangePolicy

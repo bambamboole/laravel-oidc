@@ -11,10 +11,11 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinal
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetView;
-use Bambamboole\LaravelOidc\Server\Users\UserActionManager;
+use Bambamboole\LaravelOidc\Server\Users\Actions\ResetUserPassword;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class NewPasswordController
     use ResolvesIdentityGuard;
 
     public function __construct(
-        private readonly UserActionManager $actions,
+        private readonly Container $container,
         private readonly InteractiveLoginFinalizer $finalizer,
         private readonly Auditor $auditor,
     ) {}
@@ -69,7 +70,7 @@ class NewPasswordController
         $status = Password::broker((string) config('auth.defaults.passwords', 'users'))->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (CanResetPassword $user) use ($request, &$resetUser): void {
-                $this->actions->resetUserPassword($user, $request->all());
+                $this->container->make(ResetUserPassword::class)($user, $request->all());
 
                 if (method_exists($user, 'setRememberToken')) {
                     $user->setRememberToken(Str::random(60));

@@ -10,7 +10,7 @@ a sensitive action).
 ## Password reset
 
 Reset is built on Laravel's `Password` broker (`config('auth.defaults.passwords')`, default
-`users`) and your [`resetUserPasswordsUsing`](/auth/overview/) action. It spans four handlers.
+`users`) and your bound [`ResetUserPassword`](/auth/overview/) action. It spans four handlers.
 
 ### Routes
 
@@ -52,7 +52,7 @@ page renders one, and without the rule a typo would silently commit the first va
 password rule the package enforces; length, strength and history stay with your action. Inside the
 broker callback the package:
 
-1. Invokes your `resetUserPasswordsUsing` action with the user and full input (your action owns the
+1. Invokes your `ResetUserPassword` action with the user and full input (your action owns the
    remaining password rules and persistence).
 2. Rotates the user's remember token and saves.
 3. Fires `Illuminate\Auth\Events\PasswordReset`.

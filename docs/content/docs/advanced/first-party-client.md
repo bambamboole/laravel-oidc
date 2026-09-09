@@ -1,6 +1,6 @@
 ---
 title: First-party client provisioning
-description: Provision the package-managed first-party confidential client with the oidc:client command or Oidc::provisionFirstPartyClient().
+description: Provision the package-managed first-party confidential client with the oidc:client command or the ProvisionFirstPartyClient action.
 ---
 
 The **first-party client** is a confidential OAuth client the package manages on your
@@ -40,14 +40,15 @@ The command prints the resulting `OIDC_FIRST_PARTY_CLIENT` / `OIDC_FIRST_PARTY_T
 values, plus `OIDC_RP_CLIENT_ID` / `OIDC_RP_CLIENT_SECRET` when a secret was issued or
 rotated (the plaintext secret is only ever available at that moment).
 
-## `Oidc::provisionFirstPartyClient()`
+## The `ProvisionFirstPartyClient` action
 
-The same operation is available programmatically:
+The same operation is available programmatically through the invokable
+`Bambamboole\LaravelOidc\Server\Clients\Actions\ProvisionFirstPartyClient`:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Clients\Actions\ProvisionFirstPartyClient;
 
-$result = Oidc::provisionFirstPartyClient(
+$result = app(ProvisionFirstPartyClient::class)(
     name: 'My App',
     redirectUris: ['https://app.test/callback'],
     postLogoutRedirectUris: ['https://app.test/'],
@@ -84,7 +85,7 @@ supplied secret against the managed client, inside the same row-locked reconcili
 transaction, before touching any metadata.
 
 ```php
-$result = Oidc::provisionFirstPartyClient(
+$result = app(ProvisionFirstPartyClient::class)(
     name: 'My App',
     redirectUris: ['https://app.test/callback'],
     existingClientSecret: $knownClientSecret,

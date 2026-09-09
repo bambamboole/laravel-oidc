@@ -1,10 +1,10 @@
 ---
 title: Registration
-description: The registration flow, the createUsersUsing action seam, and where validation lives.
+description: The registration flow, the CreateUser action contract, and where validation lives.
 ---
 
 Registration is owned by `RegisteredUserController`. Your app fills the view seam by binding
-`RegisterView` and the action seam with `Oidc::createUsersUsing(...)`; the package owns the event
+`RegisterView` and the action seam by binding `CreateUser`; the package owns the event
 dispatch, sign-in, and session regeneration.
 
 ## Routes
@@ -22,7 +22,7 @@ hitting the route throws `MissingAuthViewException`.
 The store action is throttled to **5 requests per minute**, then runs the following steps:
 
 1. The full request input is collected, with `email` **lowercased**.
-2. The [`createUsersUsing`](/auth/overview/) action is invoked with that input array and must
+2. The bound [`CreateUser`](/auth/overview/) action is invoked with that input array and must
    return the created `Authenticatable`.
 3. Laravel's `Illuminate\Auth\Events\Registered` event is fired for the new user (this is what
    triggers the [email verification](/auth/email-verification/) notification when your user model
@@ -39,16 +39,17 @@ The store action is throttled to **5 requests per minute**, then runs the follow
 ## Validation lives in your action
 
 The controller does **not** validate the registration input beyond lowercasing `email`. Ownership
-of the rules is yours — enforce them inside your `createUsersUsing` action (or a form request that
+of the rules is yours — enforce them inside your `CreateUser` action (or a form request that
 feeds it), exactly where your app's persistence and password hashing already live. This keeps the
 package out of your user model's shape:
 
 ```php
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
 use Illuminate\Support\Facades\Validator;
 
-class CreateNewUser
+class CreateNewUser implements CreateUser
 {
-    public function create(array $input): User
+    public function __invoke(array $input): User
     {
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
@@ -65,12 +66,10 @@ class CreateNewUser
 }
 ```
 
-Register it in a service provider `boot()`:
+Bind it in a service provider:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-
-Oidc::createUsersUsing(App\Actions\CreateNewUser::class);
+$this->app->bind(CreateUser::class, App\Actions\CreateNewUser::class);
 ```
 
 ## After registration

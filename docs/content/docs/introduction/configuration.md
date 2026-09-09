@@ -79,7 +79,7 @@ Used by the two-token browser-fetch model — see [Browser-fetch](/advanced/brow
 | Key | Default | Description |
 | --- | --- | --- |
 | `social.link_by_verified_email` | `true` | Attach an upstream identity to an existing local user when the provider reports a matching verified email. |
-| `social.auto_provision` | `true` | Create a local user on first social login via the `Oidc::createUsersFromSocialUsing()` action. |
+| `social.auto_provision` | `true` | Create a local user on first social login via the bound `CreateUserFromSocialAccount` action. |
 | `social.providers` | `google`, `apple`, `github` entries | The upstream identity providers; each is active only once its `client_id` is set. See [Social login](/auth/social-login/). |
 
 ## Assumptions

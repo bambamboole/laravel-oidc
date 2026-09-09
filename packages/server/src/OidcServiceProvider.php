@@ -68,7 +68,6 @@ class OidcServiceProvider extends ServiceProvider
         foreach (self::DOMAIN_PROVIDERS as $provider) {
             $this->app->register($provider);
         }
-        $this->app->singleton(OidcManager::class);
     }
 
     public function boot(): void

@@ -10,8 +10,9 @@ use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesI
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\RegisterView;
-use Bambamboole\LaravelOidc\Server\Users\UserActionManager;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,7 @@ class RegisteredUserController
     use ResolvesIdentityGuard;
 
     public function __construct(
-        private readonly UserActionManager $actions,
+        private readonly Container $container,
         private readonly InteractiveLoginFinalizer $finalizer,
         private readonly Auditor $auditor,
     ) {}
@@ -42,13 +43,13 @@ class RegisteredUserController
     {
         // Mirrors the createUserFromSocial null design: registration without a
         // configured action is disabled, not broken — so 404, not 500.
-        abort_unless($this->actions->hasCreateUserAction(), 404);
+        abort_unless($this->container->bound(CreateUser::class), 404);
 
         $input = array_merge($request->all(), [
             'email' => $request->string('email')->lower()->value(),
         ]);
 
-        event(new Registered($user = $this->actions->createUser($input)));
+        event(new Registered($user = $this->container->make(CreateUser::class)($input)));
 
         $this->auditor->log(AuditEventType::UserRegistered, userId: (string) $user->getAuthIdentifier());
 

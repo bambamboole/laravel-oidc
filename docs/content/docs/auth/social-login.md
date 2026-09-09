@@ -7,7 +7,7 @@ Social login is an additional authentication method: a user signs in through an 
 provider (IdP) instead of (or alongside) a password. Four drivers ship out of the box — `google`,
 `apple`, `github`, and a generic `oidc` driver for any OIDC-compliant IdP — resolved by
 `SocialProviderRegistry` from `oidc.social.providers`. Custom drivers can be registered with
-`Oidc::extendSocialProvider(...)`.
+`SocialProviderRegistry::extend(...)`.
 
 ## Routes and the accounts table
 
@@ -64,8 +64,8 @@ php artisan migrate
 
 - `link_by_verified_email` — attach the upstream identity to an existing local user when the
   provider reports a verified email that matches.
-- `auto_provision` — create a local user on first social login via the action registered with
-  `Oidc::createUsersFromSocialUsing()` (see [JIT provisioning](#jit-provisioning)).
+- `auto_provision` — create a local user on first social login via the bound
+  `CreateUserFromSocialAccount` action (see [JIT provisioning](#jit-provisioning)).
 - A provider entry is only enabled once its `client_id` is set; an empty or missing `client_id`
   disables it without removing the entry (`SocialProviderRegistry::get`).
 
@@ -88,21 +88,29 @@ verifies the returned `id_token` against the upstream JWKS.
 
 ## JIT provisioning
 
-Without a registered action, `auto_provision` has no effect: provisioning is effectively disabled,
-and an upstream identity that resolves to no existing user fails to sign in. Register the action in
-a service provider's `boot()`:
+Without a bound action, `auto_provision` has no effect: provisioning is effectively disabled,
+and an upstream identity that resolves to no existing user fails to sign in. Implement
+`Bambamboole\LaravelOidc\Server\Users\Actions\CreateUserFromSocialAccount` and bind it in a
+service provider:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUserFromSocialAccount;
 use Illuminate\Support\Str;
 
-Oidc::createUsersFromSocialUsing(function (Bambamboole\LaravelOidc\Server\Brokering\SocialUser $socialUser, string $provider) {
-    return User::create([
-        'name' => $socialUser->name,
-        'email' => $socialUser->email,
-        'password' => Str::random(40),
-    ]);
-});
+class CreateUserFromSocial implements CreateUserFromSocialAccount
+{
+    public function __invoke(SocialUser $socialUser, string $provider): User
+    {
+        return User::create([
+            'name' => $socialUser->name,
+            'email' => $socialUser->email,
+            'password' => Str::random(40),
+        ]);
+    }
+}
+
+$this->app->bind(CreateUserFromSocialAccount::class, CreateUserFromSocial::class);
 ```
 
 The action receives the normalized `SocialUser` and the provider key, and must return the created
@@ -118,11 +126,11 @@ on subsequent logins.
 
 ## Login buttons
 
-`Oidc::socialProviders()` returns the configured and credentialed providers, keyed by provider key,
+`app(SocialProviderRegistry::class)->enabled()` returns the configured and credentialed providers, keyed by provider key,
 for rendering login buttons:
 
 ```blade
-@foreach (Oidc::socialProviders() as $key => $provider)
+@foreach (app(SocialProviderRegistry::class)->enabled() as $key => $provider)
     <a href="{{ route('identity.social.redirect', ['provider' => $key]) }}">
         Sign in with {{ ucfirst($key) }}
     </a>
@@ -137,7 +145,7 @@ On callback, `SocialAccountManager::resolveUser` resolves the local user in this
    `provider_user_id`. The account's stored fields are refreshed from the latest `SocialUser`.
 2. **Verified-email link** — when `link_by_verified_email` is enabled and the upstream identity
    reports a verified email, an existing user with that email is matched and linked.
-3. **JIT provisioning** — when `auto_provision` is enabled and a `createUsersFromSocialUsing` action
+3. **JIT provisioning** — when `auto_provision` is enabled and a `CreateUserFromSocialAccount` action
    is registered, a new user is created and linked.
 4. **Error** — none of the above resolved a user; the callback redirects back to
    `identity.login` with a `social` error.
@@ -172,9 +180,9 @@ user) and returns an empty **`200`** response (JSON) or a `back()` redirect flas
 Register a custom driver factory in a service provider's `boot()`:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
 
-Oidc::extendSocialProvider('my-driver', function (string $key, array $config) {
+app(SocialProviderRegistry::class)->extend('my-driver', function (string $key, array $config) {
     return new App\Auth\Social\MyDriverProvider($key, $config);
 });
 ```
