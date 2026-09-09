@@ -44,7 +44,7 @@ feeds it), exactly where your app's persistence and password hashing already liv
 package out of your user model's shape:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
+use Bambamboole\LaravelOidc\Server\Shared\Users\CreateUser;
 use Illuminate\Support\Facades\Validator;
 
 class CreateNewUser implements CreateUser

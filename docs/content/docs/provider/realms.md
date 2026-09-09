@@ -70,7 +70,7 @@ settings, so a deployment that only scopes data per tenant needs no code.
 An application with a realm model binds the repository:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Realms\RealmRepository;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmRepository;
 
 $this->app->singleton(RealmRepository::class, EloquentRealmRepository::class);
 ```
@@ -101,8 +101,8 @@ the whole contract from `config('oidc.*')`, so a model can delegate what it does
 
 ```php
 use Bambamboole\LaravelOidc\Server\Realms\ConfiguredRealm;
-use Bambamboole\LaravelOidc\Server\Realms\Realm;
-use Bambamboole\LaravelOidc\Server\Realms\Settings\TokenSettings;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\Realm;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\Settings\TokenSettings;
 
 class Realm extends Model implements Realm
 {

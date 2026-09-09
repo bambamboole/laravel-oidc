@@ -9,12 +9,14 @@ their pruning yourself:
 - **The token tables** (`oidc_access_tokens`, `oidc_refresh_tokens`, `oidc_auth_codes`) grow one
   row per token issuance. With short access-token TTLs and refresh-token rotation, that's a row on
   every refresh. Prune them with `oidc:purge`.
-- **This package's tables** grow too: `oidc_authentication_contexts` (one row per login) and
-  `oidc_access_token_contexts` (one row per access-token issuance), plus `oidc_sessions` (one row
-  per login session) and `oidc_session_participants` (one row per participating client). Prune them
-  with `oidc:prune-authentication-contexts`.
+- **`oidc_access_token_contexts`** grows one row per access-token issuance. `oidc:purge` prunes
+  it too, on its own retention horizon (see below).
+- **`oidc_authentication_contexts`** grows one row per login. Prune it with
+  `oidc:prune-authentication-contexts`.
+- **`oidc_sessions`** and **`oidc_session_participants`** grow one row per login session and per
+  participating client. Prune them with `oidc:prune-sessions`.
 
-Schedule **all three** — running only some leaves tables growing unbounded, or leaves relying
+Schedule **all four** — running only some leaves tables growing unbounded, or leaves relying
 parties unnotified of expired sessions. In `routes/console.php`:
 
 ```php
@@ -23,32 +25,31 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('oidc:purge')->daily();
 Schedule::command('oidc:dispatch-expired-session-logouts')->hourly();
 Schedule::command('oidc:prune-authentication-contexts')->daily();
+Schedule::command('oidc:prune-sessions')->daily();
 ```
 
 ## Dispatch and prune independently
 
 `oidc:dispatch-expired-session-logouts` sends OIDC back-channel logout to a session's
 relying-party participants and marks the eligible session as notified once it hits its absolute
-lifetime (see [Logout](/provider/logout/)). `oidc:prune-authentication-contexts` removes a session
-only when both its expiry and notification timestamps are older than the one-day grace period, so
+lifetime (see [Logout](/provider/logout/)). `oidc:prune-sessions` removes a session only when both
+its expiry and notification timestamps are older than the one-day grace period, so
 the commands do not require a specific ordering. Back-channel logout is opt-in per relying-party
 client: a client only receives it if it has registered a `backchannel_logout_uri`.
 
-## What prune deletes
+## What each command deletes
 
-`oidc:prune-authentication-contexts` deletes:
+`oidc:prune-authentication-contexts` deletes `oidc_authentication_contexts` rows past their
+`expires_at` (i.e. past `oidc.session.absolute_lifetime` from login — the hard session cap). Once a
+context is gone, refreshing its tokens is denied.
 
-- `oidc_authentication_contexts` rows past their `expires_at` (i.e. past
-  `oidc.session.absolute_lifetime` from login — the hard session cap). Once a context is gone,
-  refreshing its tokens is denied.
-- `oidc_access_token_contexts` link rows older than `oidc.session.absolute_lifetime` **plus** the
-  refresh-token lifetime, so a still-rotating refresh chain never loses its link early (which would
-  silently drop the deny-on-expiry cap). Retention is fully self-managed here and does **not**
-  depend on how `oidc:purge` is configured.
-- `oidc_sessions` and their `oidc_session_participants` rows only when both `expires_at` and
-  `logout_notified_at` are more than one day old. This grace keeps session data available to queued
-  back-channel logout jobs; unnotified sessions are retained.
+`oidc:prune-sessions` deletes `oidc_sessions` and their `oidc_session_participants` rows only when
+both `expires_at` and `logout_notified_at` are more than one day old. This grace keeps session data
+available to queued back-channel logout jobs; unnotified sessions are retained.
 
 `oidc:purge` deletes revoked records and records that expired more than `--hours` ago (a week by
 default), so a chain still inside its retention window is never cut short. Pass `--revoked` or
-`--expired` to restrict it to one of the two.
+`--expired` to restrict it to one of the two. It also deletes `oidc_access_token_contexts` link
+rows older than `oidc.session.absolute_lifetime` **plus** the refresh-token lifetime, so a
+still-rotating refresh chain never loses its link early (which would silently drop the
+deny-on-expiry cap). That horizon is independent of `--hours`.

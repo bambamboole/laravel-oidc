@@ -90,12 +90,12 @@ verifies the returned `id_token` against the upstream JWKS.
 
 Without a bound action, `auto_provision` has no effect: provisioning is effectively disabled,
 and an upstream identity that resolves to no existing user fails to sign in. Implement
-`Bambamboole\LaravelOidc\Server\Brokering\Actions\CreateUserFromSocialAccount` and bind it in a
+`Bambamboole\LaravelOidc\Server\Shared\Brokering\CreateUserFromSocialAccount` and bind it in a
 service provider:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
-use Bambamboole\LaravelOidc\Server\Brokering\Actions\CreateUserFromSocialAccount;
+use Bambamboole\LaravelOidc\Server\Shared\Brokering\SocialUser;
+use Bambamboole\LaravelOidc\Server\Shared\Brokering\CreateUserFromSocialAccount;
 use Illuminate\Support\Str;
 
 class CreateUserFromSocial implements CreateUserFromSocialAccount

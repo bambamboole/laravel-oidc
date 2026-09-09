@@ -78,13 +78,13 @@ hitting a `GET` route — it binds every contract to a minimal JSON responder (s
 
 ## Action seams
 
-Three action contracts under `Bambamboole\LaravelOidc\Server\Users\Actions` let the package
-stay out of your user model and persistence. Bind your implementation in a service provider:
+Three action contracts in `Shared\Users` and `Shared\Brokering` let the package stay out of
+your user model and persistence. Bind your implementation in a service provider:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
-use Bambamboole\LaravelOidc\Server\Brokering\Actions\CreateUserFromSocialAccount;
-use Bambamboole\LaravelOidc\Server\Users\Actions\ResetUserPassword;
+use Bambamboole\LaravelOidc\Server\Shared\Users\CreateUser;
+use Bambamboole\LaravelOidc\Server\Shared\Brokering\CreateUserFromSocialAccount;
+use Bambamboole\LaravelOidc\Server\Shared\Users\ResetUserPassword;
 
 // Called by the registration flow with the validated input array.
 $this->app->bind(CreateUser::class, App\Actions\CreateNewUser::class);
