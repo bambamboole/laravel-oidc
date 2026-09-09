@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Http;
 
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
+use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
 

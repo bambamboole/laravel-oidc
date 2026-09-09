@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Http\Middleware\CheckScopes;
 use Bambamboole\LaravelOidc\Server\Models\Token;
+use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Bambamboole\LaravelOidc\Server\Token\AccessTokenMinter;
 use Illuminate\Support\Facades\Auth;

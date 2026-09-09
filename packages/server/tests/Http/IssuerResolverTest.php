@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Bridge\AccessToken;
 use Bambamboole\LaravelOidc\Server\Bridge\Client;
-use Bambamboole\LaravelOidc\Server\ConfiguredIssuerResolver;
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
+use Bambamboole\LaravelOidc\Server\Realm\ConfiguredIssuerResolver;
+use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Scopes\BridgeScope;
 use Bambamboole\LaravelOidc\Server\Token\IdTokenBuilder;
 use Lcobucci\JWT\Encoding\JoseEncoder;

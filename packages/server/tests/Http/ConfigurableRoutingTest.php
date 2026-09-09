@@ -2,11 +2,11 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\AuthenticatedSessionController;
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\DiscoveryController;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\JwksController;
 use Bambamboole\LaravelOidc\Server\Http\ProviderMetadata;
+use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Bambamboole\LaravelOidc\Server\Routing\HandlerConfig;
 use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;

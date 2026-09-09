@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server;
-
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
+namespace Bambamboole\LaravelOidc\Server\Realm;
 
 final class ConfiguredIssuerResolver implements IssuerResolver
 {
