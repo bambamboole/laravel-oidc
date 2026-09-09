@@ -25,3 +25,10 @@ form and `scopes` is the compatibility form.
 `aud` defaults to the requesting client's id. It is overridden by
 [token exchange](/provider/token-exchange/), which sets `aud` to the requested
 `resource`/`audience` instead so the token targets a downstream resource server.
+
+`iss` is the realm's issuer URL, and the package checks it wherever it accepts one of its own
+tokens — the `auth:oidc` guard, introspection, revocation and token exchange (RFC 9068 §4). A token
+signed with the realm's key but issued under another `iss` is rejected.
+
+The token response that carries the access token names the granted scopes in its `scope` member
+whenever there are any — see [Endpoints](/provider/endpoints/#the-token-endpoint).

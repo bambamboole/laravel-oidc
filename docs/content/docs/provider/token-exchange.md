@@ -81,6 +81,15 @@ Only `subject_token_type=urn:ietf:params:oauth:token-type:access_token` is suppo
 given, `requested_token_type` must also be the access-token URN); anything else is rejected with
 `invalid_request`.
 
+The target is named by `audience` or by `resource`, which must be an absolute URI without a
+fragment (RFC 8707 §2) — a relative value is `invalid_target`. Given together they must agree,
+otherwise `invalid_target`; given neither, `invalid_request`. Either way the value is checked
+against the client's `allowed_exchange_audiences` and becomes the token's `aud`.
+
+`actor_token` and `actor_token_type` are not supported: a request carrying either is rejected with
+`invalid_request` rather than issuing a token whose `act` chain ignores the actor. The `act` claim
+always names the exchanging client.
+
 ```json
 {
     "access_token": "eyJ...",
