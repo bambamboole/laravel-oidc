@@ -12,10 +12,10 @@ use Bambamboole\LaravelOidc\Server\Clients\Client;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ClientEntity as BridgeClient;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\ScopeRepository;
+use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Server\Tokens\Guard\ResolvesTokenUser;
 use Bambamboole\LaravelOidc\Server\Tokens\TokenInspector;
-use Bambamboole\LaravelOidc\Server\Tokens\TokenLifetimes;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -32,7 +32,7 @@ class TokenExchanger
         private readonly ExchangePolicy $policy,
         private readonly TokenInspector $inspector,
         private readonly AccessTokenMinter $minter,
-        private readonly TokenLifetimes $lifetimes,
+        private readonly RealmResolver $realms,
         private readonly ScopeRepository $scopes,
         private readonly AccessTokenPipeline $pipeline,
         private readonly Auditor $auditor,
@@ -120,7 +120,7 @@ class TokenExchanger
             throw OAuthServerException::accessDenied($api->denyReason());
         }
 
-        $ttl = $this->cappedTtl($accessTokenTTL ?? $this->lifetimes->accessToken(), $result->expiresAt);
+        $ttl = $this->cappedTtl($accessTokenTTL ?? $this->realms->current()->tokens()->accessToken(), $result->expiresAt);
 
         $token = $this->minter->mint($result->userId, $requestingClient, $scopeIds, $ttl, $result->audience);
 

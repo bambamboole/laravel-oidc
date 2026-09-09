@@ -16,10 +16,10 @@ use Bambamboole\LaravelOidc\Server\Protocol\League\Grants\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Grants\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\AuthCodeRepository;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\RefreshTokenRepository;
+use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
 use Bambamboole\LaravelOidc\Server\Tokens\Context\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\TokenExchanger;
-use Bambamboole\LaravelOidc\Server\Tokens\TokenLifetimes;
 use DateInterval;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
@@ -42,7 +42,7 @@ final readonly class AuthorizationServerFactory
         private SigningKeys $keys,
         private EncryptionKey $encryptionKey,
         private IdTokenResponse $responseType,
-        private TokenLifetimes $lifetimes,
+        private RealmResolver $realms,
         private AuthCodeRepository $authCodes,
         private RefreshTokenRepository $refreshTokens,
         private AccessTokenContextLink $contextLink,
@@ -73,7 +73,8 @@ final readonly class AuthorizationServerFactory
 
     private function enableGrants(AuthorizationServer $server): void
     {
-        $accessTokenTtl = $this->lifetimes->accessToken();
+        $realm = $this->realms->current();
+        $accessTokenTtl = $realm->tokens()->accessToken();
 
         $authCodeGrant = new OidcAuthCodeGrant(
             $this->authCodes,
@@ -85,8 +86,9 @@ final readonly class AuthorizationServerFactory
             $this->sessions,
             $this->sessionState,
             $this->auditor,
+            $this->realms,
         );
-        $authCodeGrant->setRefreshTokenTTL($this->lifetimes->refreshToken());
+        $authCodeGrant->setRefreshTokenTTL($realm->tokens()->refreshToken());
         $server->enableGrantType($authCodeGrant, $accessTokenTtl);
 
         $refreshGrant = new OidcRefreshTokenGrant(
@@ -97,15 +99,15 @@ final readonly class AuthorizationServerFactory
             $this->sessions,
             $this->auditor,
         );
-        $refreshGrant->setRefreshTokenTTL($this->lifetimes->refreshToken());
+        $refreshGrant->setRefreshTokenTTL($realm->tokens()->refreshToken());
         $server->enableGrantType($refreshGrant, $accessTokenTtl);
 
         $server->enableGrantType(
             new OidcClientCredentialsGrant($this->pipeline, $this->auditor),
-            $this->lifetimes->clientCredentials(),
+            $realm->tokens()->clientCredentials(),
         );
 
-        if (config('oidc.token_exchange.enabled', true)) {
+        if ($realm->clients()->tokenExchange) {
             $server->enableGrantType(new TokenExchangeGrant($this->exchanger), $accessTokenTtl);
         }
     }
