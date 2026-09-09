@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server;
 
-use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
 use Bambamboole\LaravelOidc\Server\Audit\LogSink;
 use Bambamboole\LaravelOidc\Server\Audit\RecordLoginAudit;
 use Bambamboole\LaravelOidc\Server\Audit\RecordLogoutAudit;
-use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\Contracts\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\NullDeviceRecognizer;
@@ -51,10 +49,6 @@ use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestView;
 use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
 use Bambamboole\LaravelOidc\Server\Forms\RegisterView;
 use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengeView;
-use Bambamboole\LaravelOidc\Server\Grant\OidcAuthCodeGrant;
-use Bambamboole\LaravelOidc\Server\Grant\OidcClientCredentialsGrant;
-use Bambamboole\LaravelOidc\Server\Grant\OidcRefreshTokenGrant;
-use Bambamboole\LaravelOidc\Server\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Server\Keys\EnvSigningKeyStore;
 use Bambamboole\LaravelOidc\Server\Keys\RotateKeysCommand;
@@ -84,7 +78,6 @@ use Bambamboole\LaravelOidc\Server\Token\PurgeTokensCommand;
 use Bambamboole\LaravelOidc\Server\Token\TokenInspector;
 use Bambamboole\LaravelOidc\Server\Token\TokenLifetimes;
 use Bambamboole\LaravelOidc\Server\User\UserActionManager;
-use DateInterval;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -106,7 +99,6 @@ use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use League\OAuth2\Server\Repositories\UserRepositoryInterface;
-use League\OAuth2\Server\RequestEvent;
 use Throwable;
 
 class OidcServiceProvider extends ServiceProvider
@@ -223,65 +215,6 @@ class OidcServiceProvider extends ServiceProvider
         $this->app->when(AuthorizationController::class)
             ->needs(StatefulGuard::class)
             ->give(fn () => Auth::guard((string) config('oidc.auth.guard', 'identity')));
-
-        $this->app->extend(AuthorizationServer::class, function (AuthorizationServer $server, Application $app): AuthorizationServer {
-            $lifetimes = $app->make(TokenLifetimes::class);
-            $accessTokenTtl = $lifetimes->accessToken();
-
-            $grant = new OidcAuthCodeGrant(
-                $app->make(AuthCodeRepository::class),
-                $app->make(RefreshTokenRepository::class),
-                new DateInterval('PT10M'),
-                $app->make(AccessTokenContextLink::class),
-                $app->make(AccessTokenPipeline::class),
-                $app->make(AuthenticationContextStore::class),
-                $app->make(OidcSessionRepository::class),
-                $app->make(AuthSessionState::class),
-                $app->make(Auditor::class),
-            );
-            $grant->setRefreshTokenTTL($lifetimes->refreshToken());
-
-            $server->enableGrantType($grant, $accessTokenTtl);
-
-            $refreshGrant = new OidcRefreshTokenGrant(
-                $app->make(RefreshTokenRepository::class),
-                $app->make(AccessTokenContextLink::class),
-                $app->make(AccessTokenPipeline::class),
-                $app->make(AuthenticationContextStore::class),
-                $app->make(OidcSessionRepository::class),
-                $app->make(Auditor::class),
-            );
-            $refreshGrant->setRefreshTokenTTL($lifetimes->refreshToken());
-            $server->enableGrantType($refreshGrant, $accessTokenTtl);
-
-            $server->enableGrantType(
-                new OidcClientCredentialsGrant($app->make(AccessTokenPipeline::class), $app->make(Auditor::class)),
-                $lifetimes->clientCredentials(),
-            );
-
-            if (config('oidc.token_exchange.enabled', true)) {
-                $server->enableGrantType(
-                    new TokenExchangeGrant(
-                        $app->make(TokenExchanger::class),
-                    ),
-                    $accessTokenTtl,
-                );
-            }
-
-            $auditClientAuthFailure = function (RequestEvent $event) use ($app): void {
-                $body = $event->getRequest()->getParsedBody();
-                $clientId = is_array($body) ? ($body['client_id'] ?? null) : null;
-                $clientId = is_string($clientId) ? $clientId : ($event->getRequest()->getQueryParams()['client_id'] ?? null);
-                $app->make(Auditor::class)->log(AuditEventType::ClientAuthenticationFailed, clientId: is_string($clientId) ? $clientId : null, context: [
-                    'endpoint' => trim($event->getRequest()->getUri()->getPath(), '/'),
-                    'reason' => $event->eventName(),
-                ]);
-            };
-            $server->getEmitter()->subscribeTo(RequestEvent::CLIENT_AUTHENTICATION_FAILED, $auditClientAuthFailure);
-            $server->getEmitter()->subscribeTo(RequestEvent::REFRESH_TOKEN_CLIENT_FAILED, $auditClientAuthFailure);
-
-            return $server;
-        });
     }
 
     /**
