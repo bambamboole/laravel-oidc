@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Contracts\EnrollableFactorProvider;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Data\EnrollmentOption;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorRole;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorSetupKind;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorChallenge;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorVerification;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Credential\Contracts\EnrollableFactorProvider;
+use Bambamboole\LaravelOidc\Server\Credential\Data\EnrollmentOption;
+use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorRole;
+use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorSetupKind;
+use Bambamboole\LaravelOidc\Server\Credential\FactorChallenge;
+use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Credential\FactorVerification;
+use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Lattice\Core\Support\Wire;

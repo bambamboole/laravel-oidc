@@ -22,8 +22,8 @@ or `deny()` to stop issuance before the access token is persisted. Triggers run 
 registration order and fail closed when a callback throws.
 
 ```php
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\ClientCredentialsEvent;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi $api): void {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordConfirmationView;
+use Bambamboole\LaravelOidc\Server\Forms\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;

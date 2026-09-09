@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Tables;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorRole;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorRole;
+use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;

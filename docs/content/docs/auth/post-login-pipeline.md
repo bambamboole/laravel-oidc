@@ -11,8 +11,8 @@ and **before** the [MFA challenge](/auth/multi-factor/) is presented — so it i
 effects such as audit logging from inside it.
 
 ```php
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginApi;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginEvent;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginApi;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
 Oidc::postLogin(function (LoginEvent $event, LoginApi $api): void {
