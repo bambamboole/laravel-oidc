@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Scopes\DefaultScopeRepository;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
 use Bambamboole\LaravelOidc\Server\Scopes\ScopeCatalog;
@@ -28,7 +29,7 @@ class RepositoryThrowingCatalog implements ScopeCatalog
     }
 }
 
-beforeEach(fn () => $this->repository = new DefaultScopeRepository(app()));
+beforeEach(fn () => $this->repository = new DefaultScopeRepository(app(), app(RealmResolver::class)));
 
 it('exposes registered scopes plus the oidc standard scopes', function () {
     config(['oidc.scopes.catalog' => ['project:update' => 'Update projects']]);

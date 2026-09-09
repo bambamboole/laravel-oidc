@@ -11,9 +11,9 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PersonalAccessTokenEv
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ClientEntity;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\ScopeRepository;
+use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
-use DateInterval;
 use Illuminate\Contracts\Auth\Authenticatable;
 use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -33,6 +33,7 @@ final readonly class PersonalAccessTokenFactory
         private AccessTokenMinter $minter,
         private AccessTokenPipeline $pipeline,
         private Auditor $auditor,
+        private RealmResolver $realms,
     ) {}
 
     /** @param  list<string>  $scopes */
@@ -70,7 +71,7 @@ final readonly class PersonalAccessTokenFactory
             userId: $userId,
             client: $client,
             scopeIds: $granted,
-            ttl: new DateInterval('PT'.(int) config('oidc.token_lifetimes.access_token').'S'),
+            ttl: $this->realms->current()->tokens()->accessToken(),
             extraClaims: $claims,
         );
 

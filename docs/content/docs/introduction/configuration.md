@@ -25,7 +25,7 @@ below with its default and the environment variable that overrides it.
 | `api_guard` | `env('OIDC_API_GUARD', 'oidc')` | The guard the userinfo endpoint (and resource-server routes using `auth:oidc`) authenticates against. Registered automatically if absent, the same way `auth.guard` is. |
 | `claims_supported` | standard set | Claims advertised in the discovery document. |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
-| `realm` | `'default'` (`OIDC_REALM`) | Identifier of the realm every request belongs to, unless a `RealmResolver` derives it. See [Realms](/provider/realms/). |
+| `realm` | `'default'` (`OIDC_REALM`) | Identifier of the realm outside a matched route and of the only realm in a single-realm deployment; per-realm settings come from the `Realm` contract. See [Realms](/provider/realms/). |
 | `routes.middleware` | `[]` | Middleware prepended to every registered package route. |
 
 ## Scopes
