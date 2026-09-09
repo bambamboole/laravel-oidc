@@ -1,10 +1,10 @@
 ---
 title: The post-login pipeline
-description: The Oidc::postLogin() decision hook that runs once per login, its read/write API, fail-closed behavior, and how it emits acr/amr onto the id_token.
+description: The PostLoginPipeline decision hook that runs once per login, its read/write API, fail-closed behavior, and how it emits acr/amr onto the id_token.
 ---
 
-`Oidc::postLogin()` is a **decision hook**, not an access-token trigger. Unlike
-[`Oidc::clientCredentials()` and `Oidc::tokenExchange()`](/provider/claim-hooks/), it participates
+`PostLoginPipeline::register()` is a **decision hook**, not an access-token trigger. Unlike the
+[access-token triggers on `AccessTokenPipeline`](/provider/claim-hooks/), it participates
 in the interactive login decision itself. Register it in a service provider's
 `boot()`. It runs **exactly once** per login attempt — after the primary factor (password) succeeds
 and **before** the [MFA challenge](/auth/multi-factor/) is presented — so it is safe to perform side
@@ -13,9 +13,9 @@ effects such as audit logging from inside it.
 ```php
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginApi;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginEvent;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PostLoginPipeline;
 
-Oidc::postLogin(function (LoginEvent $event, LoginApi $api): void {
+app(PostLoginPipeline::class)->register(function (LoginEvent $event, LoginApi $api): void {
     if ($event->requestsAcr('mfa')) {
         $api->requireMfa();
     }

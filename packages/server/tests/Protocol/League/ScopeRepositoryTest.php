@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ClientEntity as BridgeClient;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ScopeEntity;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\ScopeRepository as LeagueScopeRepository;
@@ -11,7 +10,7 @@ use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Workbench\App\Models\User;
 
 it('is bound as the league scope repository', function () {
-    expect(app(ScopeRepositoryInterface::class))->toBeInstanceOf(LeagueScopeRepository::class);
+    expect(get_class(app(ScopeRepositoryInterface::class)))->toBe(LeagueScopeRepository::class);
 });
 
 it('resolves oidc scopes that passport does not know', function () {
@@ -26,7 +25,7 @@ it('returns null for unknown scopes', function () {
 });
 
 it('finalizes scopes through the contract', function () {
-    Oidc::tokensCan(['project:update' => 'Update projects']);
+    config(['oidc.scopes.catalog' => ['project:update' => 'Update projects']]);
     $client = new BridgeClient('client-id', 'Test', ['https://rp.test/callback']);
 
     $finalized = app(LeagueScopeRepository::class)->finalizeScopes(

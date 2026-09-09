@@ -6,7 +6,7 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Tokens\Actions\IssueScopedToken;
 use Lcobucci\JWT\Encoding\JoseEncoder;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
@@ -30,7 +30,7 @@ beforeEach(function () {
 it('issues an audience-scoped token for the session user', function () {
     $this->actingAs($this->user);
 
-    $issued = Oidc::issueScopedToken('https://api.orders.test', ['openid']);
+    $issued = app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 
     expect($issued->audience)->toBe('https://api.orders.test')
         ->and($issued->scopes)->toBe(['openid'])
@@ -49,5 +49,5 @@ it('issues an audience-scoped token for the session user', function () {
 });
 
 it('throws when there is no session token (unauthenticated)', function () {
-    Oidc::issueScopedToken('https://api.orders.test', ['openid']);
+    app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 })->throws(RuntimeException::class);

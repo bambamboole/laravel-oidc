@@ -8,8 +8,5 @@ use Illuminate\Support\ServiceProvider;
 
 class UsersServiceProvider extends ServiceProvider
 {
-    public function register(): void
-    {
-        $this->app->singleton(UserActionManager::class);
-    }
+    public function register(): void {}
 }

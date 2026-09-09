@@ -78,22 +78,29 @@ hitting a `GET` route — it binds every contract to a minimal JSON responder (s
 
 ## Action seams
 
-Two domain actions let the package stay out of your user model and persistence:
+Three action contracts under `Bambamboole\LaravelOidc\Server\Users\Actions` let the package
+stay out of your user model and persistence. Bind your implementation in a service provider:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
+use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUserFromSocialAccount;
+use Bambamboole\LaravelOidc\Server\Users\Actions\ResetUserPassword;
 
 // Called by the registration flow with the validated input array.
-// Return the created Authenticatable.
-Oidc::createUsersUsing(App\Actions\CreateNewUser::class);
+$this->app->bind(CreateUser::class, App\Actions\CreateNewUser::class);
 
 // Called by the password-reset flow with the user and validated input.
-Oidc::resetUserPasswordsUsing(App\Actions\ResetUserPassword::class);
+$this->app->bind(ResetUserPassword::class, App\Actions\ResetUserPassword::class);
+
+// Called on first social login when auto_provision is on.
+$this->app->bind(CreateUserFromSocialAccount::class, App\Actions\CreateUserFromGoogle::class);
 ```
 
-Each accepts a callable or an invokable/`class-string`. A `class-string` is resolved from the
-container; a class is expected to expose a `create(array $input)` / `reset($user, array $input)`
-method. `createUsersUsing` must return an `Authenticatable`.
+Each contract is a single `__invoke()` method: `CreateUser(array $input): Authenticatable`,
+`ResetUserPassword(CanResetPassword $user, array $input): void`, and
+`CreateUserFromSocialAccount(SocialUser $socialUser, string $provider): Authenticatable`.
+A flow whose contract is not bound is disabled: registration answers 404 and social
+provisioning fails the login instead of creating a user.
 
 ## What the app keeps, what the package owns
 

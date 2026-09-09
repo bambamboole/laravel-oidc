@@ -33,7 +33,7 @@ The store action is throttled to **5 requests per minute** and runs the followin
 4. **Record the primary factor.** The `pwd` authentication method is recorded (it becomes part of
    the `amr` claim — see [Multi-factor](/auth/multi-factor/)).
 5. **Run the [post-login pipeline](/auth/post-login-pipeline/).** A `LoginEvent` is dispatched
-   through `Oidc::postLogin(...)` hooks. If a hook denies the login, the recorded factor is
+   through the hooks registered on `PostLoginPipeline`. If a hook denies the login, the recorded factor is
    discarded and the request fails with the same generic `auth.failed` message. Queued
    `id_token`/`access_token` claims from the pipeline are stored on the session.
 6. **Branch on MFA** (below).

@@ -1,6 +1,6 @@
 ---
 title: Extension contracts
-description: The container-bound seams — IssuerResolver, ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer — and how to rebind each.
+description: The container-bound seams — IssuerResolver, ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer, the domain actions — and how to rebind each.
 ---
 
 Each of the package's extension points is a container-bound interface with a default
@@ -59,8 +59,7 @@ interface ScopeRepository
 ```
 
 The default `DefaultScopeRepository` merges scopes in order: first, the configured
-catalog (`oidc.scopes.catalog`); second, scopes registered via `Oidc::tokensCan()`;
-third, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
+catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
 The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
 (See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
 the catalog:
@@ -101,7 +100,7 @@ $this->app->singleton(
 ## `ExchangePolicy`
 
 `Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy` authorizes every RFC 8693 token
-exchange (and every `Oidc::issueScopedToken()` call).
+exchange (and every `IssueScopedToken` action call).
 
 ```php
 interface ExchangePolicy
@@ -175,3 +174,29 @@ $this->app->singleton(
     MyDeviceRecognizer::class,
 );
 ```
+
+## Domain actions
+
+Every use case the package's controllers, commands and jobs perform is an invokable
+class under `<Domain>\Actions`. Controllers validate the request, call the action and
+shape the response; the action owns the behavior, including audit events. Actions are
+resolved from the container, so binding your own class to an action's name replaces it
+for every caller:
+
+```php
+$this->app->bind(RegisterClient::class, App\Oidc\RegisterClientWithApproval::class);
+```
+
+| Action | Domain | Called by |
+| --- | --- | --- |
+| `RegisterUser`, `AuthenticateWithPassword`, `SendPasswordResetLink`, `ResetPassword`, `ConfirmPassword`, `SendEmailVerification` | `Authentication` | the login, registration, password and verification endpoints |
+| `EnrollFactor`, `ConfirmFactorEnrollment`, `RevokeFactor`, `VerifyFactorChallenge` | `Credentials` | the factor enrollment and two-factor challenge endpoints |
+| `LinkSocialAccount`, `UnlinkSocialAccount` | `Brokering` | the social callback and linked-account endpoints |
+| `RegisterClient`, `ProvisionFirstPartyClient` | `Clients` | dynamic client registration, `oidc:client`, `oidc:install-self` |
+| `IssueScopedToken` | `Tokens` | your application, to mint browser tokens |
+| `EndSession` | `Sessions` | the end-session endpoint |
+| `CompleteAuthorization` | `Consents` | the consent approve and deny endpoints |
+
+The three contracts under `Users\Actions` (`CreateUser`, `ResetUserPassword`,
+`CreateUserFromSocialAccount`) have no default implementation; see
+[Auth overview](/auth/overview/#action-seams).

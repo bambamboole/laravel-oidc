@@ -6,9 +6,8 @@ description: The OIDC scope catalog and how an authenticated user is mapped to c
 ## Scope catalog
 
 The provider understands the OIDC standard scopes — `openid`, `profile`, `email`, `address`,
-`phone` — merged with your configured catalog (`scopes.catalog`, below) and any scopes a
-third party registered directly via `Oidc::tokensCan()`. On a conflict the configured
-catalog wins, then `tokensCan()`-registered scopes, then the built-in OIDC scopes — so you can
+`phone` — merged with your configured catalog (`scopes.catalog`, below). On a conflict the configured
+catalog wins over the built-in OIDC scopes — so you can
 override the description of a standard scope simply by defining it in your catalog.
 
 ### Wildcard (`*`)
@@ -21,7 +20,7 @@ granted on a consent screen.
 ### Registering API scopes
 
 Feed your API scope catalog to the provider through `config/oidc.php`'s `scopes.catalog`
-option instead of calling `Oidc::tokensCan()` yourself:
+option:
 
 ```php
 'scopes' => [
@@ -34,14 +33,11 @@ A class-string must implement `Bambamboole\LaravelOidc\Server\Scopes\ScopeCatalo
 resolved from the container the first time scopes are actually enumerated (the
 consent screen, the discovery document, token issuance), so a database-backed
 catalog costs nothing on unrelated requests, keeping key- and db-less artisan
-runs working, and the result is memoized for the life of the repository.
+runs working, and the result is memoized for the life of the repository; an
+inline array is read fresh on every enumeration.
 Exceptions thrown by `scopes()` fall back to an empty catalog; an invalid
 class-string still fails loudly, at first enumeration rather than at boot.
-
-Scopes registered at runtime via `Oidc::tokensCan()` (by a third-party package,
-for instance) are still honored — the repository merges them in, with the
-configured catalog winning on conflict. Enumerate the full catalog through the
-`ScopeRepository` contract.
+Enumerate the full catalog through the `ScopeRepository` contract.
 
 The scope catalog is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.

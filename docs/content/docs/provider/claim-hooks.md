@@ -3,19 +3,21 @@ title: Custom claims & triggers
 description: Adding claims to access tokens and userinfo responses through supported extension points.
 ---
 
-Access-token claims are added through capability-scoped triggers registered on the `Oidc` facade.
+Access-token claims are added through capability-scoped triggers registered on the
+`Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline` service.
 Userinfo claims come from the application's `ClaimsResolver` implementation.
 
 ## Access-token triggers
 
-Four access-token triggers are available:
+Four access-token triggers are available; register one with
+`app(AccessTokenPipeline::class)->register($kind, $callback)`:
 
-| Method | Fires on | Read context |
+| Kind | Fires on | Read context |
 | --- | --- | --- |
-| `Oidc::clientCredentials()` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
-| `Oidc::tokenExchange()` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
-| `Oidc::personalAccessToken()` | Personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
-| `Oidc::authorizationCode()` | `authorization_code` grant and every `refresh_token` reissue | `AuthorizationCodeEvent` — `user`, `client`, finalized `scopes`, and `grantType` |
+| `client_credentials` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
+| `token_exchange` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
+| `personal_access_token` | Personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
+| `authorization_code` | `authorization_code` grant and every `refresh_token` reissue | `AuthorizationCodeEvent` — `user`, `client`, finalized `scopes`, and `grantType` |
 
 Each callback also receives an `AccessTokenApi`. Use `setAccessTokenClaim()` to add a custom claim,
 or `deny()` to stop issuance before the access token is persisted. Triggers run once per issuance in
@@ -23,19 +25,19 @@ registration order and fail closed when a callback throws.
 
 ```php
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 
-Oidc::clientCredentials(function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
+app(AccessTokenPipeline::class)->register('client_credentials', function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
     $api->setAccessTokenClaim('tenant', $event->client->getIdentifier());
 });
 ```
 
-For interactive access-token claims computed once at login, register `Oidc::postLogin()` and call
+For interactive access-token claims computed once at login, register a hook on `PostLoginPipeline` and call
 `LoginApi::setAccessTokenClaim()`. The authentication context carries those claims onto the
 authorization-code access token and reissues them through refresh. The same
 [post-login pipeline](/auth/post-login-pipeline/) handles login decisions and `id_token` claims.
-`Oidc::authorizationCode()` complements it for claims that must be re-evaluated on every issuance;
+The `authorization_code` trigger complements it for claims that must be re-evaluated on every issuance;
 its claims are stamped after the context's, so a trigger can override a stale login-time claim.
 
 ## Userinfo claims

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
@@ -14,9 +13,9 @@ use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 beforeEach(function () {
-    Oidc::tokensCan([
+    config(['oidc.scopes.catalog' => [
         'openid' => 'Authenticate',
-    ]);
+    ]]);
 
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
 
