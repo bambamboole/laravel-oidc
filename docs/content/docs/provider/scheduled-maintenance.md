@@ -9,8 +9,6 @@ their pruning yourself:
 - **The token tables** (`oidc_access_tokens`, `oidc_refresh_tokens`, `oidc_auth_codes`) grow one
   row per token issuance. With short access-token TTLs and refresh-token rotation, that's a row on
   every refresh. Prune them with `oidc:purge`.
-- **`oidc_access_token_contexts`** grows one row per access-token issuance. `oidc:purge` prunes
-  it too, on its own retention horizon (see below).
 - **`oidc_authentication_contexts`** grows one row per login. Prune it with
   `oidc:prune-authentication-contexts`.
 - **`oidc_sessions`** and **`oidc_session_participants`** grow one row per login session and per
@@ -49,7 +47,6 @@ available to queued back-channel logout jobs; unnotified sessions are retained.
 
 `oidc:purge` deletes revoked records and records that expired more than `--hours` ago (a week by
 default), so a chain still inside its retention window is never cut short. Pass `--revoked` or
-`--expired` to restrict it to one of the two. It also deletes `oidc_access_token_contexts` link
-rows older than `oidc.session.absolute_lifetime` **plus** the refresh-token lifetime, so a
-still-rotating refresh chain never loses its link early (which would silently drop the
-deny-on-expiry cap). That horizon is independent of `--hours`.
+`--expired` to restrict it to one of the two.
+
+`oidc_consents` is not pruned: a consent has no expiry and holds one row per user and client.

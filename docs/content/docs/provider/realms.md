@@ -152,12 +152,13 @@ deployment.
 
 ## What the package scopes
 
-`realm_id` is stored on `oidc_clients`, `oidc_access_tokens`, `oidc_auth_codes`, `oidc_sessions`,
-`oidc_signing_keys`, `oidc_authentication_contexts` and `oidc_social_accounts`. A `client_id` only
-has to be unique **within** its realm, so the same readable name can exist in several.
-
-Refresh tokens carry no realm of their own — they inherit the one of the access token they were
-issued alongside.
+`realm_id` is stored on `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
+`oidc_auth_codes`, `oidc_consents`, `oidc_sessions`, `oidc_signing_keys`,
+`oidc_authentication_contexts` and `oidc_social_accounts`. A `client_id` only has to be unique
+**within** its realm, so the same readable name can exist in several; likewise a social
+provider's user id is unique per realm, so the same upstream identity can be linked to a different
+user in each realm. Session participants carry no realm of their own — they belong to a session,
+which does.
 
 Scoping is explicit (`Model::query()->inRealm()`), not a global scope: administration reads across
 realms on purpose, and a guard that half the callers disable hides the isolation it claims to

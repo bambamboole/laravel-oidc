@@ -23,7 +23,8 @@ callback against that pending authorization and exchanges the code for the upstr
 
 Every upstream identity linked to a local user is stored in `oidc_social_accounts`
 (`2026_07_16_000008_create_oidc_social_accounts_table`): a polymorphic
-`authenticatable_type`/`authenticatable_id` pair, `provider`, `provider_user_id` (unique together),
+`authenticatable_type`/`authenticatable_id` pair, `realm_id`, `provider`, `provider_user_id`
+(unique together),
 `email`, `name`, `nickname`, `avatar`, `access_token`, `refresh_token`, `token_expires_at`, and the
 upstream claims as `raw` JSON.
 
@@ -141,8 +142,8 @@ for rendering login buttons:
 
 On callback, `SocialAccountManager::resolveUser` resolves the local user in this order:
 
-1. **Existing link** — an `oidc_social_accounts` row already matches `provider` +
-   `provider_user_id`. The account's stored fields are refreshed from the latest `SocialUser`.
+1. **Existing link** — an `oidc_social_accounts` row in the current realm already matches
+   `provider` + `provider_user_id`. The account's stored fields are refreshed from the latest `SocialUser`.
 2. **Verified-email link** — when `link_by_verified_email` is enabled and the upstream identity
    reports a verified email, an existing user with that email is matched and linked.
 3. **JIT provisioning** — when `auto_provision` is enabled and a `CreateUserFromSocialAccount` action
