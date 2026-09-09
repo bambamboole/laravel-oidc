@@ -3,9 +3,9 @@ title: Upgrading from the Passport-backed releases
 description: What changed when the package took ownership of the OAuth2 core, and what you have to do about it.
 ---
 
-Up to 0.22 the package built on **Laravel Passport**. It now owns the OAuth2 core directly on top
-of `league/oauth2-server`: its own tables, models, repositories and controllers. Passport is no
-longer a dependency.
+Up to 0.22 the package built on **Laravel Passport**. It now owns the OAuth2 core outright: its
+own tables, models, grants and controllers, with no OAuth2 library underneath. Neither Passport
+nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 

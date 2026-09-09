@@ -17,11 +17,10 @@ Standard claims: `iss`, `aud`, `sub`, `client_id`, `iat`, `nbf`, `exp`, `jti`, a
 space-delimited `scope` string (e.g. `"openid email"`).
 
 The legacy `scopes` array claim (`["openid", "email"]`) is retained alongside `scope` for
-compatibility with clients that read scopes from the token body — league's
-`BearerTokenValidator` reads a token's scopes straight from this claim. This package's own
-`auth:oidc` guard and userinfo endpoint don't depend on it; they read scopes off the persisted
-token record instead. Both claims describe the same grant; `scope` is the RFC 9068 form and
-`scopes` is the compatibility form.
+compatibility with resource servers that read scopes from the token body as an array. This
+package's own `auth:oidc` guard and userinfo endpoint don't depend on it; they read scopes off
+the persisted token record instead. Both claims describe the same grant; `scope` is the RFC 9068
+form and `scopes` is the compatibility form.
 
 `aud` defaults to the requesting client's id. It is overridden by
 [token exchange](/provider/token-exchange/), which sets `aud` to the requested
