@@ -9,7 +9,7 @@ method to replace the behavior without touching a caller.
 
 ## `IssuerResolver`
 
-`Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver` returns the issuer identifier every
+`Bambamboole\LaravelOidc\Server\Realm\IssuerResolver` returns the issuer identifier every
 protocol surface builds on: the `iss` claim of `id_token`s, access tokens and logout tokens, the
 `issuer` and endpoint URLs in the discovery document, the audience the `oidc` guard accepts, and
 RFC 9728 resource metadata.
@@ -27,7 +27,7 @@ from the current request (a host or path segment) and still be reset per request
 
 ```php
 $this->app->scoped(
-    \Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver::class,
+    \Bambamboole\LaravelOidc\Server\Realm\IssuerResolver::class,
     PerHostIssuerResolver::class,
 );
 ```
@@ -39,7 +39,7 @@ resolved issuer origin.
 
 ## `ScopeRepository`
 
-`Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository` is the catalog of scopes the
+`Bambamboole\LaravelOidc\Server\Scopes\ScopeRepository` is the catalog of scopes the
 provider understands.
 
 ```php
@@ -67,14 +67,14 @@ the catalog:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository::class,
+    \Bambamboole\LaravelOidc\Server\Scopes\ScopeRepository::class,
     MyScopeRepository::class,
 );
 ```
 
 ## `ClaimsResolver`
 
-`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the
+`Bambamboole\LaravelOidc\Server\Claims\ClaimsResolver` turns a `ClaimsRequest` into the
 claims to emit.
 
 ```php
@@ -93,14 +93,14 @@ The default is `DefaultClaimsResolver`. Bind your own:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Claims\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```
 
 ## `ExchangePolicy`
 
-`Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy` authorizes every RFC 8693 token
+`Bambamboole\LaravelOidc\Server\Exchange\ExchangePolicy` authorizes every RFC 8693 token
 exchange (and every `Oidc::issueScopedToken()` call).
 
 ```php
@@ -119,14 +119,14 @@ a different allowlist source:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\ExchangePolicy::class,
+    \Bambamboole\LaravelOidc\Server\Exchange\ExchangePolicy::class,
     TenantScopedExchangePolicy::class,
 );
 ```
 
 ## `SessionTokenProvider`
 
-`Bambamboole\LaravelOidc\Server\Contracts\SessionTokenProvider` owns the server-side session
+`Bambamboole\LaravelOidc\Server\Session\SessionTokenProvider` owns the server-side session
 root token used by the [browser-fetch flow](/advanced/browser-fetch/).
 
 ```php
@@ -146,7 +146,7 @@ Rebind it to source the root token elsewhere (e.g. an external SSO exchange):
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\SessionTokenProvider::class,
+    \Bambamboole\LaravelOidc\Server\Session\SessionTokenProvider::class,
     MyExternalSsoTokenProvider::class,
 );
 ```

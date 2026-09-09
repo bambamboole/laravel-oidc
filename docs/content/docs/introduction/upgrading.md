@@ -71,7 +71,7 @@ the cutover.
 -use Laravel\Passport\Contracts\OAuthenticatable;
 -use Laravel\Passport\HasApiTokens;
 +use Bambamboole\LaravelOidc\Server\User\Concerns\HasOidcTokens;
-+use Bambamboole\LaravelOidc\Server\Contracts\OAuthenticatable;
++use Bambamboole\LaravelOidc\Server\User\OAuthenticatable;
 
  class User extends Authenticatable implements OAuthenticatable
  {

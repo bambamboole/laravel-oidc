@@ -128,7 +128,7 @@ Schema::create('oidc_audit_log', function (Blueprint $table) {
 namespace App\Audit;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
-use Bambamboole\LaravelOidc\Server\Contracts\AuditSink;
+use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
 use Illuminate\Support\Facades\DB;
 
 class EloquentAuditSink implements AuditSink
@@ -197,7 +197,7 @@ The package ships an in-memory fake for host-app test suites:
 
 ```php
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
-use Bambamboole\LaravelOidc\Server\Contracts\AuditSink;
+use Bambamboole\LaravelOidc\Server\Audit\AuditSink;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
 
 $sink = new FakeAuditSink;
