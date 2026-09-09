@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server;
 
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenPipeline;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Server\Clients\FirstPartyClientConfig;

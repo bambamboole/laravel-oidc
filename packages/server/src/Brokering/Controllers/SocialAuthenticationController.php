@@ -6,9 +6,9 @@ namespace Bambamboole\LaravelOidc\Server\Brokering\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\InteractiveLoginFinalizer;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginOutcome;
+use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinalizer;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Server\Brokering\InvalidStateException;
 use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;

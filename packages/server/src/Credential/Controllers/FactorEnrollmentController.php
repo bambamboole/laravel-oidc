@@ -6,7 +6,7 @@ namespace Bambamboole\LaravelOidc\Server\Credential\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Credential\Contracts\EnrollableFactorProvider;
 use Bambamboole\LaravelOidc\Server\Credential\Data\EnrollmentOption;
 use Bambamboole\LaravelOidc\Server\Credential\EnrollmentPolicy;

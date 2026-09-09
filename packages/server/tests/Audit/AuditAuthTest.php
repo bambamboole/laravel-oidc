@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginApi;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginEvent;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginApi;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;

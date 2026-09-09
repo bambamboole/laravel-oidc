@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Testing;
 
-use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\ConsentView;

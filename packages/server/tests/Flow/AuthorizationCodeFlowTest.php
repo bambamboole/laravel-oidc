@@ -5,12 +5,12 @@ declare(strict_types=1);
  * OAuth 2.1 §4.1 authorization code grant + RFC 7636 PKCE (S256); OpenID Connect Core 1.0 §3.1.3 (id_token issuance/validation)
  */
 
-use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Auth\Models\AccessTokenContext;
 use Bambamboole\LaravelOidc\Server\Auth\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Server\Auth\Models\OidcSession;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Server\Auth\Pipeline\AuthorizationCodeEvent;
+use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AuthorizationCodeEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\ApproveAuthorizationController;

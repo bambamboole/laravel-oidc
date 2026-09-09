@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Brokering\Models\SocialAccount;
 use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;

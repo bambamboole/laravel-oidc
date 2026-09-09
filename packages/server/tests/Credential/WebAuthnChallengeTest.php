@@ -7,7 +7,7 @@ declare(strict_types=1);
  * request (options persisted server-side) and verified in the next.
  */
 
-use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Passkeys\Actions\VerifyPasskey;

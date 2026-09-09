@@ -6,8 +6,8 @@ namespace Bambamboole\LaravelOidc\Server\Credential\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
-use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
-use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
+use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Credential\FactorChallenge;
 use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
