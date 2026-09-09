@@ -29,7 +29,7 @@ option instead of calling `Oidc::tokensCan()` yourself:
 ],
 ```
 
-A class-string must implement `Bambamboole\LaravelOidc\Server\Contracts\ScopeCatalog`
+A class-string must implement `Bambamboole\LaravelOidc\Server\Scopes\ScopeCatalog`
 (`scopes(): array<string, string>`). The scope repository consults it lazily —
 resolved from the container the first time scopes are actually enumerated (the
 consent screen, the discovery document, token issuance), so a database-backed
@@ -48,7 +48,7 @@ The scope catalog is provided by the `ScopeRepository` contract — see
 
 ## Claims
 
-`Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the claim
+`Bambamboole\LaravelOidc\Server\Claims\ClaimsResolver` turns a `ClaimsRequest` into the claim
 map to emit. The request carries the authenticated user, the requesting client, the granted
 scopes, and which surface is being built — so a resolver can vary claims per client, or emit a
 claim into the `id_token` but not userinfo.
@@ -73,7 +73,7 @@ only emitted when its scope was granted — null values are dropped.
 ```php
 use Bambamboole\LaravelOidc\Server\Claims\ClaimSet;
 use Bambamboole\LaravelOidc\Server\Claims\ClaimsRequest;
-use Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver;
+use Bambamboole\LaravelOidc\Server\Claims\ClaimsResolver;
 
 class AppClaimsResolver implements ClaimsResolver
 {
@@ -112,7 +112,7 @@ Bind your resolver so the provider uses it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Contracts\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Claims\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```
