@@ -6,7 +6,7 @@ description: Install laravel-oidc-client, enable the relying party, and register
 ## Requirements
 
 - PHP `^8.4`
-- Laravel 12 or 13
+- Laravel 13
 
 There is no database migration and no key material to generate — the client verifies
 tokens against the provider's published JWKS.
