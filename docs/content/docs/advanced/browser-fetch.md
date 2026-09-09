@@ -83,7 +83,7 @@ $this->app->singleton(SessionTokenProvider::class, MyExternalSsoTokenProvider::c
 ## Issuing a browser token
 
 ```php
-use Bambamboole\LaravelOidc\Server\Tokens\Actions\IssueScopedToken;
+use Bambamboole\LaravelOidc\Server\Sessions\Actions\IssueScopedToken;
 
 $issued = app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 ```

@@ -83,7 +83,7 @@ stay out of your user model and persistence. Bind your implementation in a servi
 
 ```php
 use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUser;
-use Bambamboole\LaravelOidc\Server\Users\Actions\CreateUserFromSocialAccount;
+use Bambamboole\LaravelOidc\Server\Brokering\Actions\CreateUserFromSocialAccount;
 use Bambamboole\LaravelOidc\Server\Users\Actions\ResetUserPassword;
 
 // Called by the registration flow with the validated input array.

@@ -28,7 +28,7 @@ option:
 ],
 ```
 
-A class-string must implement `Bambamboole\LaravelOidc\Server\Scopes\ScopeCatalog`
+A class-string must implement `Bambamboole\LaravelOidc\Server\Shared\Scopes\ScopeCatalog`
 (`scopes(): array<string, string>`). The scope repository consults it lazily —
 resolved from the container the first time scopes are actually enumerated (the
 consent screen, the discovery document, token issuance), so a database-backed
