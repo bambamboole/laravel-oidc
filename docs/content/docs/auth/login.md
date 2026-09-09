@@ -112,5 +112,5 @@ Route::post('/logout', function (Request $request) {
 ```
 
 Terminating the interactive session is separate from **OIDC RP-initiated logout** at
-`/oauth/logout`, which relying parties use to end the OP session and any downstream sessions. That
+`/realms/{realm}/oauth/logout`, which relying parties use to end the OP session and any downstream sessions. That
 endpoint and its CSRF threat model are documented under [Logout](/provider/logout/).

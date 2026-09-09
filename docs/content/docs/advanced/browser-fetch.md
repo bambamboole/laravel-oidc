@@ -90,7 +90,7 @@ $issued = Oidc::issueScopedToken('https://api.orders.test', ['openid']);
 
 `issueScopedToken(string $audience, array $scopes): IssuedToken` reads the current
 session root token, exchanges it (in-process, via the same RFC 8693 grant logic used by
-`/oauth/token`) for a token scoped to `$audience`, and returns an `IssuedToken`:
+`/realms/{realm}/oauth/token`) for a token scoped to `$audience`, and returns an `IssuedToken`:
 
 ```php
 final readonly class IssuedToken

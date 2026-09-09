@@ -213,7 +213,7 @@ $sink->events(AuditEventType::TokenIssued); // list<AuditEvent>
 
 ## Limitations
 
-- **`invalid_grant` raised inside league/oauth2-server at `/oauth/token`** — a replayed, expired,
+- **`invalid_grant` raised inside league/oauth2-server at `/realms/{realm}/oauth/token`** — a replayed, expired,
   or malformed authorization code, a PKCE verifier mismatch, or a structurally invalid refresh
   token — happens before any package seam runs and emits no event, so it is not audited. These
   surface only as `400` responses to the client. Everything that flows through package code

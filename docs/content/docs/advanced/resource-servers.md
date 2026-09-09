@@ -28,12 +28,12 @@ client's `allowed_exchange_audiences`.
 
 ## Three validation options
 
-- **JWKS (stateless).** Fetch `GET /.well-known/openid-configuration`, follow
+- **JWKS (stateless).** Fetch `GET /realms/{realm}/.well-known/openid-configuration`, follow
   `jwks_uri`, verify the token's signature against the matching key (`kid`), and check
   that `iss` matches the issuer, `aud` contains your resource server's audience, `exp`
   is in the future, and the header `typ` is `at+jwt`. No call back to the OP per
   request — but it cannot see a token revoked before its `exp`.
-- **Introspection (revocation-aware).** `POST /oauth/introspect` with the resource
+- **Introspection (revocation-aware).** `POST /realms/{realm}/oauth/introspect` with the resource
   server's own client credentials and the token as `token`. Returns
   `{"active": true, ...}` or `{"active": false}` — catches tokens revoked before their
   `exp`, at the cost of a round trip per check.
