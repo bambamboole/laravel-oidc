@@ -15,7 +15,8 @@ for how to replace a controller, and [Realms](/provider/realms/) for the prefix 
 | AS metadata | `GET /.well-known/oauth-authorization-server/realms/{realm}/{path?}` | RFC 8414 authorization server metadata (same document as Discovery) |
 | Protected resource | `GET /.well-known/oauth-protected-resource/realms/{realm}/{path?}` | RFC 9728 protected resource metadata — see [Dynamic client registration & MCP](/provider/dynamic-client-registration/) |
 | JWKS | `GET /realms/{realm}/.well-known/jwks.json` | Public signing keys (RS256) |
-| Authorize | `GET /realms/{realm}/oauth/authorize` | Authorization request (PKCE `S256` required) |
+| Authorize | `GET\|POST /realms/{realm}/oauth/authorize` | Authorization request (PKCE `S256` required) |
+| Consent | `POST\|DELETE /realms/{realm}/oauth/authorize/consent` | Approve (`POST`) or deny (`DELETE`) the pending authorization request |
 | Token | `POST /realms/{realm}/oauth/token` | Token endpoint (all grants) |
 | Register | `POST /realms/{realm}/oauth/register` | RFC 7591 dynamic client registration (disabled by default) |
 | UserInfo | `GET\|POST /realms/{realm}/oauth/userinfo` | Claims for the bearer token |
@@ -50,14 +51,43 @@ sequenceDiagram
         B->>OP: Authenticate (password, MFA, ...)
     end
     OP->>B: Consent view (skipped for trusted clients)
-    B->>OP: POST /realms/{realm}/oauth/authorize (approve)
-    OP->>B: Redirect to redirect_uri?code=...
+    B->>OP: POST /realms/{realm}/oauth/authorize/consent (approve)
+    OP->>B: Redirect to redirect_uri?code=...&iss=...
     B->>RP: Authorization code
     RP->>OP: POST /realms/{realm}/oauth/token (code + code_verifier)
     OP->>RP: access_token (at+jwt), id_token, refresh_token
     RP->>OP: GET /realms/{realm}/oauth/userinfo (Bearer access_token)
     OP->>RP: Claims for the granted scopes
 ```
+
+## The authorization endpoint
+
+The endpoint accepts `GET` and `POST` (OpenID Connect Core §3.1.2.1). Parameters are read from
+the query string on `GET` and from the `application/x-www-form-urlencoded` body on `POST`; the two
+are never merged. `POST /realms/{realm}/oauth/authorize` is exempt from the `web` group's request
+forgery check because clients submit it cross-site.
+
+The request is validated before anything touches the session. `client_id` and `redirect_uri` are
+checked first: an unknown or missing `client_id`, a missing `redirect_uri` (when more than one is
+registered), or one that does not match a registration is answered with HTTP 400 and a JSON
+`invalid_request` body — never a redirect and never a `WWW-Authenticate` challenge. Every later
+failure is reported as an error redirect to the validated `redirect_uri`, with `state` echoed.
+
+| Parameter | Behaviour |
+| --- | --- |
+| Any parameter more than once | `invalid_request` (OAuth 2.1 §4.1.1). Without a redirect if the duplicate is `client_id` or `redirect_uri` |
+| `response_type` other than `code` | `unsupported_response_type` |
+| `response_mode` other than `query` | `invalid_request`; the response mode is never silently substituted |
+| `request` / `request_uri` | `request_not_supported` / `request_uri_not_supported` (OpenID Connect Core §6) |
+| `code_challenge` missing, `code_challenge_method` other than `S256` | `invalid_request` |
+| `scope` naming an unknown scope | `invalid_scope` |
+| `max_age` | Non-negative integer. A login older than that (or without a recorded `auth_time`) is renewed: the session is ended and the user sent to login. With `prompt=none` the answer is `login_required` and the session is kept |
+| `prompt` | `none`, `login`, `consent`, `select_account`. `none` combined with any other value, or an unknown value, is `invalid_request`. `login` ends the session and sends the user to login. `select_account` behaves exactly like `login`: the provider holds one account per browser session, so there is no account to switch to. `consent` shows the consent view even when a grant already covers the requested scopes; trusted first-party clients ignore it |
+| `id_token_hint` | Must verify against the realm's signing keys and issuer, otherwise `invalid_request`. When the hint's `sub` is not the signed-in user the answer is `login_required`; a signed-out user proceeds to login (`login_required` with `prompt=none`) |
+| `acr_values` | Stored for the post-login pipeline — see [Post-login pipeline](/auth/post-login-pipeline/) |
+
+Every response sent to the `redirect_uri` — the code and each error — carries the realm's issuer
+as `iss` (RFC 9207 §2).
 
 ## The UserInfo endpoint
 
@@ -82,6 +112,7 @@ host — and is served with `Cache-Control: max-age=3600, public`. The fixed met
 | `claims_parameter_supported` | `false` |
 | `request_parameter_supported` | `false` |
 | `request_uri_parameter_supported` | `false` |
+| `authorization_response_iss_parameter_supported` | `true` |
 | `backchannel_logout_supported` | `true` |
 | `backchannel_logout_session_supported` | `true` |
 | `token_endpoint_auth_methods_supported` | `["client_secret_basic", "client_secret_post", "none"]` |
@@ -127,5 +158,6 @@ Without a binding, the default throws `MissingAuthViewException` — install
 `bambamboole/laravel-oidc-ui` (which binds it, among the other auth views) or bind it
 yourself.
 
-The view posts `auth_token` back to `POST /realms/{realm}/oauth/authorize` to approve, or sends
-`DELETE /realms/{realm}/oauth/authorize` to deny.
+The view posts `auth_token` back to `POST /realms/{realm}/oauth/authorize/consent` (route
+`oidc.approve`) to approve, or sends `DELETE /realms/{realm}/oauth/authorize/consent` (route
+`oidc.deny`) to deny.
