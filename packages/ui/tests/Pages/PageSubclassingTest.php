@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Clients\Client;
 use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\EmailVerificationPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\LoginPrompt;
@@ -9,7 +10,6 @@ use Bambamboole\LaravelOidc\Server\Forms\LoginView;
 use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\PasswordResetRequestPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Server\Models\Client;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;

@@ -111,7 +111,7 @@ and `oidc.keys.path` (was Passport's key path).
 | `Passport::actingAs($user, $scopes, $guard)` | `Oidc::actingAs($user, $scopes, $guard)` |
 | `Passport::authorizationView(...)` | bind the [`ConsentView` contract](/provider/endpoints/#consent-view-required) |
 | `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Http\Middleware\CheckScopes` |
-| `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Models\Client` / `Token` |
+| `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Clients\Client` / `Token` |
 | `Laravel\Passport\ClientRepository` | `Bambamboole\LaravelOidc\Server\Clients\ClientRepository` |
 
 ## What was dropped
