@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
-use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetPrompt;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetView;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
 use Lattice\Form\Components\Form;

@@ -7,7 +7,7 @@ use Bambamboole\LaravelOidc\Server\Brokering\Models\SocialAccount;
 use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
-use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Credentials\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Illuminate\Http\RedirectResponse;

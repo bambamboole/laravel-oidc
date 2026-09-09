@@ -9,7 +9,7 @@ use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\User\UserActionManager;
+use Bambamboole\LaravelOidc\Server\Users\UserActionManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;

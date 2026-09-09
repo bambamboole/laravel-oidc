@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
-use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Ui\Concerns\ManagesTwoFactor;
 use Bambamboole\LaravelOidc\Ui\Support\RecoveryCodesModal;
 use Illuminate\Http\Request;

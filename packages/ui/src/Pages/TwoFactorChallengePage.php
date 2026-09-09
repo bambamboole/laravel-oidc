@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
-use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Server\Forms\TwoFactorChallengeView;
+use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengePrompt;
+use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Contracts\Support\Responsable;

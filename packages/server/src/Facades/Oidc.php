@@ -24,7 +24,7 @@ use SensitiveParameter;
  * @method static void createUsersFromSocialUsing(callable|string $action)
  * @method static array<string, \Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider> socialProviders()
  * @method static void extendSocialProvider(string $driver, Closure $creator)
- * @method static \Bambamboole\LaravelOidc\Server\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
+ * @method static \Bambamboole\LaravelOidc\Server\Tokens\Exchange\IssuedToken issueScopedToken(string $audience, string[] $scopes)
  *
  * @see OidcManager
  */

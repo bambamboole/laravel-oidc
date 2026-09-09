@@ -6,7 +6,7 @@ use Bambamboole\LaravelOidc\Server\Audit\AuditEvent;
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Session\OidcSessionRepository;
+use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
 use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;

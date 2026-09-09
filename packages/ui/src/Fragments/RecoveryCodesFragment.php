@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
-use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
 use Lattice\Core\Attributes\AsFragment;
 use Lattice\Fragments\FragmentDefinition;
 use Lattice\Ui\Components\Stack;

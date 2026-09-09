@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Forms\ConsentPrompt;
+use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
 use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;

@@ -20,8 +20,9 @@ provider and the auth engine share one session.
 
 ## View seams
 
-Each auth surface renders through a typed **view contract** — an interface under
-`Bambamboole\LaravelOidc\Server\Forms` with a single `respond()` method that takes a matching
+Each auth surface renders through a typed **view contract** — an interface in the
+`Views` namespace of the domain that renders it (for example
+`Bambamboole\LaravelOidc\Server\Authentication\Views`) with a single `respond()` method that takes a matching
 **prompt** (the page-specific data) and the `Request`, and returns a `Responsable` or `Response`:
 
 ```php
@@ -48,8 +49,8 @@ Override one by binding your implementation over the contract, typically in a se
 `boot()` (a bind there wins over the package's default, since package providers boot first):
 
 ```php
-use Bambamboole\LaravelOidc\Server\Forms\LoginPrompt;
-use Bambamboole\LaravelOidc\Server\Forms\LoginView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginPrompt;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
 use Illuminate\Http\Request;
 
 $this->app->bind(LoginView::class, fn () => new class implements LoginView

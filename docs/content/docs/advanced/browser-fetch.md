@@ -49,7 +49,7 @@ recommended so the root token stays server-side.
 
 ## The `SessionTokenProvider` seam
 
-`Bambamboole\LaravelOidc\Server\Session\SessionTokenProvider` is the seam that owns the
+`Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider` is the seam that owns the
 root token:
 
 ```php

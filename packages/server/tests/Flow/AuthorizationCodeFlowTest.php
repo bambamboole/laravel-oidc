@@ -6,20 +6,20 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
+use Bambamboole\LaravelOidc\Server\Authentication\Context\AuthenticationContext;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AuthorizationCodeEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Context\AccessTokenContext;
-use Bambamboole\LaravelOidc\Server\Context\AuthenticationContext;
+use Bambamboole\LaravelOidc\Server\Consents\Controllers\ApproveAuthorizationController;
+use Bambamboole\LaravelOidc\Server\Consents\Controllers\DenyAuthorizationController;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Http\Controllers\ApproveAuthorizationController;
-use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationController;
-use Bambamboole\LaravelOidc\Server\Http\Controllers\DenyAuthorizationController;
-use Bambamboole\LaravelOidc\Server\Session\OidcSession;
-use Bambamboole\LaravelOidc\Server\Session\OidcSessionRepository;
+use Bambamboole\LaravelOidc\Server\Protocol\Controllers\AuthorizationController;
+use Bambamboole\LaravelOidc\Server\Sessions\OidcSession;
+use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
 use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
-use Bambamboole\LaravelOidc\Server\Token\Token;
+use Bambamboole\LaravelOidc\Server\Tokens\Context\AccessTokenContext;
+use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Testing\TestResponse;
