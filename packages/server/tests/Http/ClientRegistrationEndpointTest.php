@@ -7,8 +7,6 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Server\Models\Client;
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
-use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -24,12 +22,11 @@ function enableDynamicClientRegistration(array $overrides = []): void
         ...$overrides,
     ]]);
 
-    app(HandlerRegistrar::class)->register();
-    Route::getRoutes()->refreshNameLookups();
+    reloadOidcRoutes();
 }
 
 it('does not register the endpoint while the feature is disabled', function () {
-    expect(Handler::ClientRegistration->config())->toBeFalse();
+    expect(Route::has('oidc.register'))->toBeFalse();
 
     $this->postJson('/oauth/register', ['redirect_uris' => ['https://rp.test/cb']])->assertNotFound();
 });
@@ -149,5 +146,5 @@ it('enforces the redirect domain allowlist for http(s) uris', function () {
 it('throttles the registration endpoint', function () {
     enableDynamicClientRegistration();
 
-    expect(Route::getRoutes()->getByName(Handler::ClientRegistration->value)->middleware())->toContain('throttle');
+    expect(Route::getRoutes()->getByName('oidc.register')->middleware())->toContain('throttle');
 });

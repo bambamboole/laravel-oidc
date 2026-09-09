@@ -50,8 +50,7 @@ class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
     }
 
     /**
-     * The passkey handlers can be disabled via oidc.handlers; the page must
-     * keep rendering without them.
+     * The page must keep rendering when the passkey endpoints are absent.
      *
      * @return array<int, Component>
      */

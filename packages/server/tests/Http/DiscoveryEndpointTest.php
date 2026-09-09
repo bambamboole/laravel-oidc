@@ -35,15 +35,6 @@ it('honours a configured issuer and strips trailing slashes', function () {
         ->assertJsonPath('issuer', 'https://id.example.com');
 });
 
-it('omits toggled-off endpoints', function () {
-    $handlers = config('oidc.handlers');
-    $handlers['oidc.introspect'] = false;
-    config(['oidc.handlers' => $handlers]);
-
-    $this->getJson('/.well-known/openid-configuration')
-        ->assertJsonMissingPath('introspection_endpoint');
-});
-
 it('advertises the OAuth 2.1 / RFC 8414 metadata fields', function () {
     $doc = $this->getJson('/.well-known/openid-configuration')->assertOk();
 

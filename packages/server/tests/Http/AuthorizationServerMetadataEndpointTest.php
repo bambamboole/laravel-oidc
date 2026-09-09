@@ -5,10 +5,6 @@ declare(strict_types=1);
 /**
  * RFC 8414 §3 (authorization server metadata)
  */
-
-use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
-use Illuminate\Support\Facades\Route;
-
 it('serves the authorization server metadata document at the well-known path', function () {
     config(['app.url' => 'https://op.test', 'oidc.issuer' => null]);
 
@@ -51,8 +47,7 @@ it('omits the registration endpoint while dynamic client registration is disable
 
 it('advertises the registration endpoint once dynamic client registration is enabled', function () {
     config(['oidc.dcr.enabled' => true]);
-    app(HandlerRegistrar::class)->register();
-    Route::getRoutes()->refreshNameLookups();
+    reloadOidcRoutes();
 
     $this->getJson('/.well-known/oauth-authorization-server')
         ->assertOk()

@@ -19,6 +19,7 @@ use Bambamboole\LaravelOidc\Server\Token\SigningKeys;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Encoding\JoseEncoder;
@@ -38,6 +39,18 @@ uses(TestCase::class)
     ->afterEach(fn () => Oidc::tokensCan([]))
     ->in(__DIR__);
 uses(RefreshDatabase::class)->in(__DIR__);
+
+/**
+ * Re-runs the package's route file. Endpoints whose registration depends on
+ * config (`oidc.dcr.enabled`) are bound at boot, so a test that flips the flag
+ * afterwards has to rebuild the table to see the change.
+ */
+function reloadOidcRoutes(): void
+{
+    require dirname(__DIR__).'/routes/oidc.php';
+
+    Route::getRoutes()->refreshNameLookups();
+}
 
 /**
  * Per-run root for filesystem fixtures. Everything created through this helper

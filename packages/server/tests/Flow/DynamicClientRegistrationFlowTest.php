@@ -9,17 +9,14 @@ declare(strict_types=1);
  */
 
 use Bambamboole\LaravelOidc\Server\Models\Client;
-use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
 use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
-use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
 
 it('lets a dynamically registered client complete the PKCE authorization code flow', function () {
     config(['oidc.dcr.enabled' => true, 'oidc.dcr.default_scopes' => []]);
-    app(HandlerRegistrar::class)->register();
-    Route::getRoutes()->refreshNameLookups();
+    reloadOidcRoutes();
 
     $registration = $this->postJson('/oauth/register', [
         'client_name' => 'MCP Client',

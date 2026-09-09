@@ -10,7 +10,6 @@ use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginApi;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Workbench\App\Models\User;
 
 beforeEach(function () {
@@ -39,7 +38,7 @@ it('exposes the pending authorize request acr_values to postLogin hooks', functi
     $this->get('/oauth/authorize?'.$this->query.'&acr_values=mfa phishing-resistant')
         ->assertRedirect();
 
-    $this->post(route(Handler::LoginStore->value), ['email' => 'm@example.com', 'password' => 'secret-password']);
+    $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'secret-password']);
 
     expect($captured)->toBeInstanceOf(LoginEvent::class)
         ->and($captured->requestsAcr('mfa'))->toBeTrue()
@@ -56,7 +55,7 @@ it('does not leak acr_values from an earlier authorize request without them', fu
     $this->get('/oauth/authorize?'.$this->query.'&acr_values=mfa')->assertRedirect();
     $this->get('/oauth/authorize?'.$this->query)->assertRedirect();
 
-    $this->post(route(Handler::LoginStore->value), ['email' => 'm@example.com', 'password' => 'secret-password']);
+    $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'secret-password']);
 
     expect($captured)->toBeInstanceOf(LoginEvent::class)
         ->and($captured->requestedAcrValues)->toBe([]);

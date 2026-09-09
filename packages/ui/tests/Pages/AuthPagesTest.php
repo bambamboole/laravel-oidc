@@ -8,8 +8,6 @@ use Bambamboole\LaravelOidc\Server\Auth\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\PasswordResetRequestPrompt;
 use Bambamboole\LaravelOidc\Server\Auth\Views\TwoFactorChallengePrompt;
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
-use Bambamboole\LaravelOidc\Server\Routing\HandlerRegistrar;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
@@ -25,25 +23,19 @@ use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 /**
- * Re-registers the identity routes with the given handlers disabled, swapping
- * both the router and the URL generator's collection so route() and
- * Route::has() agree on what exists. Non-identity routes are carried over from
- * the original router: packages resolve their own routes while rendering (e.g.
- * lattice's refresh endpoint), so only the identity routes may be rebuilt.
+ * Drops the named routes, swapping both the router and the URL generator's
+ * collection so route() and Route::has() agree on what exists.
  *
- * @param  list<Handler>  $disabled
+ * @param  list<string>  $names
  */
-function withDisabledHandlers(array $disabled): void
+function withoutRoutes(array $names): void
 {
-    config(['oidc.handlers' => array_fill_keys(array_map(fn (Handler $handler) => $handler->value, $disabled), false)]);
-
     $previous = Route::getRoutes();
     $router = new Router(new Dispatcher, app());
     Route::swap($router);
-    app(HandlerRegistrar::class)->register();
 
     foreach ($previous->getRoutes() as $route) {
-        if (! str_starts_with((string) $route->getName(), 'identity.')) {
+        if (! in_array((string) $route->getName(), $names, true)) {
             $router->getRoutes()->add($route);
         }
     }
@@ -131,24 +123,24 @@ it('drops the social button icon when the provider icon is set to an empty strin
         ->not->toContain('"icon":"github"');
 });
 
-it('renders the login page without passkeys when the passkey handlers are disabled', function () {
-    withDisabledHandlers([Handler::PasskeyLoginOptions, Handler::PasskeyLogin]);
+it('renders the login page without passkeys when the passkey endpoints are absent', function () {
+    withoutRoutes(['identity.passkey.login-options', 'identity.passkey.login']);
 
     expect(renderPage(new LoginPage))->not->toContain('passkey-verify');
 });
 
-it('offers the sign-up prompt on the login page when the register handler is registered', function () {
+it('offers the sign-up prompt on the login page when the register endpoint exists', function () {
     expect(renderPage(new LoginPage))->toContain(__('oidc-ui::auth.login.sign-up'));
 });
 
-it('renders the login page without the sign-up prompt when the register handler is disabled', function () {
-    withDisabledHandlers([Handler::Register, Handler::RegisterStore]);
+it('renders the login page without the sign-up prompt when the register endpoint is absent', function () {
+    withoutRoutes(['identity.register', 'identity.register.store']);
 
     expect(renderPage(new LoginPage))->not->toContain(__('oidc-ui::auth.login.sign-up'));
 });
 
-it('renders the confirm-password page without passkeys when the passkey handlers are disabled', function () {
-    withDisabledHandlers([Handler::PasskeyConfirmOptions, Handler::PasskeyConfirm]);
+it('renders the confirm-password page without passkeys when the passkey endpoints are absent', function () {
+    withoutRoutes(['identity.passkey.confirm-options', 'identity.passkey.confirm']);
 
     expect(renderPage(new ConfirmPasswordPage))->not->toContain('passkey-verify');
 });

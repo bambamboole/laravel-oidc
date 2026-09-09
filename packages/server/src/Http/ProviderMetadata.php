@@ -6,8 +6,8 @@ namespace Bambamboole\LaravelOidc\Server\Http;
 
 use Bambamboole\LaravelOidc\Server\Contracts\ScopeRepository;
 use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Builds the provider metadata document served both as the OIDC Discovery 1.0
@@ -34,9 +34,9 @@ final readonly class ProviderMetadata
 
         $document = [
             'issuer' => $this->issuer->url(),
-            'authorization_endpoint' => $this->endpoint(Handler::Authorize),
-            'token_endpoint' => $this->endpoint(Handler::IssueToken),
-            'jwks_uri' => $this->endpoint(Handler::Jwks),
+            'authorization_endpoint' => $this->endpoint('oidc.authorize'),
+            'token_endpoint' => $this->endpoint('oidc.token'),
+            'jwks_uri' => $this->endpoint('oidc.jwks'),
             'response_types_supported' => ['code'],
             'response_modes_supported' => ['query'],
             'grant_types_supported' => $grantTypes,
@@ -57,34 +57,34 @@ final readonly class ProviderMetadata
             'token_endpoint_auth_methods_supported' => ['client_secret_basic', 'client_secret_post', 'none'],
         ];
 
-        if (Handler::Userinfo->config() !== false) {
-            $document['userinfo_endpoint'] = $this->endpoint(Handler::Userinfo);
+        if (Route::has('oidc.userinfo')) {
+            $document['userinfo_endpoint'] = $this->endpoint('oidc.userinfo');
         }
 
-        if (Handler::Logout->config() !== false) {
-            $document['end_session_endpoint'] = $this->endpoint(Handler::Logout);
+        if (Route::has('oidc.logout')) {
+            $document['end_session_endpoint'] = $this->endpoint('oidc.logout');
         }
 
-        if (Handler::Introspect->config() !== false) {
-            $document['introspection_endpoint'] = $this->endpoint(Handler::Introspect);
+        if (Route::has('oidc.introspect')) {
+            $document['introspection_endpoint'] = $this->endpoint('oidc.introspect');
             $document['introspection_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 
-        if (Handler::Revoke->config() !== false) {
-            $document['revocation_endpoint'] = $this->endpoint(Handler::Revoke);
+        if (Route::has('oidc.revoke')) {
+            $document['revocation_endpoint'] = $this->endpoint('oidc.revoke');
             $document['revocation_endpoint_auth_methods_supported'] = ['client_secret_basic', 'client_secret_post'];
         }
 
-        if (Handler::ClientRegistration->config() !== false) {
-            $document['registration_endpoint'] = $this->endpoint(Handler::ClientRegistration);
+        if (Route::has('oidc.register')) {
+            $document['registration_endpoint'] = $this->endpoint('oidc.register');
         }
 
         return $document;
     }
 
-    public function endpoint(Handler $handler): string
+    public function endpoint(string $routeName): string
     {
-        $path = parse_url(route($handler->value), PHP_URL_PATH);
+        $path = parse_url(route($routeName), PHP_URL_PATH);
 
         return rtrim($this->issuer->url(), '/').($path ?? '');
     }
