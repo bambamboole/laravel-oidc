@@ -7,7 +7,6 @@ description: Install laravel-oidc, publish its migrations, and generate signing 
 
 - PHP `^8.4`
 - Laravel 12 or 13
-- `league/oauth2-server` `^9.2` — the OAuth2 core the package builds on (installed as a dependency)
 
 ## Install
 

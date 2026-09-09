@@ -35,25 +35,26 @@ flowchart TB
             AE["Auth engine<br/>login · registration · MFA · post-login pipeline"]
             OP["OIDC provider<br/>authorize · token · discovery · JWKS · userinfo · logout"]
         end
-        League["league/oauth2-server<br/>(OAuth2 core)"]
     end
     AE --> OP
-    OP --> League
 ```
 
-## Built on league/oauth2-server
+## A package-owned OAuth2 core
 
-The OAuth2 core underneath is **`league/oauth2-server`**. The package owns everything above it:
-its own client, token, refresh-token and authorization-code tables and models, its own
-repositories and grants, and the full `/realms/{realm}/oauth/*` route surface. This means:
+The package implements the OAuth 2.1 / OpenID Connect core itself: client authentication, the
+authorization request, authorization codes with PKCE, refresh-token rotation, and the token
+endpoint's grants live in the `Protocol` domain on top of the package's own tables and models.
+This means:
 
 - The authorization, token and approve/deny routes are registered by this package using its own
-  controllers, so `max_age`, `prompt`, OIDC scopes and the `id_token` response type are wired in.
-- **PKCE (`code_challenge`) is required on every authorization request**, per OAuth 2.1
-  §4.1.1/§7.6 — for confidential clients as well as public ones. A request missing it is
-  rejected with `invalid_request`.
-- The authorization server is built **per request**, so a signing-key rotation takes effect
-  without restarting the workers.
+  controllers, so `max_age`, `prompt`, OIDC scopes and the `id_token` are wired in.
+- **PKCE with `S256` is required on every authorization request**, per OAuth 2.1 §4.1.1/§7.6 —
+  for confidential clients as well as public ones. A request missing it is answered with an
+  `invalid_request` error on the client's redirect URI.
+- Authorization codes and refresh tokens are opaque, single-use database records. A replayed code
+  or a reused refresh token revokes every token that descends from it.
+- The signing key is read on every request, so a key rotation takes effect without restarting
+  the workers.
 - No client-management JSON API ships with the package. Provision clients with
   `oidc:provision-client`, or through [dynamic client registration](/provider/dynamic-client-registration/).
 

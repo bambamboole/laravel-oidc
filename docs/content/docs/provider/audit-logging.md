@@ -213,12 +213,13 @@ $sink->events(AuditEventType::TokenIssued); // list<AuditEvent>
 
 ## Limitations
 
-- **`invalid_grant` raised inside league/oauth2-server at `/realms/{realm}/oauth/token`** — a replayed, expired,
-  or malformed authorization code, a PKCE verifier mismatch, or a structurally invalid refresh
-  token — happens before any package seam runs and emits no event, so it is not audited. These
-  surface only as `400` responses to the client. Everything that flows through package code
-  (refresh-context expiry, ended sessions, exchange subject-token problems, pipeline denials)
-  **is** audited as `TokenIssuanceFailed`.
+- **Malformed token requests at `/realms/{realm}/oauth/token`** — an unknown, expired, or
+  foreign authorization code, a PKCE verifier mismatch, or an unknown or expired refresh token —
+  are rejected before any issuance step runs and emit no event. These surface only as `400`
+  responses to the client. A replayed authorization code and a reused refresh token **are**
+  audited as `TokenIssuanceFailed` (`code_replayed`, `refresh_token_reused`), as is everything
+  that fails inside issuance: refresh-context expiry, ended sessions, exchange subject-token
+  problems, and pipeline denials.
 - **First-party session tokens** minted transparently by the self-SSO integration are not audited
   — they are re-minted on session refresh and would drown the log in noise.
 - **Introspection successes** are not audited; failed client authentication at the introspection
