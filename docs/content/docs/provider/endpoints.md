@@ -89,10 +89,15 @@ host — and is served with `Cache-Control: max-age=3600, public`. The fixed met
 `scopes_supported` is the non-hidden catalog from the `ScopeRepository`, and `claims_supported`
 comes from `config('oidc.claims_supported')`.
 
+A client authenticates with exactly the method it is registered for (`token_endpoint_auth_method`):
+clients provisioned by the package use `client_secret_post` when confidential and `none` when
+public; dynamically registered clients are always `none`. Presenting a secret through both the
+`Authorization` header and the request body is rejected as `invalid_request`.
+
 The `userinfo_endpoint`, `end_session_endpoint`, `introspection_endpoint`, and
-`revocation_endpoint` keys appear only when their handlers are enabled. When present, the
-introspection and revocation entries each also advertise an
-`*_endpoint_auth_methods_supported` of `["client_secret_basic", "client_secret_post"]`.
+`revocation_endpoint` keys appear only when their handlers are enabled. Introspection is limited
+to confidential clients (`["client_secret_basic", "client_secret_post"]`); revocation also accepts
+public clients (`none`), so a browser or native app can revoke its own refresh token.
 
 ## Consent view (required)
 
