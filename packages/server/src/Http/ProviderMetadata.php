@@ -86,6 +86,25 @@ final readonly class ProviderMetadata
     {
         $path = parse_url(route($routeName), PHP_URL_PATH);
 
-        return rtrim($this->issuer->url(), '/').($path ?? '');
+        return $this->origin().($path ?? '');
+    }
+
+    /**
+     * Endpoint paths already carry the realm, so they are hung off the issuer's
+     * origin rather than the issuer itself. Rebuilding from the issuer rather
+     * than the request keeps a forwarded host out of the document.
+     */
+    private function origin(): string
+    {
+        $issuer = rtrim($this->issuer->url(), '/');
+        $parts = parse_url($issuer);
+
+        if (! isset($parts['scheme'], $parts['host'])) {
+            return $issuer;
+        }
+
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+
+        return $parts['scheme'].'://'.$parts['host'].$port;
     }
 }

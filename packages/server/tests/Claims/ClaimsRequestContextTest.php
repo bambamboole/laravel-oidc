@@ -90,7 +90,7 @@ it('hands userinfo the client, scopes and userinfo audience', function () {
 
     $bearer = resourceServerBearer($this, [app(IssuerResolver::class)->url()]);
 
-    $response = $this->getJson('/oauth/userinfo', ['Authorization' => 'Bearer '.$bearer])->assertOk();
+    $response = $this->getJson('/realms/default/oauth/userinfo', ['Authorization' => 'Bearer '.$bearer])->assertOk();
 
     expect($response->json('seen_audience'))->toBe(ClaimsAudience::Userinfo->value)
         ->and($response->json('seen_scopes'))->toBe(['openid'])

@@ -18,7 +18,7 @@ it('lets a dynamically registered client complete the PKCE authorization code fl
     config(['oidc.dcr.enabled' => true, 'oidc.dcr.default_scopes' => []]);
     reloadOidcRoutes();
 
-    $registration = $this->postJson('/oauth/register', [
+    $registration = $this->postJson('/realms/default/oauth/register', [
         'client_name' => 'MCP Client',
         'redirect_uris' => ['https://claude.ai/api/mcp/auth_callback'],
     ])->assertCreated();
@@ -34,5 +34,5 @@ it('lets a dynamically registered client complete the PKCE authorization code fl
 
     expect($result->accessToken)->not->toBeNull();
 
-    $this->withToken($result->accessToken)->getJson('/oauth/userinfo')->assertOk();
+    $this->withToken($result->accessToken)->getJson('/realms/default/oauth/userinfo')->assertOk();
 });

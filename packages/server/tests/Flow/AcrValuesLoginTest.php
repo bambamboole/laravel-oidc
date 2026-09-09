@@ -35,7 +35,7 @@ it('exposes the pending authorize request acr_values to postLogin hooks', functi
         $captured = $event;
     });
 
-    $this->get('/oauth/authorize?'.$this->query.'&acr_values=mfa phishing-resistant')
+    $this->get('/realms/default/oauth/authorize?'.$this->query.'&acr_values=mfa phishing-resistant')
         ->assertRedirect();
 
     $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'secret-password']);
@@ -52,8 +52,8 @@ it('does not leak acr_values from an earlier authorize request without them', fu
         $captured = $event;
     });
 
-    $this->get('/oauth/authorize?'.$this->query.'&acr_values=mfa')->assertRedirect();
-    $this->get('/oauth/authorize?'.$this->query)->assertRedirect();
+    $this->get('/realms/default/oauth/authorize?'.$this->query.'&acr_values=mfa')->assertRedirect();
+    $this->get('/realms/default/oauth/authorize?'.$this->query)->assertRedirect();
 
     $this->post(route('identity.login.store'), ['email' => 'm@example.com', 'password' => 'secret-password']);
 

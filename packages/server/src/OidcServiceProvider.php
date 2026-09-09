@@ -61,10 +61,11 @@ use Bambamboole\LaravelOidc\Server\Grant\OidcRefreshTokenGrant;
 use Bambamboole\LaravelOidc\Server\Grant\TokenExchangeGrant;
 use Bambamboole\LaravelOidc\Server\Http\Controllers\AuthorizationController;
 use Bambamboole\LaravelOidc\Server\Http\Responses\ConsentViewResponse;
-use Bambamboole\LaravelOidc\Server\Realm\ConfiguredIssuerResolver;
 use Bambamboole\LaravelOidc\Server\Realm\ConfiguredRealmResolver;
 use Bambamboole\LaravelOidc\Server\Realm\IssuerResolver;
+use Bambamboole\LaravelOidc\Server\Realm\RealmIssuerResolver;
 use Bambamboole\LaravelOidc\Server\Realm\RealmResolver;
+use Bambamboole\LaravelOidc\Server\Realm\RouteRealmResolver;
 use Bambamboole\LaravelOidc\Server\Scopes\BridgeScopeRepository;
 use Bambamboole\LaravelOidc\Server\Scopes\DefaultScopeRepository;
 use Bambamboole\LaravelOidc\Server\Server\AuthorizationServerFactory;
@@ -143,8 +144,8 @@ class OidcServiceProvider extends ServiceProvider
 
         Passkeys::ignoreRoutes();
 
-        $this->app->scoped(RealmResolver::class, ConfiguredRealmResolver::class);
-        $this->app->scoped(IssuerResolver::class, ConfiguredIssuerResolver::class);
+        $this->app->scoped(RealmResolver::class, fn (): RealmResolver => new RouteRealmResolver(new ConfiguredRealmResolver));
+        $this->app->scoped(IssuerResolver::class, RealmIssuerResolver::class);
         $this->app->singleton(ScopeRepository::class, DefaultScopeRepository::class);
         $this->app->bind(ScopeRepositoryInterface::class, BridgeScopeRepository::class);
         $this->app->singleton(ClaimsResolver::class, DefaultClaimsResolver::class);
@@ -326,6 +327,11 @@ class OidcServiceProvider extends ServiceProvider
             Carbon::now()->addMinutes((int) config('auth.verification.expire', 60)),
             ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())],
         ));
+
+        // Route generation outside a matched route — console commands, queued
+        // notifications — has no realm to fall back on; ResolveRealm overrides
+        // this per request.
+        URL::defaults(['realm' => (string) config('oidc.realm', 'default')]);
 
         $this->loadRoutesFrom(__DIR__.'/../routes/oidc.php');
 

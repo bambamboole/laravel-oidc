@@ -12,7 +12,7 @@ it('audits a dynamic client registration', function () {
     reloadOidcRoutes();
     $sink = fakeAudit();
 
-    $response = $this->postJson('/oauth/register', [
+    $response = $this->postJson('/realms/default/oauth/register', [
         'client_name' => 'MCP Client',
         'redirect_uris' => ['https://mcp.test/callback'],
     ])->assertCreated();
