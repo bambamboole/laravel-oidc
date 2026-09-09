@@ -4,7 +4,7 @@ description: Adding claims to access tokens and userinfo responses through suppo
 ---
 
 Access-token claims are added through capability-scoped triggers registered on the
-`Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline` service.
+`Bambamboole\LaravelOidc\Server\Tokens\Pipeline\AccessTokenPipeline` service.
 Userinfo claims come from the application's `ClaimsResolver` implementation.
 
 ## Access-token triggers
@@ -24,9 +24,9 @@ or `deny()` to stop issuance before the access token is persisted. Triggers run 
 registration order and fail closed when a callback throws.
 
 ```php
-use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
-use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
-use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
+use Bambamboole\LaravelOidc\Server\Tokens\Pipeline\AccessTokenApi;
+use Bambamboole\LaravelOidc\Server\Tokens\Pipeline\AccessTokenPipeline;
+use Bambamboole\LaravelOidc\Server\Tokens\Pipeline\ClientCredentialsEvent;
 
 app(AccessTokenPipeline::class)->register('client_credentials', function (ClientCredentialsEvent $event, AccessTokenApi $api): void {
     $api->setAccessTokenClaim('tenant', $event->client->client_id);
