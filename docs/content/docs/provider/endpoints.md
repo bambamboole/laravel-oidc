@@ -3,36 +3,34 @@ title: Endpoints & discovery
 description: The OIDC endpoints the provider exposes and what the discovery document advertises.
 ---
 
-The provider registers the full OAuth2/OIDC endpoint surface itself from
-`config('oidc.handlers')`. Each protocol endpoint below is a single entry in that map — see
-[Route handlers](/introduction/route-handlers/) for how to customize, disable, or re-point it.
+The provider registers the full OAuth2/OIDC endpoint surface itself. Every endpoint sits below
+the realm prefix and carries a stable route name — see [Routes](/introduction/route-handlers/)
+for how to replace a controller, and [Realms](/provider/realms/) for the prefix itself.
 
 ## Endpoints
 
 | Endpoint | Route | Purpose |
 | --- | --- | --- |
-| Discovery | `GET /.well-known/openid-configuration` | OIDC provider metadata |
-| AS metadata | `GET /.well-known/oauth-authorization-server/{path?}` | RFC 8414 authorization server metadata (same document as Discovery) |
-| Protected resource | `GET /.well-known/oauth-protected-resource/{path?}` | RFC 9728 protected resource metadata — see [Dynamic client registration & MCP](/provider/dynamic-client-registration/) |
-| JWKS | `GET /.well-known/jwks.json` | Public signing keys (RS256) |
-| Authorize | `GET /oauth/authorize` | Authorization request (PKCE `S256` required) |
-| Token | `POST /oauth/token` | Token endpoint (all grants) |
-| Register | `POST /oauth/register` | RFC 7591 dynamic client registration (disabled by default) |
-| UserInfo | `GET\|POST /oauth/userinfo` | Claims for the bearer token |
-| End session | `GET\|POST /oauth/logout` | RP-initiated logout — see [Logout](/provider/logout/) |
-| Introspection | `POST /oauth/introspect` | RFC 7662 token introspection (client-authenticated) |
-| Revocation | `POST /oauth/revoke` | RFC 7009 token revocation (client-authenticated) |
+| Discovery | `GET /realms/{realm}/.well-known/openid-configuration` | OIDC provider metadata |
+| AS metadata | `GET /.well-known/oauth-authorization-server/realms/{realm}/{path?}` | RFC 8414 authorization server metadata (same document as Discovery) |
+| Protected resource | `GET /.well-known/oauth-protected-resource/realms/{realm}/{path?}` | RFC 9728 protected resource metadata — see [Dynamic client registration & MCP](/provider/dynamic-client-registration/) |
+| JWKS | `GET /realms/{realm}/.well-known/jwks.json` | Public signing keys (RS256) |
+| Authorize | `GET /realms/{realm}/oauth/authorize` | Authorization request (PKCE `S256` required) |
+| Token | `POST /realms/{realm}/oauth/token` | Token endpoint (all grants) |
+| Register | `POST /realms/{realm}/oauth/register` | RFC 7591 dynamic client registration (disabled by default) |
+| UserInfo | `GET\|POST /realms/{realm}/oauth/userinfo` | Claims for the bearer token |
+| End session | `GET\|POST /realms/{realm}/oauth/logout` | RP-initiated logout — see [Logout](/provider/logout/) |
+| Introspection | `POST /realms/{realm}/oauth/introspect` | RFC 7662 token introspection (client-authenticated) |
+| Revocation | `POST /realms/{realm}/oauth/revoke` | RFC 7009 token revocation (client-authenticated) |
 
-UserInfo, End session, Introspection, and Revocation can each be toggled off by setting its
-handler to `false` in `config('oidc.handlers')` (`oidc.userinfo`, `oidc.logout`,
-`oidc.introspect`, `oidc.revoke`). When an endpoint is disabled it is also dropped from the
-discovery document. Registration (`oidc.register`) is additionally gated behind
-`config('oidc.dcr.enabled')` and only registered — and advertised as `registration_endpoint`
-in both metadata documents — when that flag is on.
+Registration (`oidc.register`) is gated behind `config('oidc.dcr.enabled')` and only
+registered — and advertised as `registration_endpoint` in both metadata documents — when that
+flag is on.
 
-The three `.well-known` documents (`oidc.discovery`, `oidc.authorization-server`,
-`oidc.protected-resource`) are never prefixed by `oidc.routes.prefix`: RFC 8414 and RFC 9728
-clients construct those URLs from the issuer origin themselves.
+The AS metadata and protected resource documents are not prefixed by the realm: RFC 8414 §3.1
+and RFC 9728 §3.1 build those URLs by inserting the well-known segment ahead of the issuer's
+path, so the realm follows it instead. OpenID Connect Discovery appends, which is why
+`/realms/{realm}/.well-known/openid-configuration` is the prefixed one.
 
 ## The authorization code flow
 
@@ -45,19 +43,19 @@ sequenceDiagram
     participant RP as Relying party
     participant OP as laravel-oidc (OP)
 
-    RP->>B: Redirect to /oauth/authorize (PKCE S256, scope openid)
-    B->>OP: GET /oauth/authorize
+    RP->>B: Redirect to /realms/{realm}/oauth/authorize (PKCE S256, scope openid)
+    B->>OP: GET /realms/{realm}/oauth/authorize
     alt no identity session
         OP->>B: Redirect to login
         B->>OP: Authenticate (password, MFA, ...)
     end
     OP->>B: Consent view (skipped for trusted clients)
-    B->>OP: POST /oauth/authorize (approve)
+    B->>OP: POST /realms/{realm}/oauth/authorize (approve)
     OP->>B: Redirect to redirect_uri?code=...
     B->>RP: Authorization code
-    RP->>OP: POST /oauth/token (code + code_verifier)
+    RP->>OP: POST /realms/{realm}/oauth/token (code + code_verifier)
     OP->>RP: access_token (at+jwt), id_token, refresh_token
-    RP->>OP: GET /oauth/userinfo (Bearer access_token)
+    RP->>OP: GET /realms/{realm}/oauth/userinfo (Bearer access_token)
     OP->>RP: Claims for the granted scopes
 ```
 
@@ -69,7 +67,7 @@ scopes resolved through the `ClaimsResolver` — see [Scopes & claims](/provider
 
 ## What discovery advertises
 
-`GET /.well-known/openid-configuration` returns a document built entirely from the configured
+`GET /realms/{realm}/.well-known/openid-configuration` returns a document built entirely from the configured
 `issuer` origin — every endpoint URL is derived from that origin, **not** the incoming request's
 host — and is served with `Cache-Control: max-age=3600, public`. The fixed metadata it publishes:
 
@@ -124,5 +122,5 @@ Without a binding, the default throws `MissingAuthViewException` — install
 `bambamboole/laravel-oidc-ui` (which binds it, among the other auth views) or bind it
 yourself.
 
-The view posts `auth_token` back to `POST /oauth/authorize` to approve, or sends
-`DELETE /oauth/authorize` to deny.
+The view posts `auth_token` back to `POST /realms/{realm}/oauth/authorize` to approve, or sends
+`DELETE /realms/{realm}/oauth/authorize` to deny.

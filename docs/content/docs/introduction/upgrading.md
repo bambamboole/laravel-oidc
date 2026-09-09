@@ -9,6 +9,34 @@ longer a dependency.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## Realms and routes
+
+Two further breaking changes land alongside the Passport removal.
+
+### Every endpoint moved below `/realms/{realm}`
+
+The package serves one OpenID Provider per realm, addressed by path. A single-realm install runs
+under the configured `oidc.realm` (`'default'` unless set), so the token endpoint moves from
+`/oauth/token` to `/realms/default/oauth/token`, and the issuer from `https://id.example.com` to
+`https://id.example.com/realms/default`.
+
+**Every relying party has to be repointed** at the new discovery URL
+(`/realms/{realm}/.well-known/openid-configuration`). Clients that pin the issuer will reject
+tokens until they are updated. See [Realms](/provider/realms/).
+
+### `oidc.handlers` and `oidc.routes.prefix` are gone
+
+Routes are registered from a plain routes file. Controllers are still replaceable — bind your own
+over the package class in the container:
+
+```php
+$this->app->bind(UserinfoController::class, MyUserinfoController::class);
+```
+
+Changing an endpoint's path and disabling an endpoint are no longer supported.
+`oidc.dcr.enabled` still gates the registration endpoint, and `oidc.routes.middleware` still
+applies to every route. Route names are unchanged. See [Routes](/introduction/route-handlers/).
+
 ## What you have to do
 
 ### 1. Run the new migrations
@@ -88,7 +116,7 @@ and `oidc.keys.path` (was Passport's key path).
 
 ## What was dropped
 
-- **`POST /oauth/token/refresh`** — Passport's cookie-based SPA refresh. The package never wired
+- **`POST /realms/{realm}/oauth/token/refresh`** — Passport's cookie-based SPA refresh. The package never wired
   the cookie guard that would have validated its output. Use the
   [browser-fetch session token](/advanced/browser-fetch/) instead.
 - **Passport's events** (`AccessTokenCreated`, `RefreshTokenCreated`, `AccessTokenRevoked`). Listen

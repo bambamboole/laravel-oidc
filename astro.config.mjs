@@ -55,7 +55,7 @@ export default defineConfig({
                 { label: "Installation", link: "/introduction/installation/" },
                 { label: "Configuration", link: "/introduction/configuration/" },
                 { label: "Upgrading", link: "/introduction/upgrading/" },
-                { label: "Route handlers", link: "/introduction/route-handlers/" },
+                { label: "Routes", link: "/introduction/route-handlers/" },
               ],
             },
             {

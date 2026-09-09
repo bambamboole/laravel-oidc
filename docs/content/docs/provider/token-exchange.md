@@ -20,7 +20,7 @@ sequenceDiagram
     participant OP as laravel-oidc (OP)
     participant RS as Resource server
 
-    C->>OP: POST /oauth/token<br/>grant_type=token-exchange<br/>subject_token + audience
+    C->>OP: POST /realms/{realm}/oauth/token<br/>grant_type=token-exchange<br/>subject_token + audience
     OP->>OP: ExchangePolicy: reciprocity, allowlist,<br/>scope narrowing, lifetime cap
     OP->>C: access_token (at+jwt, aud = audience, act = client)
     C->>RS: Request with Bearer token
@@ -57,7 +57,7 @@ never presents a `client_secret`.
 
 ## Extension parameters
 
-Any POST field on `/oauth/token` that isn't one of the standard exchange parameters (`grant_type`,
+Any POST field on `/realms/{realm}/oauth/token` that isn't one of the standard exchange parameters (`grant_type`,
 `client_id`, `client_secret`, `subject_token`, `subject_token_type`, `requested_token_type`,
 `audience`, `scope`, `resource`, `actor_token`, `actor_token_type`) is collected into
 `ExchangeRequest->parameters` and handed to the `ExchangePolicy`. A client sending `tenant=acme`
@@ -67,7 +67,7 @@ alongside the standard fields, for example, lets a custom policy read
 ## Request and response
 
 ```text
-POST /oauth/token
+POST /realms/{realm}/oauth/token
 grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 client_id=...
 client_secret=...

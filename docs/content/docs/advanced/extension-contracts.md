@@ -34,7 +34,7 @@ $this->app->scoped(
 
 Every issuer URL the package emits or validates against goes through this contract, so a rebind
 changes them consistently. It does not move any route — endpoint paths still come from the
-[handler map](/introduction/route-handlers/), and the discovery document composes them onto the
+[routes file](/introduction/route-handlers/), and the discovery document composes them onto the
 resolved issuer origin.
 
 ## `ScopeRepository`

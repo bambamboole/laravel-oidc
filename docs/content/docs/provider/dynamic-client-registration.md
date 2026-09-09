@@ -10,11 +10,11 @@ the connect flow MCP clients such as Claude or Cursor drive:
 
 1. The client calls the protected resource (e.g. `POST /mcp`) without a token and receives a
    `401` whose `WWW-Authenticate` header points at the resource metadata.
-2. `GET /.well-known/oauth-protected-resource/mcp` names this provider as the authorization
+2. `GET /.well-known/oauth-protected-resource/realms/{realm}/mcp` names this provider as the authorization
    server.
-3. `GET /.well-known/oauth-authorization-server` (or `/.well-known/openid-configuration` —
+3. `GET /.well-known/oauth-authorization-server/realms/{realm}` (or `/realms/{realm}/.well-known/openid-configuration` —
    both serve the same document) lists the authorize, token, and registration endpoints.
-4. The client registers itself via `POST /oauth/register` and receives a `client_id`.
+4. The client registers itself via `POST /realms/{realm}/oauth/register` and receives a `client_id`.
 5. A standard authorization-code flow with PKCE (`S256`, enforced for every client) yields
    the access token the client then presents to the resource.
 
@@ -29,7 +29,7 @@ resource's path relative to the issuer origin:
 ],
 ```
 
-`GET /.well-known/oauth-protected-resource/mcp` then serves:
+`GET /.well-known/oauth-protected-resource/realms/{realm}/mcp` then serves:
 
 ```json
 {
@@ -47,9 +47,9 @@ issuer root itself as the resource.
 
 ## Authorization server metadata (RFC 8414)
 
-`GET /.well-known/oauth-authorization-server` serves the same document as
-`/.well-known/openid-configuration` (RFC 8414 permits the additional OIDC members). The
-path-insertion form `/.well-known/oauth-authorization-server/{path}` is also routed. When
+`GET /.well-known/oauth-authorization-server/realms/{realm}` serves the same document as
+`/realms/{realm}/.well-known/openid-configuration` (RFC 8414 permits the additional OIDC members). The
+path-insertion form `/.well-known/oauth-authorization-server/realms/{realm}/{path}` is also routed. When
 dynamic client registration is enabled, both documents advertise the
 `registration_endpoint`.
 
@@ -66,7 +66,7 @@ Registration is disabled by default. Enable and scope it via `oidc.dcr`:
 ],
 ```
 
-`POST /oauth/register` accepts `client_name` and `redirect_uris` and ignores all other
+`POST /realms/{realm}/oauth/register` accepts `client_name` and `redirect_uris` and ignores all other
 RFC 7591 metadata fields (MCP clients routinely send `application_type`, `software_id`, and
 similar). Registered clients are always **public** — no secret is issued,
 `token_endpoint_auth_method` is `none`, and PKCE is enforced by the grant. The endpoint is
@@ -113,7 +113,7 @@ the flow:
 ```php
 use Bambamboole\LaravelOidc\Server\Http\Controllers\ProtectedResourceController;
 
-Route::get('/.well-known/oauth-protected-resource/{path}', ProtectedResourceController::class)
+Route::get('/.well-known/oauth-protected-resource/realms/{realm}/{path}', ProtectedResourceController::class)
     ->where('path', '.*')
     ->name('mcp.oauth.protected-resource.nested');
 ```

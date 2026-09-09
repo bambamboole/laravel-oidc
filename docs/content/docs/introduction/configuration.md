@@ -26,9 +26,7 @@ below with its default and the environment variable that overrides it.
 | `claims_supported` | standard set | Claims advertised in the discovery document. |
 | `logout_redirect` | `/` | Fallback redirect after logout. |
 | `realm` | `'default'` (`OIDC_REALM`) | Identifier of the realm every request belongs to, unless a `RealmResolver` derives it. See [Realms](/provider/realms/). |
-| `handlers` | `[]` | Sparse per-endpoint overrides, merged over the package's built-in endpoint map. See [Route handlers](/introduction/route-handlers/). |
-| `routes.prefix` | `''` | URI prefix applied to every registered handler route. |
-| `routes.middleware` | `[]` | Middleware prepended to every registered handler route. |
+| `routes.middleware` | `[]` | Middleware prepended to every registered package route. |
 
 ## Scopes
 

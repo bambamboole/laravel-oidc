@@ -1,64 +1,62 @@
 ---
-title: Route handlers
-description: How the package registers, customizes, and disables every HTTP endpoint.
+title: Routes
+description: How the package registers its HTTP endpoints and how to replace a controller.
 ---
 
-Every endpoint the package registers is defined by the
-`Bambamboole\LaravelOidc\Server\Routing\Handler` enum, which carries each endpoint's default path,
-controller, and middleware. `config('oidc.handlers')` is a **sparse override map** on top of
-those defaults — it ships empty, and each entry you add is merged over the built-in definition
-for that handler. Each entry has three keys and is registered by a single `HandlerRegistrar`:
+The package registers its endpoints from a plain routes file, loaded by `OidcServiceProvider`.
+Every route sits below the realm prefix and carries a stable name:
 
-```php
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
-
-Handler::Userinfo->value => [
-    'route' => 'oauth/userinfo',                 // URI path (literal)
-    'controller' => UserinfoController::class,   // invokable class, or [Class::class, 'method']
-    'middleware' => [],
-],
+```
+/realms/{realm}/oauth/authorize        oidc.authorize
+/realms/{realm}/oauth/token            oidc.token
+/realms/{realm}/auth/login             identity.login
 ```
 
-## Customizing an endpoint
+Paths and HTTP verbs are intrinsic to the package. Route **names** are the stable contract — the
+UI package, the client package and your own application all generate URLs through them, never
+through literal paths.
 
-Add an entry for any handler — point it at your own controller, change its path, or adjust its
-middleware — or set it to `false` to disable that endpoint entirely. The HTTP verb is intrinsic
-to each endpoint (defined on `Handler::method()`) and is therefore not configurable.
+## Replacing a controller
 
-To move or wrap *all* routes at once, use `oidc.routes.prefix` (a URI prefix applied to every
-handler route) and `oidc.routes.middleware` (middleware prepended to every handler route)
-instead of overriding each entry.
-
-Because paths are literal, the `/oauth/*` routes do not automatically follow
-the `oauth/` prefix; if you move an endpoint, update the corresponding handler
-paths (and the `guest`/`auth` guard middleware if you run a non-default guard).
-
-## Disabling an endpoint
-
-Set a handler to `false` to remove its route. The protocol endpoints most commonly toggled off
-are `Handler::Userinfo`, `Handler::Logout`, `Handler::Introspect`, and `Handler::Revoke`.
-
-## Resolving a handler's config
-
-Resolve a handler's configuration anywhere via the `Handler` enum instead of reading config
-directly — it returns a `HandlerConfig` DTO, or `false` when the handler is disabled:
+Controllers are referenced by class name, so Laravel resolves them through the container. Bind
+your own implementation to swap one out:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Contracts\IssuerResolver;
-use Bambamboole\LaravelOidc\Server\Routing\Handler;
+use Bambamboole\LaravelOidc\Server\Http\Controllers\UserinfoController;
 
-$config = Handler::Userinfo->config();        // HandlerConfig|false
-$issuer = app(IssuerResolver::class)->url();  // issuer URL
+public function register(): void
+{
+    $this->app->bind(UserinfoController::class, MyUserinfoController::class);
+}
 ```
 
-## What lives in the handler map
+The route, its name and its middleware stay as they are; only the class handling the request
+changes.
 
-The map covers two groups of endpoints:
+## Middleware
 
-- **Protocol** — authorize, token, token refresh, approve/deny, userinfo, logout, introspect,
-  revoke, discovery, JWKS.
+`oidc.routes.middleware` is prepended to every package route. Use it for concerns that apply to
+the whole provider surface — a maintenance gate, request logging, a tenancy initializer.
+
+Per-endpoint middleware is intrinsic: the auth-engine routes carry `web` plus the appropriate
+`guest`/`AuthenticateIdentity` middleware for the configured guard, and every endpoint that
+accepts, mints or mails a credential carries a throttle.
+
+## Realm parameter
+
+The realm is a route parameter, but [ResolveRealm](/docs/provider/realms) removes it from the
+matched route before the controller runs, so controller signatures do not carry it. URL
+generation fills it in from the current request, which means `route('oidc.authorize')` keeps
+working unchanged.
+
+## What the routes file covers
+
+- **Protocol** — authorize, token, approve/deny, userinfo, logout, introspect, revoke, discovery,
+  JWKS, authorization server metadata, protected resource metadata, dynamic client registration.
 - **Auth engine** — login, register, forgot/reset password, password confirmation, email
-  verification, two-factor challenge and management, passkey registration/login/confirmation.
+  verification, two-factor challenge and management, passkey registration/login/confirmation,
+  social redirect/callback/linking.
 
-Each auth-engine route is named `identity.*` (e.g. `identity.login`) and carries the
-appropriate `web` + `guest`/`AuthenticateIdentity` middleware for its guard.
+Dynamic client registration is the one endpoint whose registration is conditional: it is bound
+only when `oidc.dcr.enabled` is true, and the discovery document advertises
+`registration_endpoint` only when the route exists.

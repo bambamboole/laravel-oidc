@@ -37,9 +37,8 @@ class PasskeyVerify extends Component
     }
 
     /**
-     * The passkey handlers can be disabled via oidc.handlers, in which case
-     * the ceremony routes do not exist and the component must stay out of
-     * the page.
+     * An application that does not register the server package's routes has no
+     * ceremony endpoints, and the component must then stay out of the page.
      */
     public static function makeIfAvailable(
         string $optionsRoute,

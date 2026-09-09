@@ -45,8 +45,7 @@ flowchart TB
 
 The OAuth2 core underneath is **`league/oauth2-server`**. The package owns everything above it:
 its own client, token, refresh-token and authorization-code tables and models, its own
-repositories and grants, and the full `/oauth/*` route surface registered from the unified
-`oidc.handlers` config. This means:
+repositories and grants, and the full `/realms/{realm}/oauth/*` route surface. This means:
 
 - The authorization, token and approve/deny routes are registered by this package using its own
   controllers, so `max_age`, `prompt`, OIDC scopes and the `id_token` response type are wired in.

@@ -3,7 +3,7 @@ title: Logout
 description: RP-initiated logout, its threat model, and OIDC back-channel logout.
 ---
 
-## RP-initiated logout threat model (`/oauth/logout`)
+## RP-initiated logout threat model (`/realms/{realm}/oauth/logout`)
 
 RP-initiated logout is a known CSRF surface (a forged `GET` can log a victim out). The end-session
 endpoint therefore only destroys the session when the request proves intent:
@@ -21,7 +21,7 @@ to (stored in `oauth_clients.post_logout_redirect_uris`); otherwise the fallback
 
 ### Residual risk (accepted by design)
 
-`GET /oauth/authorize?max_age=0&client_id=<active client>` forces re-authentication for an
+`GET /realms/{realm}/oauth/authorize?max_age=0&client_id=<active client>` forces re-authentication for an
 already-authenticated victim when the attacker knows an active `client_id` (public client ids are
 discoverable). This is inherent to honoring `max_age` at the authorization endpoint — the effect
 is a forced re-login, never account compromise.
@@ -40,7 +40,7 @@ sequenceDiagram
     participant RP1 as RP with backchannel_logout_uri
     participant RP2 as RP without one
 
-    B->>OP: GET/POST /oauth/logout (id_token_hint)
+    B->>OP: GET/POST /realms/{realm}/oauth/logout (id_token_hint)
     OP->>OP: Verify hint, resolve sid,<br/>revoke the session
     OP-->>RP1: POST logout token (back-channel)
     Note over RP2: not notified — never registered a URI
@@ -49,7 +49,7 @@ sequenceDiagram
 
 - Back-channel logout is **opt-in per relying-party client**: a client only receives it if it has
   registered a `backchannel_logout_uri`.
-- On logout at `/oauth/logout`, the session's `sid` is resolved (from the hint's `sid` claim or the
+- On logout at `/realms/{realm}/oauth/logout`, the session's `sid` is resolved (from the hint's `sid` claim or the
   session), the session registry revokes it, and a logout token is dispatched to each participant.
 - For sessions that expire by reaching their absolute lifetime rather than an explicit logout, the
   `oidc:dispatch-expired-session-logouts` command sends the back-channel notifications. This
