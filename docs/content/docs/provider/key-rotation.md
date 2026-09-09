@@ -12,9 +12,9 @@ By default the signing key lives entirely in environment variables — no key fi
 | `OIDC_PREVIOUS_PUBLIC_KEY` | The last rotated-out public key, kept in JWKS during the overlap |
 
 :::note
-When the `OIDC_*` variables are unset, key resolution falls back to Passport's
-`PASSPORT_PRIVATE_KEY`/`PASSPORT_PUBLIC_KEY` and finally to its `oauth-*.key` files — so an
-app that generated keys with `passport:keys` keeps working unchanged.
+When the `OIDC_*` variables are unset, key resolution falls back to an
+`oauth-private.key`/`oauth-public.key` pair in `oidc.keys.path` (`storage_path()` by default),
+so an app that keeps its keypair on disk works unchanged.
 :::
 
 ## Rotating

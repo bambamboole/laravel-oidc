@@ -30,7 +30,7 @@ handler route) and `oidc.routes.middleware` (middleware prepended to every handl
 instead of overriding each entry.
 
 Because paths are literal, the `/oauth/*` routes do not automatically follow
-`config('passport.path')`; if you change Passport's prefix, update the corresponding handler
+the `oauth/` prefix; if you move an endpoint, update the corresponding handler
 paths (and the `guest`/`auth` guard middleware if you run a non-default guard).
 
 ## Disabling an endpoint

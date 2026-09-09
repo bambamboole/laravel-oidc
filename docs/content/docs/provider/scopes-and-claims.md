@@ -6,27 +6,26 @@ description: The OIDC scope catalog and how an authenticated user is mapped to c
 ## Scope catalog
 
 The provider understands the OIDC standard scopes — `openid`, `profile`, `email`, `address`,
-`phone` — merged with your configured catalog (`passport.scopes`, below) and any scopes a
-third party registered directly via `Passport::tokensCan()`. On a conflict the configured
+`phone` — merged with your configured catalog (`scopes.catalog`, below) and any scopes a
+third party registered directly via `Oidc::tokensCan()`. On a conflict the configured
 catalog wins, then `tokensCan()`-registered scopes, then the built-in OIDC scopes — so you can
 override the description of a standard scope simply by defining it in your catalog.
 
-### Wildcard (`*`) parity
+### Wildcard (`*`)
 
-The package mirrors Passport's wildcard behavior exactly. Passport treats `*` as always valid and
-grants it for the `password`, `personal_access`, and `client_credentials` grants (e.g.
-`$user->createToken('cli', ['*'])`). Here `*` resolves as a scope and survives finalization for
-those grant types, and is stripped for `authorization_code` (interactive) flows.
+`*` always resolves as a scope and survives finalization for the `personal_access` and
+`client_credentials` grants (e.g. `$user->createToken('cli', ['*'])`). It is stripped for
+`authorization_code` (interactive) flows, where a blanket grant has no business being
+granted on a consent screen.
 
 ### Registering API scopes
 
-Feed your API scope catalog to the provider through `config/oidc.php`'s `passport.scopes`
-option instead of calling `Passport::tokensCan()` yourself:
+Feed your API scope catalog to the provider through `config/oidc.php`'s `scopes.catalog`
+option instead of calling `Oidc::tokensCan()` yourself:
 
 ```php
-'passport' => [
-    'token_model' => App\Models\ApiToken::class,   // optional Passport token model (a `Laravel\Passport\Token` subclass)
-    'scopes' => App\Auth\ApiScopes::class,          // or an inline [scope => description] map
+'scopes' => [
+    'catalog' => App\Auth\ApiScopes::class,   // or an inline [scope => description] map
 ],
 ```
 
@@ -39,11 +38,10 @@ runs working, and the result is memoized for the life of the repository.
 Exceptions thrown by `scopes()` fall back to an empty catalog; an invalid
 class-string still fails loudly, at first enumeration rather than at boot.
 
-Scopes registered directly via `Passport::tokensCan()` (by a third-party
-package, for instance) are still honored — the repository merges them in,
-with the configured catalog winning on conflict. `Passport::scopes()` /
-`scopeIds()` no longer reflect `oidc.passport.scopes`; enumerate the full
-catalog through the `ScopeRepository` contract instead.
+Scopes registered at runtime via `Oidc::tokensCan()` (by a third-party package,
+for instance) are still honored — the repository merges them in, with the
+configured catalog winning on conflict. Enumerate the full catalog through the
+`ScopeRepository` contract.
 
 The scope catalog is provided by the `ScopeRepository` contract — see
 [Extension contracts](/advanced/extension-contracts/) to swap it.

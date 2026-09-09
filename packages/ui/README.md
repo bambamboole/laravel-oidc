@@ -3,7 +3,7 @@
 A [Lattice](https://lattice-php.dev)-powered authentication UI for
 [`bambamboole/laravel-oidc`](https://github.com/bambamboole/laravel-oidc) (the OIDC
 provider) — login, passkeys, TOTP, and recovery-code screens rendered as Lattice
-pages/components instead of Blade views, ready to drop into a Passport/Passkeys-backed
+pages/components instead of Blade views, ready to drop into a Passkeys-backed
 app.
 
 📖 **[Read the documentation →](https://bambamboole.github.io/laravel-oidc)**

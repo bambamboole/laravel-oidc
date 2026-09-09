@@ -77,7 +77,7 @@ host — and is served with `Cache-Control: max-age=3600, public`. The fixed met
 | --- | --- |
 | `response_types_supported` | `["code"]` |
 | `response_modes_supported` | `["query"]` |
-| `grant_types_supported` | `authorization_code`, `refresh_token`, `client_credentials`, plus the device-code URN when Passport's device-code grant is enabled, plus `urn:ietf:params:oauth:grant-type:token-exchange` when token exchange is enabled |
+| `grant_types_supported` | `authorization_code`, `refresh_token`, `client_credentials`, plus `urn:ietf:params:oauth:grant-type:token-exchange` when token exchange is enabled |
 | `subject_types_supported` | `["public"]` |
 | `id_token_signing_alg_values_supported` | `["RS256"]` |
 | `code_challenge_methods_supported` | `["S256"]` |
@@ -98,10 +98,9 @@ introspection and revocation entries each also advertise an
 
 ## Consent view (required)
 
-The authorization endpoint needs a consent view to render. The package wires Passport's
-authorization view seam internally and resolves it through the `ConsentView` contract
-(`Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView`), so no app code touches
-`Passport::authorizationView()` directly. Bind the contract instead:
+The authorization endpoint needs a consent view to render. It resolves through the `ConsentView`
+contract (`Bambamboole\LaravelOidc\Server\Auth\Views\ConsentView`), lazily — only when consent
+is actually shown. Bind the contract:
 
 ```php
 use Bambamboole\LaravelOidc\Server\Auth\Views\ConsentPrompt;

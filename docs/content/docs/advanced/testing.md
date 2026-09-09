@@ -33,7 +33,7 @@ There is no `acr` parameter: the grant derives `acr` from `amr`
 ## Minting tokens without the HTTP dance
 
 `issueTokenFor()` returns a signed `at+jwt` access token with a persisted
-Passport token row — ready for a `Bearer` header:
+persisted token row — ready for a `Bearer` header:
 
 ```php
 $jwt = $this->issueTokenFor($user, scopes: ['openid', 'email'], audience: ['https://api.orders.test']);

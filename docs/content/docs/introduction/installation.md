@@ -7,7 +7,7 @@ description: Install laravel-oidc, publish its migrations, and generate signing 
 
 - PHP `^8.4`
 - Laravel 12 or 13
-- `laravel/passport` `^13.4` — the OAuth2 core the package builds on (installed as a dependency)
+- `league/oauth2-server` `^9.2` — the OAuth2 core the package builds on (installed as a dependency)
 
 ## Install
 
@@ -49,7 +49,7 @@ This writes `OIDC_PRIVATE_KEY` and `OIDC_PUBLIC_KEY` to your `.env` (pass `--pri
 them to stdout for a secrets manager instead).
 
 :::note
-File-based keys work too: keys generated with Passport's `php artisan passport:keys` (or set
+File-based keys work too: an `oauth-private.key`/`oauth-public.key` pair under `oidc.keys.path` (or set
 via `PASSPORT_PRIVATE_KEY`/`PASSPORT_PUBLIC_KEY`) are picked up as a fallback whenever the
 `OIDC_*` variables are unset.
 :::
