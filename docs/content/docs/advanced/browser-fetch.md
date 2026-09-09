@@ -49,7 +49,7 @@ recommended so the root token stays server-side.
 
 ## The `SessionTokenProvider` seam
 
-`Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider` is the seam that owns the
+`Bambamboole\LaravelOidc\Server\Shared\Sessions\SessionTokenProvider` is the seam that owns the
 root token:
 
 ```php
@@ -83,7 +83,7 @@ $this->app->singleton(SessionTokenProvider::class, MyExternalSsoTokenProvider::c
 ## Issuing a browser token
 
 ```php
-use Bambamboole\LaravelOidc\Server\Sessions\Actions\IssueScopedToken;
+use Bambamboole\LaravelOidc\Server\Tokens\Actions\IssueScopedToken;
 
 $issued = app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 ```

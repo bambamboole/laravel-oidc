@@ -129,7 +129,7 @@ $this->app->singleton(
 
 ## `SessionTokenProvider`
 
-`Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider` owns the server-side session
+`Bambamboole\LaravelOidc\Server\Shared\Sessions\SessionTokenProvider` owns the server-side session
 root token used by the [browser-fetch flow](/advanced/browser-fetch/).
 
 ```php
@@ -149,14 +149,14 @@ Rebind it to source the root token elsewhere (e.g. an external SSO exchange):
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Sessions\SessionTokenProvider::class,
+    \Bambamboole\LaravelOidc\Server\Shared\Sessions\SessionTokenProvider::class,
     MyExternalSsoTokenProvider::class,
 );
 ```
 
 ## `DeviceRecognizer`
 
-`Bambamboole\LaravelOidc\Server\Authentication\Pipeline\Contracts\DeviceRecognizer` decides whether the current
+`Bambamboole\LaravelOidc\Server\Shared\Authentication\DeviceRecognizer` decides whether the current
 request comes from a device already known for the user — it backs the
 `LoginEvent::isNewDevice()` signal in the post-login pipeline.
 
@@ -174,7 +174,7 @@ own to add it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Authentication\Pipeline\Contracts\DeviceRecognizer::class,
+    \Bambamboole\LaravelOidc\Server\Shared\Authentication\DeviceRecognizer::class,
     MyDeviceRecognizer::class,
 );
 ```
