@@ -12,15 +12,16 @@ validate it before serving the request. There are three ways to do that.
 If the resource server *is* this same app, use the `auth:oidc` guard (auto-registered under the
 guard name in `oidc.auth.api_guard`, `oidc` by default — see [Configuration](/introduction/configuration/)).
 It's a self-contained RFC 9068 resource-server validator: signature, `iss`, `at+jwt` `typ`,
-expiry, and revocation, all checked against this package's own JWKS and token store. It accepts a bearer token
-when its `aud` intersects the issuer URL or an entry in `oidc.resource.audiences`, or the token
-carries its own `client_id` claim — the latter is what makes classic (non-exchanged) tokens pass
-uniformly, since a classic token's `aud` defaults to `[client_id]`. A token whose `aud` names some
-other resource server, or a revoked token, still 401s.
+expiry, and revocation, all checked against this package's own JWKS and token store. It accepts a
+bearer token only when its `aud` names one of the realm's audiences (RFC 9068 §4): the
+`tokens.audiences` list — the realm issuer URL when that is empty — plus every protected resource
+advertised through RFC 9728 metadata. Tokens minted without an explicit audience carry exactly
+that list, so a classic authorization-code token passes; a token addressed to some other resource
+server, to a client id, or a revoked token 401s regardless of which client it was issued to.
 
-This makes `auth:oidc` usable directly on routes that only need *a* valid authenticated user,
-regardless of which audience the token was exchanged for. Pair it with `CheckAudience` — see below —
-when a route must enforce a *specific* audience, not just any recognized one.
+This makes `auth:oidc` usable directly on routes that only need *a* valid authenticated user at
+one of the realm's resources. Pair it with `CheckAudience` — see below — when a route must enforce
+a *specific* audience, not just any recognized one.
 
 See the [API token broker](/client/api-token-broker/) for the client-side half of this contract —
 the audience it requests must match what a route here accepts, and be listed in the requesting

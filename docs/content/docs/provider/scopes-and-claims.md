@@ -113,10 +113,14 @@ $this->app->singleton(
 );
 ```
 
-The bundled `StandardClaimsResolver` also maps two conventional user attributes
-under the `profile` scope, when present: `locale` (from `$user->locale`) and
-`zoneinfo` (from `$user->timezone`). A custom resolver like the one above
-replaces it entirely, so re-add that mapping yourself if you want to keep it.
+The bundled `StandardClaimsResolver` maps same-named user attributes, when present: under
+`profile`, `name`, `locale` (from `$user->locale`), `zoneinfo` (from `$user->timezone`) and
+`updated_at`; under `email`, `email` and `email_verified` (from `email_verified_at`); under
+`phone`, `phone_number` and `phone_number_verified`; under `address`, the OIDC Core §5.1.1
+structured `address` claim from an `address` attribute — an array keeps its standard members
+(`formatted`, `street_address`, `locality`, `region`, `postal_code`, `country`), a string becomes
+`formatted`. An attribute the user lacks omits its claim. A custom resolver like the one above
+replaces it entirely, so re-add the mappings you want to keep.
 
 The `ClaimsResolver` and `ScopeRepository` are the two seams described in full under
 [Extension contracts](/advanced/extension-contracts/).

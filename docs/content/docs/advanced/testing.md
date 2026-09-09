@@ -27,8 +27,8 @@ session keys the authorization grant reads (`oidc.auth_time`, `oidc.amr`,
 $this->actingAsIdentity($user, amr: ['pwd', 'otp'], authTime: time() - 60);
 ```
 
-There is no `acr` parameter: the grant derives `acr` from `amr`
-(`1` for a single method, `2` for multiple).
+There is no `acr` parameter: the grant derives `acr` from `amr` through the bound
+`AcrResolver` (`oidc.auth.acr_values`: `1` for a single method, `2` for multiple by default).
 
 ## Acting as a token user
 
@@ -55,11 +55,10 @@ When no client is given, a default authorization-code client is created once
 per test and reused.
 
 A token minted with a custom `audience:` does not authenticate on plain
-`auth:oidc` routes unless that audience is the issuer URL or listed in
-`oidc.resource.audiences` — the `auth:oidc` guard accepts a token only when its `aud`
-intersects those, or carries the token's own `client_id`, and an arbitrary custom
-audience does neither. It is for routes guarded by the package's audience middleware; see
-[Resource servers (CheckAudience)](/advanced/resource-servers/).
+`auth:oidc` routes unless that audience is one of the realm's (`oidc.tokens.audiences`, the
+issuer URL by default, or an advertised protected resource) — the guard accepts a token only
+when its `aud` names one of them. Without `audience:` the token carries the realm's list and
+passes. See [Resource servers (CheckAudience)](/advanced/resource-servers/).
 
 ## Clients
 

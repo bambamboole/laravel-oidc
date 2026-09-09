@@ -163,7 +163,7 @@ comes from `config('oidc.claims_supported')`.
 
 A client authenticates with exactly the method it is registered for (`token_endpoint_auth_method`):
 clients provisioned by the package use `client_secret_post` when confidential and `none` when
-public; dynamically registered clients are always `none`. Presenting a secret through both the
+public; dynamically registered clients use the method they registered. Presenting a secret through both the
 `Authorization` header and the request body is rejected as `invalid_request`.
 
 The `userinfo_endpoint`, `end_session_endpoint`, `introspection_endpoint`, and

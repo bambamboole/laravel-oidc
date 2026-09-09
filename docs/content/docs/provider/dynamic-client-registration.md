@@ -66,28 +66,35 @@ Registration is disabled by default. Enable and scope it via `oidc.clients.regis
 ],
 ```
 
-`POST /realms/{realm}/oauth/register` accepts `client_name` and `redirect_uris` and ignores all other
-RFC 7591 metadata fields (MCP clients routinely send `application_type`, `software_id`, and
-similar). Registered clients are always **public** — no secret is issued,
-`token_endpoint_auth_method` is `none`, and PKCE is enforced by the grant. The endpoint is
-unauthenticated (as the RFC and MCP clients expect) but throttled; keep the redirect
-allowlists as tight as your clients allow.
+`POST /realms/{realm}/oauth/register` registers an authorization-code client from these RFC 7591
+and OIDC metadata fields; every other field (`application_type`, `software_id`, and whatever
+else MCP clients send) is ignored:
 
-Redirect URIs must be absolute, carry no user-info or fragment, and either use `http(s)`
-with a host matching `allowed_redirect_domains`, or use a scheme listed in
-`allowed_redirect_schemes` (non-HTTP schemes still require a host, so
-`cursor://anysphere.cursor-retrieval/…` passes while `cursor:/callback` is rejected).
+| Field | Default | Rule |
+| --- | --- | --- |
+| `redirect_uris` | required | Absolute, no user-info or fragment; `http(s)` with a host in `allowed_redirect_domains`, or a scheme in `allowed_redirect_schemes` (non-HTTP schemes still need a host, so `cursor://anysphere.cursor-retrieval/…` passes while `cursor:/callback` is rejected). |
+| `client_name` | first redirect host | Trimmed. |
+| `token_endpoint_auth_method` | `none` | `none` registers a public client. `client_secret_basic` or `client_secret_post` registers a confidential client; the response then carries `client_secret` (returned once) and `client_secret_expires_at: 0`. Anything else is rejected. |
+| `grant_types` | `["authorization_code", "refresh_token"]` | Must include `authorization_code` and may only add `refresh_token`. |
+| `response_types` | `["code"]` | Must be exactly `["code"]`. |
+| `post_logout_redirect_uris` | `[]` | Validated like `redirect_uris`; honoured by [RP-initiated logout](/provider/logout/). |
+| `backchannel_logout_uri` | none | Absolute `https` URL without a fragment — see [Back-channel logout](/provider/logout/#back-channel-logout). |
+| `backchannel_logout_session_required` | `false` | Stored as given. |
+
+PKCE is enforced by the grant for every client. The endpoint is unauthenticated (as the RFC and
+MCP clients expect) but throttled; keep the redirect allowlists as tight as your clients allow.
 
 When `default_scopes` is non-empty the registered client is restricted to those scopes via
-the client's `scopes` column; an empty list leaves the client unrestricted. A successful registration returns `201`:
+the client's `scopes` column; an empty list leaves the client unrestricted. A successful
+registration returns `201` echoing every stored value (RFC 7591 §3.2.1):
 
 ```json
 {
     "client_id": "01hf…",
     "client_id_issued_at": 1765465200,
-    "client_secret_expires_at": 0,
     "client_name": "Claude",
     "redirect_uris": ["https://claude.ai/api/mcp/auth_callback"],
+    "post_logout_redirect_uris": [],
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "token_endpoint_auth_method": "none",
@@ -95,8 +102,9 @@ the client's `scopes` column; an empty list leaves the client unrestricted. A su
 }
 ```
 
-Validation failures return `400` with an RFC 7591 error body
-(`invalid_redirect_uri` or `invalid_client_metadata`).
+`backchannel_logout_uri` and `backchannel_logout_session_required` appear when a back-channel
+URI was registered. Validation failures return `400` with an RFC 7591 error body:
+`invalid_redirect_uri` for a rejected redirect URI, `invalid_client_metadata` for everything else.
 
 ## Wiring a Laravel MCP server
 
