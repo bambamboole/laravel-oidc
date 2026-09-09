@@ -1,6 +1,6 @@
 ---
 title: Extension contracts
-description: The container-bound seams — IssuerResolver, ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer — and how to rebind each.
+description: The container-bound seams — IssuerResolver, ScopeRepository, ClaimsResolver, ExchangePolicy, SessionTokenProvider, DeviceRecognizer, the domain actions — and how to rebind each.
 ---
 
 Each of the package's extension points is a container-bound interface with a default
@@ -174,3 +174,29 @@ $this->app->singleton(
     MyDeviceRecognizer::class,
 );
 ```
+
+## Domain actions
+
+Every use case the package's controllers, commands and jobs perform is an invokable
+class under `<Domain>\Actions`. Controllers validate the request, call the action and
+shape the response; the action owns the behavior, including audit events. Actions are
+resolved from the container, so binding your own class to an action's name replaces it
+for every caller:
+
+```php
+$this->app->bind(RegisterClient::class, App\Oidc\RegisterClientWithApproval::class);
+```
+
+| Action | Domain | Called by |
+| --- | --- | --- |
+| `RegisterUser`, `AuthenticateWithPassword`, `SendPasswordResetLink`, `ResetPassword`, `ConfirmPassword`, `SendEmailVerification` | `Authentication` | the login, registration, password and verification endpoints |
+| `EnrollFactor`, `ConfirmFactorEnrollment`, `RevokeFactor`, `VerifyFactorChallenge` | `Credentials` | the factor enrollment and two-factor challenge endpoints |
+| `LinkSocialAccount`, `UnlinkSocialAccount` | `Brokering` | the social callback and linked-account endpoints |
+| `RegisterClient`, `ProvisionFirstPartyClient` | `Clients` | dynamic client registration, `oidc:client`, `oidc:install-self` |
+| `IssueScopedToken` | `Tokens` | your application, to mint browser tokens |
+| `EndSession` | `Sessions` | the end-session endpoint |
+| `CompleteAuthorization` | `Consents` | the consent approve and deny endpoints |
+
+The three contracts under `Users\Actions` (`CreateUser`, `ResetUserPassword`,
+`CreateUserFromSocialAccount`) have no default implementation; see
+[Auth overview](/auth/overview/#action-seams).

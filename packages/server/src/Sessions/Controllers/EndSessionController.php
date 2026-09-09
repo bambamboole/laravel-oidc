@@ -8,8 +8,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Clients\Client;
 use Bambamboole\LaravelOidc\Server\Protocol\Concerns\RespondsToInertiaExternalRedirects;
 use Bambamboole\LaravelOidc\Server\Realms\IssuerResolver;
-use Bambamboole\LaravelOidc\Server\Sessions\BackChannel\BackChannelLogoutNotifier;
-use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
+use Bambamboole\LaravelOidc\Server\Sessions\Actions\EndSession;
 use Bambamboole\LaravelOidc\Server\Tokens\TokenInspector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +21,8 @@ class EndSessionController
 {
     use RespondsToInertiaExternalRedirects;
 
+    public function __construct(private readonly EndSession $endSession) {}
+
     public function __invoke(Request $request): Response
     {
         $hint = $this->validatedHint($request);
@@ -33,17 +34,7 @@ class EndSessionController
                 $sid = $request->hasSession() ? app(AuthSessionState::class)->sid() : null;
             }
 
-            if (is_string($sid) && $sid !== '') {
-                app(OidcSessionRepository::class)->revoke($sid);
-                app(BackChannelLogoutNotifier::class)->notify($sid);
-            }
-
-            Auth::guard(config('oidc.auth.guard'))->logout();
-
-            if ($request->hasSession()) {
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-            }
+            ($this->endSession)(is_string($sid) ? $sid : null, $request->hasSession() ? $request->session() : null);
         }
 
         if ($redirectUri === null) {

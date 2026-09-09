@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Credentials\Controllers;
 
-use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
-use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
-use Bambamboole\LaravelOidc\Server\Credentials\FactorChallenge;
+use Bambamboole\LaravelOidc\Server\Credentials\Actions\VerifyFactorChallenge;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorRegistry;
 use Bambamboole\LaravelOidc\Server\Credentials\PendingMfaChallenge;
@@ -29,7 +27,7 @@ class TwoFactorChallengeController
     public function __construct(
         private readonly FactorRegistry $factors,
         private readonly AuthSessionState $sessionState,
-        private readonly Auditor $auditor,
+        private readonly VerifyFactorChallenge $verifyChallenge,
     ) {}
 
     /**
@@ -131,43 +129,15 @@ class TwoFactorChallengeController
         }
 
         $usesRecoveryCode = $request->filled('recovery_code');
-        $providerKey = $usesRecoveryCode ? 'recovery_code' : $pending->factor;
-        $provider = $this->factors->get($providerKey);
-        $enrollment = $usesRecoveryCode
-            ? $provider->enrollments($user)[0] ?? null
-            : $this->pendingEnrollment($user, $providerKey, $pending->factorId);
+        $verification = ($this->verifyChallenge)($user, $pending, $request->only('code', 'recovery_code', 'credential'));
 
-        if (! $enrollment instanceof FactorEnrollment) {
-            $this->auditor->log(AuditEventType::MfaChallengeFailed, userId: (string) $pending->userId, context: [
-                'factor' => $providerKey,
-                'reason' => 'unknown_enrollment',
-            ]);
-
-            throw ValidationException::withMessages(['code' => __('The provided two factor authentication code was invalid.')]);
-        }
-
-        $challenge = new FactorChallenge($enrollment, privateState: PendingMfaChallenge::pullChallengeState());
-        $verification = $provider->verify($user, $challenge, $request->only('code', 'recovery_code', 'credential'));
-
-        if (! $verification->verified) {
+        if ($verification === null) {
             $field = $usesRecoveryCode ? 'recovery_code' : 'code';
-            $this->auditor->log(AuditEventType::MfaChallengeFailed, userId: (string) $pending->userId, context: [
-                'factor' => $providerKey,
-                'reason' => 'invalid_code',
-            ]);
 
             throw ValidationException::withMessages([$field => __('The provided two factor authentication code was invalid.')]);
         }
 
         $this->sessionState->add(...$verification->amr);
-
-        $this->auditor->log(AuditEventType::MfaChallengeSucceeded, userId: (string) $pending->userId, context: [
-            'factor' => $providerKey,
-        ]);
-
-        if ($usesRecoveryCode) {
-            $this->auditor->log(AuditEventType::RecoveryCodeUsed, userId: (string) $pending->userId);
-        }
 
         PendingMfaChallenge::forget();
         $this->sessionGuard()->login($user, $pending->remember);

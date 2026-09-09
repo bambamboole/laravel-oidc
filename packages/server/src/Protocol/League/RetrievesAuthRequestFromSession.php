@@ -42,26 +42,4 @@ trait RetrievesAuthRequestFromSession
 
         return unserialize($authRequest, ['allowed_classes' => self::ALLOWED_AUTH_REQUEST_CLASSES]);
     }
-
-    /**
-     * Non-destructive variant for observers (e.g. consent auditing); the
-     * authoritative pull with auth_token verification stays in
-     * getAuthRequestFromSession().
-     */
-    protected function peekAuthRequestFromSession(Request $request): ?AuthorizationRequestInterface
-    {
-        $authRequest = $request->session()->get('authRequest');
-
-        if ($authRequest instanceof AuthorizationRequestInterface) {
-            return $authRequest;
-        }
-
-        if (! is_string($authRequest)) {
-            return null;
-        }
-
-        $unserialized = unserialize($authRequest, ['allowed_classes' => self::ALLOWED_AUTH_REQUEST_CLASSES]);
-
-        return $unserialized instanceof AuthorizationRequestInterface ? $unserialized : null;
-    }
 }
