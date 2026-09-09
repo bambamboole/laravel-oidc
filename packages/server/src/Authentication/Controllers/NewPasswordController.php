@@ -6,12 +6,12 @@ namespace Bambamboole\LaravelOidc\Server\Authentication\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
-use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Forms\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Forms\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\User\UserActionManager;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;

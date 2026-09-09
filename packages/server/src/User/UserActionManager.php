@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth;
+namespace Bambamboole\LaravelOidc\Server\User;
 
 use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Illuminate\Contracts\Auth\Authenticatable;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
+use Bambamboole\LaravelOidc\Server\User\UserActionManager;
 use Workbench\App\Models\User;
 
 it('rejects a string that is neither a class nor a callable at registration time', function () {

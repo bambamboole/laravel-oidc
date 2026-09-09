@@ -6,11 +6,11 @@ namespace Bambamboole\LaravelOidc\Server\Authentication\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
-use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Server\Authentication\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Forms\RegisterView;
+use Bambamboole\LaravelOidc\Server\User\UserActionManager;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\JsonResponse;

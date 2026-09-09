@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Models;
+namespace Bambamboole\LaravelOidc\Server\Context;
 
 use Bambamboole\LaravelOidc\Server\Realm\Concerns\BelongsToRealm;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

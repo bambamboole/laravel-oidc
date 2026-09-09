@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Concerns;
+namespace Bambamboole\LaravelOidc\Server\User\Concerns;
 
 use Bambamboole\LaravelOidc\Server\Models\Client;
 use Bambamboole\LaravelOidc\Server\Models\Token;

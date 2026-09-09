@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\UserActionManager;
 use Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider;
 use Bambamboole\LaravelOidc\Server\Brokering\GoogleProvider;
 use Bambamboole\LaravelOidc\Server\Brokering\OidcProvider;
@@ -10,6 +9,7 @@ use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
+use Bambamboole\LaravelOidc\Server\User\UserActionManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
