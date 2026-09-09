@@ -65,14 +65,14 @@ audience does neither. It is for routes guarded by the package's audience middle
 
 ```php
 $client = $this->createOidcClient();                 // auth-code grant client
-$client = $this->withFirstPartyClient();             // + sets oidc.first_party.* config
+$client = $this->withFirstPartyClient();             // + sets oidc.clients.first_party.* config
 ```
 
 Config mutated in a test takes effect immediately — the package reads
-`oidc.first_party.*` at call time, so no `forgetInstance()` ceremony is
+`oidc.clients.first_party.*` at call time, so no `forgetInstance()` ceremony is
 needed after `config([...])` changes.
 
-`withFirstPartyClient()` sets `oidc.first_party.trusted = true`, so consent
+`withFirstPartyClient()` sets `oidc.clients.first_party.trusted = true`, so consent
 is skipped for that client; register a client via `createOidcClient()`
 instead when a test asserts consent behavior.
 

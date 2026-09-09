@@ -191,7 +191,7 @@ app(SocialProviderRegistry::class)->extend('my-driver', function (string $key, a
 The closure receives the provider's key (its entry name under `oidc.social.providers`) and its
 config array, and must return a `Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider`
 implementation (`key()`, `redirect(Request $request, string $intent)`, and
-`user(Request $request, PendingAuthorization $pending): SocialUser`). Reference the entry with the
+`user(Request $request, PendingSocialRedirect $pending): SocialUser`). Reference the entry with the
 matching `driver`:
 
 ```php

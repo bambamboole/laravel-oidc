@@ -47,7 +47,7 @@ flowchart LR
 
 ## The overlap window
 
-`OIDC_PREVIOUS_PUBLIC_KEY` flows into `config('oidc.additional_public_keys')`, which the default env
+`OIDC_PREVIOUS_PUBLIC_KEY` flows into `config('oidc.keys.additional_public_keys')`, which the default env
 key store returns as retained verification keys; the JWKS endpoint serves them alongside the active
 key (deduplicated by `kid`). During the overlap, tokens signed by either the current or the previous
 key verify.
@@ -100,9 +100,9 @@ All key material — signing, verification, JWKS — resolves through the
 interface SigningKeyStore
 {
     /** The key new tokens are signed with. */
-    public function signingKey(): SigningKey;
+    public function signingKey(): SigningKeyPair;
 
-    /** @return non-empty-list<SigningKey> The signing key first, then every retained key. */
+    /** @return non-empty-list<SigningKeyPair> The signing key first, then every retained key. */
     public function verificationKeys(): array;
 
     /** Persist a new keypair, retaining the current one for verification. */
@@ -110,7 +110,7 @@ interface SigningKeyStore
 }
 ```
 
-A `SigningKey` carries the public PEM, an optional private PEM, and an optional `kid`. When no
+A `SigningKeyPair` carries the public PEM, an optional private PEM, and an optional `kid`. When no
 `kid` is given it is derived from the public key per RFC 7638, so a store that has no `kid` of its
 own can omit it. Entries returned from `verificationKeys()` need no private key.
 

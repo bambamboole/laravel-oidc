@@ -33,7 +33,7 @@ first hook that denies the login.
 | Property / method | Description |
 | --- | --- |
 | `$event->user` | The `Authenticatable` who just passed the primary factor |
-| `$event->client` | The requesting OAuth client (`?Bambamboole\LaravelOidc\Server\Clients\Client`), or `null` outside an authorization request |
+| `$event->client` | The requesting OAuth client (`?Bambamboole\LaravelOidc\Server\Clients\Models\Client`), or `null` outside an authorization request |
 | `$event->scopes` | The scopes being requested (`list<string>`) |
 | `$event->requestedAcrValues` | The `acr_values` requested by the client (`list<string>`) |
 | `$event->ip` | The request's IP address |

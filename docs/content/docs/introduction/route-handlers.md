@@ -58,5 +58,5 @@ working unchanged.
   social redirect/callback/linking.
 
 Dynamic client registration is the one endpoint whose registration is conditional: it is bound
-only when `oidc.dcr.enabled` is true, and the discovery document advertises
+only when `oidc.clients.registration.enabled` is true, and the discovery document advertises
 `registration_endpoint` only when the route exists.

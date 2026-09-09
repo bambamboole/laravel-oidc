@@ -77,7 +77,7 @@ security logs, but relevant for your data-retention policy.
 ```php
 'audit' => [
     'enabled' => env('OIDC_AUDIT_ENABLED', true),
-    'sink' => \Bambamboole\LaravelOidc\Server\Audit\LogSink::class,
+    'sink' => \Bambamboole\LaravelOidc\Server\Audit\LogAuditSink::class,
     'log_channel' => env('OIDC_AUDIT_LOG_CHANNEL'),
 ],
 ```
@@ -85,10 +85,10 @@ security logs, but relevant for your data-retention policy.
 - `enabled` — `false` short-circuits everything: no event dispatch, no sink call.
 - `sink` — class-string of an `AuditSink` implementation, resolved from the container (constructor
   dependencies are injected). The shipped sinks:
-  - `LogSink` (default) writes one structured log line per event, `warning` for failure types and
+  - `LogAuditSink` (default) writes one structured log line per event, `warning` for failure types and
     `info` otherwise, prefixed `oidc: audit <type>`.
-  - `NullSink` discards everything — use it when you only want the dispatched events.
-- `log_channel` — a channel from `config/logging.php` for `LogSink`; `null` uses the default
+  - `NullAuditSink` discards everything — use it when you only want the dispatched events.
+- `log_channel` — a channel from `config/logging.php` for `LogAuditSink`; `null` uses the default
   channel. Useful to ship audit lines separately (e.g. to Loki or Datadog).
 
 ## Writing your own sink

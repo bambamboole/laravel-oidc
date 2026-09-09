@@ -10,7 +10,7 @@ validate it before serving the request. There are three ways to do that.
 ## The `auth:oidc` guard
 
 If the resource server *is* this same app, use the `auth:oidc` guard (auto-registered under the
-guard name in `oidc.api_guard`, `oidc` by default — see [Configuration](/introduction/configuration/)).
+guard name in `oidc.auth.api_guard`, `oidc` by default — see [Configuration](/introduction/configuration/)).
 It's a self-contained RFC 9068 resource-server validator: signature, `iss`, `at+jwt` `typ`,
 expiry, and revocation, all checked against this package's own JWKS and token store. It accepts a bearer token
 when its `aud` intersects the issuer URL or an entry in `oidc.resource.audiences`, or the token
@@ -85,7 +85,7 @@ token introspection instead.
 
 A request turned away by `auth:oidc` is answered with an RFC 6750 §3 Bearer challenge rather than
 Laravel's generic `Unauthenticated.` response. The package registers the renderable for
-`Illuminate\Auth\AuthenticationException` itself, for the guard named by `oidc.api_guard` and any
+`Illuminate\Auth\AuthenticationException` itself, for the guard named by `oidc.auth.api_guard` and any
 other guard using the `oidc` driver. `CheckAudience` and `CheckScopes`, layered after it, render
 the errors for the checks they own:
 

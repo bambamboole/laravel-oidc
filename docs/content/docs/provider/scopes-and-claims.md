@@ -113,7 +113,7 @@ $this->app->singleton(
 );
 ```
 
-The bundled `DefaultClaimsResolver` also maps two conventional user attributes
+The bundled `StandardClaimsResolver` also maps two conventional user attributes
 under the `profile` scope, when present: `locale` (from `$user->locale`) and
 `zoneinfo` (from `$user->timezone`). A custom resolver like the one above
 replaces it entirely, so re-add that mapping yourself if you want to keep it.
