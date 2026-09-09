@@ -72,7 +72,7 @@ encrypted at rest through Eloquent's `encrypted` cast. Point `oidc.keys.store` a
 
 ```php
 'keys' => [
-    'store' => \Bambamboole\LaravelOidc\Server\Token\DatabaseSigningKeyStore::class,
+    'store' => \Bambamboole\LaravelOidc\Server\Keys\DatabaseSigningKeyStore::class,
 ],
 ```
 
@@ -94,7 +94,7 @@ so it stays stable for the life of the key.
 ### A custom store
 
 All key material — signing, verification, JWKS — resolves through the
-`Bambamboole\LaravelOidc\Server\Token\SigningKeyStore` contract:
+`Bambamboole\LaravelOidc\Server\Keys\SigningKeyStore` contract:
 
 ```php
 interface SigningKeyStore
