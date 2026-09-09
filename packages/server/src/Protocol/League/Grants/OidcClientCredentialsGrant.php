@@ -10,6 +10,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEvent;
 use Bambamboole\LaravelOidc\Server\Clients\AllowedAudiences;
 use Bambamboole\LaravelOidc\Server\Clients\Client;
+use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
 use DateInterval;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
@@ -35,6 +36,7 @@ class OidcClientCredentialsGrant extends ClientCredentialsGrant
     public function __construct(
         private readonly AccessTokenPipeline $pipeline,
         private readonly Auditor $auditor,
+        private readonly ClientRepository $clients,
     ) {}
 
     public function respondToAccessTokenRequest(
@@ -60,10 +62,11 @@ class OidcClientCredentialsGrant extends ClientCredentialsGrant
         ?string $userIdentifier,
         array $scopes = [],
     ): AccessTokenEntityInterface {
-        $this->assertAudiencesAllowed($client);
+        $model = $this->clients->findActive($client->getIdentifier()) ?? throw OAuthServerException::invalidGrant('The client is unknown.');
+        $this->assertAudiencesAllowed($model);
 
         $event = new ClientCredentialsEvent(
-            client: $client,
+            client: $model,
             scopes: array_values(array_map(
                 fn (ScopeEntityInterface $scope): string => $scope->getIdentifier(),
                 $scopes,
@@ -130,14 +133,13 @@ class OidcClientCredentialsGrant extends ClientCredentialsGrant
         return array_values(array_unique($resources));
     }
 
-    private function assertAudiencesAllowed(ClientEntityInterface $client): void
+    private function assertAudiencesAllowed(Client $client): void
     {
         if ($this->requestedAudiences === []) {
             return;
         }
 
-        $model = Client::query()->find($client->getIdentifier());
-        $allowed = $model instanceof Client ? AllowedAudiences::of($model) : [];
+        $allowed = AllowedAudiences::of($client);
 
         if (array_diff($this->requestedAudiences, $allowed) !== []) {
             throw $this->invalidTarget('The requested resource is not permitted for this client.');

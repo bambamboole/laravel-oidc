@@ -14,6 +14,7 @@ use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ScopeEntity;
 use Bambamboole\LaravelOidc\Server\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
 use Bambamboole\LaravelOidc\Server\Tests\TestCase;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeDeniedException;
 use Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckAudience;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\RefreshToken;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\Token;
@@ -171,6 +172,23 @@ function expectOAuthServerError(Closure $callback, string $errorType): void
 
     expect($thrown)->toBeInstanceOf(OAuthServerException::class)
         ->and($thrown?->getErrorType())->toBe($errorType);
+}
+
+/**
+ * The domain-level counterpart: the closure must throw an
+ * ExchangeDeniedException carrying the given RFC 6749 / 8693 error code.
+ */
+function expectExchangeDenied(Closure $callback, string $error): void
+{
+    $thrown = null;
+
+    try {
+        $callback();
+    } catch (ExchangeDeniedException $thrown) {
+    }
+
+    expect($thrown)->toBeInstanceOf(ExchangeDeniedException::class)
+        ->and($thrown?->error)->toBe($error);
 }
 
 /**

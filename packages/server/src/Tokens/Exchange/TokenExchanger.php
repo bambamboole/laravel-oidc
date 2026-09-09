@@ -9,18 +9,15 @@ use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\TokenExchangeEvent;
 use Bambamboole\LaravelOidc\Server\Clients\Client;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ClientEntity as BridgeClient;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Repositories\ScopeRepository;
 use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
+use Bambamboole\LaravelOidc\Server\Scopes\ScopeGrant;
 use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
 use Bambamboole\LaravelOidc\Server\Tokens\Guard\ResolvesTokenUser;
 use Bambamboole\LaravelOidc\Server\Tokens\TokenInspector;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
-use League\OAuth2\Server\Entities\ScopeEntityInterface;
-use League\OAuth2\Server\Exception\OAuthServerException;
 
 class TokenExchanger
 {
@@ -33,7 +30,7 @@ class TokenExchanger
         private readonly TokenInspector $inspector,
         private readonly AccessTokenMinter $minter,
         private readonly RealmResolver $realms,
-        private readonly ScopeRepository $scopes,
+        private readonly ScopeGrant $scopes,
         private readonly AccessTokenPipeline $pipeline,
         private readonly Auditor $auditor,
     ) {}
@@ -82,19 +79,7 @@ class TokenExchanger
             parameters: $parameters,
         ));
 
-        $bridgeClient = new BridgeClient((string) $requestingClient->getKey(), (string) $requestingClient->getAttribute('name'), [], true);
-        $scopeIds = array_map(
-            fn (ScopeEntityInterface $scope): string => $scope->getIdentifier(),
-            $this->scopes->finalizeScopes(
-                array_values(array_filter(array_map(
-                    fn (string $id) => $this->scopes->getScopeEntityByIdentifier($id),
-                    $result->scopes,
-                ))),
-                self::GRANT_URN,
-                $bridgeClient,
-                $result->userId,
-            ),
-        );
+        $scopeIds = $this->scopes->finalize($result->scopes, self::GRANT_URN, $requestingClient, $result->userId);
 
         $user = $this->resolveUser($result->userId);
 
@@ -104,7 +89,7 @@ class TokenExchanger
 
         $api = $this->pipeline->run('token_exchange', new TokenExchangeEvent(
             user: $user,
-            client: $bridgeClient,
+            client: $requestingClient,
             scopes: $scopeIds,
             audience: $result->audience[0] ?? (string) $requestingClient->getKey(),
             subjectClaims: $claims,
@@ -117,7 +102,7 @@ class TokenExchanger
                 'deny_reason' => $api->denyReason(),
             ]));
 
-            throw OAuthServerException::accessDenied($api->denyReason());
+            throw ExchangeDeniedException::accessDenied((string) $api->denyReason());
         }
 
         $ttl = $this->cappedTtl($accessTokenTTL ?? $this->realms->current()->tokens()->accessToken(), $result->expiresAt);
@@ -153,7 +138,7 @@ class TokenExchanger
             'reason' => $reason,
         ]);
 
-        throw OAuthServerException::invalidGrant($message);
+        throw ExchangeDeniedException::invalidGrant($message);
     }
 
     private function cappedTtl(DateInterval $default, int $subjectExpiresAt): DateInterval
