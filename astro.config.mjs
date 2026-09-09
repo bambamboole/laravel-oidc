@@ -63,6 +63,7 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { label: "Endpoints & discovery", link: "/provider/endpoints/" },
+                { label: "Realms", link: "/provider/realms/" },
                 { label: "Scopes & claims", link: "/provider/scopes-and-claims/" },
                 { label: "Custom claims & triggers", link: "/provider/claim-hooks/" },
                 { label: "Access tokens (RFC 9068)", link: "/provider/access-tokens/" },
