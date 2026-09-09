@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Social\OidcProvider;
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAuthenticationException;
+use Bambamboole\LaravelOidc\Server\Brokering\OidcProvider;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -35,7 +35,7 @@ function fakeDiscovery(array $overrides = []): void
             'userinfo_endpoint' => 'https://idp.test/userinfo',
         ]),
         'https://idp.test/jwks' => Http::response([
-            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))],
+            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))],
         ]),
     ]);
 }
@@ -52,13 +52,13 @@ function upstreamIdToken(array $claims = [], ?string $nonce = null, string $issu
         new Sha256,
         $signWithPem !== null
             ? InMemory::plainText($signWithPem)
-            : InMemory::file(__DIR__.'/../../fixtures/oauth-private.key'),
-        InMemory::file(__DIR__.'/../../fixtures/oauth-public.key'),
+            : InMemory::file(__DIR__.'/../fixtures/oauth-private.key'),
+        InMemory::file(__DIR__.'/../fixtures/oauth-public.key'),
     );
 
     $now = new DateTimeImmutable;
     $builder = $config->builder()
-        ->withHeader('kid', $kid ?? Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))['kid'])
+        ->withHeader('kid', $kid ?? Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))['kid'])
         ->issuedBy($issuer)
         ->permittedFor($audience)
         ->relatedTo((string) ($claims['sub'] ?? 'upstream-1'))

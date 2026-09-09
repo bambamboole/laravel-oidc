@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Controllers;
+namespace Bambamboole\LaravelOidc\Server\Brokering\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Auth\Controllers\Concerns\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\InteractiveLoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Auth\Pipeline\LoginOutcome;
-use Bambamboole\LaravelOidc\Server\Auth\Social\Contracts\SocialProvider;
-use Bambamboole\LaravelOidc\Server\Auth\Social\InvalidStateException;
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAccountManager;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAuthenticationException;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialProviderRegistry;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Server\Brokering\Contracts\SocialProvider;
+use Bambamboole\LaravelOidc\Server\Brokering\InvalidStateException;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAccountManager;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

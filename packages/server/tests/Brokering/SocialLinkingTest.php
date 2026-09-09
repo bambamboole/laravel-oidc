@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Social\Models\SocialAccount;
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAccountManager;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Server\Brokering\Models\SocialAccount;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAccountManager;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
@@ -32,7 +32,7 @@ function enableCorpForLinking(): void
             'jwks_uri' => 'https://idp.test/jwks',
         ]),
         'https://idp.test/jwks' => Http::response([
-            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))],
+            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))],
         ]),
     ]);
 }
@@ -46,12 +46,12 @@ function linkCallbackFor(mixed $test, string $sub = 'upstream-1'): TestResponse
 
     $config = Configuration::forAsymmetricSigner(
         new Sha256,
-        InMemory::file(__DIR__.'/../../fixtures/oauth-private.key'),
-        InMemory::file(__DIR__.'/../../fixtures/oauth-public.key'),
+        InMemory::file(__DIR__.'/../fixtures/oauth-private.key'),
+        InMemory::file(__DIR__.'/../fixtures/oauth-public.key'),
     );
     $now = new DateTimeImmutable;
     $idToken = $config->builder()
-        ->withHeader('kid', Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))['kid'])
+        ->withHeader('kid', Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))['kid'])
         ->issuedBy('https://idp.test')
         ->permittedFor('client-1')
         ->relatedTo($sub)

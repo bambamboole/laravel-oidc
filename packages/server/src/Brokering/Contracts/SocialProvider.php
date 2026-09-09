@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Auth\Social\Contracts;
+namespace Bambamboole\LaravelOidc\Server\Brokering\Contracts;
 
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAuthenticationException;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 

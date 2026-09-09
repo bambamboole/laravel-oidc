@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
-use Bambamboole\LaravelOidc\Server\Auth\Social\Models\SocialAccount;
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAuthenticationException;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Server\Brokering\Models\SocialAccount;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialAuthenticationException;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
 use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
@@ -36,7 +36,7 @@ function enableCorpIdp(): void
             'jwks_uri' => 'https://idp.test/jwks',
         ]),
         'https://idp.test/jwks' => Http::response([
-            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))],
+            'keys' => [Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))],
         ]),
     ]);
 }
@@ -48,13 +48,13 @@ function corpIdToken(array $claims, string $nonce): string
 {
     $config = Configuration::forAsymmetricSigner(
         new Sha256,
-        InMemory::file(__DIR__.'/../../fixtures/oauth-private.key'),
-        InMemory::file(__DIR__.'/../../fixtures/oauth-public.key'),
+        InMemory::file(__DIR__.'/../fixtures/oauth-private.key'),
+        InMemory::file(__DIR__.'/../fixtures/oauth-public.key'),
     );
 
     $now = new DateTimeImmutable;
     $builder = $config->builder()
-        ->withHeader('kid', Jwk::fromPem(file_get_contents(__DIR__.'/../../fixtures/oauth-public.key'))['kid'])
+        ->withHeader('kid', Jwk::fromPem(file_get_contents(__DIR__.'/../fixtures/oauth-public.key'))['kid'])
         ->issuedBy('https://idp.test')
         ->permittedFor('client-1')
         ->relatedTo((string) $claims['sub'])

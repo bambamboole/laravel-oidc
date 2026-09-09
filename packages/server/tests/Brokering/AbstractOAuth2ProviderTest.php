@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\Social\AbstractOAuth2Provider;
-use Bambamboole\LaravelOidc\Server\Auth\Social\InvalidStateException;
-use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
-use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
-use Bambamboole\LaravelOidc\Server\Auth\Social\TokenResponse;
+use Bambamboole\LaravelOidc\Server\Brokering\AbstractOAuth2Provider;
+use Bambamboole\LaravelOidc\Server\Brokering\InvalidStateException;
+use Bambamboole\LaravelOidc\Server\Brokering\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Brokering\SocialUser;
+use Bambamboole\LaravelOidc\Server\Brokering\TokenResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
