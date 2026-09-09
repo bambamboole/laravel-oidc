@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\RecoveryCodeProvider;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
+use Bambamboole\LaravelOidc\Server\Credential\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Actions\SendVerificationEmailAction;

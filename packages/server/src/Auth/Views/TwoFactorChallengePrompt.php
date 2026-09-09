@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Auth\Views;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorEnrollment;
+use Bambamboole\LaravelOidc\Server\Credential\FactorEnrollment;
 
 final readonly class TwoFactorChallengePrompt
 {

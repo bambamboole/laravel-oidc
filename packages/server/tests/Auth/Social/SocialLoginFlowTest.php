@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Auth\AuthSessionState;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Auth\Social\Models\SocialAccount;
 use Bambamboole\LaravelOidc\Server\Auth\Social\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Auth\Social\SocialAuthenticationException;
 use Bambamboole\LaravelOidc\Server\Auth\Social\SocialUser;
+use Bambamboole\LaravelOidc\Server\Credential\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Server\Facades\Oidc;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Illuminate\Http\RedirectResponse;

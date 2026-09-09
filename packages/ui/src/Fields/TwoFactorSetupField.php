@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Fields;
 
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Data\EnrollmentOption;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\Enums\FactorSetupKind;
-use Bambamboole\LaravelOidc\Server\Auth\MultiFactor\FactorRegistry;
+use Bambamboole\LaravelOidc\Server\Credential\Data\EnrollmentOption;
+use Bambamboole\LaravelOidc\Server\Credential\Enums\FactorSetupKind;
+use Bambamboole\LaravelOidc\Server\Credential\FactorRegistry;
 use Lattice\Form\Attributes\AsField;
 use Lattice\Form\Components\Field;
 
