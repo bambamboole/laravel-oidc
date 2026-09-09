@@ -8,8 +8,8 @@ use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
 use Bambamboole\LaravelOidc\Server\Keys\Jwk;
 use Bambamboole\LaravelOidc\Server\Keys\SigningKeys;
 use Bambamboole\LaravelOidc\Server\Protocol\League\EncryptionKey;
+use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\AccessTokenEntity;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ClientEntity as BridgeClient;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
 use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\ScopeEntity;
 use Bambamboole\LaravelOidc\Server\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
@@ -273,7 +273,7 @@ function mintExchangeSubjectToken(
     $tokenId = Str::random(80);
     $expiresAt ??= new DateTimeImmutable('+1 hour');
 
-    $subject = new OidcAccessToken(
+    $subject = new AccessTokenEntity(
         $userId,
         array_map(fn (string $scope) => new ScopeEntity($scope), $scopeIds),
         new BridgeClient($clientId, 'RP', ['https://rp.test/cb']),
@@ -316,7 +316,7 @@ function resourceServerBearer(
     $clientId = (string) $test->client->id;
     $subjectId ??= (string) $test->user->id;
 
-    $accessToken = new OidcAccessToken(
+    $accessToken = new AccessTokenEntity(
         $subjectId,
         [new ScopeEntity('openid')],
         new BridgeClient($clientId, 'RP', ['https://rp.test/cb']),

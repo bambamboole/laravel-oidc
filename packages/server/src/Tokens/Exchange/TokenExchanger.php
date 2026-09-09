@@ -9,7 +9,7 @@ use Bambamboole\LaravelOidc\Server\Audit\Auditor;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\TokenExchangeEvent;
 use Bambamboole\LaravelOidc\Server\Clients\Client;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
+use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\AccessTokenEntity;
 use Bambamboole\LaravelOidc\Server\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Scopes\ScopeGrant;
 use Bambamboole\LaravelOidc\Server\Tokens\AccessTokenMinter;
@@ -46,7 +46,7 @@ class TokenExchanger
         ?array $scopes = null,
         ?DateInterval $accessTokenTTL = null,
         array $parameters = [],
-    ): OidcAccessToken {
+    ): AccessTokenEntity {
         $parsed = $this->inspector->parse($subjectToken);
         $dbToken = $parsed !== null ? $this->inspector->tokenForParsed($parsed) : null;
 

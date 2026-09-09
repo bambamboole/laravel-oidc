@@ -11,7 +11,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\ClientCredentialsEven
 use Bambamboole\LaravelOidc\Server\Clients\AllowedAudiences;
 use Bambamboole\LaravelOidc\Server\Clients\Client;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
+use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\AccessTokenEntity;
 use DateInterval;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
@@ -87,7 +87,7 @@ class OidcClientCredentialsGrant extends ClientCredentialsGrant
 
         $accessToken = parent::issueAccessToken($accessTokenTTL, $client, $userIdentifier, $scopes);
 
-        if (! $accessToken instanceof OidcAccessToken) {
+        if (! $accessToken instanceof AccessTokenEntity) {
             throw new LogicException('The client-credentials grant requires an OIDC access token entity.');
         }
 

@@ -11,7 +11,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenApi;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AccessTokenPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\AuthorizationCodeEvent;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
-use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\OidcAccessToken;
+use Bambamboole\LaravelOidc\Server\Protocol\League\Entities\AccessTokenEntity;
 use Bambamboole\LaravelOidc\Server\Tokens\Context\AccessTokenContextLink;
 use Bambamboole\LaravelOidc\Server\Tokens\Guard\ResolvesTokenUser;
 use DateInterval;
@@ -72,7 +72,7 @@ trait HasAuthenticationContextIssuance
         $context = $this->pendingContext;
         $this->pendingContext = null;
 
-        if ($context !== null && $accessToken instanceof OidcAccessToken) {
+        if ($context !== null && $accessToken instanceof AccessTokenEntity) {
             foreach ($context->access_token_claims as $name => $value) {
                 $accessToken->addExtraClaim((string) $name, $value);
             }
@@ -80,7 +80,7 @@ trait HasAuthenticationContextIssuance
             $this->contextLink->link($accessToken->getIdentifier(), $context->id);
         }
 
-        if ($api !== null && $accessToken instanceof OidcAccessToken) {
+        if ($api !== null && $accessToken instanceof AccessTokenEntity) {
             foreach ($api->accessTokenClaims() as $name => $value) {
                 $accessToken->addExtraClaim($name, $value);
             }

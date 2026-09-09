@@ -123,23 +123,23 @@ interface ExchangePolicy
 
 `ExchangeRequest` carries the requesting `client`, the subject token's decoded `subjectClaims`, the
 requested `audience`/`scopes`, and the subject token's `subjectExpiresAt`. `authorize()` must
-either return an `ExchangeGrantResult` (`userId`, `scopes`, `audience`, `expiresAt`) or throw a
-`League\OAuth2\Server\Exception\OAuthServerException` to fail the exchange with a specific
-RFC-shaped error. Replace the default to add tenant checks, custom scope rules, or a different
+either return an `ExchangeGrantResult` (`userId`, `scopes`, `audience`, `expiresAt`) or throw an
+`ExchangeDeniedException` to fail the exchange with a specific RFC-shaped error; the token
+endpoint renders it and the `IssueScopedToken` action lets it propagate. Replace the default to add tenant checks, custom scope rules, or a different
 allowlist source:
 
 ```php
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy;
+use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeDeniedException;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeGrantResult;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeRequest;
-use League\OAuth2\Server\Exception\OAuthServerException;
 
 class TenantScopedExchangePolicy implements ExchangePolicy
 {
     public function authorize(ExchangeRequest $request): ExchangeGrantResult
     {
         if (($request->subjectClaims['tenant_id'] ?? null) !== $request->client->tenant_id) {
-            throw OAuthServerException::accessDenied('Cross-tenant exchange is not permitted.');
+            throw ExchangeDeniedException::accessDenied('Cross-tenant exchange is not permitted.');
         }
 
         // ... reuse or reimplement the reciprocity/allowlist/scope checks below ...
