@@ -103,7 +103,7 @@ from `config('oidc.*')`:
 | `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes; the realm's audiences |
 | `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes; the provider session cookie name in `path` mode |
 | `login()` | `LoginSettings` | username field, home URL, login route, logout redirect, `acr` values |
-| `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count |
+| `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count, the password policy |
 | `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
 | `scopes()` | `ScopeSettings` | the scope catalog and the advertised `claims_supported` |
 | `clients()` | `ClientSettings` | dynamic registration and its redirect rules, token exchange, the first-party and trusted clients |

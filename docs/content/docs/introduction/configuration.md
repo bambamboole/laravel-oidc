@@ -76,6 +76,10 @@ below with its default and the environment variable that overrides it.
 | `auth.login_route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name or path unauthenticated users are redirected to. |
 | `auth.logout_redirect` | `/` | Fallback redirect after logout. |
 | `auth.acr_values` | `['single_factor' => '1', 'multi_factor' => '2']` | The `acr` value a login earns with one method in `amr` and with several; both are advertised as `acr_values_supported`. Substitute URIs or RFC 6711 names your relying parties expect. |
+| `auth.password.min_length` | `8` | Minimum length of a new password — see [Password policy](/auth/passwords/#password-policy). |
+| `auth.password.mixed_case`, `numbers`, `symbols`, `uncompromised` | `false` | Composition rules of the password policy. |
+| `auth.password.history` | `0` | Previous passwords a new one may not repeat; `0` disables the check. |
+| `auth.password.max_age_days` | `null` | Days after which `PasswordCredential::isExpired()` reports the password as expired. |
 | `auth.two_factor.challenge_providers` | `['totp', 'webauthn']` | Factor keys offered at the challenge step. |
 | `auth.two_factor.secret_length` | `16` | TOTP secret length. |
 | `auth.two_factor.window` | `1` | TOTP validation window. |
