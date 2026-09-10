@@ -34,7 +34,7 @@ $this->app->bind(UserinfoController::class, MyUserinfoController::class);
 ```
 
 Changing an endpoint's path and disabling an endpoint are no longer supported.
-`oidc.dcr.enabled` still gates the registration endpoint, and `oidc.routes.middleware` still
+`oidc.clients.registration.enabled` still gates the registration endpoint, and `oidc.routes.middleware` still
 applies to every route. Route names are unchanged. See [Routes](/introduction/route-handlers/).
 
 ## What you have to do
@@ -71,13 +71,13 @@ the cutover.
 ```diff
 -use Laravel\Passport\Contracts\OAuthenticatable;
 -use Laravel\Passport\HasApiTokens;
-+use Bambamboole\LaravelOidc\Server\Tokens\Concerns\HasOidcTokens;
++use Bambamboole\LaravelOidc\Server\Tokens\Concerns\HasAccessTokens;
 +use Bambamboole\LaravelOidc\Server\Tokens\OAuthenticatable;
 
  class User extends Authenticatable implements OAuthenticatable
  {
 -    use HasApiTokens;
-+    use HasOidcTokens;
++    use HasAccessTokens;
  }
 ```
 
@@ -101,7 +101,7 @@ and `revoke()` replace the old `oauth_*` magic properties.
 | `passport.guard` | `oidc.auth.guard` |
 | `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` | `OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY`, or a keypair in `oidc.keys.path` |
 
-Two keys are new: `oidc.token_lifetimes.refresh_token` (was `Passport::refreshTokensExpireIn()`)
+Two keys are new: `oidc.tokens.lifetimes.refresh_token` (was `Passport::refreshTokensExpireIn()`)
 and `oidc.keys.path` (was Passport's key path).
 
 ### 7. Replace the runtime and test APIs
@@ -112,7 +112,7 @@ and `oidc.keys.path` (was Passport's key path).
 | `Passport::actingAs($user, $scopes, $guard)` | `$this->actingAsOidcUser($user, $scopes, $guard)` |
 | `Passport::authorizationView(...)` | bind the [`ConsentView` contract](/provider/endpoints/#consent-view-required) |
 | `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckScopes` |
-| `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Clients\Client` / `Token` |
+| `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Clients\Models\Client` / `Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken` |
 | `Laravel\Passport\ClientRepository` | `Bambamboole\LaravelOidc\Server\Clients\ClientRepository` |
 
 ## What was dropped

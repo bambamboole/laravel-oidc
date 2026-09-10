@@ -55,7 +55,7 @@ dynamic client registration is enabled, both documents advertise the
 
 ## Dynamic client registration (RFC 7591)
 
-Registration is disabled by default. Enable and scope it via `oidc.dcr`:
+Registration is disabled by default. Enable and scope it via `oidc.clients.registration`:
 
 ```php
 'dcr' => [
@@ -105,7 +105,7 @@ and authenticates it through this provider's guard, two pieces of app-side wirin
 the flow:
 
 - Configure the resource: `'protected_resources' => ['mcp' => ['scopes' => [/* … */]]]` and
-  enable `oidc.dcr`.
+  enable `oidc.clients.registration`.
 - laravel/mcp's `AddWwwAuthenticateHeader` middleware only emits the `resource_metadata`
   pointer on 401 responses when a route named `mcp.oauth.protected-resource.nested` exists.
   Alias it onto this package's controller in your routes file:

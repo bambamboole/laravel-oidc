@@ -18,10 +18,9 @@ The service provider is auto-discovered.
 
 ## Publish and run the migrations
 
-The package ships migrations that extend `oauth_clients` (post-logout redirect URIs, exchange
-audiences, provisioning key, back-channel logout) and add its own tables (authentication
-contexts, access-token contexts, TOTP factors, recovery codes, sessions, session participants,
-social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and the user
+The package ships migrations for its own tables (clients, access tokens, refresh tokens,
+authorization codes, consents, signing keys, authentication contexts, TOTP factors, recovery
+codes, sessions, session participants, social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and the user
 references (`user_id`, `uuidMorphs` on `authenticatable`) are native `uuid` columns — **your
 user model must be UUID-keyed** (e.g. `HasUuids`). The `laravel/passkeys` migration derives its
 `user_id` type from your user model automatically; publish it if you also want to change that
@@ -48,9 +47,8 @@ This writes `OIDC_PRIVATE_KEY` and `OIDC_PUBLIC_KEY` to your `.env` (pass `--pri
 them to stdout for a secrets manager instead).
 
 :::note
-File-based keys work too: an `oauth-private.key`/`oauth-public.key` pair under `oidc.keys.path` (or set
-via `PASSPORT_PRIVATE_KEY`/`PASSPORT_PUBLIC_KEY`) are picked up as a fallback whenever the
-`OIDC_*` variables are unset.
+File-based keys work too: an `oauth-private.key`/`oauth-public.key` pair under `oidc.keys.path`
+is picked up as a fallback whenever the `OIDC_*` variables are unset.
 :::
 
 ## Publish the config (optional)

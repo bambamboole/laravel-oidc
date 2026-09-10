@@ -6,7 +6,7 @@ description: Trading a held token for a new access token scoped to a different a
 The provider optionally supports [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token
 exchange: a confidential client trades a token it already holds for a new access token scoped to a
 different `aud` (audience), typically to call a downstream resource server. It is gated behind
-`config('oidc.token_exchange.enabled')` (default `true`; `OIDC_TOKEN_EXCHANGE_ENABLED`), advertised
+`config('oidc.clients.token_exchange')` (default `true`; `OIDC_TOKEN_EXCHANGE_ENABLED`), advertised
 in discovery's `grant_types_supported` when enabled, and registered under the grant identifier:
 
 ```text
@@ -48,8 +48,8 @@ $client->forceFill([
 ### Public clients
 
 A **public** (non-confidential) client may use this grant too, but only when it is trusted: either
-it is the configured first-party client (`oidc.first_party.client_id` with
-`oidc.first_party.trusted = true`) or it is listed in `oidc.trusted_clients`. `grant_types` is
+it is the configured first-party client (`oidc.clients.first_party.client_id` with
+`oidc.clients.first_party.trusted = true`) or it is listed in `oidc.clients.trusted`. `grant_types` is
 checked first — for confidential and public clients alike, missing the exchange URN there always
 yields `unauthorized_client`. Only once that passes does an untrusted public client get rejected
 with `invalid_client`. A public client authenticates by possession of the subject token alone — it
@@ -116,7 +116,7 @@ claim (`{"client_id": "..."}`) identifying the exchanging client as the actor.
 ## The `ExchangePolicy` contract
 
 Every exchange request is authorized by `Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy`, bound
-by default to `DefaultExchangePolicy`:
+by default to `AllowlistExchangePolicy`:
 
 ```php
 namespace Bambamboole\LaravelOidc\Server\Contracts;
@@ -167,7 +167,7 @@ class TenantScopedExchangePolicy implements ExchangePolicy
 $this->app->singleton(ExchangePolicy::class, TenantScopedExchangePolicy::class);
 ```
 
-### `DefaultExchangePolicy` rules
+### `AllowlistExchangePolicy` rules
 
 1. **Audience reciprocity.** The requesting client must be the one the subject token was issued to
    or for: either the client's id is present in the subject token's `aud`, or the subject token's

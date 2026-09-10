@@ -41,11 +41,11 @@ recommended so the root token stays server-side.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `oidc.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](/provider/token-exchange/)) gates which audiences `IssueScopedToken` may mint for. |
-| `oidc.session_token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
-| `oidc.session_token.session_key` | `oidc.session_token` | Session key the root token (JWT, `jti`, `expires_at`, `user_id`) is stored under. |
-| `oidc.session_token.refresh_skew` | `60` | Seconds before expiry at which `currentToken()` re-mints instead of reusing the stored token. |
-| `oidc.session_token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope in the `ScopeRepository`; set an array to restrict it. |
+| `oidc.clients.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](/provider/token-exchange/)) gates which audiences `IssueScopedToken` may mint for. |
+| `oidc.session.token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
+| `oidc.session.token.session_key` | `oidc.session_token` | Session key the root token (JWT, `jti`, `expires_at`, `user_id`) is stored under. |
+| `oidc.session.token.refresh_skew` | `60` | Seconds before expiry at which `currentToken()` re-mints instead of reusing the stored token. |
+| `oidc.session.token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope in the `ScopeRepository`; set an array to restrict it. |
 
 ## The `SessionTokenProvider` seam
 
@@ -63,7 +63,7 @@ interface SessionTokenProvider
 }
 ```
 
-It is bound by default to `SessionMintTokenProvider`, which:
+It is bound by default to `SessionTokenIssuer`, which:
 
 - Mints the root token on the `Login` event (via the `EstablishSessionToken` listener),
   revoking any prior root token's `jti` first.
@@ -106,9 +106,9 @@ final readonly class IssuedToken
 
 It throws a `RuntimeException` if there is no session root token for the current user
 (`No session token is available for the current user.`), or if
-`oidc.first_party.client_id` is unset or does not resolve to a client
-(`The oidc.first_party.client_id is not configured or does not exist.`). The usual
-[`DefaultExchangePolicy`](/provider/token-exchange/) rules apply — the requested
+`oidc.clients.first_party.client_id` is unset or does not resolve to a client
+(`The oidc.clients.first_party.client_id is not configured or does not exist.`). The usual
+[`AllowlistExchangePolicy`](/provider/token-exchange/) rules apply — the requested
 audience must be in the first-party client's `allowed_exchange_audiences`, and requested
 scopes must be a subset of the root token's scopes.
 

@@ -103,7 +103,7 @@ it('throws when rendered without the consent prompt', function () {
 });
 
 it('redirects guests to login', function () {
-    config(['oidc.login_route' => 'identity.login']);
+    config(['oidc.auth.login_route' => 'identity.login']);
 
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
     $pkce = $this->pkce();

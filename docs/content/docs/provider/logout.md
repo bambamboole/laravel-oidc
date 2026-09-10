@@ -16,8 +16,8 @@ endpoint therefore only destroys the session when the request proves intent:
 - **No valid hint + `GET`** → **do not log out**; redirect to the fallback unchanged.
 
 `post_logout_redirect_uri` is only honored when it is registered on the client the hint was issued
-to (stored in `oauth_clients.post_logout_redirect_uris`); otherwise the fallback
-(`oidc.logout_redirect`) is used. When present, a `state` parameter is appended to the redirect.
+to (stored in `oidc_clients.post_logout_redirect_uris`); otherwise the fallback
+(`oidc.auth.logout_redirect`) is used. When present, a `state` parameter is appended to the redirect.
 
 ### Residual risk (accepted by design)
 

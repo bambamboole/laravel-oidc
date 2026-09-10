@@ -61,7 +61,7 @@ interface ScopeRepository
 }
 ```
 
-The default `DefaultScopeRepository` merges scopes in order: first, the configured
+The default `ConfiguredScopeRepository` merges scopes in order: first, the configured
 catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
 The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
 (See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
@@ -91,7 +91,7 @@ The request carries the user, the requesting client (`clientId`), the granted `s
 the `audience` being built (`ClaimsAudience::IdToken` or `::Userinfo`), so a resolver can vary
 claims per client and per surface. `ClaimSet` remains available for the common scope-gated
 case — see [Scopes & claims](/provider/scopes-and-claims/) for both shapes.
-The default is `DefaultClaimsResolver`. Bind your own:
+The default is `StandardClaimsResolver`. Bind your own:
 
 ```php
 $this->app->singleton(
@@ -112,7 +112,7 @@ interface ExchangePolicy
 }
 ```
 
-The default `DefaultExchangePolicy` enforces audience reciprocity, the target
+The default `AllowlistExchangePolicy` enforces audience reciprocity, the target
 allowlist, scope narrowing, same-subject, and a lifetime cap — see
 [Token exchange](/provider/token-exchange/) for the full rules. `authorize()` must
 return an `ExchangeGrantResult` or throw an
@@ -143,7 +143,7 @@ interface SessionTokenProvider
 }
 ```
 
-The default `SessionMintTokenProvider` mints the root token on the `Login` event,
+The default `SessionTokenIssuer` mints the root token on the `Login` event,
 re-mints it lazily as it nears expiry, and revokes + clears it on the `Logout` event.
 Rebind it to source the root token elsewhere (e.g. an external SSO exchange):
 

@@ -6,10 +6,10 @@ description: Provision the package-managed first-party confidential client with 
 The **first-party client** is a confidential OAuth client the package manages on your
 behalf. It is not owned by any user, and it is the client that mints the session root
 token and performs token exchanges for the [browser-fetch flow](/advanced/browser-fetch/).
-Its id belongs in `config('oidc.first_party.client_id')` (`OIDC_FIRST_PARTY_CLIENT`).
+Its id belongs in `config('oidc.clients.first_party.client_id')` (`OIDC_FIRST_PARTY_CLIENT`).
 
 Provisioning is **idempotent**: the client is identified by an internal provisioning
-key (`first-party`) stored on `oauth_clients.oidc_provisioning_key`. Running the
+key (`first-party`) stored on `oidc_clients.provisioning_key`. Running the
 provisioner again reconciles the existing client's metadata rather than creating a
 duplicate. The whole operation runs inside a database transaction with a
 `lockForUpdate()` on the keyed row, so concurrent runs cannot race.
@@ -128,6 +128,6 @@ The provisioner validates and normalizes its URI inputs (deduplicating them):
   rejected.
 - **Exchange audiences** must be an absolute URI identifier — an `http`/`https` URL
   with a host, a syntactically valid `urn:` NID:NSS, or another absolute-scheme URI.
-  Configuring any audience while `oidc.token_exchange.enabled` is `false` is rejected.
+  Configuring any audience while `oidc.clients.token_exchange` is `false` is rejected.
 - Every metadata value must be a non-empty string; the name must not be empty and at
   least one redirect URI is required.

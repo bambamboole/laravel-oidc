@@ -24,7 +24,7 @@ for how to replace a controller, and [Realms](/provider/realms/) for the prefix 
 | Introspection | `POST /realms/{realm}/oauth/introspect` | RFC 7662 token introspection (client-authenticated) |
 | Revocation | `POST /realms/{realm}/oauth/revoke` | RFC 7009 token revocation (client-authenticated) |
 
-Registration (`oidc.register`) is gated behind `config('oidc.dcr.enabled')` and only
+Registration (`oidc.register`) is gated behind `config('oidc.clients.registration.enabled')` and only
 registered — and advertised as `registration_endpoint` in both metadata documents — when that
 flag is on.
 
@@ -103,7 +103,7 @@ revokes the tokens the code produced (OAuth 2.1 §4.1.3).
 
 ## The UserInfo endpoint
 
-UserInfo authenticates the bearer token against the guard named by `config('oidc.api_guard')`
+UserInfo authenticates the bearer token against the guard named by `config('oidc.auth.api_guard')`
 (default `oidc`), and requires the `openid` scope. The claims it returns are the token's granted
 scopes resolved through the `ClaimsResolver` — see [Scopes & claims](/provider/scopes-and-claims/).
 `sub` is always the authenticated user's identifier (OpenID Connect Core §5.3.2); a resolver
