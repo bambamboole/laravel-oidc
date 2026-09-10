@@ -21,12 +21,13 @@ interface IssuerResolver
 }
 ```
 
-The default `ConfiguredIssuerResolver` returns `oidc.issuer`, falling back to `app.url`, with any
-trailing slash trimmed. It is bound as a **scoped** binding, so a resolver may derive the issuer
-from the current request (a host or path segment) and still be reset per request under Octane.
+The default `Realms\RealmIssuerResolver` returns `oidc.issuer`, falling back to `app.url`, with any
+trailing slash trimmed, and appends `/realms/{realm}` when `oidc.routes.realms` is `path`. It is
+bound as a singleton, so a resolver must derive the issuer from the current request on every call
+rather than remember it — under Octane one instance serves many requests.
 
 ```php
-$this->app->scoped(
+$this->app->singleton(
     \Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver::class,
     PerHostIssuerResolver::class,
 );
@@ -201,6 +202,6 @@ $this->app->bind(RegisterClient::class, App\Oidc\RegisterClientWithApproval::cla
 | `EndSession` | `Sessions` | the end-session endpoint |
 | `CompleteAuthorization` | `Consents` | the consent approve and deny endpoints |
 
-The three contracts under `Users\Actions` (`CreateUser`, `ResetUserPassword`,
-`CreateUserFromSocialAccount`) have no default implementation; see
+The three contracts `Shared\Users\CreateUser`, `Shared\Users\ResetUserPassword` and
+`Shared\Brokering\CreateUserFromSocialAccount` have no default implementation; see
 [Auth overview](/auth/overview/#action-seams).

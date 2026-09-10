@@ -36,6 +36,7 @@ below with its default and the environment variable that overrides it.
 | `tokens.lifetimes.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
 | `tokens.lifetimes.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
 | `tokens.lifetimes.refresh_token` | `1209600` (`OIDC_REFRESH_TOKEN_TTL`) | Idle cap on an interactive session: a refresh token unused for this long is dead. |
+| `session.cookie_name` | `null` (`OIDC_SESSION_COOKIE`) | Name of the provider's session cookie under `path` realm routing; `null` derives `{session.cookie}-oidc-{realm}`. Unused under `single` routing, where provider and application share one session. |
 | `session.absolute_lifetime` | `2592000` (`OIDC_SESSION_ABSOLUTE_LIFETIME`) | Absolute cap on an interactive session, from login (30 days). Refresh is denied past this; the user must re-authenticate. Drives `context.expires_at`, the refresh deny-check, and context pruning. |
 | `session.token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds — see [Browser-fetch](/advanced/browser-fetch/). |
 | `session.token.session_key` | `oidc.session_token` | Session key the root token is stored under. |
