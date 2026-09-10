@@ -92,6 +92,12 @@ $this->app->singleton(RealmRepository::class, EloquentRealmRepository::class);
 Both contracts are singletons. A resolver must derive the realm from the current request on
 every call rather than remember it — under Octane one instance serves many requests.
 
+The shipped resolvers read the realm from the URL — the `{realm}` path segment, or the single
+configured realm. The cacheable documents (`jwks.json`, discovery, RFC 8414 and RFC 9728 metadata)
+therefore carry `Cache-Control: public` safely, because a shared cache keys on the URI. A resolver
+that derives the realm from anything outside the URL, a request header say, must add a matching
+`Vary` to those responses, or a proxy will serve one realm's keys to another.
+
 ## Realm settings
 
 `Realm` is the contract your model implements. Beyond its identifier it exposes eight typed
