@@ -150,7 +150,7 @@ it('keeps the cached expiry when serving an exchanged token from the cache', fun
     Http::assertSentCount(2);
 });
 
-it('forgets cached tokens', function (): void {
+it('exchanges again after the cached tokens are forgotten', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'api-token', 'expires_in' => 300])
         ->push(['access_token' => 'fresh-token', 'expires_in' => 300])]);
@@ -273,7 +273,7 @@ it('throws when the client-credentials request is rejected', function (): void {
     app(ApiTokenBroker::class)->machineToken();
 })->throws(OidcClientException::class);
 
-it('exposes the machine token expiry through the exchanged token value object', function (): void {
+it('returns the machine token with its expiry', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 300])]);
 
     $token = app(ApiTokenBroker::class)->machineExchangedToken();

@@ -2,14 +2,10 @@
 
 declare(strict_types=1);
 
-use Bambamboole\LaravelOidc\Ui\Layouts\AuthLayout;
-use Illuminate\Http\Request;
-use Lattice\Ui\PageSchema;
-
-it('renders the configured brand icon', function (): void {
+it('renders the configured brand icon on the auth pages', function (): void {
     config()->set('oidc-ui.brand_icon', 'acme-logo');
 
-    $renderable = (new AuthLayout)->schema(PageSchema::make(), Request::create('/'))->renderable();
-
-    expect(json_encode($renderable))->toContain('acme-logo');
+    $this->get(route('identity.login'), ['X-Inertia' => 'true'])
+        ->assertOk()
+        ->assertSee('acme-logo', false);
 });

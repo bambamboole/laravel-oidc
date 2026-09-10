@@ -2,19 +2,32 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Scopes\Scope;
 use Bambamboole\LaravelOidc\Server\Testing\InteractsWithOidc;
 use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;
 use Illuminate\Auth\GenericUser;
-use Illuminate\Http\Request;
 use Lattice\Form\Components\Select;
 use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
 
-it('renders the consent page for an authorization request', function (): void {
+/**
+ * @param  list<Scope>  $scopes
+ */
+function consentPrompt(Client $client, array $scopes): ConsentPrompt
+{
+    return new ConsentPrompt(
+        client: $client,
+        user: new GenericUser(['id' => 1]),
+        scopes: $scopes,
+        authToken: 'test-auth-token',
+    );
+}
+
+it('serves this package\'s consent page for an authorization request', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
     $pkce = $this->pkce();
@@ -35,94 +48,34 @@ it('renders the consent page for an authorization request', function (): void {
 
 it('renders for a non-Eloquent user without leaking a null email into the translation', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
-    $user = new GenericUser(['id' => 1]);
 
-    $prompt = new ConsentPrompt(
-        client: $client,
-        user: $user,
-        scopes: [new Scope('openid', 'OpenID Connect')],
-        authToken: 'test-auth-token',
-    );
+    $content = renderPage(new OAuthConsentPage(consentPrompt($client, [new Scope('openid', 'OpenID Connect')])));
 
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $response = new OAuthConsentPage($prompt)->toResponse($request);
-    $content = $response->getContent();
-
-    expect($response->getStatusCode())->toBe(200)
-        ->and($content)->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => '']))
+    expect($content)->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => '']))
         ->and($content)->not->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => 'null']));
 });
 
-it('does not render hidden scopes', function (): void {
+it('lists only the visible scopes and drops the scopes heading when none are visible', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
+    $hidden = new Scope('internal:metrics', 'Internal metrics access', hidden: true);
 
-    $prompt = new ConsentPrompt(
-        client: $client,
-        user: new GenericUser(['id' => 1]),
-        scopes: [
-            new Scope('openid', 'OpenID Connect'),
-            new Scope('internal:metrics', 'Internal metrics access', hidden: true),
-        ],
-        authToken: 'test-auth-token',
-    );
+    $mixed = renderPage(new OAuthConsentPage(consentPrompt($client, [new Scope('openid', 'OpenID Connect'), $hidden])));
+    $hiddenOnly = renderPage(new OAuthConsentPage(consentPrompt($client, [$hidden])));
 
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $content = new OAuthConsentPage($prompt)->toResponse($request)->getContent();
-
-    expect($content)->toContain('OpenID Connect')
-        ->and($content)->not->toContain('Internal metrics access');
-});
-
-it('omits the scopes heading when only hidden scopes are requested', function (): void {
-    $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
-
-    $prompt = new ConsentPrompt(
-        client: $client,
-        user: new GenericUser(['id' => 1]),
-        scopes: [new Scope('internal:metrics', 'Internal metrics access', hidden: true)],
-        authToken: 'test-auth-token',
-    );
-
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $content = new OAuthConsentPage($prompt)->toResponse($request)->getContent();
-
-    expect($content)->not->toContain(__('oidc-ui::oauth.consent.requested-scopes'));
+    expect($mixed)->toContain(__('oidc-ui::oauth.consent.requested-scopes'))
+        ->and($mixed)->toContain('OpenID Connect')
+        ->and($mixed)->not->toContain('Internal metrics access')
+        ->and($hiddenOnly)->not->toContain(__('oidc-ui::oauth.consent.requested-scopes'));
 });
 
 it('throws when rendered without the consent prompt', function (): void {
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    expect(fn (): Response => (new OAuthConsentPage)->toResponse($request))
+    expect(fn (): Response => (new OAuthConsentPage)->toResponse(inertiaRequest()))
         ->toThrow(LogicException::class, 'rendered without its prompt');
-});
-
-it('redirects guests to login', function (): void {
-    config(['oidc.auth.login_route' => 'identity.login']);
-
-    $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
-    $pkce = $this->pkce();
-
-    $this->get(route('oidc.authorize', [
-        'client_id' => $client->id,
-        'redirect_uri' => 'https://rp.test/callback',
-        'response_type' => 'code',
-        'scope' => 'openid',
-        'state' => 'st4te',
-        'code_challenge' => $pkce->challenge,
-        'code_challenge_method' => 'S256',
-    ]))->assertRedirect(route('identity.login'));
 });
 
 it('renders subclass-provided approve fields inside the approve form and responds as the subclass', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
-
+    $prompt = consentPrompt($client, [new Scope('openid', 'OpenID Connect')]);
     $page = new class extends OAuthConsentPage
     {
         protected function approveFields(ConsentPrompt $prompt): array
@@ -131,19 +84,9 @@ it('renders subclass-provided approve fields inside the approve form and respond
         }
     };
 
-    $prompt = new ConsentPrompt(
-        client: $client,
-        user: new GenericUser(['id' => 1]),
-        scopes: [new Scope('openid', 'OpenID Connect')],
-        authToken: 'test-auth-token',
-    );
-
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $content = $page->respond($prompt, $request)->getContent();
+    $content = $page->respond($prompt, inertiaRequest())->getContent();
 
     expect($content)->toContain('tenant')
         ->and($content)->toContain('Acme')
-        ->and(new OAuthConsentPage($prompt)->toResponse($request)->getContent())->not->toContain('Acme');
+        ->and(renderPage(new OAuthConsentPage($prompt)))->not->toContain('Acme');
 });

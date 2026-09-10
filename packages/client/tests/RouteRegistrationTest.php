@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Client\Tests;
 
 use Bambamboole\LaravelOidc\Client\Tests\Support\DisabledRoutesTestCase;
-use Illuminate\Support\Facades\Route;
 
 class RouteRegistrationTest extends DisabledRoutesTestCase
 {
-    public function test_it_does_not_register_the_oidc_routes_when_disabled(): void
+    public function test_the_login_callback_and_logout_endpoints_answer_404_while_the_client_is_disabled(): void
     {
-        $this->assertFalse(Route::has('login'));
-        $this->assertFalse(Route::has('login.callback'));
-        $this->assertFalse(Route::has('logout'));
+        $this->get('/login')->assertNotFound();
+        $this->get('/login/callback')->assertNotFound();
+        $this->post('/logout')->assertNotFound();
     }
 }

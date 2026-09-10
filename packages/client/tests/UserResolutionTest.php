@@ -3,26 +3,17 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
-use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Workbench\App\Models\User;
 
-it('resolves a user through the configured seam', function (): void {
-    OidcClient::resolveUsersUsing(fn (string $sub, array $claims): ?Authenticatable => User::find($sub));
-
+it('logs in the user returned by the resolveUsersUsing seam instead of the primary-key fallback', function (): void {
+    $fake = OidcClient::fake();
+    OidcClient::resolveUsersUsing(fn (string $sub, array $claims): ?Authenticatable => User::where('email', $claims['email'])->first());
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
-    $resolved = app(OidcClientManager::class)->resolveUser((string) $user->getKey(), ['sub' => (string) $user->getKey()]);
+    $this->withSession($fake->callbackContext())
+        ->get($fake->loginAs($user, ['sub' => 'external-subject', 'email' => 'm@example.com']))
+        ->assertRedirect('/dashboard');
 
-    expect($resolved)->not->toBeNull()
-        ->and($resolved->is($user))->toBeTrue();
-});
-
-it('falls back to resolving the login guard provider by sub as primary key', function (): void {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-
-    $resolved = app(OidcClientManager::class)->resolveUser((string) $user->getKey(), []);
-
-    expect($resolved)->not->toBeNull()
-        ->and($resolved->is($user))->toBeTrue();
+    $this->assertAuthenticatedAs($user);
 });

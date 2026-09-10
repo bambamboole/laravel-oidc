@@ -19,14 +19,8 @@ use Bambamboole\LaravelOidc\Ui\Pages\ResetPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
 use Bambamboole\LaravelOidc\Ui\Pages\VerifyEmailPage;
 use Illuminate\Auth\GenericUser;
-use Illuminate\Http\Request;
 use Lattice\Form\Components\TextInput;
 
-/**
- * Overrides `title()` — public on every page — with a marker a subclass alone
- * can produce. Trait methods win over inherited ones, so this replaces the
- * base page's title without repeating the override per anonymous class.
- */
 trait MarksItsOwnRender
 {
     public function title(): string
@@ -36,25 +30,20 @@ trait MarksItsOwnRender
 }
 
 /**
- * Calls `respond()` the way the server package does — on the instance resolved
- * from the container — and returns the payload it rendered. `$prompt` is
- * spread so the two prompt-less pages work through the same helper.
+ * Calls `respond()` on the page instance the way the server package does. The
+ * prompt is spread so the two prompt-less pages go through the same helper.
  */
 function respondWith(object $page, ?object $prompt = null): string
 {
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
     return (string) $page
-        ->respond(...[...($prompt === null ? [] : [$prompt]), $request])
+        ->respond(...[...($prompt === null ? [] : [$prompt]), inertiaRequest()])
         ->getContent();
 }
 
 /**
- * `respond()` must construct `new static`, not `new self`: with `new self` the
- * container's binding is honored only long enough to enter `respond()`, and the
- * object that renders is always the base page — making a subclass a silent
- * no-op. See https://github.com/bambamboole/laravel-oidc/issues/87.
+ * `respond()` must construct `new static`, not `new self`: with `new self` a
+ * container-bound subclass renders as the base page. See
+ * https://github.com/bambamboole/laravel-oidc/issues/87.
  */
 it('renders the subclass, not the base page, for every auth page', function (): void {
     $cases = [
@@ -86,8 +75,6 @@ it('renders the subclass, not the base page, for every auth page', function (): 
         {
             use MarksItsOwnRender;
         }, new EmailVerificationPrompt],
-        // Already correct before the fix; kept in the table so it stays that way.
-        // The page only reads the client's name, so an unsaved model suffices.
         'oauth-consent' => [new class extends OAuthConsentPage
         {
             use MarksItsOwnRender;
@@ -99,8 +86,6 @@ it('renders the subclass, not the base page, for every auth page', function (): 
         )],
     ];
 
-    // Collected into a keyed map rather than asserted in the loop so a failure
-    // names the page that discarded its subclass.
     $rendered = array_map(
         fn (array $case): bool => str_contains(respondWith($case[0], $case[1]), 'subclassed-page-marker'),
         $cases,
@@ -109,9 +94,7 @@ it('renders the subclass, not the base page, for every auth page', function (): 
     expect($rendered)->toBe(array_fill_keys(array_keys($cases), true));
 });
 
-it('lets a subclass read the prompt it was constructed with', function (): void {
-    // A `private readonly $prompt` is out of scope here, so `??` would fall
-    // through to the placeholder: the promoted property has to stay `protected`.
+it('exposes the prompt it was constructed with to subclasses', function (): void {
     $page = new class extends LoginPage
     {
         public function title(): string

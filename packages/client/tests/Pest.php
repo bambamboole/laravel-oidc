@@ -11,11 +11,7 @@ uses(TestCase::class)->in(__DIR__);
 uses(RefreshDatabase::class)->in(__DIR__);
 
 /**
- * Stubs the https://id.example.com discovery and JWKS endpoints against the
- * given provider. Pass $keys to serve a custom JWKS key list; the default is
- * the provider's RSA key published under kid `key-1`.
- *
- * @param  array<int, array<string, mixed>>|null  $keys
+ * @param  array<int, array<string, mixed>>|null  $keys  Defaults to the provider's RSA key under kid `key-1`.
  */
 function fakeIssuerEndpoints(FakeOidcProvider $provider, ?array $keys = null): void
 {
@@ -30,4 +26,39 @@ function fakeIssuerEndpoints(FakeOidcProvider $provider, ?array $keys = null): v
             'keys' => $keys ?? $provider->rsaJwks('key-1'),
         ]),
     ]);
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function idTokenClaims(array $overrides = []): array
+{
+    return array_merge([
+        'iss' => 'https://id.example.com',
+        'aud' => 'client-123',
+        'sub' => '42',
+        'nonce' => 'the-nonce',
+        'iat' => time(),
+        'nbf' => time(),
+        'exp' => time() + 300,
+    ], $overrides);
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function logoutTokenClaims(array $overrides = []): array
+{
+    return array_merge([
+        'iss' => 'https://id.example.com',
+        'aud' => 'client-123',
+        'sub' => '42',
+        'sid' => 'sess-abc',
+        'iat' => time(),
+        'exp' => time() + 120,
+        'jti' => 'jti-1',
+        'events' => ['http://schemas.openid.net/event/backchannel-logout' => (object) []],
+    ], $overrides);
 }

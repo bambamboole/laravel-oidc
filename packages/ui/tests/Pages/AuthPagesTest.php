@@ -11,7 +11,6 @@ use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
-use Bambamboole\LaravelOidc\Ui\Pages\RegisterPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ResetPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
 use Illuminate\Events\Dispatcher;
@@ -23,8 +22,8 @@ use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 /**
- * Drops the named routes, swapping both the router and the URL generator's
- * collection so route() and Route::has() agree on what exists.
+ * Swaps both the router and the URL generator's collection so route() and
+ * Route::has() agree on which routes are gone.
  *
  * @param  list<string>  $names
  */
@@ -44,26 +43,17 @@ function withoutRoutes(array $names): void
     app('url')->setRoutes($router->getRoutes());
 }
 
-function renderPage(object $page): string
-{
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    return (string) $page->toResponse($request)->getContent();
-}
-
 /**
- * The `two-factor-challenge` form's fields, keyed by input name, as the client
- * receives them. The recovery-code reveal is a client-side toggle driven by
- * server-declared `conditions` metadata, so the payload is where its wiring can
- * be asserted without a browser.
+ * The `two-factor-challenge` form's fields keyed by input name. The recovery-code
+ * reveal is a client-side toggle driven by the `conditions` each field declares,
+ * so the payload is the only place its wiring is observable without a browser.
  *
  * @return array<string, array<string, mixed>>
  */
-function twoFactorChallengeFields(TwoFactorChallengePrompt $prompt): array
+function twoFactorChallengeFields(string $payload): array
 {
-    $payload = json_decode(renderPage(new TwoFactorChallengePage($prompt)), true, flags: JSON_THROW_ON_ERROR);
-    $schema = data_get($payload, 'props.lattice.schema');
+    $decoded = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
+    $schema = data_get($decoded, 'props.lattice.schema');
     $form = collect(is_array($schema) ? $schema : [])->firstWhere('id', 'two-factor-challenge');
     $fields = data_get($form, 'schema');
 
@@ -72,35 +62,72 @@ function twoFactorChallengeFields(TwoFactorChallengePrompt $prompt): array
         ->all();
 }
 
-/**
- * Every auth view contract renders through the server package's real
- * `identity.*` routes, resolved from the container. Requests are sent with
- * the `X-Inertia` header so Inertia returns the page payload as JSON instead
- * of trying to render a host application's root Blade view (which this
- * package does not ship), and `assertSee(..., false)` checks the payload for
- * the translated string without HTML-escaping the expectation first.
- */
-it('renders the login page', function (): void {
+it('serves this package\'s page through the server route for each auth view contract', function (string $routeName, array $parameters, string $titleKey, string $visitor): void {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
+    $request = match ($visitor) {
+        'identity' => $this->actingAs($user, 'identity'),
+        'pending-two-factor' => $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp']),
+        default => $this,
+    };
+
+    $request->get(route($routeName, $parameters), ['X-Inertia' => 'true'])
+        ->assertOk()
+        ->assertSee(__($titleKey), false);
+})->with([
+    'login' => ['identity.login', [], 'oidc-ui::auth.login.title', 'guest'],
+    'register' => ['identity.register', [], 'oidc-ui::auth.register.title', 'guest'],
+    'forgot-password' => ['identity.password.request', [], 'oidc-ui::auth.forgot-password.title', 'guest'],
+    'reset-password' => ['identity.password.reset', ['token' => 'dummy-token'], 'oidc-ui::auth.reset-password.title', 'guest'],
+    'verify-email' => ['identity.verification.notice', [], 'oidc-ui::auth.verify-email.title', 'identity'],
+    'confirm-password' => ['identity.password.confirm', [], 'oidc-ui::auth.confirm-password.title', 'identity'],
+    'two-factor-challenge' => ['identity.two-factor.login', [], 'oidc-ui::auth.two-factor.title', 'pending-two-factor'],
+]);
+
+it('lets a host application override a bound view contract', function (): void {
+    $this->app->bind(LoginView::class, fn (): LoginView => new class implements LoginView
+    {
+        public function respond(LoginPrompt $prompt, Request $request): JsonResponse
+        {
+            return response()->json(['view' => 'fake-login']);
+        }
+    });
+
     $this->get(route('identity.login'), ['X-Inertia' => 'true'])
         ->assertOk()
-        ->assertSee(__('oidc-ui::auth.login.title'), false);
+        ->assertExactJson(['view' => 'fake-login']);
 });
 
-it('offers passkey sign-in on the login page when the handlers are registered', function (): void {
+it('offers passkey sign-in on the login page only while the passkey endpoints exist', function (): void {
     expect(renderPage(new LoginPage))->toContain('passkey-verify');
+
+    withoutRoutes(['identity.passkey.login-options', 'identity.passkey.login']);
+
+    expect(renderPage(new LoginPage))->not->toContain('passkey-verify');
 });
 
-it('renders the login page without social buttons when no provider is configured', function (): void {
+it('offers the sign-up prompt on the login page only while the register endpoint exists', function (): void {
+    expect(renderPage(new LoginPage))->toContain(__('oidc-ui::auth.login.sign-up'));
+
+    withoutRoutes(['identity.register', 'identity.register.store']);
+
+    expect(renderPage(new LoginPage))->not->toContain(__('oidc-ui::auth.login.sign-up'));
+});
+
+it('offers the passkey ceremony on the confirm-password page only while the passkey endpoints exist', function (): void {
+    expect(renderPage(new ConfirmPasswordPage))->toContain('passkey-verify');
+
+    withoutRoutes(['identity.passkey.confirm-options', 'identity.passkey.confirm']);
+
+    expect(renderPage(new ConfirmPasswordPage))->not->toContain('passkey-verify');
+});
+
+it('renders a login button per enabled social provider and no social section without one', function (): void {
     expect(renderPage(new LoginPage))->not->toContain('login-social');
-});
 
-it('renders a login button per enabled social provider', function (): void {
     config()->set('oidc.social.providers.github.client_id', 'client-id');
     config()->set('oidc.social.providers.google.client_id', 'client-id');
 
-    $payload = renderPage(new LoginPage);
-
-    expect($payload)
+    expect(renderPage(new LoginPage))
         ->toContain(__('oidc-ui::auth.login.social.divider'))
         ->toContain(__('oidc-ui::auth.login.social.github'))
         ->toContain(__('oidc-ui::auth.login.social.google'))
@@ -123,75 +150,24 @@ it('drops the social button icon when the provider icon is set to an empty strin
         ->not->toContain('"icon":"github"');
 });
 
-it('renders the login page without passkeys when the passkey endpoints are absent', function (): void {
-    withoutRoutes(['identity.passkey.login-options', 'identity.passkey.login']);
+it('replaces the code input with the passkey ceremony and an always-visible recovery-code input on a webauthn challenge', function (): void {
+    $payload = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'webauthn')));
+    $fields = twoFactorChallengeFields($payload);
 
-    expect(renderPage(new LoginPage))->not->toContain('passkey-verify');
+    expect($payload)->toContain('passkey-verify')
+        ->and(array_keys($fields))->toBe(['recovery_code'])
+        ->and($fields['recovery_code']['conditions'])->toBeNull();
 });
 
-it('offers the sign-up prompt on the login page when the register endpoint exists', function (): void {
-    expect(renderPage(new LoginPage))->toContain(__('oidc-ui::auth.login.sign-up'));
-});
+it('renders the code input with a recovery-code reveal toggle on a code-based challenge', function (): void {
+    $payload = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp')));
+    $fields = twoFactorChallengeFields($payload);
 
-it('renders the login page without the sign-up prompt when the register endpoint is absent', function (): void {
-    withoutRoutes(['identity.register', 'identity.register.store']);
-
-    expect(renderPage(new LoginPage))->not->toContain(__('oidc-ui::auth.login.sign-up'));
-});
-
-it('renders the confirm-password page without passkeys when the passkey endpoints are absent', function (): void {
-    withoutRoutes(['identity.passkey.confirm-options', 'identity.passkey.confirm']);
-
-    expect(renderPage(new ConfirmPasswordPage))->not->toContain('passkey-verify');
-});
-
-it('offers the passkey ceremony on the two-factor challenge for a webauthn factor', function (): void {
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $content = (string) (new TwoFactorChallengePage)
-        ->respond(new TwoFactorChallengePrompt(factor: 'webauthn'), $request)
-        ->getContent();
-
-    expect($content)->toContain('passkey-verify');
-});
-
-it('renders the code form without the passkey ceremony for a totp factor', function (): void {
-    $request = Request::create('/', 'GET');
-    $request->headers->set('X-Inertia', 'true');
-
-    $content = (string) (new TwoFactorChallengePage)
-        ->respond(new TwoFactorChallengePrompt(factor: 'totp'), $request)
-        ->getContent();
-
-    expect($content)->not->toContain('passkey-verify')
-        ->and($content)->toContain('two-factor-challenge');
-});
-
-it('renders the confirm-password page with the passkey ceremony when the handlers are registered', function (): void {
-    expect(renderPage(new ConfirmPasswordPage))->toContain('passkey-verify');
-});
-
-it('offers only the recovery-code input on the two-factor challenge for a webauthn factor', function (): void {
-    // The totp render anchors the `field.otp` marker so the not-contains
-    // below cannot pass vacuously if the field type string ever changes.
-    $totp = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp')));
-    $webauthn = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'webauthn')));
-
-    expect($totp)->toContain('field.otp')
-        ->and($webauthn)->toContain('recovery_code')
-        ->and($webauthn)->not->toContain('field.otp')
-        ->and($webauthn)->not->toContain('use_recovery_code');
-});
-
-it('wires the recovery-code reveal toggle on a code-based challenge', function (): void {
-    $fields = twoFactorChallengeFields(new TwoFactorChallengePrompt(factor: 'totp'));
-
-    expect(array_keys($fields))->toBe(['code', 'recovery_code', 'use_recovery_code'])
-        // The checkbox drives the reveal, so it must stay unconditional itself —
-        // a condition on it could hide the only way back to the code input.
+    expect($payload)->not->toContain('passkey-verify')
+        ->and($payload)->toContain('field.otp')
+        ->and(array_keys($fields))->toBe(['code', 'recovery_code', 'use_recovery_code'])
+        // The checkbox is the only way back to the code input, so it must never hide itself.
         ->and($fields['use_recovery_code']['conditions'])->toBeNull()
-        // Exactly inverse conditions: one field is showing at any time.
         ->and($fields['code']['conditions'])->toMatchArray([
             'visible' => [['field' => 'use_recovery_code', 'operator' => 'eq', 'value' => false]],
         ])
@@ -200,37 +176,24 @@ it('wires the recovery-code reveal toggle on a code-based challenge', function (
         ]);
 });
 
-it('reveals the recovery-code input unconditionally on a webauthn challenge', function (): void {
-    // The passkey ceremony replaces the code input, so there is nothing to
-    // toggle between and the recovery code must be visible outright.
-    $fields = twoFactorChallengeFields(new TwoFactorChallengePrompt(factor: 'webauthn'));
-
-    expect(array_keys($fields))->toBe(['recovery_code'])
-        ->and($fields['recovery_code']['conditions'])->toBeNull();
-});
-
-it('offers the other enrolled methods on a multi-provider challenge', function (): void {
-    $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
+it('lists the other enrolled methods only on a multi-provider challenge', function (): void {
+    $multiProvider = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
         new FactorEnrollment('totp', '1', 'Authenticator', now(), null),
         new FactorEnrollment('webauthn', '2', 'Security key', now(), null),
     ])));
-
-    expect($content)->toContain(__('oidc-ui::auth.two-factor.use-another'))
-        ->and($content)->toContain(__('oidc-ui::auth.two-factor.method.webauthn'))
-        // Inertia JSON escapes forward slashes, so match the escaped href.
-        ->and($content)->toContain('two-factor-challenge\/factor\/webauthn')
-        ->and($content)->not->toContain('two-factor-challenge\/factor\/totp');
-});
-
-it('renders no method switcher for a single-provider challenge', function (): void {
-    $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
+    $singleProvider = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'totp', availableFactors: [
         new FactorEnrollment('totp', '1', 'Authenticator', now(), null),
     ])));
 
-    expect($content)->not->toContain(__('oidc-ui::auth.two-factor.use-another'));
+    expect($multiProvider)->toContain(__('oidc-ui::auth.two-factor.use-another'))
+        ->and($multiProvider)->toContain(__('oidc-ui::auth.two-factor.method.webauthn'))
+        // Inertia JSON escapes forward slashes, so the href is matched escaped.
+        ->and($multiProvider)->toContain('two-factor-challenge\/factor\/webauthn')
+        ->and($multiProvider)->not->toContain('two-factor-challenge\/factor\/totp')
+        ->and($singleProvider)->not->toContain(__('oidc-ui::auth.two-factor.use-another'));
 });
 
-it('falls back to the code form and raw key label for an unknown provider', function (): void {
+it('falls back to the code form for an unknown provider and still offers the known ones', function (): void {
     $content = renderPage(new TwoFactorChallengePage(new TwoFactorChallengePrompt(factor: 'sms', availableFactors: [
         new FactorEnrollment('sms', '1', 'Phone', now(), null),
         new FactorEnrollment('totp', '2', 'Authenticator', now(), null),
@@ -239,13 +202,6 @@ it('falls back to the code form and raw key label for an unknown provider', func
     expect($content)->toContain('field.otp')
         ->and($content)->not->toContain('passkey-verify')
         ->and($content)->toContain(__('oidc-ui::auth.two-factor.method.totp'));
-});
-
-it('links back to the login page from the register page', function (): void {
-    $content = renderPage(new RegisterPage);
-
-    expect($content)->toContain(__('oidc-ui::auth.register.have-account'))
-        ->and($content)->toContain(__('oidc-ui::common.action.log-in'));
 });
 
 it('threads the prompt status through the forgot-password form', function (): void {
@@ -262,81 +218,17 @@ it('prefills the reset-password form with the prompt token and email', function 
         ->and($content)->toContain('reset-user@example.com');
 });
 
-it('renders the register page', function (): void {
-    $this->get(route('identity.register'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.register.title'), false);
-});
-
-it('renders the forgot-password page', function (): void {
-    $this->get(route('identity.password.request'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.forgot-password.title'), false);
-});
-
-it('renders the reset-password page', function (): void {
-    $this->get(route('identity.password.reset', ['token' => 'dummy-token']), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.reset-password.title'), false);
-});
-
-it('renders the verify-email page for an unverified authenticated user', function (): void {
+it('shows the log-out link on the verify-email page only while the configured logout route exists', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
+    $this->actingAs($user, 'identity');
 
-    $this->actingAs($user, 'identity')
-        ->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.verify-email.title'), false);
-});
-
-it('shows the log-out link on the verify-email page when the logout route exists', function (): void {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
-
-    $this->actingAs($user, 'identity')
-        ->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
+    $this->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertSee(__('oidc-ui::common.action.log-out'), false);
-});
 
-it('omits the log-out link on the verify-email page when the configured logout route does not exist', function (): void {
     config(['oidc-ui.logout_route' => 'route-that-does-not-exist']);
 
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
-
-    $this->actingAs($user, 'identity')
-        ->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
+    $this->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertDontSee(__('oidc-ui::common.action.log-out'), false);
-});
-
-it('renders the confirm-password page for an authenticated user', function (): void {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
-
-    $this->actingAs($user, 'identity')
-        ->get(route('identity.password.confirm'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.confirm-password.title'), false);
-});
-
-it('renders the two-factor challenge page for a pending login', function (): void {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('password')]);
-
-    $this->withSession(['login.id' => $user->getAuthIdentifier(), 'login.factor' => 'totp'])
-        ->get(route('identity.two-factor.login'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertSee(__('oidc-ui::auth.two-factor.title'), false);
-});
-
-it('lets a host application override a bound view contract', function (): void {
-    $this->app->bind(LoginView::class, fn (): LoginView => new class implements LoginView
-    {
-        public function respond(LoginPrompt $prompt, Request $request): JsonResponse
-        {
-            return response()->json(['view' => 'fake-login']);
-        }
-    });
-
-    $this->get(route('identity.login'), ['X-Inertia' => 'true'])
-        ->assertOk()
-        ->assertExactJson(['view' => 'fake-login']);
 });
