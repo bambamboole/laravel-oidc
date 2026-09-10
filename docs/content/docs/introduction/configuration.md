@@ -31,7 +31,6 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `tokens.audiences` | `[]` | Resource identifiers the realm serves. An access token minted without an explicit audience carries them as `aud`, and the `auth:oidc` guard accepts a token only when its `aud` names one of them or an advertised protected resource. Empty means the realm issuer URL — see [Access tokens](/provider/access-tokens/). |
 | `tokens.lifetimes.access_token` | `900` (`OIDC_ACCESS_TOKEN_TTL`) | Interactive (`authorization_code`) and refreshed access-token lifetime in seconds. |
 | `tokens.lifetimes.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
 | `tokens.lifetimes.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
@@ -94,7 +93,7 @@ below with its default and the environment variable that overrides it.
 | `audit.enabled` | `true` (`OIDC_AUDIT_ENABLED`) | Records audit events through the sink — see [Audit logging](/provider/audit-logging/). |
 | `audit.sink` | `LogAuditSink::class` | Class-string of the `AuditSink` audit records are written to. |
 | `audit.log_channel` | `env('OIDC_AUDIT_LOG_CHANNEL')` | Log channel `LogAuditSink` writes to; `null` uses the default channel. |
-| `protected_resources` | `[]` | RFC 9728 protected-resource metadata keyed by path — see [Resource servers](/advanced/resource-servers/). |
+| `resources` | `[]` | Resource servers the realm serves besides itself, keyed by identifier with the scopes they advertise. A path-relative key is published as RFC 9728 metadata; every entry is an audience a client may request with `resource` and the `auth:oidc` guard accepts — see [Resource servers](/advanced/resource-servers/). |
 
 ## Social login
 

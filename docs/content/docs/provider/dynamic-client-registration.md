@@ -20,11 +20,11 @@ the connect flow MCP clients such as Claude or Cursor drive:
 
 ## Protected resource metadata (RFC 9728)
 
-Declare the resources this provider protects in `oidc.protected_resources`, keyed by the
-resource's path relative to the issuer origin:
+Declare the resources this provider protects in `oidc.resources`, keyed by the resource's path
+relative to the issuer origin:
 
 ```php
-'protected_resources' => [
+'resources' => [
     'mcp' => ['scopes' => ['mcp:use']],
 ],
 ```
@@ -116,7 +116,7 @@ For an app that serves its MCP endpoint with [laravel/mcp](https://github.com/la
 and authenticates it through this provider's guard, two pieces of app-side wiring complete
 the flow:
 
-- Configure the resource: `'protected_resources' => ['mcp' => ['scopes' => [/* … */]]]` and
+- Configure the resource: `'resources' => ['mcp' => ['scopes' => [/* … */]]]` and
   enable `oidc.clients.registration`.
 - laravel/mcp's `AddWwwAuthenticateHeader` middleware only emits the `resource_metadata`
   pointer on 401 responses when a route named `mcp.oauth.protected-resource.nested` exists.

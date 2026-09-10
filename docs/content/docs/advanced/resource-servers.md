@@ -13,11 +13,12 @@ If the resource server *is* this same app, use the `auth:oidc` guard (auto-regis
 guard name in `oidc.auth.api_guard`, `oidc` by default — see [Configuration](/introduction/configuration/)).
 It's a self-contained RFC 9068 resource-server validator: signature, `iss`, `at+jwt` `typ`,
 expiry, and revocation, all checked against this package's own JWKS and token store. It accepts a
-bearer token only when its `aud` names one of the realm's audiences (RFC 9068 §4): the
-`tokens.audiences` list — the realm issuer URL when that is empty — plus every protected resource
-advertised through RFC 9728 metadata. Tokens minted without an explicit audience carry exactly
-that list, so a classic authorization-code token passes; a token addressed to some other resource
-server, to a client id, or a revoked token 401s regardless of which client it was issued to.
+bearer token only when its `aud` names the realm issuer URL or a resource registered under
+`oidc.resources` (RFC 9068 §4). A token minted without an RFC 8707 `resource` is addressed to the
+issuer alone, so a classic authorization-code token passes; a token addressed to some other
+resource server, to a client id, or a revoked token 401s regardless of which client it was issued
+to. To obtain a token for a registered resource, the client names it with `resource` at the
+authorization endpoint or exchanges its token for one — see [Access tokens](/provider/access-tokens/).
 
 This makes `auth:oidc` usable directly on routes that only need *a* valid authenticated user at
 one of the realm's resources. Pair it with `CheckAudience` — see below — when a route must enforce
@@ -62,7 +63,8 @@ It validates, **in order**:
 1. That `$request->user()` is an authenticated `OAuthenticatable` with a `currentAccessToken()` —
    otherwise `401 invalid_token`.
 2. That the audience `auth:oidc` verified intersects the audiences the route requires —
-   otherwise `403 insufficient_scope`.
+   otherwise `401 invalid_token` (RFC 6750 §3.1: a token for another resource is not a token short
+   of a scope).
 
 ```php
 use Bambamboole\LaravelOidc\Server\Tokens\Http\Middleware\CheckAudience;

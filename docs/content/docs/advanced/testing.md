@@ -55,10 +55,10 @@ When no client is given, a default authorization-code client is created once
 per test and reused.
 
 A token minted with a custom `audience:` does not authenticate on plain
-`auth:oidc` routes unless that audience is one of the realm's (`oidc.tokens.audiences`, the
-issuer URL by default, or an advertised protected resource) — the guard accepts a token only
-when its `aud` names one of them. Without `audience:` the token carries the realm's list and
-passes. See [Resource servers (CheckAudience)](/advanced/resource-servers/).
+`auth:oidc` routes unless that audience is the realm issuer or a resource registered under
+`oidc.resources` — the guard accepts a token only when its `aud` names one of them. Without
+`audience:` the token is addressed to the issuer and passes plain `auth:oidc` routes, but not a
+route behind `CheckAudience` for another resource. See [Resource servers (CheckAudience)](/advanced/resource-servers/).
 
 ## Clients
 
