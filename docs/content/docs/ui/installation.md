@@ -40,10 +40,11 @@ any provider's `boot()` runs, so an app provider that re-binds the same contract
 `register()` or `boot()`) always executes after this default and wins, without forking the
 package (see [Overriding views](/ui/overriding/)):
 
-- **All eight auth view contracts** the server package declares — `LoginView`, `RegisterView`,
+- **All nine auth view contracts** the server package declares — `LoginView`, `RegisterView`,
   `PasswordResetRequestView`, `PasswordResetView`, `EmailVerificationView`,
-  `PasswordConfirmationView`, `TwoFactorChallengeView`, and `ConsentView` (the OAuth consent
-  page) — each bound to a Lattice page (see [View seams](/auth/overview/)).
+  `PasswordConfirmationView`, `TwoFactorChallengeView`, `ConsentView` (the OAuth consent page),
+  and `LogoutConfirmationView` (the RP-initiated logout prompt) — each bound to a Lattice page
+  (see [View seams](/auth/overview/)).
 - **The `auth` layout** (`AuthLayout`) — discovered, not bound here: `extra.lattice.discover:
   ["src"]` lets Lattice's root-manifest discovery find the `#[AsLayout('auth')]`-attributed class
   in this package's `src/` on its own, without relying on the host app's `config('lattice.discover')`
