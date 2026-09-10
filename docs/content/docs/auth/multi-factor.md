@@ -207,6 +207,7 @@ them satisfies it — the active enrollment only determines what the challenge v
   `challenge_providers`. Recovery codes are always available as a fallback when the user submits one.
 - **`amr`** accrues across factors: the primary password contributes `pwd`, and each verified factor
   adds its own method (`otp`, `webauthn`). The full set is carried on the session and emitted onto
-  the issued `id_token`, where the OP derives `acr` from it (`1` for a single method, `2` when more
-  than one method was satisfied). How this reaches the token is described on
+  the issued `id_token`, where the OP derives `acr` from it through the bound `AcrResolver`
+  (`oidc.auth.acr_values`: `1` for a single method, `2` when more than one method was satisfied,
+  by default). How this reaches the token is described on
   [The post-login pipeline](/auth/post-login-pipeline/).

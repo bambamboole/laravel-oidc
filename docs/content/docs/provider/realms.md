@@ -86,9 +86,9 @@ from `config('oidc.*')`:
 
 | Method | Settings object | Drives |
 | --- | --- | --- |
-| `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes |
+| `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes; the realm's audiences |
 | `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes |
-| `login()` | `LoginSettings` | username field, home URL, login route, logout redirect |
+| `login()` | `LoginSettings` | username field, home URL, login route, logout redirect, `acr` values |
 | `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count |
 | `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
 | `scopes()` | `ScopeSettings` | the scope catalog and the advertised `claims_supported` |
@@ -125,7 +125,7 @@ class Realm extends Model implements Realm
 
 What stays in `config/oidc.php` is deployment-wide by nature: the issuer origin, guard and
 provider names, the signing key store and key material, the audit sink, route middleware,
-resource-server audiences, and the install-time first-party provisioning values.
+the advertised protected resources, and the install-time first-party provisioning values.
 
 ### ResolveRealm
 

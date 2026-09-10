@@ -30,6 +30,7 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
+| `tokens.audiences` | `[]` | Resource identifiers the realm serves. An access token minted without an explicit audience carries them as `aud`, and the `auth:oidc` guard accepts a token only when its `aud` names one of them or an advertised protected resource. Empty means the realm issuer URL — see [Access tokens](/provider/access-tokens/). |
 | `tokens.lifetimes.access_token` | `900` (`OIDC_ACCESS_TOKEN_TTL`) | Interactive (`authorization_code`) and refreshed access-token lifetime in seconds. |
 | `tokens.lifetimes.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
 | `tokens.lifetimes.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
@@ -72,6 +73,7 @@ below with its default and the environment variable that overrides it.
 | `auth.username` | `email` (`OIDC_AUTH_USERNAME`) | The credential field used to log in. |
 | `auth.login_route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name or path unauthenticated users are redirected to. |
 | `auth.logout_redirect` | `/` | Fallback redirect after logout. |
+| `auth.acr_values` | `['single_factor' => '1', 'multi_factor' => '2']` | The `acr` value a login earns with one method in `amr` and with several; both are advertised as `acr_values_supported`. Substitute URIs or RFC 6711 names your relying parties expect. |
 | `auth.two_factor.challenge_providers` | `['totp', 'webauthn']` | Factor keys offered at the challenge step. |
 | `auth.two_factor.secret_length` | `16` | TOTP secret length. |
 | `auth.two_factor.window` | `1` | TOTP validation window. |
