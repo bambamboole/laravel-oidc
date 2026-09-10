@@ -5,6 +5,23 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.25.0](https://github.com/bambamboole/laravel-oidc/compare/v0.24.0...v0.25.0) (2026-09-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** serve a realm per host with domain routing ([#165](https://github.com/bambamboole/laravel-oidc/issues/165))
+* **server:** rename the SigningKeys contract to Keyring ([#163](https://github.com/bambamboole/laravel-oidc/issues/163))
+
+### Features
+
+* **server:** serve a realm per host with domain routing ([#165](https://github.com/bambamboole/laravel-oidc/issues/165)) ([60c92d2](https://github.com/bambamboole/laravel-oidc/commit/60c92d26674ff90394e76827eb125006b7b44f43))
+
+
+### Refactoring
+
+* **server:** rename the SigningKeys contract to Keyring ([#163](https://github.com/bambamboole/laravel-oidc/issues/163)) ([f2bb2de](https://github.com/bambamboole/laravel-oidc/commit/f2bb2de65917dee0355fd470f35137704911d3be))
+
 ## [0.24.0](https://github.com/bambamboole/laravel-oidc/compare/v0.23.0...v0.24.0) (2026-09-10)
 
 
