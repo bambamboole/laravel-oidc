@@ -20,12 +20,8 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `keys.store` | `EnvSigningKeyStore::class` | Class-string of the `SigningKeyStore` that holds the signing keypair; `DatabaseSigningKeyStore::class` keeps it in `oidc_signing_keys` — see [Key rotation](/provider/key-rotation/). |
-| `keys.private_key` | `env('OIDC_PRIVATE_KEY')` | RS256 private signing key as a PEM string (`\n`-escaped single lines are fine). See [Key rotation](/provider/key-rotation/). |
-| `keys.public_key` | `env('OIDC_PUBLIC_KEY')` | The matching public key, published in JWKS. |
-| `keys.path` | `env('OIDC_KEY_PATH')` | Directory the env store falls back to for `oauth-private.key`/`oauth-public.key` when no PEM is configured; `null` means `storage_path()`. |
+| `keys.store` | `DatabaseSigningKeyStore::class` | Class-string of the `SigningKeyStore` that holds the signing keypair; the shipped store keeps it in `oidc_signing_keys` — see [Key rotation](/provider/key-rotation/). |
 | `keys.size` | `2048` (`OIDC_KEY_SIZE`) | RSA key size `oidc:rotate-keys` generates. |
-| `keys.additional_public_keys` | `[OIDC_PREVIOUS_PUBLIC_KEY]` | Extra PEM public keys the env store retains for verification and JWKS; defaults to the previous signing key during rotation. Ignored by `DatabaseSigningKeyStore`, which retains keys as rows — see [Key rotation](/provider/key-rotation/). |
 
 ## Tokens & sessions
 
