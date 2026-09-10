@@ -70,6 +70,14 @@ return [
         'passkey-separator' => 'Or confirm with password',
     ],
 
+    'two-factor-setup' => [
+        'title' => 'Two-factor authentication',
+        'heading' => 'Set up two-factor authentication',
+        'subtitle' => 'Add a second step to your sign-in.',
+        'subtitle-required' => 'This account needs two-factor authentication before you can continue.',
+        'continue' => 'Continue',
+    ],
+
     'verify-email' => [
         'title' => 'Email verification',
         'heading' => 'Email verification',

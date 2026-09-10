@@ -11,9 +11,6 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinal
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\DerivedPendingActions;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionRegistry;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\UpdatePasswordAction;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\VerifyEmailAction;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\EmailVerificationView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordConfirmationView;
@@ -29,7 +26,6 @@ use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
@@ -53,18 +49,6 @@ class AuthenticationServiceProvider extends ServiceProvider
         $this->app->singleton(DeviceRecognizer::class, NullDeviceRecognizer::class);
         $this->app->bind(AcrResolver::class, LevelOfAssuranceAcrResolver::class);
         $this->app->singleton(AuthenticationContextStore::class);
-
-        // Registration order is the order a user is walked through open
-        // actions; an application appends its own to the same registry.
-        $this->app->singleton(RequiredActionRegistry::class, function (Application $app): RequiredActionRegistry {
-            $registry = new RequiredActionRegistry;
-            $registry->register(
-                $app->make(VerifyEmailAction::class),
-                $app->make(UpdatePasswordAction::class),
-            );
-
-            return $registry;
-        });
         $this->app->singleton(PendingActions::class, DerivedPendingActions::class);
 
         // Without a ui package or app binding, a view contract throws so the

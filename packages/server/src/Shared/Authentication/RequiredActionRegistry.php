@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Authentication\RequiredActions;
-
-use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredAction;
+namespace Bambamboole\LaravelOidc\Server\Shared\Authentication;
 
 /**
  * The actions this deployment knows about. Registration order is the order

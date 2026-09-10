@@ -6,7 +6,6 @@ namespace Bambamboole\LaravelOidc\Server\Authentication\Pipeline;
 
 use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginFailed;
 use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginSucceeded;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionRegistry;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AuthSessionState;
@@ -16,8 +15,11 @@ use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginOutcome;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingAuthorization;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingRequiredActions;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionRegistry;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Shared\Credentials\SecondFactorGate;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\Settings\MfaRequirement;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +44,7 @@ final readonly class InteractiveLoginFinalizer implements LoginFinalizer
         private ClientRepository $clients,
         private PendingActions $actions,
         private RequiredActionRegistry $registry,
+        private RealmResolver $realms,
     ) {}
 
     private function pendingClient(Request $request): ?Client
@@ -93,27 +96,40 @@ final readonly class InteractiveLoginFinalizer implements LoginFinalizer
         }
 
         $this->sessionState->putClaims($api->idTokenClaims(), $api->accessTokenClaims());
-        $this->sessionState->putRequestedActions($this->knownActions($api->requiredActions()));
 
-        $challengeable = $this->secondFactor->hasChallengeableFactors($user);
+        $mfa = $this->realms->current()->authentication()->mfa;
+        $forced = $api->mfaRequired() || $mfa === MfaRequirement::Always;
+        $challengeable = $mfa !== MfaRequirement::Never && $this->secondFactor->hasChallengeableFactors($user);
+        $actions = $this->knownActions($api->requiredActions());
 
-        if ($api->mfaRequired() && ! $challengeable) {
-            Log::warning('oidc: login denied, MFA required but no challengeable factor', ['method' => $method]);
-            event(new LoginFailed(
-                method: $method,
-                reason: 'mfa_required_without_factor',
-                userId: (string) $user->getAuthIdentifier(),
-            ));
-            $this->sessionState->forget();
-
-            return LoginOutcome::Denied;
-        }
-
-        if ($challengeable && ($challengeEnrolledFactors || $api->mfaRequired())) {
+        if ($challengeable && ($challengeEnrolledFactors || $forced)) {
+            $this->sessionState->putRequestedActions($actions);
             $this->secondFactor->beginChallenge($user, $remember);
 
             return LoginOutcome::MfaChallenge;
         }
+
+        // A realm that requires a factor the user does not have enrolls one.
+        // With nothing to enroll — no provider, or the realm switched second
+        // factors off — the demand cannot be met, and the login fails closed
+        // rather than looping on a screen with no options.
+        if ($forced && ! $challengeable) {
+            if ($mfa === MfaRequirement::Never || ! $this->secondFactor->canEnrollFactor($user)) {
+                Log::warning('oidc: login denied, MFA required but no factor can satisfy it', ['method' => $method]);
+                event(new LoginFailed(
+                    method: $method,
+                    reason: 'mfa_required_without_factor',
+                    userId: (string) $user->getAuthIdentifier(),
+                ));
+                $this->sessionState->forget();
+
+                return LoginOutcome::Denied;
+            }
+
+            $actions[] = 'configure_mfa';
+        }
+
+        $this->sessionState->putRequestedActions($actions);
 
         return $this->finish($request, $user, $remember);
     }

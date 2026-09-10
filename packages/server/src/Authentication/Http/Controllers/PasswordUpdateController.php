@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Authentication\Actions\UpdatePassword;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionSubject;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdatePrompt;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdateView;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\ContinuesLogin;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingRequiredActions;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionSubject;
 use Bambamboole\LaravelOidc\Server\Shared\Credentials\PasswordCredential;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\CanResetPassword;

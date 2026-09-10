@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Server\Authentication\RequiredActions;
+namespace Bambamboole\LaravelOidc\Server\Shared\Authentication;
 
-use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingRequiredActions;
-use Bambamboole\LaravelOidc\Server\Shared\Authentication\ResolvesIdentityGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 

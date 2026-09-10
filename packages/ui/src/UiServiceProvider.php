@@ -12,6 +12,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdateView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\RegisterView;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
+use Bambamboole\LaravelOidc\Server\Credentials\Views\FactorSetupView;
 use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Server\Sessions\Views\LogoutConfirmationView;
 use Illuminate\Support\ServiceProvider;
@@ -47,6 +48,7 @@ class UiServiceProvider extends ServiceProvider
         $this->app->bind(PasswordConfirmationView::class, Pages\ConfirmPasswordPage::class);
         $this->app->bind(PasswordUpdateView::class, Pages\UpdatePasswordPage::class);
         $this->app->bind(TwoFactorChallengeView::class, Pages\TwoFactorChallengePage::class);
+        $this->app->bind(FactorSetupView::class, Pages\SetupTwoFactorPage::class);
         $this->app->bind(ConsentView::class, Pages\OAuthConsentPage::class);
         $this->app->bind(LogoutConfirmationView::class, Pages\LogoutConfirmationPage::class);
     }
