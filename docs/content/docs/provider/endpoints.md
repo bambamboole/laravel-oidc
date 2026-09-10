@@ -81,7 +81,7 @@ failure is reported as an error redirect to the validated `redirect_uri`, with `
 | `response_mode` other than `query` | `invalid_request`; the response mode is never silently substituted |
 | `request` / `request_uri` | `request_not_supported` / `request_uri_not_supported` (OpenID Connect Core §6) |
 | `code_challenge` missing, `code_challenge_method` other than `S256` | `invalid_request` |
-| `scope` naming an unknown scope | `invalid_scope` |
+| `scope` naming an unknown scope, or a known scope the client is not assigned | `invalid_scope` |
 | `max_age` | Non-negative integer. A login older than that (or without a recorded `auth_time`) is renewed: the session is ended and the user sent to login. With `prompt=none` the answer is `login_required` and the session is kept |
 | `prompt` | `none`, `login`, `consent`, `select_account`. `none` combined with any other value, or an unknown value, is `invalid_request`. `login` ends the session and sends the user to login. `select_account` behaves exactly like `login`: the provider holds one account per browser session, so there is no account to switch to. `consent` shows the consent view even when a stored consent already covers the requested scopes; trusted first-party clients ignore it |
 | `id_token_hint` | Must verify against the realm's signing keys and issuer, otherwise `invalid_request`. When the hint's `sub` is not the signed-in user the answer is `login_required`; a signed-out user proceeds to login (`login_required` with `prompt=none`) |
@@ -207,9 +207,11 @@ The view posts `auth_token` back to `POST /oauth/authorize/consent` (route
 ### What is remembered
 
 An approval is stored in `oidc_consents`: one row per realm, user and client, holding the union of
-every scope set the user approved for that client. The authorization endpoint skips the view when
-that row covers every requested scope, and shows it again when the request asks for a scope the
-row does not hold — approving then merges the new scopes in. A denial stores nothing.
+every scope set the user approved for that client. The scopes in play are the requested ones plus
+the client's [default scopes](/provider/scopes-and-claims/#client-scope-assignment); hidden scopes
+are granted without being shown. The authorization endpoint skips the view when that row covers
+every scope in play, and shows it again when the request asks for a scope the row does not hold —
+approving then merges the new scopes in. A denial stores nothing.
 
 The consent is independent of the tokens it led to: it survives their expiry and their revocation.
 It ends only when it is withdrawn, which sets `revoked_at` and brings the view back on the next

@@ -106,7 +106,7 @@ from `config('oidc.*')`:
 | `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count, the password policy |
 | `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
 | `scopes()` | `ScopeSettings` | the scope catalog and the advertised `claims_supported` |
-| `clients()` | `ClientSettings` | dynamic registration and its redirect rules, token exchange, the first-party and trusted clients |
+| `clients()` | `ClientSettings` | dynamic registration and its redirect rules, the default and optional scopes new clients are assigned, token exchange, the first-party and trusted clients |
 | `keys()` | `KeySettings` | RSA key size for generated signing keys |
 
 The settings objects live in `Bambamboole\LaravelOidc\Server\Shared\Realms\Settings`; each is a
