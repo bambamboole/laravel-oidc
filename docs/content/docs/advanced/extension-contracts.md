@@ -180,6 +180,12 @@ $this->app->singleton(
 );
 ```
 
+## `RequiredAction`
+
+Implement it to hold a login until the user has done something your application cares about. See
+[Required actions](/auth/required-actions/) for the contract, the registry and the screen
+conventions.
+
 ## Domain actions
 
 Every use case the package's controllers, commands and jobs perform is an invokable
@@ -194,7 +200,7 @@ $this->app->bind(RegisterClient::class, App\Oidc\RegisterClientWithApproval::cla
 
 | Action | Domain | Called by |
 | --- | --- | --- |
-| `RegisterUser`, `AuthenticateWithPassword`, `SendPasswordResetLink`, `ResetPassword`, `ConfirmPassword`, `SendEmailVerification` | `Authentication` | the login, registration, password and verification endpoints |
+| `RegisterUser`, `AuthenticateWithPassword`, `SendPasswordResetLink`, `ResetPassword`, `UpdatePassword`, `ConfirmPassword`, `SendEmailVerification` | `Authentication` | the login, registration, password and verification endpoints |
 | `EnrollFactor`, `ConfirmFactorEnrollment`, `RevokeFactor`, `VerifyFactorChallenge` | `Credentials` | the factor enrollment and two-factor challenge endpoints |
 | `LinkSocialAccount`, `UnlinkSocialAccount` | `Brokering` | the social callback and linked-account endpoints |
 | `RegisterClient`, `ProvisionFirstPartyClient` | `Clients` | dynamic client registration, `oidc:client`, `oidc:install-self` |

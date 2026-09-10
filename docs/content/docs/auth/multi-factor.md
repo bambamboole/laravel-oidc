@@ -124,11 +124,30 @@ recovery code is submitted, otherwise the stashed `login.factor` (default `totp`
 3. **Regenerates the session.**
 4. Responds with an empty **`204`** (JSON) or `redirect()->intended(...)` to the home URL (browser).
 
+## Requiring a factor
+
+`oidc.auth.mfa` decides how hard the realm insists on a second factor, per realm:
+
+| Value | Behavior |
+| --- | --- |
+| `never` | Enrolled factors are never challenged at login |
+| `if_enrolled` (default) | Whatever the user has enrolled is challenged |
+| `always` | A user without a factor is sent to enrollment before the login completes |
+
+With `always`, a user who has no challengeable factor gets the `configure_mfa`
+[required action](/auth/required-actions/): the login is **held** on the enrollment screen rather
+than refused. `$api->requireMfa()` from the [post-login pipeline](/auth/post-login-pipeline/) does
+the same for a single login. The login is denied only when nothing could satisfy the demand — a
+realm with no enrollable provider, or one set to `never`.
+
 ## Management endpoints
 
-All management endpoints require an authenticated `identity` session **and** a recent password
-confirmation (`RequirePassword::using('identity.password.confirm')` — see
-[Password confirmation](/auth/passwords/)).
+The management endpoints require a recent password confirmation
+(see [Password confirmation](/auth/passwords/)). Enrollment additionally accepts a **pending
+login**, because that is where a realm requiring a factor sends a user who has none; there the
+password confirmation is skipped, since no session exists yet to protect and the user proved a
+credential seconds ago. Revocation always requires a live `identity` session and a confirmed
+password.
 
 Enrollment, confirmation, and revocation run exclusively through the
 [provider-keyed endpoints](#provider-keyed-enrollment) below. The former TOTP-specific
@@ -145,10 +164,16 @@ needs no package changes. All of them share the management middleware above.
 
 | Route name | Verb | Path | Purpose |
 | --- | --- | --- | --- |
+| `identity.two-factor.setup` | `GET` | `auth/user/two-factor/setup` | The enrollment page, rendered through the `FactorSetupView` seam |
+| `identity.two-factor.setup.continue` | `POST` | `auth/user/two-factor/setup/continue` | Continue a login that was held for a factor, once one is confirmed |
 | `identity.two-factor.factors` | `GET` | `auth/user/two-factor/factors` | Every enrollment across all providers |
 | `identity.two-factor.enroll` | `POST` | `auth/user/two-factor/{provider}` | Begin an enrollment; the response `metadata` carries the setup payload (e.g. the TOTP secret, exposed only here) |
 | `identity.two-factor.enroll.confirm` | `POST` | `auth/user/two-factor/{provider}/confirm` | Confirm with `enrollment_id` plus the provider's proof (e.g. `code`) |
 | `identity.two-factor.revoke` | `DELETE` | `auth/user/two-factor/{provider}/{enrollment}` | Remove one enrollment |
+
+Continuing a held login is a step of its own rather than a tail on `confirm`, because a first
+factor mints recovery codes that are shown once — navigating off the page displaying them would
+lose them.
 
 Repeating `enroll` for `totp` while an unconfirmed enrollment exists returns that pending
 enrollment (same id, same secret) instead of creating another; enrolling alongside a
@@ -183,6 +208,8 @@ themselves (both carry `throttle:5,1`):
 ## Configuration
 
 ```php
+'mfa' => 'if_enrolled',                            // never | if_enrolled | always
+
 'two_factor' => [
     'challenge_providers' => ['totp', 'webauthn'], // which providers are offered at the login challenge
     'secret_length' => 16,                         // TOTP secret length

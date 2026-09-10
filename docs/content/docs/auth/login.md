@@ -19,6 +19,12 @@ regeneration, and the hand-off to the [post-login pipeline](/auth/post-login-pip
 `GET identity.login` renders through the bound `LoginView` contract. If none is bound, hitting the
 route throws `MissingAuthViewException`.
 
+The realm's [`methods`](/provider/realms/#realm-settings) decides which of `password`, `passkey`
+and `social` are accepted. A method left out has its routes **closed** — a hand-built POST gets a
+404, not just a login page missing a button — and `LoginPrompt::$methods` tells the view which to
+render. Registration and password reset hang off `password`: both end in a password the realm
+would not otherwise accept.
+
 ## The login flow (`POST identity.login.store`)
 
 The store action is throttled to **5 requests per minute** and runs the following steps:
@@ -37,6 +43,10 @@ The store action is throttled to **5 requests per minute** and runs the followin
    discarded and the request fails with the same generic `auth.failed` message. Queued
    `id_token`/`access_token` claims from the pipeline are stored on the session.
 6. **Branch on MFA** (below).
+7. **Branch on [required actions](/auth/required-actions/).** Before the session is established,
+   the realm is asked whether the user still owes it anything — a confirmed address, a password
+   inside the rotation window, an enrolled factor. If so the login **parks**: no session is
+   created, and the user is sent to that action's screen.
 
 ```mermaid
 flowchart TD
@@ -47,17 +57,32 @@ flowchart TD
     D --> E["Post-login pipeline"]
     E -- "deny()" --> F
     E -- ok --> G{"Challengeable factor enrolled?"}
-    G -- "no, but requireMfa()" --> F
-    G -- no --> H["Log in + regenerate session"]
+    G -- "no, but MFA required" --> L["Enroll a factor"]
+    G -- no --> M
     G -- yes --> I["Stash pending login,<br/>redirect to two-factor challenge"]
     I --> J["Verify factor (adds its amr)"]
-    J --> H
+    J --> M
+    L --> M{"Anything the realm requires?"}
+    M -- yes --> N["Action screen"]
+    N --> M
+    M -- no --> H["Log in + regenerate session"]
     H --> K["Redirect to intended / home"]
 ```
 
+### Deferring to a required action
+
+If the realm still requires something of the user, the login is **not** completed: no session is
+created, a pending record naming the user is stored, and
+
+- a JSON request receives `{"required_actions": ["update_password"]}`.
+- a browser request is redirected to the first open action's screen.
+
+The [required actions page](/auth/required-actions/) covers the screens, the authorization-endpoint
+re-check, and how to add your own.
+
 ### Success response
 
-When no challengeable factor is enrolled, the user is logged in on the `identity` guard (honoring
+When nothing is left to challenge or require, the user is logged in on the `identity` guard (honoring
 the `remember` field), the **session is regenerated**, and:
 
 - A JSON request (`wantsJson`) receives an empty **`200`** response.

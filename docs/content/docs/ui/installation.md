@@ -4,8 +4,9 @@ description: Install laravel-oidc-ui and see what it binds by default.
 ---
 
 `bambamboole/laravel-oidc-ui` is a [Lattice](https://lattice-php.dev)-powered auth UI for the
-OIDC provider: login, registration, password reset, email verification, password confirmation,
-two-factor challenge, and OAuth consent, rendered as Lattice pages instead of Blade views.
+OIDC provider: login, registration, password reset and change, email verification, password
+confirmation, two-factor challenge and enrollment, and OAuth consent, rendered as Lattice pages
+instead of Blade views.
 
 ## Requirements
 
@@ -40,11 +41,11 @@ any provider's `boot()` runs, so an app provider that re-binds the same contract
 `register()` or `boot()`) always executes after this default and wins, without forking the
 package (see [Overriding views](/ui/overriding/)):
 
-- **All nine auth view contracts** the server package declares — `LoginView`, `RegisterView`,
-  `PasswordResetRequestView`, `PasswordResetView`, `EmailVerificationView`,
-  `PasswordConfirmationView`, `TwoFactorChallengeView`, `ConsentView` (the OAuth consent page),
-  and `LogoutConfirmationView` (the RP-initiated logout prompt) — each bound to a Lattice page
-  (see [View seams](/auth/overview/)).
+- **All eleven auth view contracts** the server package declares — `LoginView`, `RegisterView`,
+  `PasswordResetRequestView`, `PasswordResetView`, `PasswordUpdateView`, `EmailVerificationView`,
+  `PasswordConfirmationView`, `TwoFactorChallengeView`, `FactorSetupView`, `ConsentView` (the
+  OAuth consent page), and `LogoutConfirmationView` (the RP-initiated logout prompt) — each bound
+  to a Lattice page (see [View seams](/auth/overview/)).
 - **The `auth` layout** (`AuthLayout`) — discovered, not bound here: `extra.lattice.discover:
   ["src"]` lets Lattice's root-manifest discovery find the `#[AsLayout('auth')]`-attributed class
   in this package's `src/` on its own, without relying on the host app's `config('lattice.discover')`

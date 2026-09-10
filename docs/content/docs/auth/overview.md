@@ -36,13 +36,15 @@ Eight contracts cover every auth surface:
 
 | Contract | Prompt | Renders for |
 | --- | --- | --- |
-| `LoginView` | `LoginPrompt` (`status`) | [Login](/auth/login/) |
+| `LoginView` | `LoginPrompt` (`status`, `methods`) | [Login](/auth/login/) |
 | `RegisterView` | — (`respond(Request $request)`) | [Registration](/auth/registration/) |
 | `PasswordResetRequestView` | `PasswordResetRequestPrompt` (`status`) | [Password reset](/auth/passwords/) request step |
 | `PasswordResetView` | `PasswordResetPrompt` (`token`, `email`, `status`) | [Password reset](/auth/passwords/) reset step |
 | `EmailVerificationView` | `EmailVerificationPrompt` (`status`) | [Email verification](/auth/email-verification/) |
 | `PasswordConfirmationView` | — (`respond(Request $request)`) | [Password confirmation](/auth/passwords/) |
+| `PasswordUpdateView` | `PasswordUpdatePrompt` (`requiresCurrentPassword`, `expired`, `status`) | [Changing a password](/auth/passwords/#changing-a-password) |
 | `TwoFactorChallengeView` | `TwoFactorChallengePrompt` | [Multi-factor challenge](/auth/multi-factor/) |
+| `FactorSetupView` | `FactorSetupPrompt` (`options`, `required`, `enrolled`, `status`) | [Factor enrollment](/auth/multi-factor/#provider-keyed-enrollment) |
 | `ConsentView` | `ConsentPrompt` (`client`, `user`, `scopes`, `authToken`) | [OAuth consent](/provider/endpoints/#consent-view-required) |
 | `LogoutConfirmationView` | `LogoutPrompt` (`user`, `client`, `postLogoutRedirectUri`, `state`, `confirmationToken`) | [Logout confirmation](/provider/logout/#confirmation-view) |
 

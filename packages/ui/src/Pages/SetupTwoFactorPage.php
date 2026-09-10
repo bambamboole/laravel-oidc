@@ -56,7 +56,7 @@ class SetupTwoFactorPage extends AuthPage implements FactorSetupView
      */
     private function continueButton(): array
     {
-        if ($this->prompt?->required !== true || $this->prompt->enrolled !== true) {
+        if ($this->prompt?->required !== true || ! $this->prompt->enrolled) {
             return [];
         }
 
