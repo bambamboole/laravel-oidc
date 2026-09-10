@@ -13,16 +13,23 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Workbench\App\Models\User;
 
-test('the regenerate action replaces recovery codes', function (): void {
+test('the regenerate action replaces the recovery codes and opens them in a modal', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user);
     $originalCodes = app(RecoveryCodeProvider::class)->generate($user);
 
-    $this->actingAs($user)
+    $response = $this->actingAs($user)
         ->callAction(RegenerateRecoveryCodesAction::class)
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertOpensModal('oidc.recovery-codes');
 
-    expect(app(RecoveryCodeProvider::class)->codes($user))
+    /** @var array<int, array<string, mixed>> $effects */
+    $effects = $response->json('effects');
+    $modal = collect($effects)->firstWhere('type', 'open-modal');
+
+    expect($modal['props']['node']['schema'][0])
+        ->toMatchArray(['type' => 'fragment', 'id' => 'oidc.recovery-codes'])
+        ->and(app(RecoveryCodeProvider::class)->codes($user))
         ->toHaveCount(8)
         ->not->toBe($originalCodes);
 });
@@ -45,26 +52,6 @@ test('the recovery codes fragment reports when no codes exist', function (): voi
         ->loadFragment(RecoveryCodesFragment::class)
         ->assertOk()
         ->assertSee(__('oidc-ui::security.recovery-codes.none'), false);
-});
-
-test('the regenerate action opens the recovery codes modal', function (): void {
-    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-    app(TotpFactorProvider::class)->enroll($user);
-    app(RecoveryCodeProvider::class)->generate($user);
-
-    $response = $this->actingAs($user)
-        ->callAction(RegenerateRecoveryCodesAction::class)
-        ->assertSuccessful()
-        ->assertOpensModal('oidc.recovery-codes');
-
-    // The effect carries the dialog itself, so the codes fragment rides along with
-    // it — a host composes nothing for this to render.
-    /** @var array<int, array<string, mixed>> $effects */
-    $effects = $response->json('effects');
-    $modal = collect($effects)->firstWhere('type', 'open-modal');
-
-    expect($modal['props']['node']['schema'][0])
-        ->toMatchArray(['type' => 'fragment', 'id' => 'oidc.recovery-codes']);
 });
 
 test('the methods table lists confirmed enrollments across providers with their role', function (): void {
@@ -109,8 +96,6 @@ test('revoking the last challengeable factor takes the recovery codes with it', 
         ->callAction(RevokeFactorAction::class, context: ['provider' => 'totp', 'enrollment' => (string) $factor->getKey()])
         ->assertSuccessful();
 
-    // There is no disable switch any more: emptying the list is what turns
-    // two-factor off, and the backup codes must not outlive what they back up.
     expect($user->totpFactors()->exists())->toBeFalse()
         ->and($user->recoveryCodes()->exists())->toBeFalse();
 });

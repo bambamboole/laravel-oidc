@@ -6,9 +6,8 @@ namespace Bambamboole\LaravelOidc\Ui\Support;
 final class FactorMethodName
 {
     /**
-     * The translated display name for a factor provider key, falling back to
-     * the raw key so host-registered providers render without package
-     * translations.
+     * Falls back to the raw key so host-registered providers render without
+     * package translations.
      */
     public static function for(string $providerKey): string
     {

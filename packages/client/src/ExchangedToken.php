@@ -21,8 +21,7 @@ final readonly class ExchangedToken
     }
 
     /**
-     * Whether the token endpoint granted the scope. False while the granted
-     * scopes are unknown.
+     * False while the granted scopes are unknown.
      */
     public function hasScope(string $scope): bool
     {

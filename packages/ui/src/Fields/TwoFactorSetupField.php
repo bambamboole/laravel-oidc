@@ -38,7 +38,6 @@ class TwoFactorSetupField extends Field
     /** @var array<string, mixed>|null */
     public ?array $webauthnOptions = null;
 
-    /** The enrollment the user is confirming, echoed back on submit. */
     public ?string $enrollmentId = null;
 
     /**

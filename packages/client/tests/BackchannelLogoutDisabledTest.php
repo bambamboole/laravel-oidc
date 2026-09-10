@@ -2,27 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Bambamboole\LaravelOidc\Client\Tests;
-
-use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
-use Illuminate\Routing\Router;
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
 use Illuminate\Support\Facades\Route;
+use Workbench\App\Models\User;
 
-class BackchannelLogoutDisabledTest extends TestCase
-{
-    public function test_it_does_not_register_the_backchannel_logout_route_when_disabled(): void
-    {
-        $this->assertFalse(Route::has('oidc.backchannel-logout'));
-    }
+it('answers the back-channel logout endpoint with 404 while back-channel logout is disabled', function (): void {
+    $this->post('/oidc/backchannel-logout', ['logout_token' => 'any'])->assertNotFound();
+});
 
-    public function test_it_does_not_append_the_enforcement_middleware_to_the_web_group_when_disabled(): void
-    {
-        /** @var Router $router */
-        $router = $this->app['router'];
+it('keeps a session with a revoked sid authenticated while back-channel logout is disabled', function (): void {
+    Route::get('/session-status', fn (): string => auth()->check() ? 'authenticated' : 'guest')->middleware('web');
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    app(BackchannelLogoutStore::class)->markRevoked('sess-x');
 
-        $this->assertNotContains(
-            EnforceBackchannelLogout::class,
-            $router->getMiddlewareGroups()['web'] ?? [],
-        );
-    }
-}
+    $this->actingAs($user)
+        ->withSession(['oidc-client.sid' => 'sess-x'])
+        ->get('/session-status')
+        ->assertSeeText('authenticated');
+});

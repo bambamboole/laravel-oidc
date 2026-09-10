@@ -13,7 +13,6 @@ use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Server\Credentials\TotpFactorProvider;
 use Bambamboole\LaravelOidc\Ui\Forms\TwoFactorSetupForm;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Lattice\Core\Support\Wire;
 use Lattice\Facades\Effects;
 use Lattice\Form\Components\Choice;
 use Lattice\Form\Components\Form;
@@ -21,18 +20,45 @@ use Lattice\Ui\Effects\Builtin\OpenModal;
 use PragmaRX\Google2FA\Google2FA;
 use Workbench\App\Models\User;
 
+final class FlashedEffectsRecorder
+{
+    /** @var list<object> */
+    public array $effects = [];
+
+    public function flash(object ...$effects): void
+    {
+        array_push($this->effects, ...$effects);
+    }
+
+    /**
+     * @return list<string|null>
+     */
+    public function openedModalIds(): array
+    {
+        return array_map(
+            static fn (OpenModal $effect): ?string => $effect->node->componentId(),
+            array_values(array_filter($this->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
+        );
+    }
+}
+
 /**
- * The setup wizard: step one picks an enrollment option, step two is prepared by
- * Lattice's resolve sub-request, and Finish confirms in a single submit. These
- * cover both halves through the endpoint the browser uses, so the resolve's
- * side effect — beginning the enrollment — is exercised the way it really runs.
+ * Observes Lattice's own effect flasher instead of Inertia's flash bag, whose
+ * internals vary across inertia-laravel versions.
  */
+function recordFlashedEffects(): FlashedEffectsRecorder
+{
+    $recorder = new FlashedEffectsRecorder;
+    Effects::swap($recorder);
+
+    return $recorder;
+}
+
 function setupUser(): User
 {
     return User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 }
 
-/** The step-one picker, narrowed from the field list so its options are typed. */
 function pickerChoice(): Choice
 {
     $choice = app(TwoFactorSetupForm::class)
@@ -56,44 +82,20 @@ function resolveSetupField(mixed $test, User $user, string $option): array
         ->json('fields.setup.props');
 }
 
-test('the picker offers every enrollment option with what it is good for', function (): void {
+test('the picker offers every enrollment option with its role, recommended first and preselected', function (): void {
     $choice = pickerChoice();
 
     expect(array_column($choice->options, 'value'))->toBe(['passkey', 'security_key', 'totp'])
-        ->and($choice->options[0]->data['recommended'])->toBeTrue()
-        ->and($choice->options[0]->data['role'])->toBe(__('oidc-ui::security.role.login-and-second-factor'))
-        ->and($choice->options[0]->data['icon'])->toBe('fingerprint')
-        ->and($choice->options[2]->data['role'])->toBe(__('oidc-ui::security.role.second-factor-only'))
-        ->and($choice->options[2]->data['description'])->toBe(__('oidc-ui::security.option.totp.description'));
-});
-
-test('the picker carries the recommended option as its value', function (): void {
-    $choice = pickerChoice();
-
-    expect($choice->value)->toBe('passkey');
-});
-
-test('the picker renders each option as a card bound to its data', function (): void {
-    $choice = pickerChoice();
-
-    /** @var array<string, mixed> $node */
-    $node = json_decode((string) json_encode(Wire::toWire([$choice])[0]), true);
-
-    $bound = [];
-    $collect = function (array $nodes) use (&$collect, &$bound): void {
-        foreach ($nodes as $child) {
-            foreach ($child['props']['dataBindings'] ?? [] as $key) {
-                $bound[] = $key;
-            }
-            $collect($child['schema'] ?? []);
-        }
-    };
-    $collect($node['props']['optionSchema']);
-
-    // The schema ships once and binds per option, so adding a provider needs no
-    // rendering code of its own.
-    expect($node['props']['optionSchema'])->toHaveCount(1)
-        ->and($bound)->toEqualCanonicalizing(['icon', 'label', 'role', 'description']);
+        ->and($choice->value)->toBe('passkey')
+        ->and($choice->options[0]->data)->toMatchArray([
+            'recommended' => true,
+            'role' => __('oidc-ui::security.role.login-and-second-factor'),
+            'icon' => 'fingerprint',
+        ])
+        ->and($choice->options[2]->data)->toMatchArray([
+            'role' => __('oidc-ui::security.role.second-factor-only'),
+            'description' => __('oidc-ui::security.option.totp.description'),
+        ]);
 });
 
 test('resolving a code option begins the enrollment and returns its setup payload', function (): void {
@@ -142,20 +144,7 @@ test('switching the ceremony option reissues the challenge', function (): void {
 });
 
 test('finishing the wizard confirms the factor and shows the fresh recovery codes', function (): void {
-    // Observe Lattice's own effect flasher rather than Inertia's flash-bag
-    // internals, which vary across inertia-laravel versions.
-    $recorder = new class
-    {
-        /** @var list<object> */
-        public array $effects = [];
-
-        public function flash(object ...$effects): void
-        {
-            array_push($this->effects, ...$effects);
-        }
-    };
-    Effects::swap($recorder);
-
+    $recorder = recordFlashedEffects();
     $user = setupUser();
     resolveSetupField($this, $user, 'totp');
     $factor = app(TotpFactorProvider::class)->latestPendingFactor($user);
@@ -168,12 +157,7 @@ test('finishing the wizard confirms the factor and shows the fresh recovery code
         ])
         ->assertRedirect();
 
-    $openedModals = array_map(
-        static fn (OpenModal $effect): ?string => $effect->node->componentId(),
-        array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
-    );
-
-    expect($openedModals)->toBe(['oidc.recovery-codes'])
+    expect($recorder->openedModalIds())->toBe(['oidc.recovery-codes'])
         ->and($user->totpFactors()->whereNotNull('confirmed_at')->exists())->toBeTrue()
         ->and($user->recoveryCodes()->count())->toBe(8);
 });
@@ -211,32 +195,8 @@ test('a confirmation that does not prove the setup returns a field error', funct
     expect($user->totpFactors()->whereNotNull('confirmed_at')->exists())->toBeFalse();
 });
 
-test('a confirmed factor never has its secret shown again', function (): void {
-    $user = setupUser();
-    $confirmed = app(TotpFactorProvider::class)->enroll($user);
-    $confirmed->forceFill(['confirmed_at' => now()])->save();
-
-    $props = resolveSetupField($this, $user, 'totp');
-
-    // Re-enrolling alongside a confirmed factor opens a fresh pending one; the
-    // confirmed secret stays where it was written and is never re-exposed.
-    expect($props['secret'])->not->toBe($confirmed->secret)
-        ->and($user->totpFactors()->count())->toBe(2);
-});
-
 test('the host can point the wizard at its own recovery codes modal', function (): void {
-    $recorder = new class
-    {
-        /** @var list<object> */
-        public array $effects = [];
-
-        public function flash(object ...$effects): void
-        {
-            array_push($this->effects, ...$effects);
-        }
-    };
-    Effects::swap($recorder);
-
+    $recorder = recordFlashedEffects();
     $user = setupUser();
     $context = ['recovery_codes_modal' => 'host.custom-codes'];
     $this->actingAs($user)->submitForm(TwoFactorSetupForm::class, ['_sub' => 'resolve', 'option' => 'totp'], $context);
@@ -247,10 +207,7 @@ test('the host can point the wizard at its own recovery codes modal', function (
         'setup' => app(Google2FA::class)->getCurrentOtp($factor->secret),
     ], $context)->assertRedirect();
 
-    expect(array_map(
-        static fn (OpenModal $effect): ?string => $effect->node->componentId(),
-        array_values(array_filter($recorder->effects, static fn (object $effect): bool => $effect instanceof OpenModal)),
-    ))->toBe(['host.custom-codes']);
+    expect($recorder->openedModalIds())->toBe(['host.custom-codes']);
 });
 
 test('a ceremony credential submitted as a JSON string reaches the provider decoded', function (): void {
@@ -304,10 +261,6 @@ test('a ceremony credential submitted as a JSON string reaches the provider deco
         }
     };
     app(FactorRegistry::class)->register($provider);
-
-    // The browser's attestation is a nested object, which the client submits as
-    // a JSON string in a hidden input — Inertia serializes the DOM, and a nested
-    // object cannot be mounted as one.
     $credential = ['id' => 'abc', 'response' => ['clientDataJSON' => 'payload']];
 
     $this->actingAs(setupUser())

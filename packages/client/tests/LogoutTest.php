@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
 beforeEach(function (): void {
-    Cache::clear();
     $this->fake = OidcClient::fake();
 });
 
@@ -60,8 +58,7 @@ it('omits id_token_hint when no id_token was stored in the session', function ()
 });
 
 it('persists local logout when provider discovery fails', function (): void {
-    // The fake models success responses only; a real transport failure needs a
-    // raw Http::fake() against a dedicated issuer.
+    // OidcClient::fake() only models success responses, so the failing issuer is stubbed raw.
     config()->set('oidc-client.issuer', 'https://unavailable.example.com');
 
     Http::fake([

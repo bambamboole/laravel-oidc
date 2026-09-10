@@ -126,8 +126,6 @@ class OidcClientFake
     }
 
     /**
-     * The callback URL carrying a fake authorization code and the seeded state.
-     *
      * @param  array<string, string>  $query
      */
     public function callbackUrl(array $query = []): string

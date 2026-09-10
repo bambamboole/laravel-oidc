@@ -27,13 +27,13 @@ class BackchannelLogoutController
             return response()->json(['error' => 'invalid_request'], 400)->header('Cache-Control', 'no-store, private');
         }
 
-        // Immediate teardown for server-side stores (no-op for the cookie driver).
+        // Destroying the session is a no-op for the cookie driver, so the revoked
+        // marker below is what the enforcement middleware falls back on.
         $sessionId = $store->pullSessionId($sid);
         if ($sessionId !== null) {
             Session::getHandler()->destroy($sessionId);
         }
 
-        // Universal fallback marker for the enforcement middleware.
         $store->markRevoked($sid);
 
         return response('', 200)->header('Cache-Control', 'no-store, private');

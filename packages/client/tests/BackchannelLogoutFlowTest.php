@@ -11,29 +11,19 @@ use Workbench\App\Models\User;
 
 class BackchannelLogoutFlowTest extends BackchannelLogoutEnabledTestCase
 {
-    public function test_a_provider_logout_token_tears_down_the_session_end_to_end(): void
+    public function test_a_provider_logout_token_logs_the_session_out_on_its_next_request_through_the_web_group(): void
     {
         $fake = OidcClient::fake()->clientId('client-123');
-
-        // A route through the `web` group, exactly like an app-defined page, so we
-        // exercise the auto-appended EnforceBackchannelLogout middleware for real.
         Route::get('/session-status', fn (): string => auth()->check() ? 'authenticated' : 'guest')
             ->middleware('web');
-
         $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
-
         $fake->loginAs($user);
-        $logoutToken = $fake->logoutToken(['sid' => 'sess-e2e']);
 
-        // The user is authenticated with a session carrying the provider's sid.
         $this->actingAs($user)->withSession(['oidc-client.sid' => 'sess-e2e']);
         $this->get('/session-status')->assertSeeText('authenticated');
 
-        // The provider POSTs a back-channel logout token for that sid.
-        $this->post('/oidc/backchannel-logout', ['logout_token' => $logoutToken])->assertOk();
+        $this->post('/oidc/backchannel-logout', ['logout_token' => $fake->logoutToken(['sid' => 'sess-e2e'])])->assertOk();
 
-        // The next request through the web group carries the same sid and is denylisted:
-        // the auto-appended middleware logs it out before the route handler runs.
         $this->actingAs($user)->withSession(['oidc-client.sid' => 'sess-e2e']);
         $this->get('/session-status')->assertSeeText('guest');
 

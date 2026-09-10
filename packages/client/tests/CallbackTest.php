@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
@@ -40,7 +40,7 @@ it('records the sid and a session pointer when backchannel logout is enabled', f
 
     $this->assertAuthenticatedAs($this->user);
     expect(session('oidc-client.sid'))->toBe('the-sid');
-    expect(Cache::has('oidc-client:bclo:session:the-sid'))->toBeTrue();
+    expect(app(BackchannelLogoutStore::class)->pullSessionId('the-sid'))->toBe(session()->getId());
 });
 
 it('rejects a tampered state and does not log in', function (): void {

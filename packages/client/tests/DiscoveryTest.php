@@ -46,7 +46,7 @@ it('caches discovery so the document is fetched once', function (): void {
     Http::assertSentCount(1);
 });
 
-it('fetches and caches the jwks key set', function (): void {
+it('fetches the jwks key set from the discovered jwks_uri', function (): void {
     Http::fake([
         'https://id.example.com/.well-known/openid-configuration' => Http::response([
             'issuer' => 'https://id.example.com',
