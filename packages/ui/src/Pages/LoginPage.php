@@ -7,6 +7,7 @@ namespace Bambamboole\LaravelOidc\Ui\Pages;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Brokering\SocialProviderRegistry;
+use Bambamboole\LaravelOidc\Server\Shared\Realms\Settings\LoginMethod;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Request;
@@ -51,20 +52,33 @@ class LoginPage extends AuthPage implements LoginView
 
     public function render(PageSchema $schema): PageSchema
     {
-        $passkey = PasskeyVerify::makeIfAvailable('identity.passkey.login-options', 'identity.passkey.login');
+        $passkey = $this->allows(LoginMethod::Passkey)
+            ? PasskeyVerify::makeIfAvailable('identity.passkey.login-options', 'identity.passkey.login')
+            : null;
 
         return $schema->schema([
             $this->heading('login-heading', __('oidc-ui::auth.login.heading'), __('oidc-ui::auth.login.subtitle')),
             ...($passkey instanceof PasskeyVerify ? [$passkey] : []),
-            Form::make('login-form')
-                ->action(route('identity.login.store', absolute: false))
-                ->method(HttpMethod::Post)
-                ->schema($this->formSchema())
-                ->resetOnSuccess(['password'])
-                ->withoutSubmitButton()
-                ->status($this->prompt?->status),
+            ...($this->allows(LoginMethod::Password) ? [
+                Form::make('login-form')
+                    ->action(route('identity.login.store', absolute: false))
+                    ->method(HttpMethod::Post)
+                    ->schema($this->formSchema())
+                    ->resetOnSuccess(['password'])
+                    ->withoutSubmitButton()
+                    ->status($this->prompt?->status),
+            ] : []),
             ...$this->socialButtons(),
         ]);
+    }
+
+    /**
+     * A page rendered without a prompt (a subclass instantiated directly) has
+     * no realm to ask, so it shows everything it can.
+     */
+    protected function allows(LoginMethod $method): bool
+    {
+        return $this->prompt?->allows($method) ?? true;
     }
 
     /**
@@ -72,7 +86,9 @@ class LoginPage extends AuthPage implements LoginView
      */
     protected function socialButtons(): array
     {
-        $providers = array_keys(app(SocialProviderRegistry::class)->enabled());
+        $providers = $this->allows(LoginMethod::Social)
+            ? array_keys(app(SocialProviderRegistry::class)->enabled())
+            : [];
 
         if ($providers === []) {
             return [];
@@ -134,8 +150,9 @@ class LoginPage extends AuthPage implements LoginView
         ];
 
         // A host application can disable the register handler; the sign-up
-        // prompt would then link to a route that does not exist.
-        if (Route::has('identity.register')) {
+        // prompt would then link to a route that does not exist. A realm that
+        // does not accept passwords keeps the route but answers 404 on it.
+        if (Route::has('identity.register') && $this->allows(LoginMethod::Password)) {
             $schema[] = Stack::make('login-register-prompt')
                 ->align(Align::Center)
                 ->direction(Orientation::Horizontal)
