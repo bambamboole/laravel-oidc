@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware;
 
 use Bambamboole\LaravelOidc\Server\Authentication\LoginDestination;
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionSubject;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionSubject;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Authenticatable;

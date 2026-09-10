@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers;
 
-use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionSubject;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\ContinuesLogin;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionSubject;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;

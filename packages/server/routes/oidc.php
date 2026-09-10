@@ -14,6 +14,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\SendEmailVeri
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\ShowConfirmedPasswordStatusController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\VerifyEmailController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\AuthenticateIdentity;
+use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\ConfirmPassword;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\RequireActionSubject;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\RequireLoginMethod;
 use Bambamboole\LaravelOidc\Server\Brokering\Http\Controllers\LinkedAccountController;
@@ -35,7 +36,6 @@ use Bambamboole\LaravelOidc\Server\Realms\Enums\RealmRouting;
 use Bambamboole\LaravelOidc\Server\Realms\Http\Middleware\ResolveRealm;
 use Bambamboole\LaravelOidc\Server\Sessions\Http\Controllers\EndSessionController;
 use Bambamboole\LaravelOidc\Server\SigningKeys\Http\Controllers\JwksController;
-use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Session\Middleware\StartSession;
@@ -50,7 +50,7 @@ $authenticated = AuthenticateIdentity::class.':'.$guard;
 // A required action is settled either mid-login, before any session exists,
 // or from a live one — so its screens sit behind the subject, not the guard.
 $actionSubject = RequireActionSubject::class;
-$passwordConfirmed = RequirePassword::using('identity.password.confirm');
+$passwordConfirmed = ConfirmPassword::using('identity.password.confirm');
 $password = RequireLoginMethod::class.':password';
 $passkey = RequireLoginMethod::class.':passkey';
 $social = RequireLoginMethod::class.':social';
@@ -85,6 +85,14 @@ Route::middleware([ResolveRealm::class, ...$shared])
                 });
             });
 
+            Route::middleware([$actionSubject, $passwordConfirmed])->group(function (): void {
+                Route::get('auth/user/two-factor/setup', [FactorEnrollmentController::class, 'setup'])->name('identity.two-factor.setup');
+                Route::get('auth/user/two-factor/factors', [FactorEnrollmentController::class, 'index'])->name('identity.two-factor.factors');
+                Route::post('auth/user/two-factor/{provider}', [FactorEnrollmentController::class, 'store'])->middleware('throttle:5,1')->name('identity.two-factor.enroll');
+                Route::post('auth/user/two-factor/{provider}/confirm', [FactorEnrollmentController::class, 'confirm'])->middleware('throttle:5,1')->name('identity.two-factor.enroll.confirm');
+                Route::post('auth/user/two-factor/setup/continue', [FactorEnrollmentController::class, 'resume'])->name('identity.two-factor.setup.continue');
+            });
+
             Route::middleware($actionSubject)->group(function () use ($password): void {
                 Route::get('auth/user/password', [PasswordUpdateController::class, 'create'])->middleware($password)->name('identity.password.change');
                 Route::post('auth/user/password', [PasswordUpdateController::class, 'store'])->middleware([$password, 'throttle:5,1'])->name('identity.password.change.store');
@@ -103,9 +111,6 @@ Route::middleware([ResolveRealm::class, ...$shared])
                 Route::post('auth/passkeys/confirm', [PasskeyConfirmationController::class, 'store'])->middleware('throttle:5,1')->name('identity.passkey.confirm');
 
                 Route::middleware($passwordConfirmed)->group(function () use ($social): void {
-                    Route::get('auth/user/two-factor/factors', [FactorEnrollmentController::class, 'index'])->name('identity.two-factor.factors');
-                    Route::post('auth/user/two-factor/{provider}', [FactorEnrollmentController::class, 'store'])->middleware('throttle:5,1')->name('identity.two-factor.enroll');
-                    Route::post('auth/user/two-factor/{provider}/confirm', [FactorEnrollmentController::class, 'confirm'])->middleware('throttle:5,1')->name('identity.two-factor.enroll.confirm');
                     Route::delete('auth/user/two-factor/{provider}/{enrollment}', [FactorEnrollmentController::class, 'destroy'])->name('identity.two-factor.revoke');
 
                     Route::get('auth/user/social/{provider}', [LinkedAccountController::class, 'link'])->middleware($social)->name('identity.social.link');

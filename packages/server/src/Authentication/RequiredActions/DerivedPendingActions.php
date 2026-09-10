@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Events\RequiredActionCompleted
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredAction;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionRegistry;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
 use Illuminate\Contracts\Auth\Authenticatable;
 

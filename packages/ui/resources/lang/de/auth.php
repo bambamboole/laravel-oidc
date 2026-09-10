@@ -70,6 +70,14 @@ return [
         'passkey-separator' => 'Oder mit Passwort bestätigen',
     ],
 
+    'two-factor-setup' => [
+        'title' => 'Zwei-Faktor-Authentifizierung',
+        'heading' => 'Zwei-Faktor-Authentifizierung einrichten',
+        'subtitle' => 'Ergänze deine Anmeldung um einen zweiten Schritt.',
+        'subtitle-required' => 'Dieses Konto benötigt eine Zwei-Faktor-Authentifizierung, bevor es weitergeht.',
+        'continue' => 'Weiter',
+    ],
+
     'verify-email' => [
         'title' => 'E-Mail-Bestätigung',
         'heading' => 'E-Mail-Bestätigung',
