@@ -6,7 +6,7 @@ declare(strict_types=1);
  * OpenID Connect Discovery 1.0 §3 (one issuer per realm)
  */
 
-use Bambamboole\LaravelOidc\Server\Realms\ResolveRealm;
+use Bambamboole\LaravelOidc\Server\Realms\Http\Middleware\ResolveRealm;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Testing\FakesAuthViews;

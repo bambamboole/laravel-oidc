@@ -111,7 +111,7 @@ and `oidc.keys.path` (was Passport's key path).
 | `Passport::tokensCan([...])` | `config(['oidc.scopes.catalog' => [...]])` |
 | `Passport::actingAs($user, $scopes, $guard)` | `$this->actingAsOidcUser($user, $scopes, $guard)` |
 | `Passport::authorizationView(...)` | bind the [`ConsentView` contract](/provider/endpoints/#consent-view-required) |
-| `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Tokens\Middleware\CheckScopes` |
+| `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Tokens\Http\Middleware\CheckScopes` |
 | `Laravel\Passport\Client` / `Token` | `Bambamboole\LaravelOidc\Server\Clients\Models\Client` / `Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken` |
 | `Laravel\Passport\ClientRepository` | `Bambamboole\LaravelOidc\Server\Clients\ClientRepository` |
 

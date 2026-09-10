@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Realms\ConfiguredRealm;
-use Bambamboole\LaravelOidc\Server\Realms\ResolveRealm;
+use Bambamboole\LaravelOidc\Server\Realms\Http\Middleware\ResolveRealm;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\Realm;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmRepository;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
