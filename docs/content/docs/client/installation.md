@@ -38,7 +38,7 @@ OIDC_RP_REDIRECT_URI=https://app.example.com/login/callback
 protected by PKCE either way.
 
 Everything else (authorization endpoint, token endpoint, JWKS) is discovered from the
-issuer's `/realms/{realm}/.well-known/openid-configuration`.
+issuer's `/.well-known/openid-configuration`.
 
 ## Register the client at the provider
 

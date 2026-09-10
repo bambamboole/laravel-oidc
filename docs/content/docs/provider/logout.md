@@ -3,7 +3,7 @@ title: Logout
 description: RP-initiated logout, its threat model, and OIDC back-channel logout.
 ---
 
-## RP-initiated logout (`/realms/{realm}/oauth/logout`)
+## RP-initiated logout (`/oauth/logout`)
 
 The end-session endpoint implements OpenID Connect RP-Initiated Logout 1.0. It accepts `GET` and
 `POST` with the §2 parameters `id_token_hint`, `client_id`, `post_logout_redirect_uri`, `state`,
@@ -51,7 +51,7 @@ final readonly class LogoutPrompt
 }
 ```
 
-The page posts `logout_confirmation` back to `/realms/{realm}/oauth/logout`. The token seals the
+The page posts `logout_confirmation` back to `/oauth/logout`. The token seals the
 validated target with the application encrypter, bound to the prompted user and valid for ten
 minutes; a token for another user, a tampered one or an expired one is `400 invalid_request`.
 `FakesAuthViews` binds a JSON stub for it, like for every other view.
@@ -87,7 +87,7 @@ sequenceDiagram
     participant RP1 as RP with backchannel_logout_uri
     participant RP2 as RP without one
 
-    B->>OP: GET/POST /realms/{realm}/oauth/logout (id_token_hint)
+    B->>OP: GET/POST /oauth/logout (id_token_hint)
     OP->>OP: Verify hint, resolve sid,<br/>revoke the session
     OP-->>RP1: POST logout token (back-channel)
     Note over RP2: not notified — never registered a URI
@@ -96,7 +96,7 @@ sequenceDiagram
 
 - Back-channel logout is **opt-in per relying-party client**: a client only receives it if it has
   registered a `backchannel_logout_uri`.
-- On logout — at `/realms/{realm}/oauth/logout` or through the application's own logout — the
+- On logout — at `/oauth/logout` or through the application's own logout — the
   `Logout` event listener reads the session's `sid`, the session registry revokes it, and a logout
   token is dispatched to each participant.
 - For sessions that expire by reaching their absolute lifetime rather than an explicit logout, the

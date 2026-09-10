@@ -13,28 +13,41 @@ application, exactly as the user model does.
 
 ## Addressing
 
-Every endpoint lives below `/realms/{realm}`:
+Where realms appear in URLs is `oidc.routes.realms`:
 
-```
-https://id.example.com/realms/acme/.well-known/openid-configuration
-https://id.example.com/realms/acme/oauth/authorize
-https://id.example.com/realms/acme/auth/login
-```
+- **`single`** (the default) serves the realm named by `oidc.realm` from the application root.
+  There is no realm segment, and the issuer is the bare origin — `oidc.issuer` or `app.url`:
 
-The issuer follows from it — `oidc.issuer` (or `app.url`) supplies the origin, and the realm
-supplies the path:
+  ```
+  https://id.example.com/.well-known/openid-configuration
+  https://id.example.com/oauth/authorize
+  https://id.example.com/auth/login
 
-```
-issuer = https://id.example.com/realms/acme
-```
+  issuer = https://id.example.com
+  ```
 
-So a relying party configured against `https://id.example.com/realms/acme` discovers, verifies
-and logs in entirely within one realm.
+- **`path`** serves every realm below `/realms/{realm}`. Each realm is its own OpenID Provider
+  with its own issuer; the origin comes from `oidc.issuer` and the realm supplies the path:
+
+  ```
+  https://id.example.com/realms/acme/.well-known/openid-configuration
+  https://id.example.com/realms/acme/oauth/authorize
+  https://id.example.com/realms/acme/auth/login
+
+  issuer = https://id.example.com/realms/acme
+  ```
+
+  A relying party configured against `https://id.example.com/realms/acme` discovers, verifies and
+  logs in entirely within one realm. More than one realm per deployment requires this mode.
+
+The mode is fixed when the routes are registered; the route **names** are the same in both.
 
 ### Metadata that is not prefixed
 
 RFC 8414 and RFC 9728 build their metadata URLs by inserting the well-known segment *ahead* of
-the issuer's path rather than appending it, so those two sit above the prefix:
+the issuer's path rather than appending it. In `single` mode the issuer has no path, so both
+documents sit directly below `/.well-known/`. In `path` mode the realm follows the well-known
+segment:
 
 ```
 https://id.example.com/.well-known/oauth-authorization-server/realms/acme
@@ -62,8 +75,9 @@ interface RealmRepository
 ```
 
 The default `RouteRealmResolver` reads the `{realm}` route parameter, asks the bound
-`RealmRepository` for it, and answers 404 for an identifier the repository does not know. Outside
-a matched route — console commands, queued jobs — it falls back to `config('oidc.realm')`. The
+`RealmRepository` for it, and answers 404 for an identifier the repository does not know. Without
+a realm parameter — every request in `single` mode, and console commands or queued jobs in either
+mode — it falls back to `config('oidc.realm')`. The
 default `ConfiguredRealmRepository` accepts every identifier and serves it with the configured
 settings, so a deployment that only scopes data per tenant needs no code.
 
@@ -87,7 +101,7 @@ from `config('oidc.*')`:
 | Method | Settings object | Drives |
 | --- | --- | --- |
 | `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes; the realm's audiences |
-| `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes |
+| `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes; the provider session cookie name in `path` mode |
 | `login()` | `LoginSettings` | username field, home URL, login route, logout redirect, `acr` values |
 | `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count |
 | `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
@@ -129,9 +143,9 @@ the advertised protected resources, and the install-time first-party provisionin
 
 ### ResolveRealm
 
-The `ResolveRealm` middleware runs on every package route and does three things: it records the
-realm on the request, registers it as the default `{realm}` for URL generation, and scopes the
-session cookie to `/realms/{realm}`.
+The `ResolveRealm` middleware runs on every package route: it records the realm on the request,
+registers it as the default `{realm}` for URL generation, and — in `path` mode — gives the
+provider its own session cookie (see [Sessions](#sessions)).
 
 It also removes `{realm}` from the matched route's parameters. That is load-bearing rather than
 cosmetic: Laravel hands route parameters to controller methods positionally, so a leading realm
@@ -181,6 +195,18 @@ failure. It is the one bug in this area that stays silent in production.
 
 ## Sessions
 
-The session cookie is scoped to `/realms/{realm}`, so a browser session in one realm is not sent
-to another. The realm's own SSO session (`oidc_sessions`) and its stashed authorize request are
-scoped by `realm_id` on top of that.
+In `single` mode the provider shares the application's session: the same cookie, the same
+session id. A self-SSO deployment — the application is its own relying party on the same host —
+relies on that, because Laravel's CSRF cookie has one fixed name and two independent sessions on
+one path would overwrite each other's token.
+
+In `path` mode each realm gets its own session cookie, scoped to `/realms/{realm}`, so a browser
+session in one realm is not sent to another and a login in the provider cannot consume or
+regenerate the relying party's session. The cookie is named `{session.cookie}-oidc-{realm}` (dots
+in the realm id become underscores) unless the realm's `SessionSettings::$cookieName` — from
+`oidc.session.cookie_name` by default — names it; the name must differ from the application's
+and consist of letters, digits, underscores or hyphens. When a provider response redirects out of
+the realm, the provider's CSRF cookie is expired so the application's own is used again.
+
+In both modes the realm's SSO session (`oidc_sessions`) and its stashed authorize request are
+scoped by `realm_id`.

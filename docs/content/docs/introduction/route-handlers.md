@@ -4,13 +4,16 @@ description: How the package registers its HTTP endpoints and how to replace a c
 ---
 
 The package registers its endpoints from a plain routes file, loaded by `OidcServiceProvider`.
-Every route sits below the realm prefix and carries a stable name:
+Every route carries a stable name:
 
 ```
-/realms/{realm}/oauth/authorize        oidc.authorize
-/realms/{realm}/oauth/token            oidc.token
-/realms/{realm}/auth/login             identity.login
+/oauth/authorize        oidc.authorize
+/oauth/token            oidc.token
+/auth/login             identity.login
 ```
+
+With `oidc.routes.realms` set to `path`, every route sits below `/realms/{realm}` instead — the
+names stay the same. See [Realms](/provider/realms/).
 
 Paths and HTTP verbs are intrinsic to the package. Route **names** are the stable contract — the
 UI package, the client package and your own application all generate URLs through them, never

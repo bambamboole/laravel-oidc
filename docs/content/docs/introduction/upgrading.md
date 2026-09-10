@@ -13,16 +13,18 @@ This is a clean break. **No data migration ships with the package** — the new 
 
 Two further breaking changes land alongside the Passport removal.
 
-### Every endpoint moved below `/realms/{realm}`
+### Realms
 
-The package serves one OpenID Provider per realm, addressed by path. A single-realm install runs
-under the configured `oidc.realm` (`'default'` unless set), so the token endpoint moves from
-`/oauth/token` to `/realms/default/oauth/token`, and the issuer from `https://id.example.com` to
-`https://id.example.com/realms/default`.
+The package now serves realms — isolated sets of clients, tokens, sessions and signing keys. A
+single-realm deployment (the default, `oidc.routes.realms` = `single`) keeps every endpoint where
+it was: `/oauth/token` stays `/oauth/token` and the issuer stays `https://id.example.com`, so no
+relying party has to be repointed. Set `OIDC_REALM` if you want the realm to carry a name other
+than `default`.
 
-**Every relying party has to be repointed** at the new discovery URL
-(`/realms/{realm}/.well-known/openid-configuration`). Clients that pin the issuer will reject
-tokens until they are updated. See [Realms](/provider/realms/).
+Deployments that serve more than one realm set `oidc.routes.realms` to `path`. Then every
+endpoint moves below `/realms/{realm}`, the issuer becomes `https://id.example.com/realms/{realm}`,
+and **every relying party has to be repointed** at the new discovery URL
+(`/realms/{realm}/.well-known/openid-configuration`). See [Realms](/provider/realms/).
 
 ### `oidc.handlers` and `oidc.routes.prefix` are gone
 
@@ -117,7 +119,7 @@ and `oidc.keys.path` (was Passport's key path).
 
 ## What was dropped
 
-- **`POST /realms/{realm}/oauth/token/refresh`** — Passport's cookie-based SPA refresh. The package never wired
+- **`POST /oauth/token/refresh`** — Passport's cookie-based SPA refresh. The package never wired
   the cookie guard that would have validated its output. Use the
   [browser-fetch session token](/advanced/browser-fetch/) instead.
 - **Passport's events** (`AccessTokenCreated`, `RefreshTokenCreated`, `AccessTokenRevoked`). Listen

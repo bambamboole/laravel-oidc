@@ -45,7 +45,7 @@ context is pulled from the session exactly once, so a replayed callback fails. S
 
 ## What it provides
 
-- **Discovery-driven setup** — the provider's `/realms/{realm}/.well-known/openid-configuration` and JWKS
+- **Discovery-driven setup** — the provider's `/.well-known/openid-configuration` and JWKS
   are fetched and cached; an unknown `kid` triggers one fresh JWKS fetch, so provider
   [key rotation](/provider/key-rotation/) works without redeploying the client.
 - **Strict `id_token` validation** — RS256 signature against JWKS, `iss`, `aud`, `azp`,
