@@ -3,19 +3,37 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Tests;
 
+use Bambamboole\LaravelOidc\Server\OidcServiceProvider;
+use Bambamboole\LaravelOidc\Ui\UiServiceProvider;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passkeys\Passkeys;
+use Laravel\Passkeys\PasskeysServiceProvider;
+use Lattice\LatticeServiceProvider;
 use Lattice\Support\Testing\InteractsWithLatticeComponents;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Workbench\App\Models\User;
+use Workbench\App\Providers\WorkbenchServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
     use InteractsWithLatticeComponents;
     use WithLaravelMigrations;
     use WithWorkbench;
+
+    protected $enablesPackageDiscoveries = false;
+
+    protected function getPackageProviders($app): array
+    {
+        return [
+            PasskeysServiceProvider::class,
+            LatticeServiceProvider::class,
+            OidcServiceProvider::class,
+            UiServiceProvider::class,
+            WorkbenchServiceProvider::class,
+        ];
+    }
 
     protected function getEnvironmentSetUp($app): void
     {
@@ -38,9 +56,8 @@ abstract class TestCase extends BaseTestCase
 
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(dirname(__DIR__).'/vendor/laravel/passport/database/migrations');
-        $this->loadMigrationsFrom(dirname(__DIR__).'/workbench/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__, 3).'/workbench/database/migrations');
         $this->loadMigrationsFrom(Passkeys::migrationPath());
-        $this->loadMigrationsFrom(dirname(__DIR__).'/vendor/bambamboole/laravel-oidc-server/database/migrations');
+        $this->loadMigrationsFrom(dirname(__DIR__, 2).'/server/database/migrations');
     }
 }

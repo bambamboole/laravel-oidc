@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Use when reviewing a laravel-oidc pull request, branch diff, or staged/working changes for quality: reuse, simplification, efficiency, altitude, and adherence to package guidelines. Review-only: surface findings and never commit proposed changes.
+description: "Use when reviewing a laravel-oidc pull request, branch diff, or staged/working changes for quality: reuse, simplification, efficiency, altitude, and adherence to package guidelines. Review-only: surface findings and never commit proposed changes."
 ---
 
 # Laravel OIDC PR Review

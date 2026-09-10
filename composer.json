@@ -34,6 +34,18 @@
         "phpseclib/phpseclib": "^3.0.15",
         "pragmarx/google2fa": "^9.0"
     },
+    "require-dev": {
+        "bambamboole/extended-testbench": "^0.6.1",
+        "larastan/larastan": "^3.0",
+        "laravel/boost": "^2.6",
+        "laravel/pint": "^1.16",
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^5.0",
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-phpstan": "^5.0",
+        "rector/rector": "^2.4"
+    },
     "replace": {
         "bambamboole/laravel-oidc-client": "self.version",
         "bambamboole/laravel-oidc-server": "self.version",
@@ -44,6 +56,14 @@
             "Bambamboole\\LaravelOidc\\Server\\": "packages/server/src/",
             "Bambamboole\\LaravelOidc\\Client\\": "packages/client/src/",
             "Bambamboole\\LaravelOidc\\Ui\\": "packages/ui/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bambamboole\\LaravelOidc\\Server\\Tests\\": "packages/server/tests/",
+            "Bambamboole\\LaravelOidc\\Client\\Tests\\": "packages/client/tests/",
+            "Bambamboole\\LaravelOidc\\Ui\\Tests\\": "packages/ui/tests/",
+            "Workbench\\App\\": "workbench/app/"
         }
     },
     "homepage": "https://github.com/bambamboole/laravel-oidc",
@@ -66,32 +86,51 @@
         }
     },
     "scripts": {
-        "install:all": [
-            "@composer --working-dir=packages/server install",
-            "@composer --working-dir=packages/client install",
-            "@composer --working-dir=packages/mautic install",
-            "@install:ui"
-        ],
-        "install:ui": "cp packages/ui/composer.json packages/ui/composer.json.bak && composer --working-dir=packages/ui config repositories.server \"$(php -r 'echo json_encode([\"type\" => \"path\", \"url\" => \"../server\", \"options\" => [\"symlink\" => true, \"versions\" => [\"bambamboole/laravel-oidc-server\" => json_decode(file_get_contents(\".release-please-manifest.json\"), true)[\".\"]]]]);')\" && composer --working-dir=packages/ui install; rc=$?; mv packages/ui/composer.json.bak packages/ui/composer.json; exit $rc",
+        "analyse": "./vendor/bin/phpstan analyse && ./vendor/bin/phpstan analyse -c phpstan-tests.neon.dist",
         "check": [
-            "@check:server",
-            "@check:client",
-            "@check:ui",
-            "@check:mautic"
+            "@test:lint",
+            "@analyse",
+            "@rector:test",
+            "@test:parallel"
         ],
-        "check:server": "@composer --working-dir=packages/server check",
-        "check:client": "@composer --working-dir=packages/client check",
-        "check:ui": "@composer --working-dir=packages/ui check",
         "check:mautic": "@composer --working-dir=packages/mautic check",
-        "test": [
-            "@composer --working-dir=packages/server test",
-            "@composer --working-dir=packages/client test",
-            "@composer --working-dir=packages/ui test",
-            "@composer --working-dir=packages/mautic test"
+        "lint:fix": "./vendor/bin/pint",
+        "test:lint": "./vendor/bin/pint --test",
+        "rector": "./vendor/bin/rector process",
+        "rector:test": "./vendor/bin/rector process --dry-run",
+        "fix": [
+            "@rector",
+            "@lint:fix"
+        ],
+        "test": "./vendor/bin/pest",
+        "test:parallel": "./vendor/bin/pest --parallel",
+        "test:mautic": "@composer --working-dir=packages/mautic test",
+        "install:mautic": "@composer --working-dir=packages/mautic install",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "post-install-cmd": [
+            "@hooks:install"
+        ],
+        "post-update-cmd": [
+            "@hooks:install"
+        ],
+        "hooks:install": "git config core.hooksPath .githooks 2>/dev/null || true",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "boost:refresh": "@php vendor/bin/testbench boost:update --no-interaction",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan serve --ansi"
         ]
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true

@@ -1,0 +1,34 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/pestphp/pest-plugin-phpstan/extension.neon
+
+parameters:
+    tmpDir: %currentWorkingDirectory%/.phpstan-cache/tests
+    paths:
+        - packages/server/tests
+        - packages/client/tests
+        - packages/ui/tests
+        - workbench/app
+    level: 6
+    ignoreErrors:
+        # pest-plugin-phpstan types `$this` from the file-local uses(InteractsWithOidc::class) calls, but a trait
+        # method declared `: static` comes back typed as the bare trait, so the next call in a chain such as
+        # `$this->actingAsIdentity($user)->get(...)` is reported against an "unknown class". The trait methods are
+        # exercised at runtime by the same tests.
+        -
+            identifier: class.notFound
+            message: '#on an unknown class Bambamboole\\LaravelOidc\\Server\\Testing\\InteractsWithOidc#'
+            paths:
+                - packages/server/tests/*
+                - packages/ui/tests/Pages/OAuthConsentTest.php
+        # The plugin only types `$this`. The `TestCase $test` helper parameters in these files receive the
+        # trait-composed test case at runtime, which PHPStan cannot see; a `TestCase&InteractsWithOidc` PHPDoc is
+        # rejected as an unresolvable type because traits are not types.
+        -
+            identifier: method.notFound
+            message: '#Call to an undefined method Bambamboole\\LaravelOidc\\Server\\Tests\\TestCase::(actingAsIdentity|authorizeAndApprove)\(\)#'
+            paths:
+                - packages/server/tests/Consents/ConsentRepositoryTest.php
+                - packages/server/tests/Flow/AuthorizationCodeFlowTest.php
+                - packages/server/tests/Flow/RefreshTokenFlowTest.php
+                - packages/server/tests/Protocol/TokenEndpointTest.php
