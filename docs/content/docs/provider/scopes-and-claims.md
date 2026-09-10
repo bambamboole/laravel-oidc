@@ -5,8 +5,7 @@ description: The OIDC scope catalog and how an authenticated user is mapped to c
 
 ## Scope catalog
 
-The provider understands the OIDC standard scopes — `openid`, `profile`, `email`, `address`,
-`phone` — merged with your configured catalog (`scopes.catalog`, below). On a conflict the configured
+The provider understands the OIDC standard scopes — `openid`, `profile` and `email` — merged with your configured catalog (`scopes.catalog`, below). On a conflict the configured
 catalog wins over the built-in OIDC scopes — so you can
 override the description of a standard scope simply by defining it in your catalog.
 
@@ -137,11 +136,9 @@ $this->app->singleton(
 
 The bundled `StandardClaimsResolver` maps same-named user attributes, when present: under
 `profile`, `name`, `locale` (from `$user->locale`), `zoneinfo` (from `$user->timezone`) and
-`updated_at`; under `email`, `email` and `email_verified` (from `email_verified_at`); under
-`phone`, `phone_number` and `phone_number_verified`; under `address`, the OIDC Core §5.1.1
-structured `address` claim from an `address` attribute — an array keeps its standard members
-(`formatted`, `street_address`, `locality`, `region`, `postal_code`, `country`), a string becomes
-`formatted`. An attribute the user lacks omits its claim. A custom resolver like the one above
+`updated_at`; under `email`, `email` and `email_verified` (from `email_verified_at`). An attribute the
+user lacks omits its claim. The OIDC `phone` and `address` scopes are not built in: add them to your
+catalog and resolve their claims in your own resolver when your user model carries the data. A custom resolver like the one above
 replaces it entirely, so re-add the mappings you want to keep.
 
 The `ClaimsResolver` and `ScopeRepository` are the two seams described in full under

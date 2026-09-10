@@ -63,7 +63,7 @@ interface ScopeRepository
 ```
 
 The default `ConfiguredScopeRepository` merges scopes in order: first, the configured
-catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`, `address`, `phone`).
+catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`).
 The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
 (See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
 the catalog:
