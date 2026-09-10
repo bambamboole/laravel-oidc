@@ -6,13 +6,16 @@ namespace Bambamboole\LaravelOidc\Server\Authentication\Pipeline;
 
 use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginFailed;
 use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginSucceeded;
+use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionRegistry;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
 use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AuthSessionState;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\DeviceRecognizer;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginOutcome;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingAuthorization;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingRequiredActions;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\ResolvesIdentityGuard;
 use Bambamboole\LaravelOidc\Server\Shared\Credentials\SecondFactorGate;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -37,6 +40,8 @@ final readonly class InteractiveLoginFinalizer implements LoginFinalizer
         private DeviceRecognizer $deviceRecognizer,
         private PendingAuthorization $pending,
         private ClientRepository $clients,
+        private PendingActions $actions,
+        private RequiredActionRegistry $registry,
     ) {}
 
     private function pendingClient(Request $request): ?Client
@@ -88,6 +93,7 @@ final readonly class InteractiveLoginFinalizer implements LoginFinalizer
         }
 
         $this->sessionState->putClaims($api->idTokenClaims(), $api->accessTokenClaims());
+        $this->sessionState->putRequestedActions($this->knownActions($api->requiredActions()));
 
         $challengeable = $this->secondFactor->hasChallengeableFactors($user);
 
@@ -109,9 +115,41 @@ final readonly class InteractiveLoginFinalizer implements LoginFinalizer
             return LoginOutcome::MfaChallenge;
         }
 
+        return $this->finish($request, $user, $remember);
+    }
+
+    public function finish(Request $request, Authenticatable $user, bool $remember = false): LoginOutcome
+    {
+        if ($this->actions->for($user) !== []) {
+            new PendingRequiredActions($user->getAuthIdentifier(), $remember)->store();
+
+            return LoginOutcome::RequiredAction;
+        }
+
+        PendingRequiredActions::forget();
         $this->complete($request, $user, $remember);
 
         return LoginOutcome::LoggedIn;
+    }
+
+    /**
+     * An action the pipeline names but nobody registered would park the login
+     * on a screen that does not exist, so it is dropped and reported instead.
+     *
+     * @param  list<string>  $keys
+     * @return list<string>
+     */
+    private function knownActions(array $keys): array
+    {
+        return array_values(array_filter($keys, function (string $key): bool {
+            if ($this->registry->has($key)) {
+                return true;
+            }
+
+            Log::warning("oidc: postLogin required an unregistered action [{$key}]");
+
+            return false;
+        }));
     }
 
     public function complete(Request $request, Authenticatable $user, bool $remember = false): void

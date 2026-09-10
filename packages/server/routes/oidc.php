@@ -13,6 +13,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\SendEmailVeri
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\ShowConfirmedPasswordStatusController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\VerifyEmailController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\AuthenticateIdentity;
+use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\RequireActionSubject;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Middleware\RequireLoginMethod;
 use Bambamboole\LaravelOidc\Server\Brokering\Http\Controllers\LinkedAccountController;
 use Bambamboole\LaravelOidc\Server\Brokering\Http\Controllers\SocialAuthenticationController;
@@ -45,6 +46,9 @@ use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 $guard = (string) config('oidc.auth.guard', 'identity');
 $guest = 'guest:'.$guard;
 $authenticated = AuthenticateIdentity::class.':'.$guard;
+// A required action is settled either mid-login, before any session exists,
+// or from a live one — so its screens sit behind the subject, not the guard.
+$actionSubject = RequireActionSubject::class;
 $passwordConfirmed = RequirePassword::using('identity.password.confirm');
 $password = RequireLoginMethod::class.':password';
 $passkey = RequireLoginMethod::class.':passkey';
@@ -57,8 +61,8 @@ $routing = RealmRouting::configured();
 Route::middleware([ResolveRealm::class, ...$shared])
     ->prefix($routing->prefix())
     ->where(['realm' => '[A-Za-z0-9._-]+'])
-    ->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social): void {
-        Route::middleware('web')->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social): void {
+    ->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject): void {
+        Route::middleware('web')->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject): void {
             Route::middleware($guest)->group(function () use ($password, $passkey, $social): void {
                 Route::get('auth/login', [AuthenticatedSessionController::class, 'create'])->name('identity.login');
                 Route::get('auth/register', [RegisteredUserController::class, 'create'])->middleware($password)->name('identity.register');
@@ -80,14 +84,16 @@ Route::middleware([ResolveRealm::class, ...$shared])
                 });
             });
 
+            Route::middleware($actionSubject)->group(function (): void {
+                Route::get('auth/email/verify', EmailVerificationPromptController::class)->name('identity.verification.notice');
+                Route::get('auth/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('identity.verification.verify');
+                Route::post('auth/email/verification-notification', SendEmailVerificationNotificationController::class)->middleware('throttle:6,1')->name('identity.verification.send');
+            });
+
             Route::middleware($authenticated)->group(function () use ($passwordConfirmed, $social): void {
                 Route::get('auth/user/confirm-password', [ConfirmablePasswordController::class, 'show'])->name('identity.password.confirm');
                 Route::post('auth/user/confirm-password', [ConfirmablePasswordController::class, 'store'])->middleware('throttle:5,1')->name('identity.password.confirm.store');
                 Route::get('auth/user/confirmed-password-status', ShowConfirmedPasswordStatusController::class)->name('identity.password.confirmation');
-
-                Route::get('auth/email/verify', EmailVerificationPromptController::class)->name('identity.verification.notice');
-                Route::get('auth/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('identity.verification.verify');
-                Route::post('auth/email/verification-notification', SendEmailVerificationNotificationController::class)->middleware('throttle:6,1')->name('identity.verification.send');
 
                 Route::get('auth/passkeys/confirm/options', [PasskeyConfirmationController::class, 'index'])->middleware('throttle:5,1')->name('identity.passkey.confirm-options');
                 Route::post('auth/passkeys/confirm', [PasskeyConfirmationController::class, 'store'])->middleware('throttle:5,1')->name('identity.passkey.confirm');
