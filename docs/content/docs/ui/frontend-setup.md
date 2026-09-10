@@ -12,6 +12,18 @@ The app's own `lattice()` Vite plugin discovers every installed package that dec
 app's registry setup already folds in — installing `bambamboole/laravel-oidc-ui` is enough for
 both components to render.
 
+## npm dependency
+
+The plugin imports `@laravel/passkeys/react`. A Composer package cannot carry an npm dependency,
+so the host application has to install it itself:
+
+```bash
+npm install @laravel/passkeys
+```
+
+Pair it with the `laravel/passkeys` release the server package resolves; the two ship the
+WebAuthn ceremony as one contract.
+
 ## Sprite icon (`brand_icon`)
 
 `AuthLayout` renders an `Icon` sized from `config('oidc-ui.brand_icon')` (default `logo`) at the

@@ -1,6 +1,6 @@
 ---
 title: Local development
-description: Setting up the monorepo, running the test/lint/analysis gates per package, and working on the docs site.
+description: Setting up the monorepo, running the test/lint/analysis gates, and working on the docs site.
 ---
 
 ## Repository layout
@@ -13,54 +13,43 @@ The repository is a monorepo holding three packages:
 | `packages/client` | `bambamboole/laravel-oidc-client` | The relying-party client |
 | `packages/ui` | `bambamboole/laravel-oidc-ui` | The Lattice-powered auth UI |
 
-Each package has its own `composer.json`, test suite, and tooling; the root `composer.json`
-provides aggregate scripts that fan out across all three.
+`packages/*/composer.json` are the split manifests consumers install. The repository root is the
+single Composer project for development: it autoloads `packages/*/src` directly and runs the
+tooling through an [Orchestra Testbench](https://packages.tools/testbench) harness — there is no
+full Laravel app to boot. `artisan` at the root is a thin shim onto `vendor/bin/testbench`.
 
 ## Getting started
 
 ```bash
 git clone git@github.com:bambamboole/laravel-oidc.git
 cd laravel-oidc
-composer install:all
+composer install
 ```
 
-`composer install:all` runs `composer install` inside each package. Because
-`bambamboole/laravel-oidc-server` is not on Packagist yet, the `packages/ui` install resolves
-it from the sibling `packages/server` checkout: the script backs up `packages/ui/composer.json`,
-writes a temporary path repository into it (version taken from `.release-please-manifest.json`),
-installs, and restores the file — `composer.json` ends up unchanged, and each package's
-`composer.lock` is git-ignored. `composer install:ui` reruns just that leg; the manual
-equivalent is documented in `packages/ui/composer.local-dev.md`.
+`composer install` also points `core.hooksPath` at `.githooks/`, which runs Pint, Rector and
+PHPStan on commit and Pint and PHPStan on push. `composer boost:refresh` regenerates the
+Laravel Boost guidance (`CLAUDE.md`, `AGENTS.md`) from `.ai/` and `boost.json`.
 
-The packages are developed
-against an [Orchestra Testbench](https://packages.tools/testbench) harness — there is no full
-Laravel app to boot. Each package's install wires itself into its harness via its
-`post-autoload-dump` script (`testbench package:discover`); `composer clear` inside a package
-purges the generated skeleton if you need to reset it.
+`packages/mautic` is a Symfony bundle with its own install: `composer install:mautic` and
+`composer check:mautic`.
 
 ## The quality gates
 
 From the repository root:
 
 ```bash
-composer check          # every package: Pint --test, PHPStan, Pest in sequence
-composer check:server   # a single package's gate
-composer check:client
-composer check:ui
-composer test           # every package's Pest suite only
+composer check          # Pint --test, PHPStan (sources and tests), Rector --dry-run, Pest --parallel
+composer test           # the Pest suites of all three packages
+composer test:lint      # Pint in --test mode
+composer analyse        # PHPStan, both configs
+composer rector:test    # Rector in dry-run mode
+composer fix            # Rector, then Pint
 ```
 
-Inside a package directory, the individual tools are available directly:
+Tests live in `packages/*/tests` and run from the root; each package's `TestCase` registers only
+its own providers, so a package suite proves the package works without the others.
 
-```bash
-composer test:lint   # Pint in --test mode (fails on style violations)
-composer analyse     # PHPStan static analysis
-composer test        # Pest test suite
-composer lint        # Pint (applies fixes)
-```
-
-Run `composer check` from the root before opening a pull request — CI runs the same tools
-on Laravel 13.
+Run `composer check` before opening a pull request — CI runs the same tools on Laravel 13.
 
 ## The docs site
 

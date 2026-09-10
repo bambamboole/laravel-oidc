@@ -60,7 +60,7 @@ document.
 
 ## Resolving the realm
 
-Everything hangs off two contracts in `Bambamboole\LaravelOidc\Server\Realms`:
+Everything hangs off two contracts in `Bambamboole\LaravelOidc\Server\Shared\Realms`:
 
 ```php
 interface RealmResolver
@@ -109,7 +109,7 @@ from `config('oidc.*')`:
 | `clients()` | `ClientSettings` | dynamic registration and its redirect rules, token exchange, the first-party and trusted clients |
 | `keys()` | `KeySettings` | RSA key size for generated signing keys |
 
-The settings objects live in `Bambamboole\LaravelOidc\Server\Realms\Settings`; each is a
+The settings objects live in `Bambamboole\LaravelOidc\Server\Shared\Realms\Settings`; each is a
 `final readonly` value object with a `fromConfig()` constructor. `ConfiguredRealm` implements
 the whole contract from `config('oidc.*')`, so a model can delegate what it does not store:
 
@@ -118,7 +118,7 @@ use Bambamboole\LaravelOidc\Server\Realms\ConfiguredRealm;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\Realm;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\Settings\TokenSettings;
 
-class Realm extends Model implements Realm
+class Tenant extends Model implements Realm
 {
     public function id(): string
     {
