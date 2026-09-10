@@ -44,6 +44,7 @@ Eight contracts cover every auth surface:
 | `PasswordConfirmationView` | — (`respond(Request $request)`) | [Password confirmation](/auth/passwords/) |
 | `TwoFactorChallengeView` | `TwoFactorChallengePrompt` | [Multi-factor challenge](/auth/multi-factor/) |
 | `ConsentView` | `ConsentPrompt` (`client`, `user`, `scopes`, `authToken`) | [OAuth consent](/provider/endpoints/#consent-view-required) |
+| `LogoutConfirmationView` | `LogoutPrompt` (`user`, `client`, `postLogoutRedirectUri`, `state`, `confirmationToken`) | [Logout confirmation](/provider/logout/#confirmation-view) |
 
 Override one by binding your implementation over the contract, typically in a service provider's
 `boot()` (a bind there wins over the package's default, since package providers boot first):
@@ -68,7 +69,7 @@ the real prompt only through `respond()`.
 
 A flow whose contract is not bound throws `MissingAuthViewException` when that route is hit, so a
 headless install fails loudly on the first request to an unbound surface instead of rendering
-nothing. Install `bambamboole/laravel-oidc-ui` to bind all eight contracts at once (see
+nothing. Install `bambamboole/laravel-oidc-ui` to bind all nine contracts at once (see
 [UI installation](/ui/installation/)), or bind only the ones you enable yourself.
 
 For engine tests that drive the real controllers without a view package installed, add
