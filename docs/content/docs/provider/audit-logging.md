@@ -1,71 +1,78 @@
 ---
 title: Audit logging
-description: Every security-relevant event as a typed audit event, routed through a configurable sink.
+description: Security-relevant domain events, recorded through a configurable sink.
 ---
 
-The server package records every security-relevant event — logins, MFA challenges, consent
-decisions, token issuance and revocation, client administration — as a typed `AuditEvent`. Each
-event is dispatched through Laravel's event dispatcher **and** forwarded to a configurable
-`AuditSink`, so you can log, persist, or ship events wherever you need.
+Every security-relevant step in the server package — logins, MFA challenges, consent decisions,
+token issuance and revocation, client administration — dispatches a domain event that implements
+`Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent`. The Audit domain listens for that
+contract, enriches the event's `AuditRecord` with request context and hands it to the configured
+`AuditSink`. Domains never talk to the sink themselves.
 
-Recording is **fail-open**: a throwing sink or listener is `report()`ed and swallowed, never
-allowed to break a login or token flow. If you need stronger delivery guarantees, build them into
-your own sink (e.g. queue the write).
+Recording is **fail-open**: a throwing sink is `report()`ed and swallowed, never allowed to break
+a login or token flow. If you need stronger delivery guarantees, build them into your own sink
+(e.g. queue the write).
 
 ## Event reference
 
-Every event carries an `AuditEventType` case; the case value is a dotted string whose first
-segment is the category (`auth`, `oauth`, `admin`), available via `$type->category()`.
-`$type->isFailure()` marks the cases a monitoring setup usually alerts on.
+Every event class exposes its record type as a `TYPE` constant. The type is a dotted string whose
+first segment is the category (`auth`, `oauth`, `admin`), available via `$record->category()`.
+`$record->failure` marks the records a monitoring setup usually alerts on.
 
-| Type | Value | Context keys |
+| Event | Type | Context keys |
 | --- | --- | --- |
-| `LoginSucceeded` | `auth.login.succeeded` | `amr`, `remember` |
-| `LoginFailed` | `auth.login.failed` | `method`, `reason` (`invalid_credentials`, `policy_denied`, `mfa_required_without_factor`, …), `deny_reason`, `username` |
-| `Logout` | `auth.logout` | — |
-| `MfaChallengeSucceeded` | `auth.mfa.challenge_succeeded` | `factor` |
-| `MfaChallengeFailed` | `auth.mfa.challenge_failed` | `factor`, `reason` |
-| `RecoveryCodeUsed` | `auth.mfa.recovery_code_used` | — |
-| `FactorEnrollmentStarted` | `auth.mfa.factor_enrollment_started` | `factor`, `enrollment_id` |
-| `FactorConfirmed` | `auth.mfa.factor_confirmed` | `factor`, `enrollment_id` |
-| `FactorRevoked` | `auth.mfa.factor_revoked` | `factor`, `enrollment_id` |
-| `UserRegistered` | `auth.registration.succeeded` | — |
-| `PasswordReset` | `auth.password.reset` | — |
-| `ConsentApproved` | `oauth.consent.approved` | `scopes` |
-| `ConsentDenied` | `oauth.consent.denied` | `scopes` |
-| `TokenIssued` | `oauth.token.issued` | `grant_type`, `jti`, `scopes`, `audience` (exchange only) |
-| `TokenIssuanceFailed` | `oauth.token.failed` | `grant_type`, `reason` |
-| `TokenRevoked` | `oauth.token.revoked` | `token_type_hint`, `jti`, `refresh_token_jti` |
-| `ClientAuthenticationFailed` | `oauth.client_auth.failed` | `endpoint`, `reason` |
-| `ClientRegistered` | `admin.client.registered` | `client_name`, `redirect_uris` |
-| `ClientProvisioned` | `admin.client.provisioned` | `created`, `secret_rotated` |
-| `KeysRotated` | `admin.keys.rotated` | `kid` |
+| `Authentication\Events\LoginSucceeded` | `auth.login.succeeded` | `amr`, `remember` |
+| `Authentication\Events\LoginFailed` | `auth.login.failed` | `method`, `reason` (`invalid_credentials`, `policy_denied`, `mfa_required_without_factor`, …), `deny_reason`, `username` |
+| `Brokering\Events\SocialLoginFailed` | `auth.login.failed` | `method` (`social:<provider>`), `reason` |
+| `Authentication\Events\LoggedOut` | `auth.logout` | — |
+| `Authentication\Events\UserRegistered` | `auth.registration.succeeded` | — |
+| `Authentication\Events\PasswordReset` | `auth.password.reset` | — |
+| `Credentials\Events\MfaChallengeSucceeded` | `auth.mfa.challenge_succeeded` | `factor` |
+| `Credentials\Events\MfaChallengeFailed` | `auth.mfa.challenge_failed` | `factor`, `reason` |
+| `Credentials\Events\RecoveryCodeUsed` | `auth.mfa.recovery_code_used` | — |
+| `Credentials\Events\FactorEnrollmentStarted` | `auth.mfa.factor_enrollment_started` | `factor`, `enrollment_id` |
+| `Credentials\Events\FactorConfirmed` | `auth.mfa.factor_confirmed` | `factor`, `enrollment_id` |
+| `Credentials\Events\FactorRevoked` | `auth.mfa.factor_revoked` | `factor`, `enrollment_id` |
+| `Consents\Events\ConsentApproved` | `oauth.consent.approved` | `scopes` |
+| `Consents\Events\ConsentDenied` | `oauth.consent.denied` | `scopes` |
+| `Tokens\Events\TokenIssued` | `oauth.token.issued` | `grant_type`, `jti`, `scopes`, `audiences` |
+| `Tokens\Events\TokenIssuanceFailed` | `oauth.token.failed` | `grant_type`, `reason`, `deny_reason`, `scope` |
+| `Tokens\Events\TokenRevoked` | `oauth.token.revoked` | `token_type`, `jti`, `refresh_token_jti` |
+| `Protocol\Events\ClientAuthenticationFailed` | `oauth.client_auth.failed` | `endpoint`, `reason` |
+| `Clients\Events\ClientRegistered` | `admin.client.registered` | `client_name`, `redirect_uris`, `token_endpoint_auth_method` |
+| `Clients\Events\ClientProvisioned` | `admin.client.provisioned` | `created`, `secret_rotated` |
+| `Keys\Events\KeysRotated` | `admin.keys.rotated` | `kid` |
 
-All five grants surface as a single `TokenIssued` type — `context['grant_type']` distinguishes
+Class names are relative to `Bambamboole\LaravelOidc\Server`. The events carry the same data as
+typed properties, so a listener reads `$event->grantType` instead of a context key.
+
+All five grants surface as a single `TokenIssued` event — `grantType` distinguishes
 `authorization_code`, `refresh_token`, `client_credentials`, `personal_access`, and
 `urn:ietf:params:oauth:grant-type:token-exchange`. A refresh-token use is therefore a
 `TokenIssued` with `grant_type=refresh_token`. Social and passkey logins are `LoginSucceeded`
-with the method in `amr`.
+with the method in `amr`. `LoginSucceeded` is raised for interactive logins only; a session
+restored from a remember-me cookie is not audited.
 
-## The `AuditEvent` payload
+## The `AuditRecord` payload
 
 ```php
-final readonly class AuditEvent
+final readonly class AuditRecord
 {
-    public AuditEventType $type;
+    public string $type;              // dotted, e.g. oauth.token.issued
     public ?string $userId;
     public ?string $clientId;
-    public ?string $sid;          // OIDC session id, when one exists
-    public ?string $ip;           // null for console-originated events
-    public ?string $userAgent;    // truncated to 255 characters
+    public ?string $sid;              // OIDC session id, when one exists
+    public array $context;            // per-type keys, see the reference above
+    public bool $failure;
+    public ?string $ip;               // null for console-originated events
+    public ?string $userAgent;        // truncated to 255 characters
     public DateTimeImmutable $occurredAt;
-    public array $context;        // per-type keys, see the reference above
 }
 ```
 
-The recorder enriches every event centrally: IP and user agent come from the current request
-(console runs produce `null`), the `sid` falls back to the active OIDC session when the call site
-does not pass one explicitly.
+The event builds the record with what its domain knows. The Audit listener adds IP and user
+agent from the current request (console runs produce `null`) and falls back to the active OIDC
+session's `sid` when the event does not carry one. Null context values are dropped.
 
 **What is never stored:** raw access/refresh tokens or JWTs (only the `jti`), authorization
 codes, client secrets, passwords, TOTP or recovery codes, and key material. One deliberate
@@ -82,12 +89,13 @@ security logs, but relevant for your data-retention policy.
 ],
 ```
 
-- `enabled` — `false` short-circuits everything: no event dispatch, no sink call.
+- `enabled` — `false` stops recording. The domain events are still dispatched, so your own
+  listeners keep working.
 - `sink` — class-string of an `AuditSink` implementation, resolved from the container (constructor
   dependencies are injected). The shipped sinks:
-  - `LogAuditSink` (default) writes one structured log line per event, `warning` for failure types and
+  - `LogAuditSink` (default) writes one structured log line per record, `warning` for failures and
     `info` otherwise, prefixed `oidc: audit <type>`.
-  - `NullAuditSink` discards everything — use it when you only want the dispatched events.
+  - `NullAuditSink` discards everything — use it when you only listen to the events.
 - `log_channel` — a channel from `config/logging.php` for `LogAuditSink`; `null` uses the default
   channel. Useful to ship audit lines separately (e.g. to Loki or Datadog).
 
@@ -100,7 +108,7 @@ namespace Bambamboole\LaravelOidc\Server\Shared\Audit;
 
 interface AuditSink
 {
-    public function record(AuditEvent $event): void;
+    public function record(AuditRecord $record): void;
 }
 ```
 
@@ -116,6 +124,7 @@ Schema::create('oidc_audit_log', function (Blueprint $table) {
     $table->string('sid')->nullable();
     $table->string('ip', 45)->nullable();
     $table->string('user_agent')->nullable();
+    $table->boolean('failure');
     $table->json('context');
     $table->timestamp('occurred_at');
 
@@ -127,23 +136,24 @@ Schema::create('oidc_audit_log', function (Blueprint $table) {
 ```php
 namespace App\Audit;
 
-use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditRecord;
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditSink;
 use Illuminate\Support\Facades\DB;
 
 class EloquentAuditSink implements AuditSink
 {
-    public function record(AuditEvent $event): void
+    public function record(AuditRecord $record): void
     {
         DB::table('oidc_audit_log')->insert([
-            'type' => $event->type->value,
-            'user_id' => $event->userId,
-            'client_id' => $event->clientId,
-            'sid' => $event->sid,
-            'ip' => $event->ip,
-            'user_agent' => $event->userAgent,
-            'context' => json_encode($event->context),
-            'occurred_at' => $event->occurredAt,
+            'type' => $record->type,
+            'user_id' => $record->userId,
+            'client_id' => $record->clientId,
+            'sid' => $record->sid,
+            'ip' => $record->ip,
+            'user_agent' => $record->userAgent,
+            'failure' => $record->failure,
+            'context' => json_encode($record->context),
+            'occurred_at' => $record->occurredAt,
         ]);
     }
 }
@@ -168,27 +178,47 @@ Two practical notes:
 
 - On a busy token endpoint every issuance is one sink call. If the insert latency matters,
   dispatch a queued job from `record()` instead of writing inline.
-- Filtering is a sink concern, not config: `if ($event->type->category() !== 'auth') return;` is
+- Filtering is a sink concern, not config: `if ($record->category() !== 'auth') return;` is
   the whole feature.
 - An audit table grows like the token tables do — plan its pruning alongside
   [Scheduled maintenance](/provider/scheduled-maintenance/).
 
-## Listening to audit events
+## Listening to events
 
-Every event is also dispatched through Laravel's dispatcher before the sink runs, so one-off
-reactions don't need a sink at all:
+The events are ordinary Laravel events, so a one-off reaction listens to the class it cares
+about and never needs a sink:
+
+```php
+use Bambamboole\LaravelOidc\Server\Credentials\Events\RecoveryCodeUsed;
+
+Event::listen(RecoveryCodeUsed::class, function (RecoveryCodeUsed $event): void {
+    Notification::route('mail', 'security@acme.test')
+        ->notify(new RecoveryCodeUsedNotification($event->userId));
+});
+```
+
+Listening to `AuditEvent::class` receives every audited event, whichever domain raised it.
+
+## Raising your own audit events
+
+Any event implementing `AuditEvent` is recorded through the same listener and sink, so
+application-level actions can share the audit trail:
 
 ```php
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
-use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEventType;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditRecord;
 
-Event::listen(AuditEvent::class, function (AuditEvent $event): void {
-    match ($event->type) {
-        AuditEventType::RecoveryCodeUsed => Notification::route('mail', 'security@acme.test')
-            ->notify(new RecoveryCodeUsedNotification($event)),
-        default => null,
-    };
-});
+final readonly class ExportDownloaded implements AuditEvent
+{
+    public function __construct(public string $userId, public string $file) {}
+
+    public function auditRecord(): AuditRecord
+    {
+        return new AuditRecord('app.export.downloaded', userId: $this->userId, context: ['file' => $this->file]);
+    }
+}
+
+event(new ExportDownloaded($user->id, 'report.csv'));
 ```
 
 ## Testing
@@ -196,20 +226,26 @@ Event::listen(AuditEvent::class, function (AuditEvent $event): void {
 The package ships an in-memory fake for host-app test suites:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEventType;
+use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginFailed;
+use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginSucceeded;
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditSink;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
+use Bambamboole\LaravelOidc\Server\Tokens\Events\TokenIssued;
 
 $sink = new FakeAuditSink;
 app()->instance(AuditSink::class, $sink);
 
 // ... drive a flow ...
 
-$sink->assertRecorded(AuditEventType::LoginSucceeded, fn ($event) => $event->userId === (string) $user->id);
-$sink->assertNotRecorded(AuditEventType::LoginFailed);
+$sink->assertRecorded(LoginSucceeded::TYPE, fn ($record) => $record->userId === (string) $user->id);
+$sink->assertNotRecorded(LoginFailed::TYPE);
 $sink->assertNothingRecorded();
-$sink->events(AuditEventType::TokenIssued); // list<AuditEvent>
+$sink->records(TokenIssued::TYPE); // list<AuditRecord>
 ```
+
+`Event::fake()` works too, but it also silences the recording listener; assert on the sink when a
+test cares about what reaches the audit trail, and on the dispatched event when it cares about
+the domain.
 
 ## Limitations
 
