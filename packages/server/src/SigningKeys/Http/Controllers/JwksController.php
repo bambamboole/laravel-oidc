@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\SigningKeys\Http\Controllers;
 
 use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\Jwk;
-use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\SigningKeys;
+use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\Keyring;
 use Illuminate\Http\JsonResponse;
 
 class JwksController
 {
-    public function __construct(private readonly SigningKeys $signingKeys) {}
+    public function __construct(private readonly Keyring $signingKeys) {}
 
     public function __invoke(): JsonResponse
     {

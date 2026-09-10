@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Tokens;
 
 use Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver;
-use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\SigningKeys;
+use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\Keyring;
 use Bambamboole\LaravelOidc\Server\Shared\Tokens\SignedJwtParser;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
 use Lcobucci\JWT\Encoding\JoseEncoder;
@@ -28,7 +28,7 @@ use Throwable;
 class TokenInspector implements SignedJwtParser
 {
     public function __construct(
-        private readonly SigningKeys $signingKeys,
+        private readonly Keyring $signingKeys,
         private readonly IssuerResolver $issuer,
     ) {}
 
