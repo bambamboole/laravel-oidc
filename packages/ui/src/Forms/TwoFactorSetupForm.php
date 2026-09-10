@@ -39,8 +39,6 @@ use Lattice\Ui\Enums\Variant;
 use Lattice\Ui\Enums\Width;
 
 /**
- * Adding a second factor: pick a method, then configure it.
- *
  * One form for every provider. Step one is built from
  * {@see FactorRegistry::enrollmentOptions()}, so a host-registered provider shows
  * up without touching this class; step two is a single field whose body the
@@ -126,8 +124,7 @@ class TwoFactorSetupForm extends FormDefinition
     }
 
     /**
-     * One card per option: icon, name, what it is good for, and a sentence of
-     * plain language. The schema ships once — the options carry only data.
+     * The schema ships once — the options carry only data.
      *
      * There is deliberately no "recommended" badge: a component's visibility is
      * decided when the schema is built, not per option, so a badge bound to a

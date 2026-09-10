@@ -100,8 +100,6 @@ abstract class TokenValidator
     }
 
     /**
-     * Assert the aud claim contains this client, returning the audience list.
-     *
      * @return array<int, mixed>
      */
     protected function assertAudience(UnencryptedToken $token): array

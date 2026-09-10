@@ -68,8 +68,6 @@ class LoginPage extends AuthPage implements LoginView
     }
 
     /**
-     * One button per enabled social provider, below the credentials form.
-     *
      * @return array<int, Component>
      */
     protected function socialButtons(): array

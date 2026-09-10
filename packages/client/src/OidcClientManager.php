@@ -29,17 +29,11 @@ class OidcClientManager
         return $guard;
     }
 
-    /**
-     * Redirect to the post-login destination (`oidc-client.redirect_after_login`).
-     */
     public function redirectAfterLogin(): RedirectResponse
     {
         return redirect()->intended((string) config('oidc-client.redirect_after_login', '/dashboard'));
     }
 
-    /**
-     * Log out of the login guard and fully invalidate the local session.
-     */
     public function terminateLocalSession(Request $request): void
     {
         $this->guard()->logout();

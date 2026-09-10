@@ -78,11 +78,6 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
     }
 
     /**
-     * Links to re-challenge with another enrolled method, rendered only when
-     * the prompt offers more than the active enrollment. Providers with a
-     * single enrollment get one link; multiple enrollments of the same
-     * provider are listed individually by their label.
-     *
      * @return list<Stack>
      */
     private function factorSwitcher(): array

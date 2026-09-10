@@ -50,8 +50,6 @@ class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
     }
 
     /**
-     * The page must keep rendering when the passkey endpoints are absent.
-     *
      * @return array<int, Component>
      */
     private function passkeySchema(): array
