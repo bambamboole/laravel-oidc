@@ -29,6 +29,16 @@ client's `allowed_exchange_audiences`.
 - `CheckAudience` answers a token for another resource with `401 invalid_token`, as RFC 6750 §3.1
   prescribes, rather than `403`.
 
+### Signing keys live in the database
+
+`EnvSigningKeyStore` and the `OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY` / `OIDC_PREVIOUS_PUBLIC_KEY`
+variables are gone, as is the `oauth-*.key` file fallback and `oidc:rotate-keys --print`. The
+keypair lives in `oidc_signing_keys` through `DatabaseSigningKeyStore`, the only shipped store; run
+`php artisan oidc:rotate-keys --if-missing` once after migrating and drop the variables from your
+environment. Tokens signed by the env key stop verifying at the cutover. The `Keys` domain is
+now `SigningKeys`: `Server\Keys\*` and `Shared\Keys\*` are `Server\SigningKeys\*` and
+`Shared\SigningKeys\*`. Host-app tests get a key from `InteractsWithOidc::installSigningKey()`.
+
 ## Realms and routes
 
 Two further breaking changes land alongside the Passport removal.
@@ -130,10 +140,9 @@ and `revoke()` replace the old `oauth_*` magic properties.
 | `oidc.passport.scopes` | `oidc.scopes.catalog` |
 | `oidc.passport.token_model` | *(removed — the package owns its token model)* |
 | `passport.guard` | `oidc.auth.guard` |
-| `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` | `OIDC_PRIVATE_KEY` / `OIDC_PUBLIC_KEY`, or a keypair in `oidc.keys.path` |
+| `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` | *(removed — the keypair lives in `oidc_signing_keys`; run `oidc:rotate-keys --if-missing`)* |
 
-Two keys are new: `oidc.tokens.lifetimes.refresh_token` (was `Passport::refreshTokensExpireIn()`)
-and `oidc.keys.path` (was Passport's key path).
+One key is new: `oidc.tokens.lifetimes.refresh_token` (was `Passport::refreshTokensExpireIn()`).
 
 ### 7. Replace the runtime and test APIs
 

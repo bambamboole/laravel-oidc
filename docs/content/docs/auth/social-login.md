@@ -70,8 +70,8 @@ php artisan migrate
 - A provider entry is only enabled once its `client_id` is set; an empty or missing `client_id`
   disables it without removing the entry (`SocialProviderRegistry::get`).
 
-Apple's `private_key` is a PEM string; escape its newlines as `\n` in `.env` — the same convention
-as `OIDC_PRIVATE_KEY`/`OIDC_PUBLIC_KEY` — and the provider unescapes them at runtime.
+Apple's `private_key` is a PEM string; escape its newlines as `\n` in `.env` and the provider
+unescapes them at runtime.
 
 Any other OIDC-compliant IdP can be added with the generic `oidc` driver and an `issuer`:
 

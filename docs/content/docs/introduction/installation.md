@@ -34,22 +34,16 @@ php artisan migrate
 If you use the passkey/WebAuthn factor, also publish the `laravel/passkeys` migration with
 `php artisan vendor:publish --tag=passkeys-migrations`.
 
-## Generate signing keys
+## Generate the signing key
 
-Tokens are signed with RS256. Generate an env-based keypair — it keeps keys out of the
-filesystem and manages rotation for you (see [Key rotation](/provider/key-rotation/)):
+Tokens are signed with RS256. The keypair lives in the `oidc_signing_keys` table you just
+migrated, with the private key encrypted at rest; generate the first one with:
 
 ```bash
-php artisan oidc:rotate-keys
+php artisan oidc:rotate-keys --if-missing
 ```
 
-This writes `OIDC_PRIVATE_KEY` and `OIDC_PUBLIC_KEY` to your `.env` (pass `--print` to emit
-them to stdout for a secrets manager instead).
-
-:::note
-File-based keys work too: an `oauth-private.key`/`oauth-public.key` pair under `oidc.keys.path`
-is picked up as a fallback whenever the `OIDC_*` variables are unset.
-:::
+See [Key rotation](/provider/key-rotation/) for rotating it later and for a custom store.
 
 ## Publish the config (optional)
 
