@@ -40,6 +40,18 @@ unpersisted token that grants the listed scopes — for routes behind
 $this->actingAsOidcUser($user, ['openid', 'email']);
 ```
 
+## Acting as a machine client
+
+`actingAsOidcClient()` is the counterpart for a `client_credentials` caller: it
+authenticates a `ClientPrincipal` on the token guard with an unpersisted token
+granting the listed scopes.
+
+```php
+$client = $this->createOidcMachineClient();          // a confidential client_credentials client
+
+$this->actingAsOidcClient($client, ['orders.read']);
+```
+
 ## Minting tokens without the HTTP dance
 
 `issueTokenFor()` returns a signed `at+jwt` access token with a persisted
@@ -54,6 +66,13 @@ $this->withHeader('Authorization', 'Bearer '.$jwt)->get('/api/orders');
 When no client is given, a default authorization-code client is created once
 per test and reused.
 
+`issueClientToken()` mints the userless equivalent — the token
+`client_credentials` issues, whose principal is the client itself:
+
+```php
+$jwt = $this->issueClientToken($this->createOidcMachineClient(), ['orders.read']);
+```
+
 A token minted with a custom `audience:` does not authenticate on plain
 `auth:oidc` routes unless that audience is the realm issuer or a resource registered under
 `oidc.resources` — the guard accepts a token only when its `aud` names one of them. Without
@@ -64,6 +83,7 @@ route behind `CheckAudience` for another resource. See [Resource servers (CheckA
 
 ```php
 $client = $this->createOidcClient();                 // auth-code grant client
+$client = $this->createOidcMachineClient();          // client_credentials grant client
 $client = $this->withFirstPartyClient();             // + sets oidc.clients.first_party.* config
 ```
 
