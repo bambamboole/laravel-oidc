@@ -10,7 +10,7 @@ use Bambamboole\LaravelOidc\Server\Scopes\Enums\ClaimsAudience;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AcrResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
-use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\SigningKeys;
+use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\Keyring;
 use Bambamboole\LaravelOidc\Server\Shared\Tokens\ProtocolClaims;
 use Bambamboole\LaravelOidc\Server\Tokens\Concerns\ResolvesTokenUser;
 use DateTimeImmutable;
@@ -23,7 +23,7 @@ class IdTokenBuilder
     public function __construct(
         private readonly ClaimsResolver $claims,
         private readonly IssuerResolver $issuer,
-        private readonly SigningKeys $signingKeys,
+        private readonly Keyring $signingKeys,
         private readonly RealmResolver $realms,
         private readonly AcrResolver $acr,
     ) {}
