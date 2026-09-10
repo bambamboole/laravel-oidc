@@ -5,6 +5,30 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.24.0](https://github.com/bambamboole/laravel-oidc/compare/v0.23.0...v0.24.0) (2026-09-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** keep signing keys in the database only and rename Keys to SigningKeys
+* **server:** address access tokens to the requested resource, the issuer by default
+* **server:** drop the built-in phone and address scopes
+
+### Features
+
+* **server:** address access tokens to the requested resource, the issuer by default ([82bcb46](https://github.com/bambamboole/laravel-oidc/commit/82bcb4612b1a0fa8d11f4da98a9cbb4f06f2906c))
+
+
+### Bug Fixes
+
+* **server:** survive the default guard and strict user models in host apps ([#157](https://github.com/bambamboole/laravel-oidc/issues/157)) ([574117a](https://github.com/bambamboole/laravel-oidc/commit/574117a042ea895ce3fc981f19ffa562516b4a98))
+
+
+### Refactoring
+
+* **server:** drop the built-in phone and address scopes ([e8ae805](https://github.com/bambamboole/laravel-oidc/commit/e8ae80524c1dd940807f1d2f19bb739efe9c02d2))
+* **server:** keep signing keys in the database only and rename Keys to SigningKeys ([5edc7b8](https://github.com/bambamboole/laravel-oidc/commit/5edc7b81d9334d2b0d534d5bd5c2fead438c9eb8))
+
 ## [0.23.0](https://github.com/bambamboole/laravel-oidc/compare/v0.22.0...v0.23.0) (2026-09-10)
 
 
