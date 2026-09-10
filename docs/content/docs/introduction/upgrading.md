@@ -46,9 +46,10 @@ php artisan vendor:publish --tag=oidc-migrations
 php artisan migrate
 ```
 
-Four tables are added: `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
-`oidc_auth_codes`. Passport's `oauth_*` tables are untouched and no longer read — drop them once
-you are satisfied with the cutover.
+Five tables are added: `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
+`oidc_auth_codes`, `oidc_consents`. `oidc_access_token_contexts` is gone — the access token
+carries its `context_id` itself. Passport's `oauth_*` tables are untouched and no longer read —
+drop them once you are satisfied with the cutover.
 
 ### 2. Re-provision your clients
 

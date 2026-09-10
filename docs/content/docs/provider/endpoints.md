@@ -82,7 +82,7 @@ failure is reported as an error redirect to the validated `redirect_uri`, with `
 | `code_challenge` missing, `code_challenge_method` other than `S256` | `invalid_request` |
 | `scope` naming an unknown scope | `invalid_scope` |
 | `max_age` | Non-negative integer. A login older than that (or without a recorded `auth_time`) is renewed: the session is ended and the user sent to login. With `prompt=none` the answer is `login_required` and the session is kept |
-| `prompt` | `none`, `login`, `consent`, `select_account`. `none` combined with any other value, or an unknown value, is `invalid_request`. `login` ends the session and sends the user to login. `select_account` behaves exactly like `login`: the provider holds one account per browser session, so there is no account to switch to. `consent` shows the consent view even when a grant already covers the requested scopes; trusted first-party clients ignore it |
+| `prompt` | `none`, `login`, `consent`, `select_account`. `none` combined with any other value, or an unknown value, is `invalid_request`. `login` ends the session and sends the user to login. `select_account` behaves exactly like `login`: the provider holds one account per browser session, so there is no account to switch to. `consent` shows the consent view even when a stored consent already covers the requested scopes; trusted first-party clients ignore it |
 | `id_token_hint` | Must verify against the realm's signing keys and issuer, otherwise `invalid_request`. When the hint's `sub` is not the signed-in user the answer is `login_required`; a signed-out user proceeds to login (`login_required` with `prompt=none`) |
 | `acr_values` | Stored for the post-login pipeline — see [Post-login pipeline](/auth/post-login-pipeline/) |
 
@@ -202,3 +202,23 @@ yourself.
 The view posts `auth_token` back to `POST /realms/{realm}/oauth/authorize/consent` (route
 `oidc.approve`) to approve, or sends `DELETE /realms/{realm}/oauth/authorize/consent` (route
 `oidc.deny`) to deny.
+
+### What is remembered
+
+An approval is stored in `oidc_consents`: one row per realm, user and client, holding the union of
+every scope set the user approved for that client. The authorization endpoint skips the view when
+that row covers every requested scope, and shows it again when the request asks for a scope the
+row does not hold — approving then merges the new scopes in. A denial stores nothing.
+
+The consent is independent of the tokens it led to: it survives their expiry and their revocation.
+It ends only when it is withdrawn, which sets `revoked_at` and brings the view back on the next
+request; approving again re-activates the same row.
+
+```php
+use Bambamboole\LaravelOidc\Server\Consents\ConsentRepository;
+
+app(ConsentRepository::class)->revoke((string) $user->getAuthIdentifier(), $client);
+```
+
+Trusted first-party clients and clients with `consent_required` set to false never see the view
+and store no consent. `prompt=consent` shows the view regardless of a stored consent.
