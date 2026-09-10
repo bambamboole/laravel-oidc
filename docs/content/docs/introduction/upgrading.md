@@ -84,6 +84,9 @@ the cutover.
 ```
 
 `$user->createToken()`, `currentAccessToken()`, `withAccessToken()` and `tokenCan()` keep working.
+`createToken()` takes an optional third argument, an array stored with the token and served back
+by `currentAccessToken()->context()` — the replacement for subclassing Passport's token model to
+hang extra columns (a tenant id, say) on it.
 `currentAccessToken()` now returns a `CurrentAccessToken`, whose `scopes()`, `clientId()`, `can()`
 and `revoke()` replace the old `oauth_*` magic properties.
 

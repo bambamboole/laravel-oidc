@@ -16,7 +16,7 @@ Four access-token triggers are available; register one with
 | --- | --- | --- |
 | `client_credentials` | `client_credentials` grant | `ClientCredentialsEvent` — `client` and finalized `scopes` |
 | `token_exchange` | RFC 8693 token exchange | `TokenExchangeEvent` — `user`, `client`, finalized `scopes`, `audience`, and `subjectClaims` |
-| `personal_access_token` | Personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, and finalized `scopes` |
+| `personal_access_token` | Personal access tokens | `PersonalAccessTokenEvent` — `user`, `client`, finalized `scopes`, and the `context` passed to `createToken()` |
 | `authorization_code` | `authorization_code` grant and every `refresh_token` reissue | `AuthorizationCodeEvent` — `user`, `client`, finalized `scopes`, and `grantType` |
 
 Each callback also receives an `AccessTokenApi`. Use `setAccessTokenClaim()` to add a custom claim,
