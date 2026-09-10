@@ -11,8 +11,8 @@ validate it before serving the request. There are three ways to do that.
 
 If the resource server *is* this same app, use the `auth:oidc` guard (auto-registered under the
 guard name in `oidc.api_guard`, `oidc` by default — see [Configuration](/introduction/configuration/)).
-It's a self-contained RFC 9068 resource-server validator: signature, `at+jwt` `typ`, expiry, and
-revocation, all checked against this package's own JWKS and token store. It accepts a bearer token
+It's a self-contained RFC 9068 resource-server validator: signature, `iss`, `at+jwt` `typ`,
+expiry, and revocation, all checked against this package's own JWKS and token store. It accepts a bearer token
 when its `aud` intersects the issuer URL or an entry in `oidc.resource.audiences`, or the token
 carries its own `client_id` claim — the latter is what makes classic (non-exchanged) tokens pass
 uniformly, since a classic token's `aud` defaults to `[client_id]`. A token whose `aud` names some
@@ -83,14 +83,27 @@ token introspection instead.
 
 ## Failure semantics
 
-`auth:oidc` itself renders no OAuth-style error — a rejected token just leaves `$request->user()`
-null, and standard Laravel guard-middleware behavior (a plain `401`) applies from there.
-`CheckAudience`, layered after it, renders RFC 6750-style errors for the checks it owns:
+A request turned away by `auth:oidc` is answered with an RFC 6750 §3 Bearer challenge rather than
+Laravel's generic `Unauthenticated.` response. The package registers the renderable for
+`Illuminate\Auth\AuthenticationException` itself, for the guard named by `oidc.api_guard` and any
+other guard using the `oidc` driver. `CheckAudience` and `CheckScopes`, layered after it, render
+the errors for the checks they own:
 
 | Condition | Status | Body |
 | --- | --- | --- |
-| No authenticated user with a `currentAccessToken()` (the guard rejected the token, or didn't run) | `401` | `{"error": "invalid_token"}` |
-| Authenticated, but the guard-verified audience doesn't intersect the audiences `CheckAudience::using()` requires | `403` | `{"error": "insufficient_scope"}` |
+| No bearer token presented | `401` | empty — RFC 6750 §3.1 omits the error code when no credentials were sent |
+| A bearer token the guard rejected (signature, `iss`, `typ`, expiry, revocation, audience, unknown user) | `401` | `{"error": "invalid_token"}` |
+| `CheckAudience`: the guard-verified audience does not intersect the audiences `CheckAudience::using()` requires | `401` | `{"error": "invalid_token"}` — a token for another resource is not a valid token here (RFC 6750 §3.1) |
+| `CheckAudience` or `CheckScopes` without a preceding guard populating `currentAccessToken()` | `401` | `{"error": "invalid_token"}` |
+| `CheckScopes`: the token lacks a required scope | `403` | `{"error": "insufficient_scope"}` |
 
-Both `CheckAudience` responses follow RFC 6750: a `WWW-Authenticate: Bearer error="..."` header
-accompanies the JSON body rather than a bare status code.
+Every challenge is a `WWW-Authenticate: Bearer` header carrying `realm` (the realm id), `error`
+where one applies, and `resource_metadata` — the URL of the realm's RFC 9728 protected resource
+metadata (`/.well-known/oauth-protected-resource/realms/{realm}`) — as RFC 9728 §5.1 prescribes,
+so a client that lands on a protected route without a token can discover the authorization server
+from the challenge alone:
+
+```text
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="default", error="invalid_token", resource_metadata="https://id.example.com/.well-known/oauth-protected-resource/realms/default"
+```

@@ -89,11 +89,52 @@ failure is reported as an error redirect to the validated `redirect_uri`, with `
 Every response sent to the `redirect_uri` — the code and each error — carries the realm's issuer
 as `iss` (RFC 9207 §2).
 
+## The token endpoint
+
+Every successful response carries `token_type`, `expires_in`, `access_token` and — whenever the
+token has any — `scope`, the space-delimited set actually granted (RFC 6749 §5.1). The granted set
+can be narrower than the requested one (consent, client restrictions, refresh narrowing), so a
+client reads its scopes from the response rather than assuming the request went through
+unchanged. `refresh_token` and `id_token` follow when the grant produces them.
+
+An authorization code is bound to the client it was issued to: another client presenting it gets
+`invalid_grant`, and the code's own client keeps its tokens. Only the code's client replaying it
+revokes the tokens the code produced (OAuth 2.1 §4.1.3).
+
 ## The UserInfo endpoint
 
 UserInfo authenticates the bearer token against the guard named by `config('oidc.api_guard')`
 (default `oidc`), and requires the `openid` scope. The claims it returns are the token's granted
 scopes resolved through the `ClaimsResolver` — see [Scopes & claims](/provider/scopes-and-claims/).
+`sub` is always the authenticated user's identifier (OpenID Connect Core §5.3.2); a resolver
+returning `sub` or any other protocol claim (`iss`, `aud`, `exp`, `iat`, `nbf`, `jti`, `nonce`,
+`at_hash`, `c_hash`, `auth_time`, `azp`, `acr`, `amr`, `sid`) has that claim dropped, in the
+id_token as well as here.
+
+A request without a bearer token is answered with `401` and `WWW-Authenticate: Bearer realm="…",
+resource_metadata="…"` and no body; a rejected token with `401 invalid_token` — see
+[Resource servers](/advanced/resource-servers/) for the challenge format.
+
+## Introspection and revocation
+
+Both endpoints take `token` and an optional `token_type_hint`. A missing or empty `token` is
+`400 invalid_request` (RFC 7662 §2.3, RFC 7009 §2.2.1). The hint only orders the lookup: the
+hinted type is tried first, the other one after it, and a hint the provider does not know
+(anything other than `access_token` or `refresh_token`) is ignored. A refresh token presented as
+`access_token`, or the other way round, is therefore still found.
+
+Introspection (`POST /realms/{realm}/oauth/introspect`) is limited to confidential clients. The
+client the token was issued to may introspect it, and so may any client named in an access
+token's `aud`. Everything else — an unknown, expired, revoked, or another client's token — is
+`{"active": false}`. An active access token reports `active`, `token_type` (`Bearer`), `scope`,
+`client_id`, `sub` (omitted for a client-credentials token), `exp`, `iat`, `nbf`, `jti`, `iss`
+and `aud` (always an array); an active refresh token reports `active`, `scope`, `client_id`,
+`sub`, `exp` (the refresh token's own expiry) and `iss`, and no `token_type`.
+
+Revocation (`POST /realms/{realm}/oauth/revoke`) is open to public clients too, so a browser or
+native app can revoke its own refresh token. Revoking either token of a pair revokes both (RFC 7009
+§2.1). A token that is unknown or belongs to another client is ignored with `200`, so the endpoint
+never confirms whether a token existed.
 
 ## What discovery advertises
 
@@ -128,7 +169,7 @@ public; dynamically registered clients are always `none`. Presenting a secret th
 The `userinfo_endpoint`, `end_session_endpoint`, `introspection_endpoint`, and
 `revocation_endpoint` keys appear only when their handlers are enabled. Introspection is limited
 to confidential clients (`["client_secret_basic", "client_secret_post"]`); revocation also accepts
-public clients (`none`), so a browser or native app can revoke its own refresh token.
+public clients (`none`) — see [Introspection and revocation](#introspection-and-revocation).
 
 ## Consent view (required)
 
