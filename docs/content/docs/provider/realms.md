@@ -100,7 +100,8 @@ from `config('oidc.*')`:
 
 | Method | Settings object | Drives |
 | --- | --- | --- |
-| `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes; the realm's audiences |
+| `tokens()` | `TokenSettings` | access, id, client-credentials and refresh token lifetimes |
+| `resources()` | `ResourceSettings` | the resource servers the realm serves besides itself: audiences a client may request and RFC 9728 metadata |
 | `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes; the provider session cookie name in `path` mode |
 | `login()` | `LoginSettings` | username field, home URL, login route, logout redirect, `acr` values |
 | `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count, the password policy |

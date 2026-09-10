@@ -9,6 +9,26 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.24: audiences are requested, not distributed
+
+An access token minted without an RFC 8707 `resource` is now addressed to the realm issuer URL
+only, the default resource indicator of RFC 9068 §3. Before, it carried every realm audience,
+so any login token passed every `CheckAudience` route. A client that needs a token for a
+specific resource server names it with `resource` at the authorization endpoint (or at the
+client-credentials grant, or as the `audience` of a token exchange); the value must be on the
+client's `allowed_exchange_audiences`.
+
+- `oidc.tokens.audiences` and `oidc.protected_resources` merge into `oidc.resources`: the resource
+  servers the realm serves besides itself, keyed by identifier. A path-relative key is published as
+  RFC 9728 metadata as before; an absolute URI is a resource the `auth:oidc` guard accepts and a
+  client may request.
+- `oidc_access_tokens` and `oidc_auth_codes` gain an `audience` column in their create migrations, so
+  a refresh keeps the audience of the token it replaces. Re-run them (the 0.23 tables start empty
+  anyway) or add the two nullable JSON columns by hand.
+- `Realm` implementations add `resources(): ResourceSettings`; `TokenSettings::` is gone.
+- `CheckAudience` answers a token for another resource with `401 invalid_token`, as RFC 6750 §3.1
+  prescribes, rather than `403`.
+
 ## Realms and routes
 
 Two further breaking changes land alongside the Passport removal.

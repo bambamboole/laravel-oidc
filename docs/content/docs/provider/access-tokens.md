@@ -23,13 +23,14 @@ the persisted token record instead. Both claims describe the same grant; `scope`
 form and `scopes` is the compatibility form.
 
 `aud` names the resources the token is for (RFC 9068 §2.2); the client it was issued to is in
-`client_id`. Without an explicit audience — the authorization code, refresh, session-root and
-personal-access paths — `aud` is the realm's audience list: `tokens.audiences`, the realm issuer
-URL when that is empty, plus the identifier of every protected resource advertised through
-[RFC 9728 metadata](/provider/dynamic-client-registration/#protected-resource-metadata-rfc-9728).
-An RFC 8707 `resource` parameter at the client-credentials grant and the `audience` of a
-[token exchange](/provider/token-exchange/) set `aud` explicitly instead. The `auth:oidc` guard
-accepts a token only when its `aud` names one of the realm's audiences (§4) — see
+`client_id`. A client asks for a resource with the RFC 8707 `resource` parameter at the
+authorization endpoint (repeatable; the token endpoint may narrow it to a subset, and so may a
+refresh) or at the client-credentials grant, or with the `audience` of a
+[token exchange](/provider/token-exchange/); the value must be on the client's
+`allowed_exchange_audiences`, otherwise `invalid_target`. Without one, `aud` is the realm issuer URL
+as the default resource indicator (§3): the token is for the realm itself — userinfo and the
+first-party API — and nothing else. The `auth:oidc` guard accepts a token only when its `aud` names
+the issuer or a resource registered under `oidc.resources` (§4) — see
 [Resource servers](/advanced/resource-servers/). ID tokens keep `aud` = client id (OIDC Core §2).
 
 `iss` is the realm's issuer URL, and the package checks it wherever it accepts one of its own

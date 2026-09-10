@@ -36,7 +36,7 @@ A client must opt in on two columns of `oidc_clients` — `grant_types` and the
 ```php
 $client->forceFill([
     'grant_types' => [...$client->grant_types, 'urn:ietf:params:oauth:grant-type:token-exchange'],
-    'allowed_exchange_audiences' => json_encode(['https://api.internal/orders']),
+    'allowed_exchange_audiences' => ['https://api.internal/orders'],
 ])->save();
 ```
 
