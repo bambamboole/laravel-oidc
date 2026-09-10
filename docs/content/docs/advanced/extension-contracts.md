@@ -41,30 +41,39 @@ resolved issuer origin.
 ## `ScopeRepository`
 
 `Bambamboole\LaravelOidc\Server\Scopes\Contracts\ScopeRepository` is the catalog of scopes the
-provider understands.
+provider understands. Every lookup is bound to the resources the request asks for: a scope only
+exists under the audiences that own it. An empty `$audiences` means the realm's default audience,
+its issuer URL — the same convention the token minter follows.
 
 ```php
 interface ScopeRepository
 {
-    /** @return Collection<int, Scope> */
-    public function all(): Collection;
+    /**
+     * @param  list<string>  $audiences
+     * @return Collection<int, Scope>
+     */
+    public function all(array $audiences = []): Collection;
 
-    public function find(string $identifier): ?Scope;
+    /** @param  list<string>  $audiences */
+    public function find(string $identifier, array $audiences = []): ?Scope;
 
     /**
      * The last word on what a token gets: `$requested` is already limited to
      * known scopes the client is assigned, its default scopes included.
      *
      * @param  Scope[]  $requested
+     * @param  list<string>  $audiences
      * @return Scope[]
      */
-    public function finalize(array $requested, string $grantType, ?Client $client, ?string $userIdentifier = null): array;
+    public function finalize(array $requested, string $grantType, ?Client $client, ?string $userIdentifier = null, array $audiences = []): array;
 }
 ```
 
 The default `ConfiguredScopeRepository` merges scopes in order: first, the configured
-catalog (`oidc.scopes.catalog`); second, the built-in OIDC scopes (`openid`, `profile`, `email`).
-The first occurrence of a scope id wins. Its `finalize()` filters out unknown scopes.
+catalog (`oidc.scopes.catalog`) reduced to what the requested resources own; second, the scopes
+those resources declare in `oidc.resources`; third, the built-in OIDC scopes (`openid`, `profile`,
+`email`), which hold under every audience. The first occurrence of a scope id wins. Its
+`finalize()` filters out scopes no requested resource owns.
 (See [Scopes & claims](/provider/scopes-and-claims/) for a deeper look at the merge strategy.) Bind your own to change
 the catalog:
 

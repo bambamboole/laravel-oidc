@@ -9,12 +9,40 @@ The provider understands the OIDC standard scopes — `openid`, `profile` and `e
 catalog wins over the built-in OIDC scopes — so you can
 override the description of a standard scope simply by defining it in your catalog.
 
+### Scopes belong to a resource
+
+Every scope belongs to exactly one resource server, and a scope only resolves when that resource
+is the one being asked for. The realm itself, identified by its issuer URL, is the resource of a
+request that carries no RFC 8707 `resource` parameter; the resources registered under
+`oidc.resources` own the scopes they list there.
+
+- A catalog scope no resource lists belongs to the realm: requestable without a `resource`, and
+  not requestable for some other resource.
+- A catalog scope a resource lists belongs to that resource: requestable only when the request
+  names it, and never on the realm's default audience.
+- The same value under two resources is **two different scopes**. `read` for
+  `https://api.internal/orders` and `read` for `https://api.internal/billing` are unrelated
+  grants; a request that names neither resource gets neither.
+- The OIDC standard scopes belong to the realm itself but resolve under **every** audience, so
+  `openid` still produces an id_token for a token requested for an API.
+- A scope the requested resources do not own is `invalid_scope` at the authorization endpoint and
+  at the `client_credentials` grant, and is dropped at issuance everywhere else — narrowing the
+  audience with `resource` at the token endpoint (RFC 8707 §2.2) drops the scopes the narrowed
+  resource does not own along with it.
+
+`scopes_supported` in the discovery document is the union over the realm and every registered
+resource, which is what a client needs to see before it has chosen one. What each resource itself
+advertises stays narrower: its RFC 9728 metadata at
+`/.well-known/oauth-protected-resource/<path>` lists only its own scopes.
+
 ### Wildcard (`*`)
 
 `*` always resolves as a scope and survives finalization for the `personal_access` and
 `client_credentials` grants (e.g. `$user->createToken('cli', ['*'])`), provided the client's
 optional scopes contain it. It is stripped for `authorization_code` (interactive) flows, where a
-blanket grant has no business being granted on a consent screen.
+blanket grant has no business being granted on a consent screen. It stands for every scope the
+**requested** resources own, not for every scope in the realm: a client holding `*` still cannot
+reach an API's scopes without naming that API with `resource`.
 
 ### Client scope assignment
 
@@ -22,7 +50,22 @@ Every client carries two lists, `default_scopes` and `optional_scopes`. Default 
 without being requested; optional scopes only when the request names them. Together they are what
 the client may request at all: a known catalog scope outside the assignment is answered with
 `invalid_scope` by the authorization endpoint and by the `client_credentials` grant. `*` among the
-optional scopes stands for every catalog scope.
+optional scopes stands for every scope the requested resources own.
+
+An entry may name the resource that owns the scope, the RFC 8707 identifier first and separated by
+a space, which limits it to requests for that resource — a space cannot occur in a scope token
+(RFC 6749 §3.3), so the two forms never collide:
+
+```php
+'optional_scopes' => [
+    'openid',                                 // under every resource
+    'https://api.internal/orders read',       // only when the orders API is requested
+],
+```
+
+A bare entry holds under every resource the client may reach, so two APIs that both define `read`
+both accept a bare `read` assignment. Qualify the entry when the grant is meant for one of them.
+Which resources a client may name at all remains its `allowed_exchange_audiences` allowlist.
 
 New clients receive the realm's `clients.default_scopes` (default `[]`) and
 `clients.optional_scopes` (default `['*']`) — from `ClientRepository`, `oidc:client` and
@@ -49,13 +92,33 @@ option:
 ],
 ```
 
-A class-string must implement `Bambamboole\LaravelOidc\Server\Shared\Scopes\ScopeCatalog`
-(`scopes(): array<string, string>`). The scope repository consults it lazily —
-resolved from the container the first time scopes are actually enumerated (the
-consent screen, the discovery document, token issuance), so a database-backed
-catalog costs nothing on unrelated requests, keeping key- and db-less artisan
-runs working, and the result is memoized for the life of the repository; an
-inline array is read fresh on every enumeration.
+An inline map lists the realm's scopes and the descriptions of the scopes the resources in
+`oidc.resources` list; the resource lists decide which of them belongs where.
+
+A class-string must implement `Bambamboole\LaravelOidc\Server\Shared\Scopes\ScopeCatalog`:
+
+```php
+interface ScopeCatalog
+{
+    /**
+     * @param  list<string>  $audiences  resolved resource identifiers, never empty
+     * @return array<string, string> scope id => description
+     */
+    public function scopes(array $audiences): array;
+}
+```
+
+It is asked for the resources of the request and returns only the scopes those resources own —
+the realm's issuer URL among the audiences means the realm's own scopes are wanted too. Doing the
+split itself is what lets a database-backed catalog answer with one query per audience set and
+give the same value a different description under two resources. The scopes each resource lists in
+`oidc.resources` are added to whatever it returns.
+
+The scope repository consults it lazily — resolved from the container the first time scopes are
+actually enumerated (the consent screen, the discovery document, token issuance), so a
+database-backed catalog costs nothing on unrelated requests, keeping key- and db-less artisan
+runs working, and the result is memoized per realm and audience set for the life of the
+repository; an inline array is read fresh on every enumeration.
 Exceptions thrown by `scopes()` fall back to an empty catalog; an invalid
 class-string still fails loudly, at first enumeration rather than at boot.
 Enumerate the full catalog through the `ScopeRepository` contract.

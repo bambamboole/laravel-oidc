@@ -44,7 +44,7 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `scopes.catalog` | `[]` | API scope catalog the scope repository consults at enumeration time — an inline `[scope => description]` map or a `ScopeCatalog` class-string. See [Scopes & claims](/provider/scopes-and-claims/). |
+| `scopes.catalog` | `[]` | API scope catalog the scope repository consults at enumeration time — an inline `[scope => description]` map or a `ScopeCatalog` class-string. A scope a resource lists in `resources` belongs to that resource; the rest belong to the realm. See [Scopes & claims](/provider/scopes-and-claims/). |
 
 ## Clients
 
