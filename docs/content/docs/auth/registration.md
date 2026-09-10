@@ -38,10 +38,11 @@ The store action is throttled to **5 requests per minute**, then runs the follow
 
 ## Validation lives in your action
 
-The controller does **not** validate the registration input beyond lowercasing `email`. Ownership
-of the rules is yours — enforce them inside your `CreateUser` action (or a form request that
-feeds it), exactly where your app's persistence and password hashing already live. This keeps the
-package out of your user model's shape:
+The controller lowercases `email` and, when the input carries a `password`, checks it against the
+realm's [password policy](/auth/passwords/#password-policy) before your action runs. Every other rule
+is yours — enforce it inside your `CreateUser` action (or a form request that feeds it), exactly
+where your app's persistence and password hashing already live. This keeps the package out of your
+user model's shape:
 
 ```php
 use Bambamboole\LaravelOidc\Server\Shared\Users\CreateUser;
@@ -54,7 +55,7 @@ class CreateNewUser implements CreateUser
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'confirmed'],
         ])->validate();
 
         return User::create([
