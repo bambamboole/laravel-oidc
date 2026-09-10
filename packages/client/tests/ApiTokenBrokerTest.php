@@ -6,7 +6,7 @@ use Bambamboole\LaravelOidc\Client\ApiTokenBroker;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com');
     config()->set('oidc-client.client_id', 'client-123');
 
@@ -27,12 +27,12 @@ beforeEach(function () {
     ]);
 });
 
-it('exchanges the login token with extension parameters and the issuer as default audience', function () {
+it('exchanges the login token with extension parameters and the issuer as default audience', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     expect(app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']))->toBe('api-token');
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
         && $request['subject_token'] === 'login-token'
         && $request['subject_token_type'] === 'urn:ietf:params:oauth:token-type:access_token'
@@ -41,18 +41,18 @@ it('exchanges the login token with extension parameters and the issuer as defaul
         && $request['tenant'] === 'acme');
 });
 
-it('strips a trailing slash from the issuer when it is used as the default audience', function () {
+it('strips a trailing slash from the issuer when it is used as the default audience', function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com/');
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
         && $request['audience'] === 'https://id.example.com');
 });
 
-it('uses an explicit audience and caches it separately', function () {
+it('uses an explicit audience and caches it separately', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'issuer-token', 'expires_in' => 300])
         ->push(['access_token' => 'other-token', 'expires_in' => 300])]);
@@ -61,11 +61,11 @@ it('uses an explicit audience and caches it separately', function () {
     expect($broker->accessToken(['tenant' => 'acme']))->toBe('issuer-token')
         ->and($broker->accessToken(['tenant' => 'acme'], 'https://other.example'))->toBe('other-token');
 
-    Http::assertSent(fn ($request) => $request->url() !== 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() !== 'https://id.example.com/oauth/token'
         || $request['audience'] === 'https://other.example');
 });
 
-it('serves a cached token without a second exchange', function () {
+it('serves a cached token without a second exchange', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
     $broker = app(ApiTokenBroker::class);
 
@@ -75,7 +75,7 @@ it('serves a cached token without a second exchange', function () {
     Http::assertSentCount(2);
 });
 
-it('re-exchanges when the cached token is expired', function () {
+it('re-exchanges when the cached token is expired', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'api-token', 'expires_in' => 10])
         ->push(['access_token' => 'fresh-token', 'expires_in' => 300])]);
@@ -85,7 +85,7 @@ it('re-exchanges when the cached token is expired', function () {
     expect($broker->accessToken(['tenant' => 'acme']))->toBe('fresh-token');
 });
 
-it('caches per parameter set', function () {
+it('caches per parameter set', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'acme-token', 'expires_in' => 300])
         ->push(['access_token' => 'globex-token', 'expires_in' => 300])]);
@@ -96,27 +96,27 @@ it('caches per parameter set', function () {
         ->and($broker->accessToken(['tenant' => 'acme']))->toBe('acme-token');
 });
 
-it('sends requested scopes space-joined', function () {
+it('sends requested scopes space-joined', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme'], scopes: ['crm:view', 'catalog:view']);
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
         && $request['scope'] === 'crm:view catalog:view');
 });
 
-it('omits the scope parameter when no scopes are requested', function () {
+it('omits the scope parameter when no scopes are requested', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme'], scopes: []);
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
         && ! isset($request['scope']));
 });
 
-it('caches per scope set regardless of scope order', function () {
+it('caches per scope set regardless of scope order', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'narrow-token', 'expires_in' => 300])
         ->push(['access_token' => 'wide-token', 'expires_in' => 300])]);
@@ -127,7 +127,7 @@ it('caches per scope set regardless of scope order', function () {
         ->and($broker->accessToken(['tenant' => 'acme'], scopes: ['crm:manage', 'crm:view']))->toBe('wide-token');
 });
 
-it('returns the exchanged token with its expiry', function () {
+it('returns the exchanged token with its expiry', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
@@ -138,7 +138,7 @@ it('returns the exchanged token with its expiry', function () {
         ->and($token->expiresIn())->toBeGreaterThan(290);
 });
 
-it('keeps the cached expiry when serving an exchanged token from the cache', function () {
+it('keeps the cached expiry when serving an exchanged token from the cache', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
     $broker = app(ApiTokenBroker::class);
 
@@ -150,7 +150,7 @@ it('keeps the cached expiry when serving an exchanged token from the cache', fun
     Http::assertSentCount(2);
 });
 
-it('forgets cached tokens', function () {
+it('forgets cached tokens', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'api-token', 'expires_in' => 300])
         ->push(['access_token' => 'fresh-token', 'expires_in' => 300])]);
@@ -162,19 +162,19 @@ it('forgets cached tokens', function () {
     expect($broker->accessToken(['tenant' => 'acme']))->toBe('fresh-token');
 });
 
-it('throws when the exchange is rejected', function () {
+it('throws when the exchange is rejected', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['error' => 'invalid_grant'], 400)]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 })->throws(OidcClientException::class);
 
-it('throws when no login token is in the session', function () {
+it('throws when no login token is in the session', function (): void {
     session()->forget('oidc-client.tokens');
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 })->throws(OidcClientException::class);
 
-it('refreshes an expired login token before exchanging', function () {
+it('refreshes an expired login token before exchanging', function (): void {
     session()->put('oidc-client.tokens.expires_at', time() - 10);
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'renewed-login', 'refresh_token' => 'renewed-refresh', 'expires_in' => 3600])
@@ -182,11 +182,11 @@ it('refreshes an expired login token before exchanging', function () {
 
     expect(app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']))->toBe('api-token');
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'refresh_token'
         && $request['refresh_token'] === 'refresh-token'
         && $request['client_id'] === 'client-123');
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange'
         && $request['subject_token'] === 'renewed-login');
     expect(session('oidc-client.tokens.access_token'))->toBe('renewed-login')
@@ -194,7 +194,7 @@ it('refreshes an expired login token before exchanging', function () {
         ->and(session('oidc-client.tokens.expires_at'))->toBeGreaterThan(time() + 3500);
 });
 
-it('keeps the old refresh token when the response omits one', function () {
+it('keeps the old refresh token when the response omits one', function (): void {
     session()->put('oidc-client.tokens.expires_at', time() - 10);
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'renewed-login', 'expires_in' => 3600])
@@ -205,46 +205,46 @@ it('keeps the old refresh token when the response omits one', function () {
     expect(session('oidc-client.tokens.refresh_token'))->toBe('refresh-token');
 });
 
-it('throws when the refresh is rejected', function () {
+it('throws when the refresh is rejected', function (): void {
     session()->put('oidc-client.tokens.expires_at', time() - 10);
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['error' => 'invalid_grant'], 400)]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 })->throws(OidcClientException::class);
 
-it('throws when the login token is expired and no refresh token exists', function () {
+it('throws when the login token is expired and no refresh token exists', function (): void {
     session()->put('oidc-client.tokens', ['access_token' => 'login-token', 'expires_at' => time() - 10]);
 
     app(ApiTokenBroker::class)->accessToken(['tenant' => 'acme']);
 })->throws(OidcClientException::class);
 
-it('mints a machine token via client credentials without any login session', function () {
+it('mints a machine token via client credentials without any login session', function (): void {
     session()->forget('oidc-client.tokens');
     config()->set('oidc-client.client_secret', 'secret-123');
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
 
     expect(app(ApiTokenBroker::class)->machineToken(audience: 'https://mail.example.com'))->toBe('machine-token');
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'client_credentials'
         && $request['client_id'] === 'client-123'
         && $request['client_secret'] === 'secret-123'
         && $request['resource'] === 'https://mail.example.com');
 });
 
-it('omits the resource parameter without an audience and sends requested scopes', function () {
+it('omits the resource parameter without an audience and sends requested scopes', function (): void {
     config()->set('oidc-client.client_secret', 'secret-123');
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
 
     app(ApiTokenBroker::class)->machineToken(scopes: ['contacts:write']);
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['grant_type'] === 'client_credentials'
         && ! isset($request['resource'])
         && $request['scope'] === 'contacts:write');
 });
 
-it('caches machine tokens in the application cache per client and audience', function () {
+it('caches machine tokens in the application cache per client and audience', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::sequence()
         ->push(['access_token' => 'first-token', 'expires_in' => 3600])
         ->push(['access_token' => 'other-client-token', 'expires_in' => 3600])]);
@@ -257,23 +257,23 @@ it('caches machine tokens in the application cache per client and audience', fun
     Http::assertSentCount(3);
 });
 
-it('uses explicit client credentials over the configured ones', function () {
+it('uses explicit client credentials over the configured ones', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 3600])]);
 
     app(ApiTokenBroker::class)->machineToken(clientId: 'm2m-client', clientSecret: 'm2m-secret');
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://id.example.com/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === 'https://id.example.com/oauth/token'
         && $request['client_id'] === 'm2m-client'
         && $request['client_secret'] === 'm2m-secret');
 });
 
-it('throws when the client-credentials request is rejected', function () {
+it('throws when the client-credentials request is rejected', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['error' => 'invalid_client'], 401)]);
 
     app(ApiTokenBroker::class)->machineToken();
 })->throws(OidcClientException::class);
 
-it('exposes the machine token expiry through the exchanged token value object', function () {
+it('exposes the machine token expiry through the exchanged token value object', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 300])]);
 
     $token = app(ApiTokenBroker::class)->machineExchangedToken();
@@ -283,7 +283,7 @@ it('exposes the machine token expiry through the exchanged token value object', 
         ->and($token->expiresIn())->toBeLessThanOrEqual(300);
 });
 
-it('exposes the scopes the token endpoint granted on the exchange', function () {
+it('exposes the scopes the token endpoint granted on the exchange', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300, 'scope' => 'crm:view catalog:view'])]);
 
     $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view', 'catalog:view', 'crm:manage']);
@@ -293,7 +293,7 @@ it('exposes the scopes the token endpoint granted on the exchange', function () 
         ->and($token->hasScope('crm:manage'))->toBeFalse();
 });
 
-it('serves the granted scopes from the session cache', function () {
+it('serves the granted scopes from the session cache', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300, 'scope' => 'crm:view'])]);
     $broker = app(ApiTokenBroker::class);
 
@@ -304,7 +304,7 @@ it('serves the granted scopes from the session cache', function () {
     Http::assertSentCount(2);
 });
 
-it('leaves the granted scopes unknown when the exchange response omits scope', function () {
+it('leaves the granted scopes unknown when the exchange response omits scope', function (): void {
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'api-token', 'expires_in' => 300])]);
 
     $token = app(ApiTokenBroker::class)->exchangedToken(['tenant' => 'acme'], scopes: ['crm:view']);
@@ -313,7 +313,7 @@ it('leaves the granted scopes unknown when the exchange response omits scope', f
         ->and($token->hasScope('crm:view'))->toBeFalse();
 });
 
-it('exposes the scopes granted to a machine token', function () {
+it('exposes the scopes granted to a machine token', function (): void {
     config()->set('oidc-client.client_secret', 'secret-456');
     session()->forget('oidc-client.tokens');
     Http::fake(['https://id.example.com/oauth/token' => Http::response(['access_token' => 'machine-token', 'expires_in' => 300, 'scope' => 'sync:run'])]);

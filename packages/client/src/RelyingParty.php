@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Http\Controllers\Concerns\RespondsToInertiaExternalRedirects;
 use Bambamboole\LaravelOidc\Client\Token\IdTokenValidator;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -112,7 +113,7 @@ class RelyingParty
 
         $user = $this->manager->resolveUser((string) $claims['sub'], $claims);
 
-        if ($user === null) {
+        if (! $user instanceof Authenticatable) {
             throw new OidcClientException('No local user matched the id_token subject.');
         }
 

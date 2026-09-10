@@ -60,7 +60,7 @@ class OidcClientManager
      */
     public function resolveUser(string $sub, array $claims): ?Authenticatable
     {
-        if ($this->resolveUsersUsing !== null) {
+        if ($this->resolveUsersUsing instanceof Closure) {
             return ($this->resolveUsersUsing)($sub, $claims);
         }
 

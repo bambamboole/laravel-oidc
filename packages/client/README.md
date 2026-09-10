@@ -72,9 +72,13 @@ All packages in the suite are versioned in lockstep; see the
 
 ## Development
 
+The suite runs from the root of the
+[monorepo](https://github.com/bambamboole/laravel-oidc), which holds the single Composer
+install for all packages:
+
 ```bash
 composer install
-composer check   # pint --test, phpstan, pest
+composer check   # pint --test, phpstan, rector --dry-run, pest
 ```
 
 Tests run in isolation through Orchestra Testbench — no external OIDC provider is

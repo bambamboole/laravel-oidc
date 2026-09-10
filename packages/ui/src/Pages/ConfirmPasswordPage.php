@@ -64,7 +64,7 @@ class ConfirmPasswordPage extends AuthPage implements PasswordConfirmationView
             separator: __('oidc-ui::auth.confirm-password.passkey-separator'),
         );
 
-        return $passkey === null ? [] : [$passkey];
+        return $passkey instanceof PasskeyVerify ? [$passkey] : [];
     }
 
     /**

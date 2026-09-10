@@ -2,8 +2,9 @@ laravel: '@testbench'
 
 providers:
   - Laravel\Passkeys\PasskeysServiceProvider
-  - Bambamboole\LaravelOidc\Server\OidcServiceProvider
   - Lattice\LatticeServiceProvider
+  - Bambamboole\LaravelOidc\Server\OidcServiceProvider
+  - Bambamboole\LaravelOidc\Client\OidcClientServiceProvider
   - Bambamboole\LaravelOidc\Ui\UiServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
 

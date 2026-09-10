@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Pages;
 
+use Bambamboole\LaravelOidc\Server\Credentials\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Ui\Components\PasskeyVerify;
@@ -31,7 +32,7 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 
     public function respond(TwoFactorChallengePrompt $prompt, Request $request): Responsable|Response
     {
-        return (new static($prompt))->toResponse($request);
+        return new static($prompt)->toResponse($request);
     }
 
     public function title(): string
@@ -50,7 +51,7 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
                 separator: __('oidc-ui::auth.two-factor.passkey-separator'),
             )
             : null;
-        $webauthn = $passkey !== null;
+        $webauthn = $passkey instanceof PasskeyVerify;
 
         return $schema->schema([
             $this->heading('two-factor-challenge-heading', __('oidc-ui::auth.two-factor.heading'), $webauthn
@@ -92,7 +93,7 @@ class TwoFactorChallengePage extends AuthPage implements TwoFactorChallengeView
 
         $available = $this->prompt->availableFactors ?? [];
         $countPerProvider = array_count_values(array_map(
-            fn ($enrollment): string => $enrollment->providerKey,
+            fn (FactorEnrollment $enrollment): string => $enrollment->providerKey,
             $available,
         ));
 

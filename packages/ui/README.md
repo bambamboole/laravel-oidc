@@ -44,14 +44,14 @@ route (name configurable via `oidc-ui.logout_route`, default `logout`); apps bui
 
 ## Development
 
-`bambamboole/laravel-oidc-server` is not published on Packagist yet, so local installs
-need a temporary path repository pointed at the sibling `packages/server` checkout.
-From the monorepo root, `composer install:all` sets it up (and restores
-`composer.json` afterwards); the manual equivalent is documented in
-[`composer.local-dev.md`](composer.local-dev.md).
+The suite runs from the root of the
+[monorepo](https://github.com/bambamboole/laravel-oidc), which holds the single Composer
+install for all packages (the root autoloads `packages/server` directly, so no path
+repository is needed):
 
 ```bash
-composer check   # pint --test, phpstan, pest
+composer install
+composer check   # pint --test, phpstan, rector --dry-run, pest
 ```
 
 ## Changelog

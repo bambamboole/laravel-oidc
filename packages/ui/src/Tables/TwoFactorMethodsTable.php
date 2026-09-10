@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Tables;
 
+use Bambamboole\LaravelOidc\Server\Credentials\Contracts\EnrollableFactorProvider;
+use Bambamboole\LaravelOidc\Server\Credentials\Data\EnrollmentOption;
 use Bambamboole\LaravelOidc\Server\Credentials\Enums\FactorRole;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorRegistry;
@@ -71,7 +73,7 @@ class TwoFactorMethodsTable extends TableDefinition
             return [Action::use(RegenerateRecoveryCodesAction::class)];
         }
 
-        if ($this->factors->enrollable((string) $row['provider']) === null) {
+        if (! $this->factors->enrollable((string) $row['provider']) instanceof EnrollableFactorProvider) {
             return [];
         }
 
@@ -129,9 +131,9 @@ class TwoFactorMethodsTable extends TableDefinition
                 ? $method.' · '.$authenticator
                 : $method,
             'role' => $this->role($enrollment->providerKey),
-            'last_used_at_diff' => $enrollment->lastUsedAt === null
-                ? __('oidc-ui::security.methods.never-used')
-                : __('oidc-ui::security.methods.last-used-at', ['time' => Carbon::instance($enrollment->lastUsedAt)->diffForHumans()]),
+            'last_used_at_diff' => $enrollment->lastUsedAt instanceof \DateTimeInterface
+                ? __('oidc-ui::security.methods.last-used-at', ['time' => Carbon::instance($enrollment->lastUsedAt)->diffForHumans()])
+                : __('oidc-ui::security.methods.never-used'),
         ];
     }
 
@@ -162,7 +164,7 @@ class TwoFactorMethodsTable extends TableDefinition
     {
         $options = array_filter(
             $this->factors->enrollmentOptions(),
-            static fn ($option): bool => $option->providerKey === $providerKey,
+            static fn (EnrollmentOption $option): bool => $option->providerKey === $providerKey,
         );
 
         $signsIn = $options !== [] && array_all(

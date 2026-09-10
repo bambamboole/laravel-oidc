@@ -28,7 +28,7 @@ class ResetPasswordPage extends AuthPage implements PasswordResetView
 
     public function respond(PasswordResetPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new static($prompt))->toResponse($request);
+        return new static($prompt)->toResponse($request);
     }
 
     public function title(): string

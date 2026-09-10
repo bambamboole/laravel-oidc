@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.client_secret', 'secret-xyz');
     config()->set('oidc-client.redirect_after_login', '/dashboard');
 
@@ -18,20 +18,20 @@ beforeEach(function () {
     $this->user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 });
 
-it('completes the callback and logs the user into the web guard', function () {
+it('completes the callback and logs the user into the web guard', function (): void {
     $this->withSession($this->fake->callbackContext())
         ->get($this->fake->loginAs($this->user))
         ->assertRedirect('/dashboard');
 
     $this->assertAuthenticatedAs($this->user);
 
-    Http::assertSent(fn ($request) => $request->url() === config('oidc-client.issuer').'/oauth/token'
+    Http::assertSent(fn ($request): bool => $request->url() === config('oidc-client.issuer').'/oauth/token'
         && $request['grant_type'] === 'authorization_code'
         && $request['code_verifier'] === OidcClientFake::VERIFIER
         && $request['client_secret'] === 'secret-xyz');
 });
 
-it('records the sid and a session pointer when backchannel logout is enabled', function () {
+it('records the sid and a session pointer when backchannel logout is enabled', function (): void {
     config()->set('oidc-client.backchannel_logout.enabled', true);
 
     $this->withSession($this->fake->callbackContext())
@@ -43,7 +43,7 @@ it('records the sid and a session pointer when backchannel logout is enabled', f
     expect(Cache::has('oidc-client:bclo:session:the-sid'))->toBeTrue();
 });
 
-it('rejects a tampered state and does not log in', function () {
+it('rejects a tampered state and does not log in', function (): void {
     $this->withSession($this->fake->callbackContext())
         ->get($this->fake->callbackUrl(['state' => 'WRONG-state']))
         ->assertRedirect(route('login'));
@@ -53,7 +53,7 @@ it('rejects a tampered state and does not log in', function () {
     $this->fake->assertCodeNotExchanged();
 });
 
-it('rejects missing or empty callback session context before discovery or token exchange', function (array $context) {
+it('rejects missing or empty callback session context before discovery or token exchange', function (array $context): void {
     $this->withSession($context)
         ->get($this->fake->callbackUrl())
         ->assertRedirect(route('login'));
@@ -91,7 +91,7 @@ it('rejects missing or empty callback session context before discovery or token 
     ]],
 ]);
 
-it('rejects replayed callback session context before discovery or token exchange', function () {
+it('rejects replayed callback session context before discovery or token exchange', function (): void {
     $this->withSession($this->fake->callbackContext())
         ->get($this->fake->callbackUrl(['state' => 'WRONG-state']))
         ->assertRedirect(route('login'));
@@ -103,7 +103,7 @@ it('rejects replayed callback session context before discovery or token exchange
     $this->fake->assertCodeNotExchanged();
 });
 
-it('reports the callback failure before redirecting back to login', function () {
+it('reports the callback failure before redirecting back to login', function (): void {
     Exceptions::fake();
 
     $this->withSession($this->fake->callbackContext())
@@ -113,7 +113,7 @@ it('reports the callback failure before redirecting back to login', function () 
     Exceptions::assertReported(OidcClientException::class);
 });
 
-it('rejects a failed token exchange and does not log in', function () {
+it('rejects a failed token exchange and does not log in', function (): void {
     $this->fake->failTokenExchange(400);
 
     $this->withSession($this->fake->callbackContext())
@@ -123,7 +123,7 @@ it('rejects a failed token exchange and does not log in', function () {
     $this->assertGuest();
 });
 
-it('rejects an id token with a tampered signature and does not log in', function () {
+it('rejects an id token with a tampered signature and does not log in', function (): void {
     $this->fake->withInvalidSignature();
 
     $this->withSession($this->fake->callbackContext())
@@ -133,7 +133,7 @@ it('rejects an id token with a tampered signature and does not log in', function
     $this->assertGuest();
 });
 
-it('stores the access token expiry alongside the tokens', function () {
+it('stores the access token expiry alongside the tokens', function (): void {
     $this->withSession($this->fake->callbackContext())->get($this->fake->loginAs($this->user));
 
     expect(session('oidc-client.tokens.expires_at'))

@@ -94,7 +94,7 @@ class TwoFactorSetupForm extends FormDefinition
 
         $pending = Arr::last(
             $provider->enrollments($user),
-            static fn (FactorEnrollment $enrollment): bool => $enrollment->confirmedAt === null,
+            static fn (FactorEnrollment $enrollment): bool => ! $enrollment->confirmedAt instanceof \DateTimeInterface,
         );
 
         $confirmed = $pending instanceof FactorEnrollment && $provider->confirmEnrollment(

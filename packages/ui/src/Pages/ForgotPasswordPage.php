@@ -31,7 +31,7 @@ class ForgotPasswordPage extends AuthPage implements PasswordResetRequestView
 
     public function respond(PasswordResetRequestPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new static($prompt))->toResponse($request);
+        return new static($prompt)->toResponse($request);
     }
 
     public function title(): string

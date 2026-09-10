@@ -7,7 +7,7 @@ use Bambamboole\LaravelOidc\Client\OidcClientManager;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Workbench\App\Models\User;
 
-it('resolves a user through the configured seam', function () {
+it('resolves a user through the configured seam', function (): void {
     OidcClient::resolveUsersUsing(fn (string $sub, array $claims): ?Authenticatable => User::find($sub));
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
@@ -18,7 +18,7 @@ it('resolves a user through the configured seam', function () {
         ->and($resolved->is($user))->toBeTrue();
 });
 
-it('falls back to resolving the login guard provider by sub as primary key', function () {
+it('falls back to resolving the login guard provider by sub as primary key', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $resolved = app(OidcClientManager::class)->resolveUser((string) $user->getKey(), []);

@@ -15,7 +15,7 @@ function createPasskey(User $user, string $name = 'My passkey'): Passkey
     ]);
 }
 
-test('users can revoke their own passkey through the methods table action', function () {
+test('users can revoke their own passkey through the methods table action', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $passkey = createPasskey($user);
 
@@ -27,7 +27,7 @@ test('users can revoke their own passkey through the methods table action', func
     expect($user->passkeys()->whereKey($passkey->id)->exists())->toBeFalse();
 });
 
-test('users cannot revoke another users passkey', function () {
+test('users cannot revoke another users passkey', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
     $passkey = createPasskey($other);
@@ -39,7 +39,7 @@ test('users cannot revoke another users passkey', function () {
     expect($other->passkeys()->whereKey($passkey->id)->exists())->toBeTrue();
 });
 
-test('the methods table lists only the authenticated users passkeys', function () {
+test('the methods table lists only the authenticated users passkeys', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
     createPasskey($user, 'My MacBook');

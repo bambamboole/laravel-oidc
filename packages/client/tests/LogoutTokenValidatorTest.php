@@ -24,14 +24,14 @@ function logoutTokenValidatorClaims(array $overrides = []): array
     ], $overrides);
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com');
     config()->set('oidc-client.client_id', 'client-123');
     $this->provider = new FakeOidcProvider;
     fakeIssuerEndpoints($this->provider);
 });
 
-it('accepts a well-formed logout token and returns sid + sub', function () {
+it('accepts a well-formed logout token and returns sid + sub', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(), 'key-1');
 
     $result = app(LogoutTokenValidator::class)->validate($jwt);
@@ -39,49 +39,49 @@ it('accepts a well-formed logout token and returns sid + sub', function () {
     expect($result['sid'])->toBe('sess-abc')->and($result['sub'])->toBe('42');
 });
 
-it('rejects a logout token that carries a nonce', function () {
+it('rejects a logout token that carries a nonce', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['nonce' => 'x']), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class, 'nonce');
 
-it('rejects a token without the backchannel-logout event', function () {
+it('rejects a token without the backchannel-logout event', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['events' => ['other' => (object) []]]), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
 
-it('rejects a token without a sid', function () {
+it('rejects a token without a sid', function (): void {
     $claims = logoutTokenValidatorClaims();
     unset($claims['sid']);
     app(LogoutTokenValidator::class)->validate($this->provider->logoutToken($claims, 'key-1'));
 })->throws(OidcClientException::class);
 
-it('rejects a wrong audience', function () {
+it('rejects a wrong audience', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['aud' => 'someone-else']), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
 
-it('rejects an expired token', function () {
+it('rejects an expired token', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['exp' => time() - 3600, 'iat' => time() - 3700]), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
 
-it('rejects a token that is missing the logout+jwt typ header', function () {
+it('rejects a token that is missing the logout+jwt typ header', function (): void {
     $jwt = $this->provider->idToken(logoutTokenValidatorClaims(), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class, 'typ');
 
-it('rejects a logout token issued implausibly far in the past', function () {
+it('rejects a logout token issued implausibly far in the past', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['iat' => time() - 3600, 'exp' => time() + 3600]), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
 
-it('rejects a token signed with an untrusted key', function () {
+it('rejects a token signed with an untrusted key', function (): void {
     $otherProvider = new FakeOidcProvider;
     $jwt = $otherProvider->logoutToken(logoutTokenValidatorClaims(), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class);
 
-it('rejects a token with the wrong issuer', function () {
+it('rejects a token with the wrong issuer', function (): void {
     $jwt = $this->provider->logoutToken(logoutTokenValidatorClaims(['iss' => 'https://someone-else.example.com']), 'key-1');
     app(LogoutTokenValidator::class)->validate($jwt);
 })->throws(OidcClientException::class, 'issuer');

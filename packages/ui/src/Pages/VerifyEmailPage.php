@@ -24,7 +24,7 @@ class VerifyEmailPage extends AuthPage implements EmailVerificationView
 
     public function respond(EmailVerificationPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new static($prompt))->toResponse($request);
+        return new static($prompt)->toResponse($request);
     }
 
     public function title(): string

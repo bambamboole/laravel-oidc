@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Client\Discovery\OidcDiscovery;
 use Illuminate\Support\Facades\Http;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com');
 });
 
-it('fetches and maps the discovery document', function () {
+it('fetches and maps the discovery document', function (): void {
     Http::fake([
         'https://id.example.com/.well-known/openid-configuration' => Http::response([
             'issuer' => 'https://id.example.com',
@@ -29,7 +29,7 @@ it('fetches and maps the discovery document', function () {
         ->and($meta->endSessionEndpoint)->toBe('https://id.example.com/oauth/logout');
 });
 
-it('caches discovery so the document is fetched once', function () {
+it('caches discovery so the document is fetched once', function (): void {
     Http::fake([
         'https://id.example.com/.well-known/openid-configuration' => Http::response([
             'issuer' => 'https://id.example.com',
@@ -46,7 +46,7 @@ it('caches discovery so the document is fetched once', function () {
     Http::assertSentCount(1);
 });
 
-it('fetches and caches the jwks key set', function () {
+it('fetches and caches the jwks key set', function (): void {
     Http::fake([
         'https://id.example.com/.well-known/openid-configuration' => Http::response([
             'issuer' => 'https://id.example.com',

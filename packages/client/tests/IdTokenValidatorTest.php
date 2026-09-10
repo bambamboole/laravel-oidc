@@ -23,7 +23,7 @@ function idTokenValidatorClaims(array $overrides = []): array
     ], $overrides);
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com');
     config()->set('oidc-client.client_id', 'client-123');
 
@@ -32,7 +32,7 @@ beforeEach(function () {
     fakeIssuerEndpoints($this->provider);
 });
 
-it('accepts a well-formed id token and returns its claims', function () {
+it('accepts a well-formed id token and returns its claims', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(), 'key-1');
 
     $claims = app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
@@ -41,61 +41,61 @@ it('accepts a well-formed id token and returns its claims', function () {
         ->and($claims['iss'])->toBe('https://id.example.com');
 });
 
-it('rejects a token whose nonce does not match', function () {
+it('rejects a token whose nonce does not match', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'different-nonce');
 })->throws(OidcClientException::class, 'nonce does not match');
 
-it('rejects a token with the wrong audience', function () {
+it('rejects a token with the wrong audience', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(['aud' => 'someone-else']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'audience does not include');
 
-it('rejects a token with the wrong issuer', function () {
+it('rejects a token with the wrong issuer', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(['iss' => 'https://evil.example.com']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'issuer does not match');
 
-it('rejects an expired token', function () {
+it('rejects an expired token', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(['exp' => time() - 3600]), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'has expired');
 
-it('rejects a token signed with an unknown kid', function () {
+it('rejects a token signed with an unknown kid', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(), 'unknown-kid');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'No JWKS key matches');
 
-it('rejects a token missing a subject', function () {
+it('rejects a token missing a subject', function (): void {
     $jwt = $this->provider->idToken(idTokenValidatorClaims(['sub' => '']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'missing a subject');
 
-it('rejects a token missing exp', function () {
+it('rejects a token missing exp', function (): void {
     $jwt = $this->provider->idToken(array_diff_key(idTokenValidatorClaims(), ['exp' => true]), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'missing or invalid exp');
 
-it('rejects a token missing iat', function () {
+it('rejects a token missing iat', function (): void {
     $jwt = $this->provider->idToken(array_diff_key(idTokenValidatorClaims(), ['iat' => true]), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->throws(OidcClientException::class, 'missing or invalid iat');
 
-it('rejects invalid timestamp claim shapes', function (string $claim) {
+it('rejects invalid timestamp claim shapes', function (string $claim): void {
     $jwt = $this->provider->rawIdToken(idTokenValidatorClaims([$claim => 'not-a-timestamp']), 'key-1');
 
     app(IdTokenValidator::class)->validate($jwt, 'the-nonce');
 })->with(['exp', 'iat', 'nbf'])->throws(OidcClientException::class);
 
-it('rejects a token issued in the future outside leeway', function () {
+it('rejects a token issued in the future outside leeway', function (): void {
     config()->set('oidc-client.leeway', 60);
     $jwt = $this->provider->idToken(idTokenValidatorClaims(['iat' => time() + 300]), 'key-1');
 

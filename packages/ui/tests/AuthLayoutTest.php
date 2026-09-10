@@ -6,7 +6,7 @@ use Bambamboole\LaravelOidc\Ui\Layouts\AuthLayout;
 use Illuminate\Http\Request;
 use Lattice\Ui\PageSchema;
 
-it('renders the configured brand icon', function () {
+it('renders the configured brand icon', function (): void {
     config()->set('oidc-ui.brand_icon', 'acme-logo');
 
     $renderable = (new AuthLayout)->schema(PageSchema::make(), Request::create('/'))->renderable();

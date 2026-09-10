@@ -9,43 +9,35 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [server, client, ui]
-    name: Lint & static analysis (${{ matrix.package }})
-    defaults:
-      run:
-        working-directory: packages/${{ matrix.package }}
+    name: Lint & static analysis
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup package
-        uses: ./.github/actions/setup-package
-        with:
-          working-directory: packages/${{ matrix.package }}
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
 
       - name: Lint (Pint)
         run: vendor/bin/pint --test
 
       - name: Static analysis (PHPStan)
-        run: vendor/bin/phpstan analyse --no-progress
+        run: |
+          vendor/bin/phpstan analyse --no-progress
+          vendor/bin/phpstan analyse -c phpstan-tests.neon.dist --no-progress
+
+      - name: Refactoring rules (Rector)
+        run: vendor/bin/rector process --dry-run
 
   tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        package: [server, client, ui]
         php: ['8.4']
         testbench: ['11.*']
         stability: [prefer-stable, prefer-lowest]
 
-    name: ${{ matrix.package }} - PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
-    defaults:
-      run:
-        working-directory: packages/${{ matrix.package }}
+    name: PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
 
     steps:
       - name: Checkout code
@@ -54,16 +46,15 @@ jobs:
       # Advisory blocking stays ON (Composer's default): a consumer with
       # default settings cannot install advisory-affected versions either, so
       # the lowest cells test the lowest set that is actually installable.
-      - name: Setup package
-        uses: ./.github/actions/setup-package
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
         with:
-          working-directory: packages/${{ matrix.package }}
           php-version: ${{ matrix.php }}
           testbench: ${{ matrix.testbench }}
           dependency-versions: ${{ matrix.stability == 'prefer-lowest' && 'lowest' || 'highest' }}
 
       - name: Tests (Pest)
-        run: vendor/bin/pest
+        run: vendor/bin/pest --parallel
 
   mautic:
     runs-on: ubuntu-latest
@@ -108,17 +99,12 @@ jobs:
   keyless-boot:
     runs-on: ubuntu-latest
     name: Keyless boot (no APP_KEY)
-    defaults:
-      run:
-        working-directory: packages/server
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup package
-        uses: ./.github/actions/setup-package
-        with:
-          working-directory: packages/server
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
 
       - name: Discover packages without an app key
         run: APP_KEY= vendor/bin/testbench package:discover --ansi

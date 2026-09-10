@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         executionOrder="random"
+         cacheDirectory=".phpunit.cache"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="Server">
+            <directory>packages/server/tests</directory>
+        </testsuite>
+        <testsuite name="Client">
+            <directory>packages/client/tests</directory>
+        </testsuite>
+        <testsuite name="Ui">
+            <directory>packages/ui/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>packages/server/src</directory>
+            <directory>packages/client/src</directory>
+            <directory>packages/ui/src</directory>
+        </include>
+    </source>
+    <php>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+    </php>
+</phpunit>

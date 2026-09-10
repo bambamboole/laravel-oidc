@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Client\Tests;
 
+use Bambamboole\LaravelOidc\Client\OidcClientServiceProvider;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\ParallelTesting;
@@ -15,6 +16,17 @@ abstract class TestCase extends BaseTestCase
 {
     use WithLaravelMigrations;
     use WithWorkbench;
+
+    protected $enablesPackageDiscoveries = false;
+
+    /**
+     * Only this package's provider: the suite must prove the client works without the
+     * server or ui packages that share this monorepo's vendor directory.
+     */
+    protected function getPackageProviders($app): array
+    {
+        return [OidcClientServiceProvider::class];
+    }
 
     protected function setUp(): void
     {
@@ -43,5 +55,10 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('auth.providers.users.model', User::class);
         $app['config']->set('session.driver', 'array');
         $app['config']->set('oidc-client.enabled', true);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(dirname(__DIR__, 3).'/workbench/database/migrations');
     }
 }

@@ -15,18 +15,20 @@ of the protocol.
 
 ## Development
 
-Each package is a self-contained Composer project. From the repo root:
+The repo root is the single Composer project for all Laravel packages: it
+autoloads `packages/*/src` directly and runs the tooling through Orchestra
+Testbench (`php artisan …` boots the Testbench skeleton with the `workbench/`
+app).
 
 ```bash
-composer install:all   # composer install in every package
-composer check         # pint --test + phpstan + pest, per package
+composer install       # also activates the git hooks in .githooks/
+composer check         # pint --test + phpstan + rector --dry-run + pest --parallel
+composer test          # pest only
+composer fix           # rector + pint
+composer boost:refresh # regenerate CLAUDE.md / AGENTS.md from .ai/ and boost.json
 ```
 
-`bambamboole/laravel-oidc-server` is not on Packagist yet, so the ui install
-resolves it from the sibling `packages/server` checkout: `install:all` backs up
-`packages/ui/composer.json`, writes a path repository into it (version taken
-from `.release-please-manifest.json`), runs the install, and restores the file —
-`composer.json` ends up unchanged, and `composer.lock` is git-ignored. See
-`packages/ui/composer.local-dev.md` for the manual equivalent.
+`packages/mautic` is a Symfony bundle with its own install:
+`composer install:mautic` and `composer check:mautic`.
 
 Docs: https://bambamboole.github.io/laravel-oidc (built from `docs/`).

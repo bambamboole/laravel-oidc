@@ -46,12 +46,12 @@ function fakeIssuerWithRotatingJwks(array $jwksResponses): void
     ]);
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     config()->set('oidc-client.issuer', 'https://id.example.com');
     config()->set('oidc-client.client_id', 'client-123');
 });
 
-it('accepts a token signed with a rotated key by refetching the JWKS on an unknown kid', function () {
+it('accepts a token signed with a rotated key by refetching the JWKS on an unknown kid', function (): void {
     $oldProvider = new FakeOidcProvider;
     $newProvider = new FakeOidcProvider;
 
@@ -72,7 +72,7 @@ it('accepts a token signed with a rotated key by refetching the JWKS on an unkno
     Http::assertSentCount(3); // discovery + cached-miss JWKS fetch + fresh JWKS fetch
 });
 
-it('rejects a token whose kid is in neither the cached nor the fresh JWKS', function () {
+it('rejects a token whose kid is in neither the cached nor the fresh JWKS', function (): void {
     $provider = new FakeOidcProvider;
 
     fakeIssuerWithRotatingJwks([

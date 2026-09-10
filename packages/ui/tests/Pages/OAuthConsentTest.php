@@ -9,11 +9,12 @@ use Bambamboole\LaravelOidc\Ui\Pages\OAuthConsentPage;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Http\Request;
 use Lattice\Form\Components\Select;
+use Symfony\Component\HttpFoundation\Response;
 use Workbench\App\Models\User;
 
 uses(InteractsWithOidc::class);
 
-it('renders the consent page for an authorization request', function () {
+it('renders the consent page for an authorization request', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
     $pkce = $this->pkce();
@@ -32,7 +33,7 @@ it('renders the consent page for an authorization request', function () {
         ->assertSee($client->name, false);
 });
 
-it('renders for a non-Eloquent user without leaking a null email into the translation', function () {
+it('renders for a non-Eloquent user without leaking a null email into the translation', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
     $user = new GenericUser(['id' => 1]);
 
@@ -46,7 +47,7 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
     $request = Request::create('/', 'GET');
     $request->headers->set('X-Inertia', 'true');
 
-    $response = (new OAuthConsentPage($prompt))->toResponse($request);
+    $response = new OAuthConsentPage($prompt)->toResponse($request);
     $content = $response->getContent();
 
     expect($response->getStatusCode())->toBe(200)
@@ -54,7 +55,7 @@ it('renders for a non-Eloquent user without leaking a null email into the transl
         ->and($content)->not->toContain(__('oidc-ui::oauth.consent.signed-in-as', ['email' => 'null']));
 });
 
-it('does not render hidden scopes', function () {
+it('does not render hidden scopes', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
 
     $prompt = new ConsentPrompt(
@@ -70,13 +71,13 @@ it('does not render hidden scopes', function () {
     $request = Request::create('/', 'GET');
     $request->headers->set('X-Inertia', 'true');
 
-    $content = (new OAuthConsentPage($prompt))->toResponse($request)->getContent();
+    $content = new OAuthConsentPage($prompt)->toResponse($request)->getContent();
 
     expect($content)->toContain('OpenID Connect')
         ->and($content)->not->toContain('Internal metrics access');
 });
 
-it('omits the scopes heading when only hidden scopes are requested', function () {
+it('omits the scopes heading when only hidden scopes are requested', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
 
     $prompt = new ConsentPrompt(
@@ -89,20 +90,20 @@ it('omits the scopes heading when only hidden scopes are requested', function ()
     $request = Request::create('/', 'GET');
     $request->headers->set('X-Inertia', 'true');
 
-    $content = (new OAuthConsentPage($prompt))->toResponse($request)->getContent();
+    $content = new OAuthConsentPage($prompt)->toResponse($request)->getContent();
 
     expect($content)->not->toContain(__('oidc-ui::oauth.consent.requested-scopes'));
 });
 
-it('throws when rendered without the consent prompt', function () {
+it('throws when rendered without the consent prompt', function (): void {
     $request = Request::create('/', 'GET');
     $request->headers->set('X-Inertia', 'true');
 
-    expect(fn () => (new OAuthConsentPage)->toResponse($request))
+    expect(fn (): Response => (new OAuthConsentPage)->toResponse($request))
         ->toThrow(LogicException::class, 'rendered without its prompt');
 });
 
-it('redirects guests to login', function () {
+it('redirects guests to login', function (): void {
     config(['oidc.auth.login_route' => 'identity.login']);
 
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
@@ -119,7 +120,7 @@ it('redirects guests to login', function () {
     ]))->assertRedirect(route('identity.login'));
 });
 
-it('renders subclass-provided approve fields inside the approve form and responds as the subclass', function () {
+it('renders subclass-provided approve fields inside the approve form and responds as the subclass', function (): void {
     $client = $this->createOidcClient('Test RP', ['https://rp.test/callback']);
 
     $page = new class extends OAuthConsentPage
@@ -144,5 +145,5 @@ it('renders subclass-provided approve fields inside the approve form and respond
 
     expect($content)->toContain('tenant')
         ->and($content)->toContain('Acme')
-        ->and((new OAuthConsentPage($prompt))->toResponse($request)->getContent())->not->toContain('Acme');
+        ->and(new OAuthConsentPage($prompt)->toResponse($request)->getContent())->not->toContain('Acme');
 });
