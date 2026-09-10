@@ -7,26 +7,20 @@ namespace Bambamboole\LaravelOidc\Server\Realms;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Session\Store;
 use Illuminate\Support\Facades\URL;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Binds the matched realm to URL generation, to the session cookie and to the
- * request, then drops `{realm}` from the route parameters.
- *
- * Dropping it is what keeps controller signatures unchanged: Laravel hands
- * route parameters to a controller method positionally, so leaving a leading
- * `{realm}` in place would shift every other argument along by one.
- *
- * Runs ahead of StartSession so the cookie is written with a realm-scoped
- * path; without it every realm shares one cookie and a login in one realm is
- * a login in all of them.
+ * Runs before StartSession so provider logins cannot consume or regenerate the
+ * relying party's session. Removing the realm parameter preserves controller arguments.
  */
 final readonly class ResolveRealm
 {
     public const string ATTRIBUTE = 'oidc.realm';
 
-    public function __construct(private RealmResolver $realms) {}
+    public function __construct(private RealmResolver $realms, private Store $session) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -36,8 +30,44 @@ final readonly class ResolveRealm
         $request->route()?->forgetParameter('realm');
 
         URL::defaults(['realm' => $realm]);
-        config(['session.path' => RealmPath::for($realm)]);
+        $originalCookie = (string) config('session.cookie');
+        $originalPath = config('session.path');
+        $originalName = $this->session->getName();
+        $path = RealmPath::for($realm);
+        $cookie = $this->realms->current()->sessions()->cookieName ?? $originalCookie.'-oidc-'.str_replace('.', '_', $realm);
 
-        return $next($request);
+        if ($cookie === $originalCookie || preg_match('/\A[A-Za-z0-9_-]+\z/', $cookie) !== 1) {
+            throw new LogicException('The realm session cookie must have a distinct name using letters, digits, underscores or hyphens.');
+        }
+
+        config(['session.cookie' => $cookie, 'session.path' => $path]);
+        $this->session->setName($cookie);
+
+        try {
+            $response = $next($request);
+
+            if ($request->hasSession()) {
+                $response->headers->clearCookie($originalCookie, $path, config('session.domain'));
+                $location = $response->headers->get('Location') ?? $response->headers->get('X-Inertia-Location');
+
+                if (is_string($location) && ! $this->staysInRealm($request, $location, $path)) {
+                    $response->headers->clearCookie('XSRF-TOKEN', $path, config('session.domain'));
+                }
+            }
+
+            return $response;
+        } finally {
+            config(['session.cookie' => $originalCookie, 'session.path' => $originalPath]);
+            $this->session->setName($originalName);
+        }
+    }
+
+    private function staysInRealm(Request $request, string $location, string $path): bool
+    {
+        $host = parse_url($location, PHP_URL_HOST);
+        $targetPath = (string) parse_url($location, PHP_URL_PATH);
+
+        return ($host === null || $host === $request->getHost())
+            && ($targetPath === $path || str_starts_with($targetPath, $path.'/'));
     }
 }
