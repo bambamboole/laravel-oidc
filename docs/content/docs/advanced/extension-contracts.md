@@ -40,7 +40,7 @@ resolved issuer origin.
 
 ## `ScopeRepository`
 
-`Bambamboole\LaravelOidc\Server\Scopes\ScopeRepository` is the catalog of scopes the
+`Bambamboole\LaravelOidc\Server\Scopes\Contracts\ScopeRepository` is the catalog of scopes the
 provider understands.
 
 ```php
@@ -70,14 +70,14 @@ the catalog:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Scopes\ScopeRepository::class,
+    \Bambamboole\LaravelOidc\Server\Scopes\Contracts\ScopeRepository::class,
     MyScopeRepository::class,
 );
 ```
 
 ## `ClaimsResolver`
 
-`Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsResolver` turns a `ClaimsRequest` into the
+`Bambamboole\LaravelOidc\Server\Scopes\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the
 claims to emit.
 
 ```php
@@ -96,14 +96,14 @@ The default is `StandardClaimsResolver`. Bind your own:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Scopes\Contracts\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```
 
 ## `ExchangePolicy`
 
-`Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy` authorizes every RFC 8693 token
+`Bambamboole\LaravelOidc\Server\Tokens\Contracts\ExchangePolicy` authorizes every RFC 8693 token
 exchange (and every `IssueScopedToken` action call).
 
 ```php
@@ -123,7 +123,7 @@ a different allowlist source:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy::class,
+    \Bambamboole\LaravelOidc\Server\Tokens\Contracts\ExchangePolicy::class,
     TenantScopedExchangePolicy::class,
 );
 ```

@@ -5,7 +5,7 @@ namespace Workbench\App\Models;
 
 use Bambamboole\LaravelOidc\Server\Credentials\Concerns\HasAuthenticationFactors;
 use Bambamboole\LaravelOidc\Server\Tokens\Concerns\HasAccessTokens;
-use Bambamboole\LaravelOidc\Server\Tokens\OAuthenticatable;
+use Bambamboole\LaravelOidc\Server\Tokens\Contracts\OAuthenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;

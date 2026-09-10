@@ -44,7 +44,7 @@ The scope catalog is provided by the `ScopeRepository` contract — see
 
 ## Claims
 
-`Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsResolver` turns a `ClaimsRequest` into the claim
+`Bambamboole\LaravelOidc\Server\Scopes\Contracts\ClaimsResolver` turns a `ClaimsRequest` into the claim
 map to emit. The request carries the authenticated user, the requesting client, the granted
 scopes, and which surface is being built — so a resolver can vary claims per client, or emit a
 claim into the `id_token` but not userinfo.
@@ -69,7 +69,7 @@ only emitted when its scope was granted — null values are dropped.
 ```php
 use Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimSet;
 use Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsRequest;
-use Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsResolver;
+use Bambamboole\LaravelOidc\Server\Scopes\Contracts\ClaimsResolver;
 
 class AppClaimsResolver implements ClaimsResolver
 {
@@ -108,7 +108,7 @@ Bind your resolver so the provider uses it:
 
 ```php
 $this->app->singleton(
-    \Bambamboole\LaravelOidc\Server\Scopes\Claims\ClaimsResolver::class,
+    \Bambamboole\LaravelOidc\Server\Scopes\Contracts\ClaimsResolver::class,
     AppClaimsResolver::class,
 );
 ```
