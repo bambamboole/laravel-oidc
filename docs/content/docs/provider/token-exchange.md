@@ -115,11 +115,11 @@ claim (`{"client_id": "..."}`) identifying the exchanging client as the actor.
 
 ## The `ExchangePolicy` contract
 
-Every exchange request is authorized by `Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy`, bound
+Every exchange request is authorized by `Bambamboole\LaravelOidc\Server\Tokens\Contracts\ExchangePolicy`, bound
 by default to `AllowlistExchangePolicy`:
 
 ```php
-namespace Bambamboole\LaravelOidc\Server\Contracts;
+namespace Bambamboole\LaravelOidc\Server\Tokens\Contracts;
 
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeGrantResult;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeRequest;
@@ -138,8 +138,8 @@ endpoint renders it and the `IssueScopedToken` action lets it propagate. Replace
 allowlist source:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangePolicy;
-use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeDeniedException;
+use Bambamboole\LaravelOidc\Server\Tokens\Contracts\ExchangePolicy;
+use Bambamboole\LaravelOidc\Server\Tokens\Exceptions\ExchangeDeniedException;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeGrantResult;
 use Bambamboole\LaravelOidc\Server\Tokens\Exchange\ExchangeRequest;
 

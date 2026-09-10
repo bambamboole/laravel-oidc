@@ -77,7 +77,7 @@ security logs, but relevant for your data-retention policy.
 ```php
 'audit' => [
     'enabled' => env('OIDC_AUDIT_ENABLED', true),
-    'sink' => \Bambamboole\LaravelOidc\Server\Audit\LogAuditSink::class,
+    'sink' => \Bambamboole\LaravelOidc\Server\Audit\Sinks\LogAuditSink::class,
     'log_channel' => env('OIDC_AUDIT_LOG_CHANNEL'),
 ],
 ```
@@ -96,7 +96,7 @@ security logs, but relevant for your data-retention policy.
 The contract is a single method:
 
 ```php
-namespace Bambamboole\LaravelOidc\Server\Contracts;
+namespace Bambamboole\LaravelOidc\Server\Shared\Audit;
 
 interface AuditSink
 {
