@@ -5,6 +5,118 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.23.0](https://github.com/bambamboole/laravel-oidc/compare/v0.22.0...v0.23.0) (2026-09-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** audit through domain events instead of an Auditor service ([#156](https://github.com/bambamboole/laravel-oidc/issues/156))
+* **server:** oidc_clients.scopes is replaced by default_scopes and optional_scopes (the unreleased 0.23 migration is edited in place; re-run it or re-provision clients as the upgrade guide already requires). Client::hasScope() is removed in favour of allowsScope() and assignedScopes(). A known scope a client is not assigned is now rejected with invalid_scope at the authorization endpoint and by the client_credentials grant instead of being dropped. The oidc.clients.registration.default_scopes option is removed; every client creation path (ClientRepository, oidc:client, dynamic registration) now applies oidc.clients.default_scopes (default []) and oidc.clients.optional_scopes (default ['*']); ClientSettings::$defaultScopes changes meaning accordingly and gains $optionalScopes.
+* **server:** run the new oidc_password_history migration. New passwords must satisfy the realm policy (oidc.auth.password.*, minimum length 8 by default) at registration and reset; an app action that allowed shorter passwords will now see a validation error first.
+* serve a single realm from the application root by default
+* **server:** prune the suite to spec, security and contract coverage
+* **server:** bind access tokens to realm audiences, make acr and RP-initiated logout spec-conformant, complete RFC 7591 registration
+* **server:** align class, config and session names with their concepts
+* **server:** persist consents, put context_id on the access token, scope refresh tokens and social accounts per realm
+* **server:** bring the token, introspection, revocation and bearer paths in line with RFC 6749/6750/7009/7662/8693/9068/9728
+* **server:** bring the authorize endpoint in line with OIDC Core §3.1.2 and OAuth 2.1 §4.1
+* require Laravel 13 and move the test toolchain to Pest 5
+* **server:** settle client identity and consolidate client authentication
+* **server:** replace league/oauth2-server with a package-owned protocol core
+* **server:** Tokens\AccessTokenMinter and Tokens\MintedAccessToken are Shared\Tokens\*, and mint() takes string $clientId (the wire client_id) instead of a Client model. Sessions\SessionTokenProvider is Shared\Sessions\SessionTokenProvider. Sessions\Actions\IssueScopedToken is Tokens\Actions\IssueScopedToken. Authentication\Pipeline\Contracts\DeviceRecognizer is Shared\Authentication\DeviceRecognizer. TokenInspector::refreshTokenPayload() is removed (Protocol\League\RefreshTokenPayload::decode()). A denied consent now returns the error redirect instead of throwing OAuthServerException.
+* **server:** namespaces moved. Audit\{Auditor, AuditSink, AuditEvent, AuditEventType} are Shared\Audit\* (Auditor is now an interface; Audit\DefaultAuditor implements it). Keys\{SigningKeys, SigningKeyStore, SigningKey, GeneratedSigningKeys, Jwk} are Shared\Keys\* (SigningKeys is now an interface; Keys\StoredSigningKeys implements it). Realms\{Realm, RealmResolver, IssuerResolver, RealmRepository} and Realms\Settings\* are Shared\Realms\*; Realms\Concerns\BelongsToRealm is Shared\Realms\BelongsToRealm. Users\Actions\{CreateUser, ResetUserPassword} are Shared\Users\*; Brokering\Actions\CreateUserFromSocialAccount and Brokering\SocialUser are Shared\Brokering\*. Users\OAuthenticatable is Tokens\OAuthenticatable and Users\Concerns\HasOidcTokens is Tokens\Concerns\HasOidcTokens; the Users domain and UsersServiceProvider are removed. Authentication\Pipeline\LoginOutcome is Shared\Authentication\LoginOutcome. Schedule the new oidc:prune-sessions command: oidc:prune-authentication-contexts no longer deletes sessions or access-token context links (oidc:purge now prunes the links).
+* **server:** namespaces moved. Authentication\Pipeline\{AccessTokenPipeline, AccessTokenApi, AuthorizationCodeEvent, ClientCredentialsEvent, TokenExchangeEvent, PersonalAccessTokenEvent} are now Tokens\Pipeline\*; Authentication\AuthSessionState, Authentication\Controllers\Concerns\ResolvesIdentityGuard and Authentication\Views\MissingAuthViewException are Shared\Authentication\*; Tokens\ProtocolClaims is Shared\Tokens\ProtocolClaims; Protocol\OAuthError is Shared\Protocol\OAuthError; Protocol\Concerns\{RespondsToInertiaExternalRedirects, ConvertsPsrResponses} are Shared\Http\*; Installation\{EnvironmentFile, EnvironmentWriteException} are Shared\Installation\*; Scopes\ScopeCatalog is Shared\Scopes\ScopeCatalog; Consents\Views\AuthorizationViewResponse is Shared\Consents\AuthorizationViewResponse; Tokens\Actions\IssueScopedToken is Sessions\Actions\IssueScopedToken; Users\Actions\CreateUserFromSocialAccount is Brokering\Actions\CreateUserFromSocialAccount. AccessTokenMinter is an interface whose mint() gained an $actor parameter and returns MintedAccessToken instead of a league entity; IssuedToken::fromEntity() is now fromMinted(). OAuthenticatable and HasOidcTokens are unchanged.
+* replace the Oidc facade with action contracts and services
+* cut packages/server/src into domain folders
+* Bambamboole\LaravelOidc\Server\Models\Client is now Clients\Client; Models\Token, Models\RefreshToken and Models\AuthCode are Token\Token, Token\RefreshToken and Token\AuthCode. Applications querying the client or token tables through these models must update the import.
+* Bambamboole\LaravelOidc\Server\Contracts\* moved into the domain namespaces listed above. Applications binding their own AuditSink, ClaimsResolver, ExchangePolicy, ScopeRepository or SessionTokenProvider, or implementing OAuthenticatable on their user model, must update the import.
+* Auth\Models\OidcSession and SessionParticipant are now Session\*, Auth\Models\AuthenticationContext and AccessTokenContext are Context\*, Auth\UserActionManager is User\UserActionManager and Auth\Concerns\HasOidcTokens is User\Concerns\HasOidcTokens. User models using the trait must update the import.
+* Bambamboole\LaravelOidc\Server\Auth\Pipeline\* is now Bambamboole\LaravelOidc\Server\Authentication\Pipeline\*, Auth\Controllers\* is Authentication\Controllers\*, and AuthSessionState, LoginDestination, PasswordConfirmation and AuthenticateIdentity sit directly under Authentication. Applications hooking LoginEvent, AccessTokenApi or the DeviceRecognizer contract must update the namespace.
+* Bambamboole\LaravelOidc\Server\Auth\Views\* is now Bambamboole\LaravelOidc\Server\Forms\*. UI packages binding LoginView, ConsentView and friends must update the namespace.
+* Bambamboole\LaravelOidc\Server\Auth\Social\* is now Bambamboole\LaravelOidc\Server\Brokering\*. Custom drivers implement Brokering\Contracts\SocialProvider and the createUsersFromSocialUsing callback receives Brokering\SocialUser.
+* Bambamboole\LaravelOidc\Server\Auth\MultiFactor\* is now Bambamboole\LaravelOidc\Server\Credential\*. HasAuthenticationFactors, FactorRegistry, the factor providers and the enrollment enums move with it.
+* SigningKeyStore, EnvSigningKeyStore, DatabaseSigningKeyStore, SigningKeys, SigningKey, SigningKeyGenerator, GeneratedSigningKeys and Jwk now live under Bambamboole\LaravelOidc\Server\Keys. Applications that point oidc.keys.store at DatabaseSigningKeyStore or bind their own SigningKeyStore must update the namespace.
+* every endpoint moved below /realms/{realm}, and the issuer is now `<configured issuer>/realms/<realm>`. Relying parties must be repointed. RFC 8414 and RFC 9728 metadata keep the path-insertion form and carry the realm behind the well-known segment.
+* `oidc.handlers` and `oidc.routes.prefix` are gone. Swap a controller by binding it in the container; per-endpoint path overrides and disabling an endpoint are no longer supported. `oidc.dcr.enabled` still gates the registration endpoint. Route names are unchanged.
+* replace Laravel Passport with a package-owned OAuth2 core
+* give the ClaimsResolver client, scope and audience context
+* make the signing key layer injectable and add a database key store
+* resolve the issuer through a container-bound IssuerResolver
+
+### test
+
+* **server:** prune the suite to spec, security and contract coverage ([aa69f43](https://github.com/bambamboole/laravel-oidc/commit/aa69f43b839d9d72b34e6dcee4ed5d85f3792147))
+
+
+### Features
+
+* add the league bridge layer and an AuthorizationServer factory ([55b617c](https://github.com/bambamboole/laravel-oidc/commit/55b617cd77e8fea1adbd51022f6dac49ea01b209))
+* add the package-owned OAuth2 schema and models ([6395321](https://github.com/bambamboole/laravel-oidc/commit/639532160e4655c4b6f4615f65029c8950305482))
+* make the signing key layer injectable and add a database key store ([b7ab193](https://github.com/bambamboole/laravel-oidc/commit/b7ab1934ae61260fc9137bdc40e7f58e52289771))
+* **mautic:** harden the login and API token flows ([b837446](https://github.com/bambamboole/laravel-oidc/commit/b8374465222a00e9aad69bd4cd0932435218cc47))
+* **mautic:** harden the login and API token flows ([24856e7](https://github.com/bambamboole/laravel-oidc/commit/24856e77dccb4afa518502004e1960cfc61c24f7))
+* provision the personal access client with oidc:client --personal ([df66961](https://github.com/bambamboole/laravel-oidc/commit/df66961de8ab11482e03197117825fbb62fa518b))
+* replace Laravel Passport with a package-owned OAuth2 core ([e436ee3](https://github.com/bambamboole/laravel-oidc/commit/e436ee3bd6a48986af209325f416de4f2655c884))
+* scope the package's own data by realm ([124d3b9](https://github.com/bambamboole/laravel-oidc/commit/124d3b9a98f0c948b7964eb238ef85d5cce2061b))
+* serve a single realm from the application root by default ([67b5b1e](https://github.com/bambamboole/laravel-oidc/commit/67b5b1e383ced8ddebcbc396ed5a4e59a649473b))
+* serve every realm under /realms/{realm} ([cd8711f](https://github.com/bambamboole/laravel-oidc/commit/cd8711f7be845d23f556535650e673af54572ddc))
+* **server:** assign default and optional scopes per client ([#155](https://github.com/bambamboole/laravel-oidc/issues/155)) ([5578fb8](https://github.com/bambamboole/laravel-oidc/commit/5578fb8e898cab0c37ac3a1a8feb85b0ac4e677d))
+* **server:** bind access tokens to realm audiences, make acr and RP-initiated logout spec-conformant, complete RFC 7591 registration ([d1711d7](https://github.com/bambamboole/laravel-oidc/commit/d1711d74237b58b082c5769edb7ade6ef7248b05))
+* **server:** govern passwords with a per-realm policy and history ([#153](https://github.com/bambamboole/laravel-oidc/issues/153)) ([fad8e5a](https://github.com/bambamboole/laravel-oidc/commit/fad8e5a7354dcf5e38e4612847e2783eab743e90))
+* store a host-defined context with personal access tokens ([#150](https://github.com/bambamboole/laravel-oidc/issues/150)) ([0f5a768](https://github.com/bambamboole/laravel-oidc/commit/0f5a768f1c7cf1f1a835deb175de837af134648e))
+* **ui:** ship the RP-initiated logout confirmation page ([#152](https://github.com/bambamboole/laravel-oidc/issues/152)) ([c10c8de](https://github.com/bambamboole/laravel-oidc/commit/c10c8de15d50946efa6488440889ffdaed03d1d0))
+
+
+### Bug Fixes
+
+* isolate realm sessions for self-SSO ([922ffac](https://github.com/bambamboole/laravel-oidc/commit/922ffacd76dd8171d66ac8c80fe6aef1b0cf2f3c))
+* isolate realm sessions for self-SSO ([37da06d](https://github.com/bambamboole/laravel-oidc/commit/37da06d7fe0a1a6dded50e62051882dbd095406a))
+* **server:** bring the authorize endpoint in line with OIDC Core §3.1.2 and OAuth 2.1 §4.1 ([0ffc83e](https://github.com/bambamboole/laravel-oidc/commit/0ffc83e905540c091b122e0df7b936b0a14aef60))
+* **server:** bring the token, introspection, revocation and bearer paths in line with RFC 6749/6750/7009/7662/8693/9068/9728 ([46fa089](https://github.com/bambamboole/laravel-oidc/commit/46fa089a55c42b646db721747656dca4c07f8172))
+* **server:** move the workbench user models to the Tokens namespace ([6f25040](https://github.com/bambamboole/laravel-oidc/commit/6f25040c3d3dd70cade1877010e51a89a422865a))
+
+
+### Refactoring
+
+* align server domains on Http/Controllers, Http/Middleware and Listeners ([88cdd8b](https://github.com/bambamboole/laravel-oidc/commit/88cdd8b5ead75f9cf2137bbc4f11565363c5e73f))
+* align server package layout ([#151](https://github.com/bambamboole/laravel-oidc/issues/151)) ([9444ab6](https://github.com/bambamboole/laravel-oidc/commit/9444ab6f3f5ad329526441a131741f3bf68e3370))
+* apply the rector rule sets across the packages ([fa178c1](https://github.com/bambamboole/laravel-oidc/commit/fa178c18eff96bc3f2228dedc0bb068d2765ae17))
+* build the grants inside AuthorizationServerFactory ([21b6688](https://github.com/bambamboole/laravel-oidc/commit/21b66880e050d1c8e54e36363652084d43c464ad))
+* confine league/oauth2-server to the Protocol domain ([#131](https://github.com/bambamboole/laravel-oidc/issues/131)) ([0cc8dc9](https://github.com/bambamboole/laravel-oidc/commit/0cc8dc92923c8c9ef363a906fce1298e4dbbc4df))
+* cut packages/server/src into domain folders ([3cf41f4](https://github.com/bambamboole/laravel-oidc/commit/3cf41f4f0e330f16434ab80e42cfee02afc26372))
+* dissolve Contracts/ into the domains that own them ([f99ee99](https://github.com/bambamboole/laravel-oidc/commit/f99ee99524c3d7a4663bcd4a573bb40430c540e0))
+* dissolve the Auth namespace into User, Session and Context ([e354cf7](https://github.com/bambamboole/laravel-oidc/commit/e354cf749d4e2f535c10fca9fcf39b243af39ac3))
+* extract domain actions out of the controllers ([72675fd](https://github.com/bambamboole/laravel-oidc/commit/72675fdcfee8d8cdaf55a1500f45261c4b7ef77f))
+* give the ClaimsResolver client, scope and audience context ([bb8fe99](https://github.com/bambamboole/laravel-oidc/commit/bb8fe99b8d2feb26f010f124868c0825c5859c30))
+* group server exceptions, enums, contracts, providers and sinks by kind ([#154](https://github.com/bambamboole/laravel-oidc/issues/154)) ([7e71c9e](https://github.com/bambamboole/laravel-oidc/commit/7e71c9e8aba31efa42d2965fc4f255f16e11d467))
+* move console commands into the domains they operate on ([db2cb76](https://github.com/bambamboole/laravel-oidc/commit/db2cb7658acbc52e39cdbe16e9561df263905882))
+* move interactive login into an Authentication domain ([f071013](https://github.com/bambamboole/laravel-oidc/commit/f071013a31275069f43359ae6236ce4520dd54b4))
+* move multi-factor into a Credential domain ([a68ab55](https://github.com/bambamboole/laravel-oidc/commit/a68ab557ad127fe1bced15401895f60e974be84e))
+* move realm scoping into a Realm domain ([8673b67](https://github.com/bambamboole/laravel-oidc/commit/8673b67607bc6eb18fad4ef47569416bf7cd3137))
+* move signing keys into a Keys domain ([c6002ef](https://github.com/bambamboole/laravel-oidc/commit/c6002ef408ed92feabecc4a41da29588cd14b64b))
+* move social login into a Brokering domain ([933a014](https://github.com/bambamboole/laravel-oidc/commit/933a014daae70be033fd7527efecb4d1cca1ac17))
+* move the auth view seam into a Forms domain ([61cf4ef](https://github.com/bambamboole/laravel-oidc/commit/61cf4eff8c3a16710f18c303c47761a5ac1f06e1))
+* move the Eloquent models into Clients and Token ([e0cd3fa](https://github.com/bambamboole/laravel-oidc/commit/e0cd3fac158dbfbca38644b9c16db0a145896368))
+* register package routes directly instead of through a Handler enum ([a46f83a](https://github.com/bambamboole/laravel-oidc/commit/a46f83a32c1473cdec575c61be40a36232f122cf))
+* replace the Oidc facade with action contracts and services ([67aca5c](https://github.com/bambamboole/laravel-oidc/commit/67aca5cd5c3dbd04f815e9ac3cb13f56e13fc433))
+* require Laravel 13 and move the test toolchain to Pest 5 ([a7a1799](https://github.com/bambamboole/laravel-oidc/commit/a7a179971f0e5e10cc49ed17c7e6f6519e8280a0))
+* resolve the issuer through a container-bound IssuerResolver ([d548588](https://github.com/bambamboole/laravel-oidc/commit/d54858889a98c9bed2a1a9c3e28c2e72ee6a5073))
+* **server:** align class, config and session names with their concepts ([7448204](https://github.com/bambamboole/laravel-oidc/commit/74482046fa951dd6f7603f2a138d6bc265a31f8a))
+* **server:** audit through domain events instead of an Auditor service ([#156](https://github.com/bambamboole/laravel-oidc/issues/156)) ([59c0013](https://github.com/bambamboole/laravel-oidc/commit/59c0013bd683230b9f4fab11b4074462f667ba68))
+* **server:** cut Sessions off Tokens and confine league to Protocol ([c37a6fc](https://github.com/bambamboole/laravel-oidc/commit/c37a6fc228b20e420de48b6a6998d286942034fe))
+* **server:** enforce one-directional domain dependencies ([fcc1432](https://github.com/bambamboole/laravel-oidc/commit/fcc1432ed1466b33dbc174334d11401753a459da))
+* **server:** move cross-domain contracts into Shared ports ([769d14a](https://github.com/bambamboole/laravel-oidc/commit/769d14a915f3d7f10aaf2e73006a27fe2d5272aa))
+* **server:** persist consents, put context_id on the access token, scope refresh tokens and social accounts per realm ([8feb5dc](https://github.com/bambamboole/laravel-oidc/commit/8feb5dc5d5dc6916a5cb12a314eaec2735a79c5a))
+* **server:** replace league/oauth2-server with a package-owned protocol core ([c1a8ee7](https://github.com/bambamboole/laravel-oidc/commit/c1a8ee7f082042344c2424078b2df3001720287f))
+* **server:** settle client identity and consolidate client authentication ([7996a58](https://github.com/bambamboole/laravel-oidc/commit/7996a5842379c7a3e95d4a43eb8f37b3391d8e4a))
+* split OidcServiceProvider into one provider per domain ([1d1f470](https://github.com/bambamboole/laravel-oidc/commit/1d1f4702a9cec3b6d81a5cc317dc5dd710d3b4a1))
+* strip what-comments and redundant docblocks from the sources ([8f42dde](https://github.com/bambamboole/laravel-oidc/commit/8f42dde7e18523c56c95b78f563e9e49c73c0982))
+
+
+### Documentation
+
+* document path-based realms and the routes file ([18c27a1](https://github.com/bambamboole/laravel-oidc/commit/18c27a18205f496cd3c802e74422f8d70db13e83))
+
 ## [0.22.0](https://github.com/bambamboole/laravel-oidc/compare/v0.21.2...v0.22.0) (2026-09-03)
 
 
