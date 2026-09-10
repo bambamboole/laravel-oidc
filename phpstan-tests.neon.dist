@@ -11,12 +11,14 @@ parameters:
         - workbench/app
     level: 6
     ignoreErrors:
-        # RoutesRealmsByPath is composed through Pest's file-level uses(), which PHPStan's static
-        # trait-usage scanner cannot see — the same reason the sources config exempts the traits
-        # consumers compose in their own suites.
+        # The realm-routing markers are composed through Pest's file-level uses(), which PHPStan's
+        # static trait-usage scanner cannot see — the same reason the sources config exempts the
+        # traits consumers compose in their own suites.
         -
             identifier: trait.unused
-            path: packages/server/tests/Realms/RoutesRealmsByPath.php
+            paths:
+                - packages/server/tests/Realms/RoutesRealmsByPath.php
+                - packages/server/tests/Realms/RoutesRealmsByDomain.php
         # pest-plugin-phpstan types `$this` from the file-local uses(InteractsWithOidc::class) calls, but a trait
         # method declared `: static` comes back typed as the bare trait, so the next call in a chain such as
         # `$this->actingAsIdentity($user)->get(...)` is reported against an "unknown class". The trait methods are
