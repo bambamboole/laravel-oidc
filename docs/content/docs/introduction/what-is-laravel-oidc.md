@@ -56,7 +56,7 @@ This means:
 - The signing key is read on every request, so a key rotation takes effect without restarting
   the workers.
 - No client-management JSON API ships with the package. Provision clients with
-  `oidc:provision-client`, or through [dynamic client registration](/provider/dynamic-client-registration/).
+  `oidc:client`, or through [dynamic client registration](/provider/dynamic-client-registration/).
 
 The package also registers a dedicated **`identity` guard** (session driver, `users` provider
 by default) and routes the interactive authorization and auth-engine flows through it, so

@@ -55,7 +55,7 @@ drop them once you are satisfied with the cutover.
 
 ### 2. Re-provision your clients
 
-Client rows are not copied. Recreate them with `oidc:provision-client` (or
+Client rows are not copied. Recreate them with `oidc:client --first-party` (or
 [dynamic client registration](/provider/dynamic-client-registration/)) and hand the new
 `client_id`/`client_secret` to each relying party.
 

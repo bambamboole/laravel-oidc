@@ -10,7 +10,7 @@ two-factor challenge, and OAuth consent, rendered as Lattice pages instead of Bl
 ## Requirements
 
 - PHP `^8.4`
-- `bambamboole/laravel-oidc-server` `^0.7` — the OIDC provider this UI renders views for
+- `bambamboole/laravel-oidc-server` in the same release — the suite is versioned in lockstep
 - `laravel/passkeys` `^0.2`, `lattice-php/lattice` `>=0.70`
 
 ## Install
@@ -48,7 +48,7 @@ package (see [Overriding views](/ui/overriding/)):
   ["src"]` lets Lattice's root-manifest discovery find the `#[AsLayout('auth')]`-attributed class
   in this package's `src/` on its own, without relying on the host app's `config('lattice.discover')`
   paths.
-- **The security building blocks** for settings pages — five actions, one form, one fragment,
+- **The security building blocks** for settings pages — three actions, one form, one fragment,
   one table — likewise discovered, not bound (see [Security components](/ui/security-components/)).
 
 ## Publish (optional)

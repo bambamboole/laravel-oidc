@@ -41,7 +41,6 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
         $app['config']->set('auth.providers.users.model', User::class);
-        $app['config']->set('auth.guards.api', ['driver' => 'passport', 'provider' => 'users']);
         $app['config']->set('session.driver', 'array');
     }
 
