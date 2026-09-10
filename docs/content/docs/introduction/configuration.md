@@ -94,7 +94,6 @@ below with its default and the environment variable that overrides it.
 | `audit.enabled` | `true` (`OIDC_AUDIT_ENABLED`) | Records audit events through the sink — see [Audit logging](/provider/audit-logging/). |
 | `audit.sink` | `LogAuditSink::class` | Class-string of the `AuditSink` audit records are written to. |
 | `audit.log_channel` | `env('OIDC_AUDIT_LOG_CHANNEL')` | Log channel `LogAuditSink` writes to; `null` uses the default channel. |
-| `resource.audiences` | `[]` | Additional audiences the `oidc` guard accepts on an exchanged access token, beyond the issuer URL. |
 | `protected_resources` | `[]` | RFC 9728 protected-resource metadata keyed by path — see [Resource servers](/advanced/resource-servers/). |
 
 ## Social login
