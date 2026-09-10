@@ -90,7 +90,7 @@ $issued = app(IssueScopedToken::class)('https://api.orders.test', ['openid']);
 
 `IssueScopedToken::__invoke(string $audience, array $scopes): IssuedToken` reads the current
 session root token, exchanges it (in-process, via the same RFC 8693 grant logic used by
-`/realms/{realm}/oauth/token`) for a token scoped to `$audience`, and returns an `IssuedToken`:
+`/oauth/token`) for a token scoped to `$audience`, and returns an `IssuedToken`:
 
 ```php
 final readonly class IssuedToken

@@ -213,7 +213,7 @@ $sink->events(AuditEventType::TokenIssued); // list<AuditEvent>
 
 ## Limitations
 
-- **Malformed token requests at `/realms/{realm}/oauth/token`** — an unknown, expired, or
+- **Malformed token requests at `/oauth/token`** — an unknown, expired, or
   foreign authorization code, a PKCE verifier mismatch, or an unknown or expired refresh token —
   are rejected before any issuance step runs and emit no event. These surface only as `400`
   responses to the client. A replayed authorization code and a reused refresh token **are**

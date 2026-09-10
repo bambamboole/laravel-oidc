@@ -29,12 +29,12 @@ client's `allowed_exchange_audiences`.
 
 ## Three validation options
 
-- **JWKS (stateless).** Fetch `GET /realms/{realm}/.well-known/openid-configuration`, follow
+- **JWKS (stateless).** Fetch `GET /.well-known/openid-configuration`, follow
   `jwks_uri`, verify the token's signature against the matching key (`kid`), and check
   that `iss` matches the issuer, `aud` contains your resource server's audience, `exp`
   is in the future, and the header `typ` is `at+jwt`. No call back to the OP per
   request — but it cannot see a token revoked before its `exp`.
-- **Introspection (revocation-aware).** `POST /realms/{realm}/oauth/introspect` with the resource
+- **Introspection (revocation-aware).** `POST /oauth/introspect` with the resource
   server's own client credentials and the token as `token`. Returns
   `{"active": true, ...}` or `{"active": false}` — catches tokens revoked before their
   `exp`, at the cost of a round trip per check.
@@ -100,11 +100,11 @@ the errors for the checks they own:
 
 Every challenge is a `WWW-Authenticate: Bearer` header carrying `realm` (the realm id), `error`
 where one applies, and `resource_metadata` — the URL of the realm's RFC 9728 protected resource
-metadata (`/.well-known/oauth-protected-resource/realms/{realm}`) — as RFC 9728 §5.1 prescribes,
+metadata (`/.well-known/oauth-protected-resource`) — as RFC 9728 §5.1 prescribes,
 so a client that lands on a protected route without a token can discover the authorization server
 from the challenge alone:
 
 ```text
 HTTP/1.1 401 Unauthorized
-WWW-Authenticate: Bearer realm="default", error="invalid_token", resource_metadata="https://id.example.com/.well-known/oauth-protected-resource/realms/default"
+WWW-Authenticate: Bearer realm="default", error="invalid_token", resource_metadata="https://id.example.com/.well-known/oauth-protected-resource"
 ```
