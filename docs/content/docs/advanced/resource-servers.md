@@ -27,6 +27,42 @@ This makes `auth:oidc` usable directly on routes that only need *a* valid authen
 one of the realm's resources. Pair it with `CheckAudience` — see below — when a route must enforce
 a *specific* audience, not just any recognized one.
 
+### The authenticated principal
+
+`$request->user()` is the token's user for a token that carries a subject. A userless token — what
+`client_credentials` issues, and what a token exchange without a subject produces — authenticates the
+**client** instead, as a `Bambamboole\LaravelOidc\Server\Tokens\Guard\ClientPrincipal`. Everything
+else the guard checks (`iss`, `typ`, `aud`, expiry, revocation) applies to it unchanged; on top of
+that, a userless token whose client is revoked or deleted is rejected, because that client *is* the
+principal.
+
+A client principal stands for a machine, not a person: it carries no user, so there is nothing to
+hang roles or permissions on. Authorize it by scope and audience alone.
+
+```php
+use Bambamboole\LaravelOidc\Server\Tokens\Guard\ClientPrincipal;
+
+$principal = $request->user();
+
+if ($principal instanceof ClientPrincipal) {
+    $principal->clientId();              // the wire client_id, also the token's `sub`
+    $principal->client;                  // the Client model
+    $principal->tokenCan('orders.read'); // scopes are the only authorization there is
+} else {
+    // a human: the OAuthenticatable user your app configured for the guard's provider
+}
+```
+
+`ClientPrincipal` implements `Illuminate\Contracts\Auth\Authenticatable` — `auth()->id()` returns
+the `client_id` and `getAuthIdentifierName()` is `'client_id'` — and the same `AccessTokenBearer`
+contract a user implements, so `currentAccessToken()`, `CheckScopes` and `CheckAudience` behave
+identically for both. It has no password and no remember token: `getAuthPassword()` and
+`getAuthPasswordName()` throw, because reaching for either means a credential flow was handed a
+machine caller.
+
+The userinfo endpoint keeps rejecting a machine token with `401 invalid_token`: it answers for a
+user, and there is none.
+
 See the [API token broker](/client/api-token-broker/) for the client-side half of this contract —
 the audience it requests must match what a route here accepts, and be listed in the requesting
 client's `allowed_exchange_audiences`.
@@ -63,8 +99,8 @@ every request with `401 invalid_token` — there is no authenticated user to rea
 
 It validates, **in order**:
 
-1. That `$request->user()` is an authenticated `OAuthenticatable` with a `currentAccessToken()` —
-   otherwise `401 invalid_token`.
+1. That `$request->user()` is an authenticated `AccessTokenBearer` — a user or a `ClientPrincipal` —
+   with a `currentAccessToken()`, otherwise `401 invalid_token`.
 2. That the audience `auth:oidc` verified intersects the audiences the route requires —
    otherwise `401 invalid_token` (RFC 6750 §3.1: a token for another resource is not a token short
    of a scope).
@@ -98,7 +134,7 @@ the errors for the checks they own:
 | Condition | Status | Body |
 | --- | --- | --- |
 | No bearer token presented | `401` | empty — RFC 6750 §3.1 omits the error code when no credentials were sent |
-| A bearer token the guard rejected (signature, `iss`, `typ`, expiry, revocation, audience, unknown user) | `401` | `{"error": "invalid_token"}` |
+| A bearer token the guard rejected (signature, `iss`, `typ`, expiry, revocation, audience, unknown user, revoked or deleted client behind a userless token) | `401` | `{"error": "invalid_token"}` |
 | `CheckAudience`: the guard-verified audience does not intersect the audiences `CheckAudience::using()` requires | `401` | `{"error": "invalid_token"}` — a token for another resource is not a valid token here (RFC 6750 §3.1) |
 | `CheckAudience` or `CheckScopes` without a preceding guard populating `currentAccessToken()` | `401` | `{"error": "invalid_token"}` |
 | `CheckScopes`: the token lacks a required scope | `403` | `{"error": "insufficient_scope"}` |
