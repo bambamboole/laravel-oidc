@@ -42,7 +42,7 @@ class OidcClientFake
 
     public const string KID = 'oidc-fake-key';
 
-    private string $issuer;
+    private readonly string $issuer;
 
     private string $clientId;
 

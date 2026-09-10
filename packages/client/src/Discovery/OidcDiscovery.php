@@ -19,7 +19,7 @@ class OidcDiscovery
 
     public function metadata(): ProviderMetadata
     {
-        if ($this->metadata !== null) {
+        if ($this->metadata instanceof ProviderMetadata) {
             return $this->metadata;
         }
 

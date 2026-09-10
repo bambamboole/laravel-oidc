@@ -43,7 +43,7 @@ class RecoveryCodesFragment extends FragmentDefinition
                 ->schema([
                     Text::make(__('oidc-ui::security.recovery-codes.description')),
                     ...array_map(
-                        static fn (string $code) => Text::make($code)->copyable(),
+                        static fn (string $code): Text => Text::make($code)->copyable(),
                         $codes,
                     ),
                 ]),

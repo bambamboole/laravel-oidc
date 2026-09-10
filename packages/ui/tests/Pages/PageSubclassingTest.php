@@ -56,7 +56,7 @@ function respondWith(object $page, ?object $prompt = null): string
  * object that renders is always the base page — making a subclass a silent
  * no-op. See https://github.com/bambamboole/laravel-oidc/issues/87.
  */
-it('renders the subclass, not the base page, for every auth page', function () {
+it('renders the subclass, not the base page, for every auth page', function (): void {
     $cases = [
         'login' => [new class extends LoginPage
         {
@@ -109,7 +109,7 @@ it('renders the subclass, not the base page, for every auth page', function () {
     expect($rendered)->toBe(array_fill_keys(array_keys($cases), true));
 });
 
-it('lets a subclass read the prompt it was constructed with', function () {
+it('lets a subclass read the prompt it was constructed with', function (): void {
     // A `private readonly $prompt` is out of scope here, so `??` would fall
     // through to the placeholder: the promoted property has to stay `protected`.
     $page = new class extends LoginPage
@@ -124,8 +124,8 @@ it('lets a subclass read the prompt it was constructed with', function () {
         ->toContain('prompt-status:Your session expired.');
 });
 
-it('honors a subclass bound to a view contract through the real route', function () {
-    $this->app->bind(LoginView::class, fn () => new class extends LoginPage
+it('honors a subclass bound to a view contract through the real route', function (): void {
+    $this->app->bind(LoginView::class, fn (): LoginPage => new class extends LoginPage
     {
         protected function emailField(): TextInput
         {

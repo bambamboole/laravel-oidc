@@ -5,11 +5,11 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Workbench\App\Models\User;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->fake = OidcClient::fake()->clientId('client-123');
 });
 
-it('redirects to the provider authorization endpoint with pkce', function () {
+it('redirects to the provider authorization endpoint with pkce', function (): void {
     $this->fake->assertRedirectedToProvider($this->get(route('login')));
 
     $this->assertNotNull(session('oidc-client.state'));
@@ -17,7 +17,7 @@ it('redirects to the provider authorization endpoint with pkce', function () {
     $this->assertNotNull(session('oidc-client.code_verifier'));
 });
 
-it('answers an Inertia login request with a 409 + X-Inertia-Location instead of a redirect', function () {
+it('answers an Inertia login request with a 409 + X-Inertia-Location instead of a redirect', function (): void {
     $response = $this->get(route('login'), ['X-Inertia' => 'true']);
 
     $response->assertStatus(409);
@@ -25,7 +25,7 @@ it('answers an Inertia login request with a 409 + X-Inertia-Location instead of 
         ->toStartWith(config('oidc-client.issuer').'/oauth/authorize?');
 });
 
-it('sends an authenticated user straight home', function () {
+it('sends an authenticated user straight home', function (): void {
     config()->set('oidc-client.redirect_after_login', '/dashboard');
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);

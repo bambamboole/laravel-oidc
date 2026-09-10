@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
-beforeEach(function () {
+beforeEach(function (): void {
     Cache::clear();
     $this->fake = OidcClient::fake();
 });
 
-it('logs out and redirects to the provider end-session endpoint', function () {
+it('logs out and redirects to the provider end-session endpoint', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $response = $this->actingAs($user)
@@ -25,7 +25,7 @@ it('logs out and redirects to the provider end-session endpoint', function () {
     $this->assertGuest();
 });
 
-it('answers an Inertia logout request with a 409 + X-Inertia-Location instead of a redirect', function () {
+it('answers an Inertia logout request with a 409 + X-Inertia-Location instead of a redirect', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $response = $this->actingAs($user)
@@ -38,7 +38,7 @@ it('answers an Inertia logout request with a 409 + X-Inertia-Location instead of
     $this->assertGuest();
 });
 
-it('redirects home when the provider has no end-session endpoint', function () {
+it('redirects home when the provider has no end-session endpoint', function (): void {
     $this->fake->withoutEndSessionEndpoint();
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
@@ -49,7 +49,7 @@ it('redirects home when the provider has no end-session endpoint', function () {
     $this->assertGuest();
 });
 
-it('omits id_token_hint when no id_token was stored in the session', function () {
+it('omits id_token_hint when no id_token was stored in the session', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $response = $this->actingAs($user)->post(route('logout'));
@@ -59,7 +59,7 @@ it('omits id_token_hint when no id_token was stored in the session', function ()
     expect($location)->not->toContain('id_token_hint');
 });
 
-it('persists local logout when provider discovery fails', function () {
+it('persists local logout when provider discovery fails', function (): void {
     // The fake models success responses only; a real transport failure needs a
     // raw Http::fake() against a dedicated issuer.
     config()->set('oidc-client.issuer', 'https://unavailable.example.com');
@@ -68,7 +68,7 @@ it('persists local logout when provider discovery fails', function () {
         'https://unavailable.example.com/.well-known/openid-configuration' => Http::response([], 503),
     ]);
 
-    Route::get('/session-status', fn () => auth()->check() ? 'authenticated' : 'guest');
+    Route::get('/session-status', fn (): string => auth()->check() ? 'authenticated' : 'guest');
 
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 

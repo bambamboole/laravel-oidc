@@ -17,7 +17,7 @@ class BackchannelLogoutFlowTest extends BackchannelLogoutEnabledTestCase
 
         // A route through the `web` group, exactly like an app-defined page, so we
         // exercise the auto-appended EnforceBackchannelLogout middleware for real.
-        Route::get('/session-status', fn () => auth()->check() ? 'authenticated' : 'guest')
+        Route::get('/session-status', fn (): string => auth()->check() ? 'authenticated' : 'guest')
             ->middleware('web');
 
         $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);

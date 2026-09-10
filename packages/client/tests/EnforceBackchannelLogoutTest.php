@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Client\Http\Middleware\EnforceBackchannelLogout;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -10,7 +11,7 @@ use Workbench\App\Models\User;
 
 beforeEach(fn () => config()->set('oidc-client.backchannel_logout.enabled', true));
 
-it('logs out a request whose session sid is revoked', function () {
+it('logs out a request whose session sid is revoked', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
     $this->actingAs($user);
     session()->put('oidc-client.sid', 'sess-x');
@@ -19,12 +20,12 @@ it('logs out a request whose session sid is revoked', function () {
     $request = Request::create('/dashboard');
     $request->setLaravelSession(session()->driver());
 
-    app(EnforceBackchannelLogout::class)->handle($request, fn ($r) => response('ok'));
+    app(EnforceBackchannelLogout::class)->handle($request, fn ($r): ResponseFactory|\Illuminate\Http\Response => response('ok'));
 
     expect(Auth::guard(config('oidc-client.login_guard', 'web'))->check())->toBeFalse();
 });
 
-it('passes through an unmarked session', function () {
+it('passes through an unmarked session', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm2@example.com', 'password' => 'x']);
     $this->actingAs($user);
     session()->put('oidc-client.sid', 'sess-y');
@@ -32,7 +33,7 @@ it('passes through an unmarked session', function () {
     $request = Request::create('/dashboard');
     $request->setLaravelSession(session()->driver());
 
-    app(EnforceBackchannelLogout::class)->handle($request, fn ($r) => response('ok'));
+    app(EnforceBackchannelLogout::class)->handle($request, fn ($r): ResponseFactory|\Illuminate\Http\Response => response('ok'));
 
     expect(Auth::guard(config('oidc-client.login_guard', 'web'))->check())->toBeTrue();
 });

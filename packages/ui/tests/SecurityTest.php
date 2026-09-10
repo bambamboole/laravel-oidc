@@ -13,7 +13,7 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Workbench\App\Models\User;
 
-test('the regenerate action replaces recovery codes', function () {
+test('the regenerate action replaces recovery codes', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user);
     $originalCodes = app(RecoveryCodeProvider::class)->generate($user);
@@ -27,7 +27,7 @@ test('the regenerate action replaces recovery codes', function () {
         ->not->toBe($originalCodes);
 });
 
-test('the recovery codes fragment renders the unused codes', function () {
+test('the recovery codes fragment renders the unused codes', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $codes = app(RecoveryCodeProvider::class)->generate($user);
 
@@ -38,7 +38,7 @@ test('the recovery codes fragment renders the unused codes', function () {
         ->assertSee(__('oidc-ui::security.recovery-codes.description'), false);
 });
 
-test('the recovery codes fragment reports when no codes exist', function () {
+test('the recovery codes fragment reports when no codes exist', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
     $this->actingAs($user)
@@ -47,7 +47,7 @@ test('the recovery codes fragment reports when no codes exist', function () {
         ->assertSee(__('oidc-ui::security.recovery-codes.none'), false);
 });
 
-test('the regenerate action opens the recovery codes modal', function () {
+test('the regenerate action opens the recovery codes modal', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user);
     app(RecoveryCodeProvider::class)->generate($user);
@@ -67,7 +67,7 @@ test('the regenerate action opens the recovery codes modal', function () {
         ->toMatchArray(['type' => 'fragment', 'id' => 'oidc.recovery-codes']);
 });
 
-test('the methods table lists confirmed enrollments across providers with their role', function () {
+test('the methods table lists confirmed enrollments across providers with their role', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user, 'Work phone');
     $user->totpFactors()->update(['confirmed_at' => now()]);
@@ -84,7 +84,7 @@ test('the methods table lists confirmed enrollments across providers with their 
         ->and($rows->firstWhere('label', 'Yubikey')['description'])->toBe(__('oidc-ui::auth.two-factor.method.webauthn'));
 });
 
-test('the methods table backs the list with a recovery-codes row', function () {
+test('the methods table backs the list with a recovery-codes row', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user, 'Work phone');
     $user->totpFactors()->update(['confirmed_at' => now()]);
@@ -99,7 +99,7 @@ test('the methods table backs the list with a recovery-codes row', function () {
         ->and($backup['role'])->toBe(__('oidc-ui::security.role.backup'));
 });
 
-test('revoking the last challengeable factor takes the recovery codes with it', function () {
+test('revoking the last challengeable factor takes the recovery codes with it', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $factor = app(TotpFactorProvider::class)->enroll($user);
     $factor->forceFill(['confirmed_at' => now()])->save();
@@ -115,7 +115,7 @@ test('revoking the last challengeable factor takes the recovery codes with it', 
         ->and($user->recoveryCodes()->exists())->toBeFalse();
 });
 
-test('revoking one of several factors keeps the recovery codes', function () {
+test('revoking one of several factors keeps the recovery codes', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $factor = app(TotpFactorProvider::class)->enroll($user);
     $factor->forceFill(['confirmed_at' => now()])->save();
@@ -130,7 +130,7 @@ test('revoking one of several factors keeps the recovery codes', function () {
         ->and($user->passkeys()->count())->toBe(1);
 });
 
-test('the revoke-factor action removes exactly the targeted enrollment', function () {
+test('the revoke-factor action removes exactly the targeted enrollment', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $first = app(TotpFactorProvider::class)->enroll($user, 'First');
     $user->totpFactors()->update(['confirmed_at' => now()]);
@@ -144,7 +144,7 @@ test('the revoke-factor action removes exactly the targeted enrollment', functio
     expect($user->totpFactors()->pluck('id')->all())->toBe([$second->getKey()]);
 });
 
-test('the revoke-factor action rejects foreign and unknown enrollments', function () {
+test('the revoke-factor action rejects foreign and unknown enrollments', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     $other = User::create(['name' => 'O', 'email' => 'o@example.com', 'password' => 'secret']);
     $foreign = app(TotpFactorProvider::class)->enroll($other, 'Other');
@@ -160,7 +160,7 @@ test('the revoke-factor action rejects foreign and unknown enrollments', functio
     expect($other->totpFactors()->exists())->toBeTrue();
 });
 
-test('the send-verification-email action notifies an unverified user', function () {
+test('the send-verification-email action notifies an unverified user', function (): void {
     Notification::fake();
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
 
@@ -176,7 +176,7 @@ test('the send-verification-email action notifies an unverified user', function 
     Notification::assertSentTo($user, VerifyEmail::class);
 });
 
-test('the send-verification-email action reports an already-verified user without resending', function () {
+test('the send-verification-email action reports an already-verified user without resending', function (): void {
     Notification::fake();
     $user = User::create([
         'name' => 'M',
@@ -197,7 +197,7 @@ test('the send-verification-email action reports an already-verified user withou
     Notification::assertNothingSent();
 });
 
-test('the send-verification-email action is forbidden for a user that cannot verify their email', function () {
+test('the send-verification-email action is forbidden for a user that cannot verify their email', function (): void {
     $user = new GenericUser(['id' => 1]);
 
     $this->actingAs($user)

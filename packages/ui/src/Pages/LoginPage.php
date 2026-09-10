@@ -41,7 +41,7 @@ class LoginPage extends AuthPage implements LoginView
 
     public function respond(LoginPrompt $prompt, Request $request): Responsable|Response
     {
-        return (new static($prompt))->toResponse($request);
+        return new static($prompt)->toResponse($request);
     }
 
     public function title(): string
@@ -55,7 +55,7 @@ class LoginPage extends AuthPage implements LoginView
 
         return $schema->schema([
             $this->heading('login-heading', __('oidc-ui::auth.login.heading'), __('oidc-ui::auth.login.subtitle')),
-            ...($passkey === null ? [] : [$passkey]),
+            ...($passkey instanceof PasskeyVerify ? [$passkey] : []),
             Form::make('login-form')
                 ->action(route('identity.login.store', absolute: false))
                 ->method(HttpMethod::Post)

@@ -14,13 +14,14 @@ use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token\Builder;
 use phpseclib3\Crypt\EC;
+use phpseclib3\Crypt\EC\PrivateKey;
 use phpseclib3\Crypt\RSA;
 
 class FakeOidcProvider
 {
     private readonly RSA\PrivateKey $privateKey;
 
-    private ?EC\PrivateKey $ecPrivateKey = null;
+    private ?PrivateKey $ecPrivateKey = null;
 
     public function __construct()
     {
@@ -29,10 +30,10 @@ class FakeOidcProvider
         $this->privateKey = $key;
     }
 
-    private function ecPrivateKey(): EC\PrivateKey
+    private function ecPrivateKey(): PrivateKey
     {
-        if ($this->ecPrivateKey === null) {
-            /** @var EC\PrivateKey $key */
+        if (! $this->ecPrivateKey instanceof PrivateKey) {
+            /** @var PrivateKey $key */
             $key = EC::createKey('secp256r1');
             $this->ecPrivateKey = $key;
         }
@@ -98,7 +99,7 @@ class FakeOidcProvider
      */
     private function build(array $claims, string $kid, string $algorithm = 'RS256', array $headers = []): string
     {
-        $builder = (new Builder(new JoseEncoder, ChainedFormatter::default()))->withHeader('kid', $kid);
+        $builder = new Builder(new JoseEncoder, ChainedFormatter::default())->withHeader('kid', $kid);
 
         foreach ($headers as $name => $value) {
             $builder = $builder->withHeader($name, $value);
@@ -139,8 +140,8 @@ class FakeOidcProvider
      */
     public function rawIdToken(array $claims, string $kid): string
     {
-        $header = $this->base64Url((string) json_encode(['alg' => 'RS256', 'typ' => 'JWT', 'kid' => $kid], JSON_THROW_ON_ERROR));
-        $payload = $this->base64Url((string) json_encode($claims, JSON_THROW_ON_ERROR));
+        $header = $this->base64Url(json_encode(['alg' => 'RS256', 'typ' => 'JWT', 'kid' => $kid], JSON_THROW_ON_ERROR));
+        $payload = $this->base64Url(json_encode($claims, JSON_THROW_ON_ERROR));
         $encoded = $header.'.'.$payload;
         $signature = $this->privateKey
             ->withHash('sha256')

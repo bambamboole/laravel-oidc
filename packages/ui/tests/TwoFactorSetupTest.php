@@ -56,7 +56,7 @@ function resolveSetupField(mixed $test, User $user, string $option): array
         ->json('fields.setup.props');
 }
 
-test('the picker offers every enrollment option with what it is good for', function () {
+test('the picker offers every enrollment option with what it is good for', function (): void {
     $choice = pickerChoice();
 
     expect(array_column($choice->options, 'value'))->toBe(['passkey', 'security_key', 'totp'])
@@ -67,13 +67,13 @@ test('the picker offers every enrollment option with what it is good for', funct
         ->and($choice->options[2]->data['description'])->toBe(__('oidc-ui::security.option.totp.description'));
 });
 
-test('the picker carries the recommended option as its value', function () {
+test('the picker carries the recommended option as its value', function (): void {
     $choice = pickerChoice();
 
     expect($choice->value)->toBe('passkey');
 });
 
-test('the picker renders each option as a card bound to its data', function () {
+test('the picker renders each option as a card bound to its data', function (): void {
     $choice = pickerChoice();
 
     /** @var array<string, mixed> $node */
@@ -96,7 +96,7 @@ test('the picker renders each option as a card bound to its data', function () {
         ->and($bound)->toEqualCanonicalizing(['icon', 'label', 'role', 'description']);
 });
 
-test('resolving a code option begins the enrollment and returns its setup payload', function () {
+test('resolving a code option begins the enrollment and returns its setup payload', function (): void {
     $user = setupUser();
 
     $props = resolveSetupField($this, $user, 'totp');
@@ -108,7 +108,7 @@ test('resolving a code option begins the enrollment and returns its setup payloa
         ->and($user->recoveryCodes()->count())->toBe(0);
 });
 
-test('resolving again for the same option reuses the pending enrollment', function () {
+test('resolving again for the same option reuses the pending enrollment', function (): void {
     $user = setupUser();
 
     $first = resolveSetupField($this, $user, 'totp');
@@ -118,7 +118,7 @@ test('resolving again for the same option reuses the pending enrollment', functi
         ->and($user->totpFactors()->count())->toBe(1);
 });
 
-test('resolving a ceremony option asks the browser for the named authenticator', function (string $option, string $attachment) {
+test('resolving a ceremony option asks the browser for the named authenticator', function (string $option, string $attachment): void {
     config(['passkeys.user_handle_secret' => 'user-handle-secret']);
 
     $props = resolveSetupField($this, setupUser(), $option);
@@ -131,7 +131,7 @@ test('resolving a ceremony option asks the browser for the named authenticator',
     ['security_key', 'cross-platform'],
 ]);
 
-test('switching the ceremony option reissues the challenge', function () {
+test('switching the ceremony option reissues the challenge', function (): void {
     config(['passkeys.user_handle_secret' => 'user-handle-secret']);
     $user = setupUser();
 
@@ -141,7 +141,7 @@ test('switching the ceremony option reissues the challenge', function () {
     expect($securityKey['webauthnOptions']['challenge'])->not->toBe($passkey['webauthnOptions']['challenge']);
 });
 
-test('finishing the wizard confirms the factor and shows the fresh recovery codes', function () {
+test('finishing the wizard confirms the factor and shows the fresh recovery codes', function (): void {
     // Observe Lattice's own effect flasher rather than Inertia's flash-bag
     // internals, which vary across inertia-laravel versions.
     $recorder = new class
@@ -178,7 +178,7 @@ test('finishing the wizard confirms the factor and shows the fresh recovery code
         ->and($user->recoveryCodes()->count())->toBe(8);
 });
 
-test('a second factor is confirmed without reissuing recovery codes', function () {
+test('a second factor is confirmed without reissuing recovery codes', function (): void {
     $user = setupUser();
     $first = app(TotpFactorProvider::class)->enroll($user);
     $first->forceFill(['confirmed_at' => now()])->save();
@@ -200,7 +200,7 @@ test('a second factor is confirmed without reissuing recovery codes', function (
         ->toBe($codes);
 });
 
-test('a confirmation that does not prove the setup returns a field error', function () {
+test('a confirmation that does not prove the setup returns a field error', function (): void {
     $user = setupUser();
     resolveSetupField($this, $user, 'totp');
 
@@ -211,7 +211,7 @@ test('a confirmation that does not prove the setup returns a field error', funct
     expect($user->totpFactors()->whereNotNull('confirmed_at')->exists())->toBeFalse();
 });
 
-test('a confirmed factor never has its secret shown again', function () {
+test('a confirmed factor never has its secret shown again', function (): void {
     $user = setupUser();
     $confirmed = app(TotpFactorProvider::class)->enroll($user);
     $confirmed->forceFill(['confirmed_at' => now()])->save();
@@ -224,7 +224,7 @@ test('a confirmed factor never has its secret shown again', function () {
         ->and($user->totpFactors()->count())->toBe(2);
 });
 
-test('the host can point the wizard at its own recovery codes modal', function () {
+test('the host can point the wizard at its own recovery codes modal', function (): void {
     $recorder = new class
     {
         /** @var list<object> */
@@ -253,7 +253,7 @@ test('the host can point the wizard at its own recovery codes modal', function (
     ))->toBe(['host.custom-codes']);
 });
 
-test('a ceremony credential submitted as a JSON string reaches the provider decoded', function () {
+test('a ceremony credential submitted as a JSON string reaches the provider decoded', function (): void {
     $provider = new class implements EnrollableFactorProvider
     {
         /** @var array<string, mixed>|null */
@@ -324,7 +324,7 @@ test('a ceremony credential submitted as a JSON string reaches the provider deco
     expect($provider->confirmedWith)->toBe(['credential' => $credential, 'name' => 'My key']);
 });
 
-test('an unknown enrollment option is rejected', function () {
+test('an unknown enrollment option is rejected', function (): void {
     $this->actingAs(setupUser())
         ->submitForm(TwoFactorSetupForm::class, ['option' => 'sms', 'setup' => '000000'])
         ->assertInvalid(['option']);
