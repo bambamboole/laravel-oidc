@@ -5,6 +5,23 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.26.0](https://github.com/bambamboole/laravel-oidc/compare/v0.25.0...v0.26.0) (2026-09-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** $api->requireMfa() for a user without a factor no longer denies the login when a factor could be enrolled. The enrollment routes keep their names but no longer run the identity guard.
+* **server:** LoginOutcome has a fourth case, so an exhaustive match over it needs a RequiredAction arm. LoginFinalizer gains finish(); a flow that verified its own credential should call it rather than complete(), which asks the realm nothing. The email-verification routes keep their names but no longer run the identity guard.
+* **server:** a Realm implementation must add authentication(), or delegate it to ConfiguredRealm like the other settings.
+
+### Features
+
+* **server:** configure the accepted login methods and mfa per realm ([30f4814](https://github.com/bambamboole/laravel-oidc/commit/30f48143ef48999a4e003e8f391d771673d406a4))
+* **server:** enroll a second factor when the realm requires one ([fd8624e](https://github.com/bambamboole/laravel-oidc/commit/fd8624e299f0d1bc99dc14b96b2614f26c972b83))
+* **server:** hold a login until the realm's required actions are done ([e62740b](https://github.com/bambamboole/laravel-oidc/commit/e62740b454f123e5271dafb7884d0361752a0664))
+* **server:** let a user change their password, and force it once it expires ([52825a2](https://github.com/bambamboole/laravel-oidc/commit/52825a24cd488ffaeb9c9450c4b6d75cacbf5691))
+* **server:** refuse an authorization code while a required action is open ([e70e166](https://github.com/bambamboole/laravel-oidc/commit/e70e1666dc79907ca9e0e1963a10076e135ec006))
+
 ## [0.25.0](https://github.com/bambamboole/laravel-oidc/compare/v0.24.0...v0.25.0) (2026-09-10)
 
 
