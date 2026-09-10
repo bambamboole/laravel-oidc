@@ -53,7 +53,7 @@ interface ScopeRepository
 
     /**
      * The last word on what a token gets: `$requested` is already limited to
-     * known scopes the client may hold.
+     * known scopes the client is assigned, its default scopes included.
      *
      * @param  Scope[]  $requested
      * @return Scope[]

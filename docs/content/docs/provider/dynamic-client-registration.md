@@ -60,11 +60,10 @@ dynamic client registration is enabled, both documents advertise the
 Registration is disabled by default. Enable and scope it via `oidc.clients.registration`:
 
 ```php
-'dcr' => [
+'registration' => [
     'enabled' => env('OIDC_DCR_ENABLED', false),
     'allowed_redirect_schemes' => [],       // e.g. ['claude', 'cursor', 'vscode']
     'allowed_redirect_domains' => ['*'],    // exact hosts, or '*' for any
-    'default_scopes' => [],                 // e.g. ['mcp:use'] — restricts registered clients
 ],
 ```
 
@@ -86,8 +85,11 @@ else MCP clients send) is ignored:
 PKCE is enforced by the grant for every client. The endpoint is unauthenticated (as the RFC and
 MCP clients expect) but throttled; keep the redirect allowlists as tight as your clients allow.
 
-When `default_scopes` is non-empty the registered client is restricted to those scopes via
-the client's `scopes` column; an empty list leaves the client unrestricted. A successful
+A registered client receives the realm's [scope assignment](/provider/scopes-and-claims/#client-scope-assignment)
+(`oidc.clients.default_scopes` and `oidc.clients.optional_scopes`) like every other client; the
+request's `scope` member is ignored. The response's `scope` echoes that assignment unless it
+contains `*`: MCP clients send the value back as the authorize `scope`, so a client that may
+request every catalog scope gets no hint and falls back to `scopes_supported`. A successful
 registration returns `201` echoing every stored value (RFC 7591 §3.2.1):
 
 ```json

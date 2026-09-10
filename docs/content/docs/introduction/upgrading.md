@@ -63,6 +63,12 @@ A client now carries a `client_id` separate from its primary key, so it can be r
 without rewriting its tokens. A client created by the package uses its key as the `client_id`
 unless you give it a readable one.
 
+Every client also carries a [scope assignment](/provider/scopes-and-claims/#client-scope-assignment):
+`default_scopes` and `optional_scopes` replace the single allow-list. New clients take the realm's
+`clients.default_scopes` / `clients.optional_scopes` (with the defaults, anything may be requested
+and nothing is granted unasked); `oidc:client --default-scope` / `--optional-scope` override them.
+`oidc.clients.registration.default_scopes` is gone.
+
 ### 3. Everyone signs in again
 
 Access tokens, refresh tokens and authorization codes are not migrated. Existing sessions end at

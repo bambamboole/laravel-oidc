@@ -61,7 +61,8 @@ below with its default and the environment variable that overrides it.
 | `clients.registration.enabled` | `false` (`OIDC_DCR_ENABLED`) | Answers RFC 7591 dynamic client registration on `POST /oauth/register` — see [Dynamic client registration](/provider/dynamic-client-registration/). |
 | `clients.registration.allowed_redirect_schemes` | `[]` | Custom URI schemes accepted for registered redirect URIs. |
 | `clients.registration.allowed_redirect_domains` | `['*']` | Hosts accepted for http(s) redirect URIs; `*` allows any. |
-| `clients.registration.default_scopes` | `[]` | Scopes granted to dynamically registered clients; empty leaves them unrestricted. |
+| `clients.default_scopes` | `[]` | Scopes every new client is assigned and granted without requesting them — see [Client scope assignment](/provider/scopes-and-claims/#client-scope-assignment). |
+| `clients.optional_scopes` | `['*']` | Scopes every new client is assigned and granted on request; `*` stands for every catalog scope. |
 | `clients.token_exchange` | `true` (`OIDC_TOKEN_EXCHANGE_ENABLED`) | Enables the RFC 8693 token-exchange grant. |
 
 ## Auth engine

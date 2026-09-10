@@ -31,6 +31,8 @@ php artisan oidc:client --first-party \
 | `--redirect-uri=*` | Registered authorization callback URI. Repeatable. At least one is required. Prompted for interactively if omitted. |
 | `--post-logout-redirect-uri=*` | Registered post-logout redirect URI. Repeatable. |
 | `--audience=*` | Allowed token-exchange audience. Repeatable. Adding any enables the token-exchange grant on the client. |
+| `--default-scope=*` | Scope granted without being requested. Repeatable; overrides the realm's `clients.default_scopes`. |
+| `--optional-scope=*` | Scope granted on request, `*` for every catalog scope. Repeatable; overrides the realm's `clients.optional_scopes`. |
 | `--trusted` | Mark the first-party client as trusted (skips consent). |
 | `--adopt=` | Adopt an existing OAuth client id under the first-party provisioning key. |
 | `--rotate` | Rotate the client secret explicitly. |

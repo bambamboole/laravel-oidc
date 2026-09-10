@@ -13,9 +13,31 @@ override the description of a standard scope simply by defining it in your catal
 ### Wildcard (`*`)
 
 `*` always resolves as a scope and survives finalization for the `personal_access` and
-`client_credentials` grants (e.g. `$user->createToken('cli', ['*'])`). It is stripped for
-`authorization_code` (interactive) flows, where a blanket grant has no business being
-granted on a consent screen.
+`client_credentials` grants (e.g. `$user->createToken('cli', ['*'])`), provided the client's
+optional scopes contain it. It is stripped for `authorization_code` (interactive) flows, where a
+blanket grant has no business being granted on a consent screen.
+
+### Client scope assignment
+
+Every client carries two lists, `default_scopes` and `optional_scopes`. Default scopes are granted
+without being requested; optional scopes only when the request names them. Together they are what
+the client may request at all: a known catalog scope outside the assignment is answered with
+`invalid_scope` by the authorization endpoint and by the `client_credentials` grant. `*` among the
+optional scopes stands for every catalog scope.
+
+New clients receive the realm's `clients.default_scopes` (default `[]`) and
+`clients.optional_scopes` (default `['*']`) — from `ClientRepository`, `oidc:client` and
+[dynamic registration](/provider/dynamic-client-registration/) alike — so a zero-config
+deployment behaves as before: anything may be requested, nothing is granted unasked. `oidc:client`
+overrides the realm assignment with `--default-scope` and `--optional-scope`. `openid` is the
+typical default scope for an OIDC-only deployment; the client personal access tokens are minted
+against needs `*` among its optional scopes for wildcard tokens.
+
+Default scopes are added to an authorization request before consent, so they appear on the consent
+screen and in the stored consent like requested scopes; a [hidden](#scope-catalog) scope is the
+one exception — granted, never shown. Grants bounded by an earlier artifact (`refresh_token`,
+token exchange) never gain scopes their original token did not carry, whatever the client's
+defaults are now.
 
 ### Registering API scopes
 
