@@ -40,6 +40,7 @@ class AuthenticatedSessionController
 
         return app(LoginView::class)->respond(new LoginPrompt(
             status: is_string($status) ? $status : null,
+            methods: $this->realms->current()->authentication()->methods,
         ), $request);
     }
 
