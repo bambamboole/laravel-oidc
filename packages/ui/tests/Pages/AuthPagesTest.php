@@ -6,6 +6,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginPrompt;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetPrompt;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetRequestPrompt;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdatePrompt;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorEnrollment;
 use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengePrompt;
 use Bambamboole\LaravelOidc\Ui\Pages\ConfirmPasswordPage;
@@ -13,6 +14,7 @@ use Bambamboole\LaravelOidc\Ui\Pages\ForgotPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\LoginPage;
 use Bambamboole\LaravelOidc\Ui\Pages\ResetPasswordPage;
 use Bambamboole\LaravelOidc\Ui\Pages\TwoFactorChallengePage;
+use Bambamboole\LaravelOidc\Ui\Pages\UpdatePasswordPage;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -231,4 +233,20 @@ it('shows the log-out link on the verify-email page only while the configured lo
     $this->get(route('identity.verification.notice'), ['X-Inertia' => 'true'])
         ->assertOk()
         ->assertDontSee(__('oidc-ui::common.action.log-out'), false);
+});
+
+it('asks for the current password only when the server will accept one', function (): void {
+    expect(renderPage(new UpdatePasswordPage(new PasswordUpdatePrompt(requiresCurrentPassword: true))))
+        ->toContain(__('oidc-ui::auth.update-password.current'));
+
+    expect(renderPage(new UpdatePasswordPage(new PasswordUpdatePrompt(requiresCurrentPassword: false))))
+        ->not->toContain(__('oidc-ui::auth.update-password.current'));
+});
+
+it('says why the user is on the change-password page when the password expired', function (): void {
+    expect(renderPage(new UpdatePasswordPage(new PasswordUpdatePrompt(requiresCurrentPassword: false, expired: true))))
+        ->toContain(__('oidc-ui::auth.update-password.subtitle-expired'));
+
+    expect(renderPage(new UpdatePasswordPage(new PasswordUpdatePrompt(requiresCurrentPassword: true))))
+        ->toContain(__('oidc-ui::auth.update-password.subtitle'));
 });

@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\EmailVerifica
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\NewPasswordController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\PasskeyAuthenticatedSessionController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\PasswordResetLinkController;
+use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\PasswordUpdateController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\RegisteredUserController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\SendEmailVerificationNotificationController;
 use Bambamboole\LaravelOidc\Server\Authentication\Http\Controllers\ShowConfirmedPasswordStatusController;
@@ -84,7 +85,10 @@ Route::middleware([ResolveRealm::class, ...$shared])
                 });
             });
 
-            Route::middleware($actionSubject)->group(function (): void {
+            Route::middleware($actionSubject)->group(function () use ($password): void {
+                Route::get('auth/user/password', [PasswordUpdateController::class, 'create'])->middleware($password)->name('identity.password.change');
+                Route::post('auth/user/password', [PasswordUpdateController::class, 'store'])->middleware([$password, 'throttle:5,1'])->name('identity.password.change.store');
+
                 Route::get('auth/email/verify', EmailVerificationPromptController::class)->name('identity.verification.notice');
                 Route::get('auth/email/verify/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('identity.verification.verify');
                 Route::post('auth/email/verification-notification', SendEmailVerificationNotificationController::class)->middleware('throttle:6,1')->name('identity.verification.send');

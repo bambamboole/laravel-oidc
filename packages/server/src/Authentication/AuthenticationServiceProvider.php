@@ -12,12 +12,14 @@ use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\NullDeviceRecognizer;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\PostLoginPipeline;
 use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\DerivedPendingActions;
 use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\RequiredActionRegistry;
+use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\UpdatePasswordAction;
 use Bambamboole\LaravelOidc\Server\Authentication\RequiredActions\VerifyEmailAction;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\EmailVerificationView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\LoginView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordConfirmationView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetRequestView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordResetView;
+use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdateView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\RegisterView;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AcrResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\DeviceRecognizer;
@@ -56,7 +58,10 @@ class AuthenticationServiceProvider extends ServiceProvider
         // actions; an application appends its own to the same registry.
         $this->app->singleton(RequiredActionRegistry::class, function (Application $app): RequiredActionRegistry {
             $registry = new RequiredActionRegistry;
-            $registry->register($app->make(VerifyEmailAction::class));
+            $registry->register(
+                $app->make(VerifyEmailAction::class),
+                $app->make(UpdatePasswordAction::class),
+            );
 
             return $registry;
         });
@@ -71,6 +76,7 @@ class AuthenticationServiceProvider extends ServiceProvider
             PasswordResetView::class,
             EmailVerificationView::class,
             PasswordConfirmationView::class,
+            PasswordUpdateView::class,
         ] as $contract) {
             $this->app->bind($contract, fn (): never => throw MissingAuthViewException::forContract($contract));
         }

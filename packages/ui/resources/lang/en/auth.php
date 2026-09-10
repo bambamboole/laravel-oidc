@@ -50,6 +50,16 @@ return [
         'submit' => 'Reset password',
     ],
 
+    'update-password' => [
+        'title' => 'Change password',
+        'heading' => 'Change your password',
+        'subtitle' => 'Choose a new password for your account.',
+        'subtitle-expired' => 'Your password has expired. Choose a new one to continue.',
+        'current' => 'Current password',
+        'new' => 'New password',
+        'submit' => 'Change password',
+    ],
+
     'confirm-password' => [
         'title' => 'Confirm password',
         'heading' => 'Confirm password',
