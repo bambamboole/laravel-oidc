@@ -9,6 +9,46 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.26: a scope belongs to one resource
+
+Scopes are no longer a flat catalog per realm. Every scope belongs to exactly one resource server
+and only resolves for requests that name it, so two APIs can carry the same scope value and mean
+different things by it — see [Scopes & claims](/provider/scopes-and-claims/). A realm that
+registers no resources under `oidc.resources` keeps the behavior it had: the whole catalog belongs
+to the realm and is requestable without a `resource`.
+
+What changed regardless:
+
+- **A catalog scope a resource lists in `oidc.resources` is no longer requestable without a
+  `resource`.** It now belongs to that resource alone; a request without `resource` gets the realm
+  default audience, and a request for another resource gets `invalid_scope`. Narrowing the
+  audience with `resource` at the token endpoint drops the scopes the narrowed resource does not
+  own. The OIDC standard scopes (`openid`, `profile`, `email`) belong to the realm but keep
+  working under every audience.
+- **`ScopeCatalog::scopes()` takes the requested resources:**
+  `scopes(array $audiences): array<string, string>`. It is asked for the resources of the request
+  — never an empty list; the realm's issuer URL stands for the realm's own scopes — and returns
+  only what those resources own. An inline `[scope => description]` catalog is split for you by
+  the resource lists in `oidc.resources`.
+- **`ScopeRepository` takes them too:** `all(array $audiences = [])`,
+  `find(string $identifier, array $audiences = [])` and
+  `finalize(array $requested, string $grantType, ?Client $client, ?string $userIdentifier = null, array $audiences = [])`.
+  An empty list means the realm's default audience, the same convention the token minter follows.
+  A custom repository must widen its signatures; a caller that passes nothing keeps today's
+  meaning.
+- **`Client::allowsScope()` takes them too:** `allowsScope(string $scope, array $audiences = [])`,
+  alongside the new `defaultScopes()`, `optionalScopes()` and a widened
+  `assignedScopes(array $audiences = [])`. `*` among the optional scopes now stands for every
+  scope the *requested* resources own, not for every scope in the realm. An assignment entry may
+  name the resource that owns the scope (`'https://api.internal/orders read'`), which limits it to
+  requests for that resource; bare entries are unchanged.
+- **`scopes_supported` in the discovery document is the union** over the realm and every
+  registered resource. Each resource's own RFC 9728 metadata still lists only its scopes.
+- **`ScopeGrant::finalize()` gained the same trailing `array $audiences = []`.**
+
+Nothing about how scopes are stored changed: no migration, and no change to the shape of
+`default_scopes` / `optional_scopes`.
+
 ## 0.26: the realm can hold a login until the user acts
 
 A realm can now refuse to finish a login until the user has confirmed their email address,

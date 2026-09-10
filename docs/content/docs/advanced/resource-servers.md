@@ -19,6 +19,9 @@ issuer alone, so a classic authorization-code token passes; a token addressed to
 resource server, to a client id, or a revoked token 401s regardless of which client it was issued
 to. To obtain a token for a registered resource, the client names it with `resource` at the
 authorization endpoint or exchanges its token for one — see [Access tokens](/provider/access-tokens/).
+The scopes a resource lists in `oidc.resources` are the scopes it owns: they are only issuable for
+a request that names it, and the same value under two resources is two different scopes — see
+[Scopes & claims](/provider/scopes-and-claims/).
 
 This makes `auth:oidc` usable directly on routes that only need *a* valid authenticated user at
 one of the realm's resources. Pair it with `CheckAudience` — see below — when a route must enforce
