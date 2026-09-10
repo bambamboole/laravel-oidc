@@ -14,7 +14,8 @@ below with its default and the environment variable that overrides it.
 | `realm` | `'default'` (`OIDC_REALM`) | Identifier of the realm outside a matched route and of the only realm in a single-realm deployment; per-realm settings come from the `Realm` contract. See [Realms](/provider/realms/). |
 | `claims_supported` | standard set | Claims advertised in the discovery document. |
 | `routes.middleware` | `[]` | Middleware prepended to every registered package route. |
-| `routes.realms` | `'single'` (`OIDC_ROUTE_REALMS`) | `single` serves the configured realm from the application root; `path` serves every realm below `/realms/{realm}` with its own issuer. See [Realms](/provider/realms/). |
+| `routes.realms` | `'single'` (`OIDC_ROUTE_REALMS`) | Where realms appear in URLs: `single` at the application root, `path` below `/realms/{realm}`, `domain` on a host per realm. See [Realms](/provider/realms/). |
+| `routes.domains` | `[]` | `domain` routing only: host => realm identifier. An application with a realm model resolves the host in its own `RealmRepository` instead. |
 
 ## Signing keys
 

@@ -51,10 +51,11 @@ it was: `/oauth/token` stays `/oauth/token` and the issuer stays `https://id.exa
 relying party has to be repointed. Set `OIDC_REALM` if you want the realm to carry a name other
 than `default`.
 
-Deployments that serve more than one realm set `oidc.routes.realms` to `path`. Then every
-endpoint moves below `/realms/{realm}`, the issuer becomes `https://id.example.com/realms/{realm}`,
-and **every relying party has to be repointed** at the new discovery URL
-(`/realms/{realm}/.well-known/openid-configuration`). See [Realms](/provider/realms/).
+Deployments that serve more than one realm set `oidc.routes.realms` to `path` or `domain`. With
+`path` every endpoint moves below `/realms/{realm}` and the issuer becomes
+`https://id.example.com/realms/{realm}`; with `domain` each realm keeps the canonical paths on its
+own host and the issuer is that host. Either way **every relying party has to be repointed** at the
+new discovery URL. See [Realms](/provider/realms/).
 
 ### `oidc.handlers` and `oidc.routes.prefix` are gone
 

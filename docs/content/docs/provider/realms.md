@@ -38,16 +38,52 @@ Where realms appear in URLs is `oidc.routes.realms`:
   ```
 
   A relying party configured against `https://id.example.com/realms/acme` discovers, verifies and
-  logs in entirely within one realm. More than one realm per deployment requires this mode.
+  logs in entirely within one realm. More than one realm per deployment requires this or `domain`.
 
-The mode is fixed when the routes are registered; the route **names** are the same in both.
+- **`domain`** serves every realm from its own host. Each realm is its own origin, so every
+  endpoint keeps the path it has in `single` and the issuer is the host itself:
+
+  ```
+  https://acme.id.example.com/.well-known/openid-configuration
+  https://acme.id.example.com/oauth/authorize
+  https://acme.id.example.com/auth/login
+
+  issuer = https://acme.id.example.com
+  ```
+
+  Map each host to a realm in `oidc.routes.domains`:
+
+  ```php
+  'routes' => [
+      'realms' => 'domain',
+      'domains' => [
+          'acme.id.example.com' => 'acme',
+          'login.globex.example' => 'globex',
+      ],
+  ],
+  ```
+
+  An application with a realm model skips the map and resolves the host in its own
+  [`RealmRepository`](#resolving-the-realm), which is what lets a customer bring their own domain.
+  A host no realm is served from answers 404.
+
+  :::danger[The Host header chooses the realm]
+  Configure Laravel's trusted hosts (and trusted proxies behind a load balancer) before using this
+  mode. An unvalidated `Host` header would otherwise let a caller pick the realm, and with it the
+  issuer the tokens claim.
+  :::
+
+  Because each realm is a separate origin, the browser isolates its cookies, so this mode needs no
+  per-realm session cookie the way `path` does.
+
+The mode is fixed when the routes are registered; the route **names** are the same in all three.
 
 ### Metadata that is not prefixed
 
 RFC 8414 and RFC 9728 build their metadata URLs by inserting the well-known segment *ahead* of
-the issuer's path rather than appending it. In `single` mode the issuer has no path, so both
-documents sit directly below `/.well-known/`. In `path` mode the realm follows the well-known
-segment:
+the issuer's path rather than appending it. In `single` and `domain` mode the issuer has no path,
+so both documents sit directly below `/.well-known/`. In `path` mode the realm follows the
+well-known segment:
 
 ```
 https://id.example.com/.well-known/oauth-authorization-server/realms/acme
@@ -71,15 +107,20 @@ interface RealmResolver
 interface RealmRepository
 {
     public function find(string $id): ?Realm;
+
+    public function findByDomain(string $host): ?Realm;
 }
 ```
 
-The default `RouteRealmResolver` reads the `{realm}` route parameter, asks the bound
-`RealmRepository` for it, and answers 404 for an identifier the repository does not know. Without
-a realm parameter — every request in `single` mode, and console commands or queued jobs in either
-mode — it falls back to `config('oidc.realm')`. The
-default `ConfiguredRealmRepository` accepts every identifier and serves it with the configured
-settings, so a deployment that only scopes data per tenant needs no code.
+In `single` and `path` mode the `RouteRealmResolver` reads the `{realm}` route parameter, asks the
+bound `RealmRepository` for it, and answers 404 for an identifier the repository does not know. In
+`domain` mode the `DomainRealmResolver` asks `findByDomain()` for the request host instead, and a
+host no realm is served from is a 404 just the same. Without a realm to read — every request in
+`single` mode, and console commands or queued jobs in any mode — resolution falls back to
+`config('oidc.realm')`. The
+default `ConfiguredRealmRepository` accepts every identifier, serves it with the configured
+settings, and maps hosts through `oidc.routes.domains`, so a deployment that only scopes data per
+tenant needs no code.
 
 An application with a realm model binds the repository:
 
