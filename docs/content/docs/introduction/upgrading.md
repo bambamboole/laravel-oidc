@@ -9,6 +9,30 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.26: the realm can hold a login until the user acts
+
+A realm can now refuse to finish a login until the user has confirmed their email address,
+replaced an expired password, or enrolled a second factor — see
+[Required actions](/auth/required-actions/). Nothing is required by default, so a deployment that
+changes no configuration keeps the behavior it had. What changed regardless:
+
+- **`Realm` gained `authentication()`.** A model implementing the contract must add it, or delegate
+  it to `ConfiguredRealm` like the other settings.
+- **`LoginOutcome` gained `RequiredAction`.** An exhaustive `match` over it needs a fourth arm.
+- **`LoginFinalizer` gained `finish()`.** A custom flow that verified its own credential should
+  call it rather than `complete()`, which asks the realm nothing and logs the user straight in.
+- **The email-verification and factor-enrollment routes no longer run the identity guard.** They
+  keep their names and paths, but sit behind `RequireActionSubject`, which accepts a session or a
+  pending login. Factor enrollment still confirms a password from a live session; mid-login it
+  cannot and does not.
+- **`$api->requireMfa()` for a user without a factor no longer denies the login** when a factor
+  could be enrolled — it holds the login on enrollment instead, matching `mfa = always`. It still
+  denies when nothing could satisfy the demand.
+- **`PasswordCredential::isExpired()` is enforced.** With `auth.password.max_age_days` set, an
+  expired password now holds the login on the new `identity.password.change` screen instead of
+  merely reporting. A post-login hook that used to deny on it can be deleted. The rotation clock
+  starts at a user's first password login the package sees, so nobody is expired retroactively.
+
 ## 0.24: audiences are requested, not distributed
 
 An access token minted without an RFC 8707 `resource` is now addressed to the realm issuer URL

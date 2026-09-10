@@ -51,6 +51,7 @@ first hook that denies the login.
 | --- | --- |
 | `$api->deny(string $reason)` | Denies the login; the user sees a generic authentication failure |
 | `$api->requireMfa()` | Forces the MFA challenge for this login, even if the client didn't request one |
+| `$api->requireAction(string $key)` | Holds the login until the user completes that [required action](/auth/required-actions/) |
 | `$api->setIdTokenClaim(string $name, mixed $value)` | Queues a claim to be added to the `id_token` once the login completes |
 | `$api->setAccessTokenClaim(string $name, mixed $value)` | Queues a claim for the interactive access token and its refreshed successors |
 
@@ -67,9 +68,19 @@ permissive default. A denied login discards the recorded factor and returns the 
 
 ## `requireMfa()` semantics
 
-Calling `requireMfa()` forces the MFA challenge to be presented. If the user has **no** challengeable
-factor enrolled, the login is **denied** rather than silently skipping MFA. When the user does have a
-challengeable factor, login defers to the [two-factor challenge](/auth/multi-factor/).
+Calling `requireMfa()` forces the MFA challenge to be presented. When the user has a challengeable
+factor, login defers to the [two-factor challenge](/auth/multi-factor/). When they have none, the
+login is held on **factor enrollment** instead — the same place the realm's
+`mfa = always` setting sends them. It is denied only when nothing could satisfy the demand: a realm
+with no enrollable provider, or one that has switched second factors off with `mfa = never`.
+
+## `requireAction()` semantics
+
+`requireAction()` holds the login until that action is settled, for **this login only** — it
+expresses a decision about one attempt, not a property of the account. An action that should
+outlive the login belongs in a `RequiredAction` implementation that derives it from state; see
+[Required actions](/auth/required-actions/). A key no action is registered under is dropped and
+logged rather than parking the user on a screen that does not exist.
 
 ## How this emits `acr` / `amr`
 

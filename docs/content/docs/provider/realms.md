@@ -141,7 +141,7 @@ that derives the realm from anything outside the URL, a request header say, must
 
 ## Realm settings
 
-`Realm` is the contract your model implements. Beyond its identifier it exposes eight typed
+`Realm` is the contract your model implements. Beyond its identifier it exposes nine typed
 settings objects; every behavior that may differ between tenants reads from them instead of
 from `config('oidc.*')`:
 
@@ -151,6 +151,7 @@ from `config('oidc.*')`:
 | `resources()` | `ResourceSettings` | the resource servers the realm serves besides itself: audiences a client may request and RFC 9728 metadata |
 | `sessions()` | `SessionSettings` | SSO session absolute lifetime; session root token TTL, refresh skew and scopes; the provider session cookie name in `path` mode |
 | `login()` | `LoginSettings` | username field, home URL, login route, logout redirect, `acr` values |
+| `authentication()` | `AuthenticationSettings` | the login methods the realm accepts, how hard it insists on a second factor, whether an unverified email address blocks the login |
 | `credentials()` | `CredentialSettings` | challengeable factor providers, TOTP secret length and window, recovery code count, the password policy |
 | `brokering()` | `BrokeringSettings` | upstream identity providers, link-by-verified-email, auto-provisioning |
 | `scopes()` | `ScopeSettings` | the scope catalog and the advertised `claims_supported` |

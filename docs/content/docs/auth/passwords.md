@@ -99,21 +99,29 @@ no row yet, so an existing user's rotation clock starts at their first login aft
 beyond the history window are pruned on every change. If your application changes a password through
 its own code path, call `record($user)` afterwards so history and rotation stay accurate.
 
-Rotation is reported, not enforced: `PasswordCredential::changedAt($user)` dates the current password
-and `isExpired($user)` compares it with `max_age_days`. A user the package has never tracked is not
-expired. Forcing a change is a [post-login hook](/auth/post-login-pipeline/) decision:
+`PasswordCredential::changedAt($user)` dates the current password and `isExpired($user)` compares it
+with `max_age_days`. A user the package has never tracked is not expired, so turning rotation on does
+not lock everybody out at once.
 
-```php
-use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginApi;
-use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\LoginEvent;
-use Bambamboole\LaravelOidc\Server\Shared\Credentials\PasswordCredential;
+Rotation is **enforced**: an expired password raises the `update_password`
+[required action](/auth/required-actions/), which holds the login on the change-password screen and
+stops the authorization endpoint from issuing a code until a fresh password is set.
 
-$pipeline->register(function (LoginEvent $event, LoginApi $api): void {
-    if (app(PasswordCredential::class)->isExpired($event->user)) {
-        $api->deny('password_expired');
-    }
-});
-```
+## Changing a password
+
+| Route name | Verb | Path |
+| --- | --- | --- |
+| `identity.password.change` | `GET` | `auth/user/password` |
+| `identity.password.change.store` | `POST` | `auth/user/password` |
+
+The screen renders through the `PasswordUpdateView` seam and persists through the same
+[`ResetUserPassword`](/auth/overview/) binding the reset flow uses, so your application
+keeps owning the column. The realm's policy and history apply to the new password, and the remember
+token is rotated to cut loose the browsers holding the old one.
+
+The **current password** is required from a live session but not mid-login: there the user proved a
+credential seconds ago, and a login that arrived by [passkey](/auth/login/#passkey-login) or an
+[upstream provider](/auth/social-login/) may have no password to recite.
 
 `verify($user, $password)` is the hash check behind the login and confirmation endpoints; use it
 instead of `Hash::check` when your own code needs to prove a password.

@@ -72,11 +72,14 @@ below with its default and the environment variable that overrides it.
 | `auth.username` | `email` (`OIDC_AUTH_USERNAME`) | The credential field used to log in. |
 | `auth.login_route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name or path unauthenticated users are redirected to. |
 | `auth.logout_redirect` | `/` | Fallback redirect after logout. |
+| `auth.methods` | `['password', 'passkey', 'social']` | The login methods this realm accepts. A method left out has its routes closed, not merely hidden — see [Login](/auth/login/). |
+| `auth.mfa` | `if_enrolled` (`OIDC_AUTH_MFA`) | How hard the realm insists on a second factor: `never`, `if_enrolled` or `always` — see [Multi-factor](/auth/multi-factor/#requiring-a-factor). |
+| `auth.email_verification_required` | `false` (`OIDC_AUTH_EMAIL_VERIFICATION_REQUIRED`) | Whether an unconfirmed address blocks the login — see [Required actions](/auth/required-actions/). |
 | `auth.acr_values` | `['single_factor' => '1', 'multi_factor' => '2']` | The `acr` value a login earns with one method in `amr` and with several; both are advertised as `acr_values_supported`. Substitute URIs or RFC 6711 names your relying parties expect. |
 | `auth.password.min_length` | `8` | Minimum length of a new password — see [Password policy](/auth/passwords/#password-policy). |
 | `auth.password.mixed_case`, `numbers`, `symbols`, `uncompromised` | `false` | Composition rules of the password policy. |
 | `auth.password.history` | `0` | Previous passwords a new one may not repeat; `0` disables the check. |
-| `auth.password.max_age_days` | `null` | Days after which `PasswordCredential::isExpired()` reports the password as expired. |
+| `auth.password.max_age_days` | `null` | Days after which the password counts as expired, raising the `update_password` [required action](/auth/required-actions/). |
 | `auth.two_factor.challenge_providers` | `['totp', 'webauthn']` | Factor keys offered at the challenge step. |
 | `auth.two_factor.secret_length` | `16` | TOTP secret length. |
 | `auth.two_factor.window` | `1` | TOTP validation window. |
