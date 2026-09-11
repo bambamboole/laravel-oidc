@@ -7,9 +7,10 @@ namespace Bambamboole\LaravelOidc\Server\Shared\Audit;
 use DateTimeImmutable;
 
 /**
- * The payload an AuditSink receives. The type is a dotted string whose first
- * segment is the category (auth, oauth, admin). Null context values are
- * dropped so sinks only see keys that carry a value.
+ * The payload an AuditSink receives. The type is the dispatching event's type,
+ * whose value is a dotted string with the category (auth, oauth, admin) as its
+ * first segment. Null context values are dropped so sinks only see keys that
+ * carry a value.
  */
 final readonly class AuditRecord
 {
@@ -20,7 +21,7 @@ final readonly class AuditRecord
      * @param  array<string, mixed>  $context
      */
     public function __construct(
-        public string $type,
+        public \BackedEnum $type,
         public ?string $userId = null,
         public ?string $clientId = null,
         public ?string $sid = null,
@@ -35,7 +36,7 @@ final readonly class AuditRecord
 
     public function category(): string
     {
-        return explode('.', $this->type)[0];
+        return explode('.', (string) $this->type->value)[0];
     }
 
     public function withRequestContext(?string $ip, ?string $userAgent, ?string $sid): self
