@@ -146,7 +146,7 @@ class EloquentAuditSink implements AuditSink
     public function record(AuditRecord $record): void
     {
         DB::table('oidc_audit_log')->insert([
-            'type' => $record->type,
+            'type' => $record->type->value,
             'user_id' => $record->userId,
             'client_id' => $record->clientId,
             'sid' => $record->sid,
@@ -209,9 +209,14 @@ application-level actions can share the audit trail:
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditRecord;
 
+enum AppAuditType: string
+{
+    case ExportDownloaded = 'app.export.downloaded';
+}
+
 final class ExportDownloaded implements AuditEvent
 {
-    public string|BackedEnum $type { get => AppAuditType::ExportDownloaded; }
+    public BackedEnum $type { get => AppAuditType::ExportDownloaded; }
 
     public function __construct(public readonly string $userId, public readonly string $file) {}
 
@@ -224,9 +229,9 @@ final class ExportDownloaded implements AuditEvent
 event(new ExportDownloaded($user->id, 'report.csv'));
 ```
 
-`$type` takes your own backed enum or a plain string; `AuditRecord` and `FakeAuditSink` store and
-compare an enum as its value. PHP does not allow a hooked property in a `readonly class`, so mark
-the constructor parameters `readonly` instead.
+Bring your own backed enum — the contract only asks for a `BackedEnum`, so an app extends the audit
+trail without touching the package's `AuditEventType`. PHP does not allow a hooked property in a
+`readonly class`, so mark the constructor parameters `readonly` instead.
 
 ## Testing
 
