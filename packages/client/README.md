@@ -50,7 +50,6 @@ OIDC_RP_ENABLED=true
 OIDC_RP_ISSUER=https://id.example.com
 OIDC_RP_CLIENT_ID=...
 OIDC_RP_CLIENT_SECRET=...   # optional — omit for a public client
-OIDC_RP_REDIRECT_URI=https://app.example.com/login/callback
 ```
 
 See the **[docs](https://bambamboole.github.io/laravel-oidc/client/overview/)** for the

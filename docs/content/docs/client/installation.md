@@ -31,11 +31,13 @@ OIDC_RP_ENABLED=true
 OIDC_RP_ISSUER=https://id.example.com
 OIDC_RP_CLIENT_ID=...
 OIDC_RP_CLIENT_SECRET=...
-OIDC_RP_REDIRECT_URI=https://app.example.com/login/callback
 ```
 
 `OIDC_RP_CLIENT_SECRET` is optional — leave it unset for a public client; the flow is
 protected by PKCE either way.
+
+The provider sends the user back to the package's own `/login/callback` route. Set
+`OIDC_RP_REDIRECT_URI` only when the provider has to use a different URL.
 
 Everything else (authorization endpoint, token endpoint, JWKS) is discovered from the
 issuer's `/.well-known/openid-configuration`.
@@ -43,7 +45,7 @@ issuer's `/.well-known/openid-configuration`.
 ## Register the client at the provider
 
 At your provider, register a client with the same `client_id` and the exact
-`redirect_uri`. If the provider is your own `laravel-oidc` instance, the
+`redirect_uri` (`https://app.example.com/login/callback` unless you changed it). If the provider is your own `laravel-oidc` instance, the
 [`oidc:client` command](/advanced/first-party-client/) provisions one and prints the
 matching `OIDC_RP_CLIENT_ID` / `OIDC_RP_CLIENT_SECRET` values.
 
