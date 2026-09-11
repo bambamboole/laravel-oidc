@@ -12,7 +12,8 @@ their pruning yourself:
 - **`oidc_authentication_contexts`** grows one row per login. Prune it with
   `oidc:prune-authentication-contexts`.
 - **`oidc_sessions`** and **`oidc_session_participants`** grow one row per login session and per
-  participating client. Prune them with `oidc:prune-sessions`.
+  participating client. Prune them with `oidc:prune-sessions` — see [Sessions](/provider/sessions/)
+  for what an OIDC session is and how it relates to the browser's.
 
 Schedule **all four** — running only some leaves tables growing unbounded, or leaves relying
 parties unnotified of expired sessions. In `routes/console.php`:

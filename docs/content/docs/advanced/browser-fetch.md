@@ -34,7 +34,8 @@ sequenceDiagram
 :::caution[Use a server-side session driver]
 With `SESSION_DRIVER=cookie` the root token rides inside the encrypted session cookie
 sent to the browser. A server-side session driver (e.g. `database`, `redis`) is
-recommended so the root token stays server-side.
+recommended so the root token stays server-side — see
+[Sessions](/provider/sessions/#what-the-package-keeps-in-laravels-session).
 :::
 
 ## Configuration

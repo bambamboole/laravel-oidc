@@ -320,6 +320,12 @@ DB::transaction(function () use ($realm): void {
 
 ## Sessions
 
+This is the realm-specific half of the session story; for how the browser session and the OIDC SSO
+session relate in general, see [Sessions](/provider/sessions/).
+
+Only `path` routing shares a host between realms, so it is the only mode where the package touches
+the session cookie at all.
+
 In `single` mode the provider shares the application's session: the same cookie, the same
 session id. A self-SSO deployment — the application is its own relying party on the same host —
 relies on that, because Laravel's CSRF cookie has one fixed name and two independent sessions on
@@ -330,8 +336,12 @@ session in one realm is not sent to another and a login in the provider cannot c
 regenerate the relying party's session. The cookie is named `{session.cookie}-oidc-{realm}` (dots
 in the realm id become underscores) unless the realm's `SessionSettings::$cookieName` — from
 `oidc.session.cookie_name` by default — names it; the name must differ from the application's
-and consist of letters, digits, underscores or hyphens. When a provider response redirects out of
-the realm, the provider's CSRF cookie is expired so the application's own is used again.
+and consist of letters, digits, underscores or hyphens. The rename lasts for the request and is
+restored afterwards. When a provider response redirects out of the realm, the provider's CSRF
+cookie is expired so the application's own is used again.
 
-In both modes the realm's SSO session (`oidc_sessions`) and its stashed authorize request are
+In `domain` mode each realm is served from its own host, so the browser separates the cookies
+already and the package leaves the session alone.
+
+In all three modes the realm's SSO session (`oidc_sessions`) and its stashed authorize request are
 scoped by `realm_id`.

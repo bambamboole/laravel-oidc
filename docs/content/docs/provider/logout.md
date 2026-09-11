@@ -80,7 +80,8 @@ if ($session !== null) {
 }
 ```
 
-The lookup is scoped to the current realm, like `find()`.
+The lookup is scoped to the current realm, like `find()`. The recorded id is the one the session
+had at login — see [Sessions](/provider/sessions/#what-links-them).
 
 ### Residual risk (accepted by design)
 
