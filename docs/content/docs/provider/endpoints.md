@@ -191,6 +191,7 @@ app()->bind(ConsentView::class, fn () => new class implements ConsentView {
             'client' => $prompt->client,
             'user' => $prompt->user,
             'scopes' => $prompt->scopes,
+            'resources' => $prompt->resources,
             'authToken' => $prompt->authToken,
         ]);
     }
@@ -207,12 +208,20 @@ The view posts `auth_token` back to `POST /oauth/authorize/consent` (route
 
 ### What is remembered
 
-An approval is stored in `oidc_consents`: one row per realm, user and client, holding the union of
-every scope set the user approved for that client. The scopes in play are the requested ones plus
-the client's [default scopes](/provider/scopes-and-claims/#client-scope-assignment); hidden scopes
-are granted without being shown. The authorization endpoint skips the view when that row covers
-every scope in play, and shows it again when the request asks for a scope the row does not hold —
-approving then merges the new scopes in. A denial stores nothing.
+An approval is stored in `oidc_consents`: one row per realm, user, client **and resource**, holding
+the union of every scope set the user approved for that client there. The scopes in play are the
+requested ones plus the client's
+[default scopes](/provider/scopes-and-claims/#client-scope-assignment); hidden scopes are granted
+without being shown. The authorization endpoint skips the view when a row covers every scope in
+play at **every** resource the request names, and shows it again when any of them is short —
+approving then merges the new scopes into each. A denial stores nothing.
+
+The resource is part of the consent because a scope name only means something at the resource that
+declares it: `read` at your orders API and `read` at your billing API are different permissions
+that happen to share a name. An approval of one therefore says nothing about the other. A request
+that names no [`resource`](/advanced/resource-servers/) is addressed to the realm itself, and its
+consent is stored against the realm's issuer URL — which is also why changing `oidc.issuer` retires
+the consents granted under the old one, and users approve once more.
 
 The consent is independent of the tokens it led to: it survives their expiry and their revocation.
 It ends only when it is withdrawn, which sets `revoked_at` and brings the view back on the next
@@ -221,7 +230,14 @@ request; approving again re-activates the same row.
 ```php
 use Bambamboole\LaravelOidc\Server\Consents\ConsentRepository;
 
-app(ConsentRepository::class)->revoke((string) $user->getAuthIdentifier(), $client);
+$userId = (string) $user->getAuthIdentifier();
+
+// Every resource this client was approved for, or just one of them.
+app(ConsentRepository::class)->revoke($userId, $client);
+app(ConsentRepository::class)->revoke($userId, $client, 'https://api.internal/orders');
+
+// What to list on an account screen.
+app(ConsentRepository::class)->forClient($userId, $client);
 ```
 
 Trusted first-party clients and clients with `consent_required` set to false never see the view
