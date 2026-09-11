@@ -264,7 +264,7 @@ interrupted is restored afterwards, so calls nest.
 
 `realm_id` is stored on `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
 `oidc_auth_codes`, `oidc_consents`, `oidc_sessions`, `oidc_signing_keys`,
-`oidc_authentication_contexts` and `oidc_social_accounts`. A `client_id` only has to be unique
+`oidc_authentication_contexts`, `oidc_password_reset_tokens` and `oidc_social_accounts`. A `client_id` only has to be unique
 **within** its realm, so the same readable name can exist in several; likewise a social
 provider's user id is unique per realm, so the same upstream identity can be linked to a different
 user in each realm. Session participants carry no realm of their own — they belong to a session,
@@ -288,6 +288,35 @@ into the wrong realm:
 Write a test that signs in with realm A's credentials against realm B's URL and asserts a
 failure. It is the one bug in this area that stays silent in production.
 :::
+
+## Deleting users, clients and realms
+
+The package's rows name users, clients and realms without foreign keys, so deleting one of those
+cascades into nothing. Three actions in `Bambamboole\LaravelOidc\Server\Purge` remove what the
+package keeps for each:
+
+| Action | Removes |
+| --- | --- |
+| `PurgeUser($user)` | The user's tokens, codes, consents, sessions, authentication contexts, reset link, social accounts, password history and second factors, and every client the user registered (with `PurgeClient`). |
+| `PurgeClient($client)` | The client and every token, code, consent and session participation issued to it. |
+| `PurgeRealm($realm)` | Every row stored under the realm's `realm_id`, and the participants of its sessions. |
+
+Each runs in a transaction. None of them deletes your own rows, and none tells a relying party
+that its sessions ended — revoke and notify first when back-channel logout should fire. Password
+history and second factors belong to a user rather than a realm, so to delete a realm, purge its
+users before the realm:
+
+```php
+DB::transaction(function () use ($realm): void {
+    $realm->users()->each(function (User $user): void {
+        app(PurgeUser::class)($user);
+        $user->delete();
+    });
+
+    app(PurgeRealm::class)($realm->identifier());
+    $realm->delete();
+});
+```
 
 ## Sessions
 
