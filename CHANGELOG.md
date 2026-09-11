@@ -5,6 +5,35 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.30.0](https://github.com/bambamboole/laravel-oidc/compare/v0.29.0...v0.30.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** keep password reset links per realm in the package
+* **server:** rename Realm::id() to identifier()
+* **server:** reshape config/oidc.php for Laravel's config merge ([#178](https://github.com/bambamboole/laravel-oidc/issues/178))
+
+### Features
+
+* **client:** default redirect_uri to the package's own callback route ([320c320](https://github.com/bambamboole/laravel-oidc/commit/320c320d248c293084169e404c65b74e3ac681d6))
+* **server:** keep password reset links per realm in the package ([da89da2](https://github.com/bambamboole/laravel-oidc/commit/da89da220fc25cc6500ac4de4de1e158d745026a))
+* **server:** model factories for sessions, consents and tokens ([a8341d4](https://github.com/bambamboole/laravel-oidc/commit/a8341d4ca9494e06ddefc367f15611a597b4e109))
+* **server:** purge what the package keeps for a user, client or realm ([62d3719](https://github.com/bambamboole/laravel-oidc/commit/62d3719dc0a73eea0374e79faa00552b38d111dc))
+* **server:** record the browser session an OIDC session was started in ([8f1f680](https://github.com/bambamboole/laravel-oidc/commit/8f1f6808bd487c3709acce1220d9b02fe0aed172))
+* **server:** run code in a realm other than the request's ([e9a6ba6](https://github.com/bambamboole/laravel-oidc/commit/e9a6ba62579d510ebfe0ac70eff5a5c551c3852d))
+
+
+### Refactoring
+
+* **server:** rename Realm::id() to identifier() ([4d8f392](https://github.com/bambamboole/laravel-oidc/commit/4d8f392c055f60fae76e82c570d011052aed0d60))
+* **server:** reshape config/oidc.php for Laravel's config merge ([#178](https://github.com/bambamboole/laravel-oidc/issues/178)) ([8fb1c2c](https://github.com/bambamboole/laravel-oidc/commit/8fb1c2ceb4a785ef1526f5cbf548af0377f69740))
+
+
+### Documentation
+
+* list the migrations 0.30 adds in the upgrade guide ([9bd799e](https://github.com/bambamboole/laravel-oidc/commit/9bd799ede88edf88be73eb6b8eb552a195057bae))
+
 ## [0.29.0](https://github.com/bambamboole/laravel-oidc/compare/v0.28.0...v0.29.0) (2026-09-11)
 
 
