@@ -90,7 +90,7 @@ final readonly class TrackedPasswordCredential implements PasswordCredential
 
         return $policy->maxAgeDays !== null
             && $changedAt instanceof CarbonInterface
-            && $changedAt->avoidMutation()->addDays($policy->maxAgeDays)->isPast();
+            && $changedAt->copy()->addDays($policy->maxAgeDays)->isPast();
     }
 
     public function policy(): PasswordPolicy
