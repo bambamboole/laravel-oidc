@@ -64,6 +64,24 @@ session and dispatches the back-channel notifications — once, whichever path t
 logout. The hint identifies the user, not the session: an OIDC session the browser no longer
 carries is ended by its absolute lifetime and `oidc:dispatch-expired-session-logouts`.
 
+### Ending a session from elsewhere
+
+An OIDC session records the id of the browser session its login happened in (`session_id` on
+`oidc_sessions`). An account page that lists a user's browser sessions can end the OIDC session
+behind one of them without reading the session payload:
+
+```php
+$sessions = app(OidcSessionRepository::class);
+$session = $sessions->findByBrowserSession($browserSessionId);
+
+if ($session !== null) {
+    $sessions->revoke($session->sid);
+    app(BackChannelLogoutNotifier::class)->notify($session->sid);
+}
+```
+
+The lookup is scoped to the current realm, like `find()`.
+
 ### Residual risk (accepted by design)
 
 A valid authorization request carrying `max_age=0` forces re-authentication for an
