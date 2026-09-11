@@ -199,10 +199,6 @@ class OidcClientFake
         config()->set('oidc-client.issuer', $this->issuer);
         config()->set('oidc-client.client_id', $this->clientId);
 
-        if (! is_string(config('oidc-client.redirect_uri')) || config('oidc-client.redirect_uri') === '') {
-            config()->set('oidc-client.redirect_uri', 'https://app.test/login/callback');
-        }
-
         foreach ([OidcDiscovery::class, JwksKeyResolver::class, RelyingParty::class, IdTokenValidator::class, LogoutTokenValidator::class] as $abstract) {
             app()->forgetInstance($abstract);
         }

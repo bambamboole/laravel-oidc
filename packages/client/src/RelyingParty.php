@@ -46,7 +46,7 @@ class RelyingParty
         $query = http_build_query([
             'response_type' => 'code',
             'client_id' => (string) config('oidc-client.client_id'),
-            'redirect_uri' => (string) config('oidc-client.redirect_uri'),
+            'redirect_uri' => $this->redirectUri(),
             'scope' => implode(' ', (array) config('oidc-client.scopes', ['openid'])),
             'state' => $state,
             'nonce' => $nonce,
@@ -86,7 +86,7 @@ class RelyingParty
         $payload = [
             'grant_type' => 'authorization_code',
             'code' => $code,
-            'redirect_uri' => (string) config('oidc-client.redirect_uri'),
+            'redirect_uri' => $this->redirectUri(),
             'client_id' => (string) config('oidc-client.client_id'),
             'code_verifier' => $verifier,
         ];
@@ -138,5 +138,12 @@ class RelyingParty
         }
 
         return $this->manager->redirectAfterLogin();
+    }
+
+    private function redirectUri(): string
+    {
+        $configured = config('oidc-client.redirect_uri');
+
+        return is_string($configured) && $configured !== '' ? $configured : route('login.callback');
     }
 }

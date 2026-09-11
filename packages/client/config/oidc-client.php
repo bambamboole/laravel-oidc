@@ -24,6 +24,7 @@ return [
 
     'client_secret' => env('OIDC_RP_CLIENT_SECRET'),
 
+    // Unset, the app's own login.callback route.
     'redirect_uri' => env('OIDC_RP_REDIRECT_URI'),
 
     'scopes' => ['openid', 'profile', 'email'],

@@ -14,7 +14,7 @@ listed below with its default and the environment variable that overrides it.
 | `issuer` | `env('OIDC_RP_ISSUER')` | The provider's issuer URL. Discovery, JWKS, and all token validation derive from it. |
 | `client_id` | `env('OIDC_RP_CLIENT_ID')` | The client id registered at the provider. |
 | `client_secret` | `env('OIDC_RP_CLIENT_SECRET')` | Optional — omit for a public client. Sent to the token endpoint when set. |
-| `redirect_uri` | `env('OIDC_RP_REDIRECT_URI')` | The absolute callback URL registered at the provider. |
+| `redirect_uri` | `env('OIDC_RP_REDIRECT_URI')` | The absolute callback URL registered at the provider. Unset, it is this app's `login.callback` route (`{APP_URL}/login/callback`). |
 | `scopes` | `['openid', 'profile', 'email']` | The scopes requested on every authorization request. |
 | `login_guard` | `web` (`OIDC_RP_LOGIN_GUARD`) | The guard the resolved user is logged into. |
 | `redirect_after_login` | `/dashboard` (`OIDC_RP_HOME`) | Where to send the user after a successful login (via `redirect()->intended(...)`). |
