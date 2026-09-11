@@ -43,7 +43,6 @@ recommended so the root token stays server-side.
 | --- | --- | --- |
 | `oidc.clients.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and to perform exchanges on its behalf. Its `allowed_exchange_audiences` (see [Token exchange](/provider/token-exchange/)) gates which audiences `IssueScopedToken` may mint for. |
 | `oidc.session.token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds. |
-| `oidc.session.token.session_key` | `oidc.session_token` | Session key the root token (JWT, `jti`, `expires_at`, `user_id`) is stored under. |
 | `oidc.session.token.refresh_skew` | `60` | Seconds before expiry at which `currentToken()` re-mints instead of reusing the stored token. |
 | `oidc.session.token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope the realm itself owns (the root token is addressed to the issuer, not to a registered resource); set an array to restrict it. |
 

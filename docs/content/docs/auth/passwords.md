@@ -70,7 +70,7 @@ redirect (browser).
 
 ## Password policy
 
-`CredentialSettings::$password` (a `PasswordPolicy`, read from `oidc.auth.password.*` by the
+`CredentialSettings::$password` (a `PasswordPolicy`, read from `oidc.password_policy.*` by the
 configured realm) is checked wherever the package accepts a new password: the reset flow above and
 [registration](/auth/registration/). It is realm-scoped like every other setting, so a `Realm`
 model can return a different policy per tenant.

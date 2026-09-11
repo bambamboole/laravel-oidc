@@ -44,7 +44,7 @@ them. Two lookups matter for login:
 `hasChallengeableFactors($user)` is the "does this user have 2FA?" check — `true` when at least
 one confirmed, challengeable enrollment exists.
 
-Providers are registered from `config('oidc.auth.factors')`, which defaults to all three shipped
+Providers are registered from `config('oidc.credentials.factors')`, which defaults to all three shipped
 providers:
 
 ```php
@@ -65,7 +65,7 @@ All three shipped providers are enrollable through the [generic endpoints](#prov
 | `RecoveryCodeProvider` | `recovery_code` | yes | one-time recovery codes | `otp` (with `backup` metadata) |
 | `WebAuthnFactorProvider` | `webauthn` | no | `laravel/passkeys` (WebAuthn) | `webauthn` |
 
-**TOTP** enrolls an authenticator-app secret (length `oidc.auth.two_factor.secret_length`, default
+**TOTP** enrolls an authenticator-app secret (length `oidc.credentials.totp_secret_length`, default
 `16`) and verifies codes within a `window` (default `1`) using replay-resistant
 `verifyKeyNewer` bookkeeping. The begin-enrollment metadata carries the setup payload —
 `secret`, `qr_svg` (rendered QR code), and `qr_url` (the `otpauth://` URL) — exposed only there,
@@ -126,7 +126,7 @@ recovery code is submitted, otherwise the stashed `login.factor` (default `totp`
 
 ## Requiring a factor
 
-`oidc.auth.mfa` decides how hard the realm insists on a second factor, per realm:
+`oidc.authentication.mfa` decides how hard the realm insists on a second factor, per realm:
 
 | Value | Behavior |
 | --- | --- |
@@ -235,6 +235,6 @@ them satisfies it — the active enrollment only determines what the challenge v
 - **`amr`** accrues across factors: the primary password contributes `pwd`, and each verified factor
   adds its own method (`otp`, `webauthn`). The full set is carried on the session and emitted onto
   the issued `id_token`, where the OP derives `acr` from it through the bound `AcrResolver`
-  (`oidc.auth.acr_values`: `1` for a single method, `2` when more than one method was satisfied,
+  (`oidc.login.acr_single_factor` / `oidc.login.acr_multi_factor`: `1` for a single method, `2` when more than one method was satisfied,
   by default). How this reaches the token is described on
   [The post-login pipeline](/auth/post-login-pipeline/).

@@ -6,6 +6,20 @@ description: Every key in config/oidc.php.
 Publish the config with `php artisan vendor:publish --tag=oidc-config`. Every key is listed
 below with its default and the environment variable that overrides it.
 
+## How a published config is merged
+
+Laravel's `mergeConfigFrom` merges only the first level of a config array. A published
+`config/oidc.php` therefore owns each of its top-level keys whole: if a later release adds a key
+inside one you already define, you will not see it until you add it yourself.
+
+Three keys are exceptions, merged by name the way Laravel merges `database.connections`: `resources`,
+`social.providers` and `routes.domains`. Each is a registry — a map of named entries — so a provider
+or resource a later release ships appears alongside yours. Your own entry always wins whole and is
+never patched into, and the group around a nested registry (`social`, `routes`) keeps its other keys.
+
+Every other key follows the first-level rule, so re-read this page after an upgrade — the
+[upgrade guide](/introduction/upgrading/) lists what moved.
+
 ## Issuer & realm
 
 | Key | Default | Description |
@@ -28,14 +42,13 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `tokens.lifetimes.access_token` | `900` (`OIDC_ACCESS_TOKEN_TTL`) | Interactive (`authorization_code`) and refreshed access-token lifetime in seconds. |
-| `tokens.lifetimes.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
-| `tokens.lifetimes.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
-| `tokens.lifetimes.refresh_token` | `1209600` (`OIDC_REFRESH_TOKEN_TTL`) | Idle cap on an interactive session: a refresh token unused for this long is dead. |
+| `tokens.access_token` | `900` (`OIDC_ACCESS_TOKEN_TTL`) | Interactive (`authorization_code`) and refreshed access-token lifetime in seconds. |
+| `tokens.id_token` | `3600` (`OIDC_ID_TOKEN_TTL`) | `id_token` lifetime in seconds. |
+| `tokens.client_credentials` | `3600` (`OIDC_M2M_ACCESS_TOKEN_TTL`) | Machine-to-machine (`client_credentials`) access-token lifetime. These tokens have no refresh and no session. |
+| `tokens.refresh_token` | `1209600` (`OIDC_REFRESH_TOKEN_TTL`) | Idle cap on an interactive session: a refresh token unused for this long is dead. |
 | `session.cookie_name` | `null` (`OIDC_SESSION_COOKIE`) | Name of the provider's session cookie under `path` realm routing; `null` derives `{session.cookie}-oidc-{realm}`. Unused under `single` routing, where provider and application share one session. |
 | `session.absolute_lifetime` | `2592000` (`OIDC_SESSION_ABSOLUTE_LIFETIME`) | Absolute cap on an interactive session, from login (30 days). Refresh is denied past this; the user must re-authenticate. Drives `context.expires_at`, the refresh deny-check, and context pruning. |
 | `session.token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds — see [Browser-fetch](/advanced/browser-fetch/). |
-| `session.token.session_key` | `oidc.session_token` | Session key the root token is stored under. |
 | `session.token.refresh_skew` | `60` | Seconds before expiry at which the root token is re-minted instead of reused. |
 | `session.token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope. |
 | `session.token.guard` | `null` (`OIDC_SESSION_TOKEN_GUARD`) | Guard whose login/logout owns the session token. `null` falls back to `auth.guard`, then the application default guard. Other guards never mint or revoke. |
@@ -44,7 +57,7 @@ below with its default and the environment variable that overrides it.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `scopes.catalog` | `[]` | API scope catalog the scope repository consults at enumeration time — an inline `[scope => description]` map or a `ScopeCatalog` class-string. A scope a resource lists in `resources` belongs to that resource; the rest belong to the realm. See [Scopes & claims](/provider/scopes-and-claims/). |
+| `scopes` | `[]` | API scope catalog the scope repository consults at enumeration time — an inline `[scope => description]` map or a `ScopeCatalog` class-string. A scope a resource lists in `resources` belongs to that resource; the rest belong to the realm. See [Scopes & claims](/provider/scopes-and-claims/). |
 
 ## Clients
 
@@ -52,7 +65,6 @@ below with its default and the environment variable that overrides it.
 | --- | --- | --- |
 | `clients.first_party.client_id` | `env('OIDC_FIRST_PARTY_CLIENT')` | The confidential client id used to mint the session root token and perform exchanges on its behalf. |
 | `clients.first_party.trusted` | `false` (`OIDC_FIRST_PARTY_TRUSTED`) | Whether the first-party client is auto-consented. |
-| `clients.first_party.provision` | empty lists | Extra provisioning metadata (`redirect_uris`, `post_logout_redirect_uris`, `allowed_exchange_audiences`) applied on top of the `APP_URL`-derived defaults — see [First-party client provisioning](/advanced/first-party-client/). |
 | `clients.trusted` | `[]` | Additional client ids that skip the consent screen. |
 | `clients.registration.enabled` | `false` (`OIDC_DCR_ENABLED`) | Answers RFC 7591 dynamic client registration on `POST /oauth/register` — see [Dynamic client registration](/provider/dynamic-client-registration/). |
 | `clients.registration.allowed_redirect_schemes` | `[]` | Custom URI schemes accepted for registered redirect URIs. |
@@ -61,30 +73,73 @@ below with its default and the environment variable that overrides it.
 | `clients.optional_scopes` | `['*']` | Scopes every new client is assigned and granted on request; `*` stands for every catalog scope. |
 | `clients.token_exchange` | `true` (`OIDC_TOKEN_EXCHANGE_ENABLED`) | Enables the RFC 8693 token-exchange grant. |
 
-## Auth engine
+## Self-SSO installation
+
+Input to the one-shot `oidc:install-self` command, added on top of the `APP_URL`-derived defaults —
+see [First-party client provisioning](/advanced/first-party-client/). Nothing here is read at
+runtime; the provisioned client carries the values from then on.
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `install_self.redirect_uris` | `[]` | Extra redirect URIs for the first-party client. |
+| `install_self.post_logout_redirect_uris` | `[]` | Extra post-logout redirect URIs for the first-party client. |
+| `install_self.allowed_exchange_audiences` | `[]` | Audiences the first-party client may exchange tokens for. Token exchange is enabled on the client only when at least one is listed. |
+
+## Guards
+
+Deployment-wide: a realm cannot override these.
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `auth.guard` | `identity` (`OIDC_AUTH_GUARD`) | The session guard the auth engine authenticates against. Registered automatically if absent. |
 | `auth.provider` | `users` (`OIDC_AUTH_PROVIDER`) | The user provider backing the guard. |
 | `auth.api_guard` | `oidc` (`OIDC_API_GUARD`) | The guard the userinfo endpoint (and resource-server routes using `auth:oidc`) authenticates against. Registered automatically if absent, the same way `auth.guard` is. |
-| `auth.home` | `/dashboard` (`OIDC_AUTH_HOME`) | Where to send a user after a successful login/registration. |
-| `auth.username` | `email` (`OIDC_AUTH_USERNAME`) | The credential field used to log in. |
-| `auth.login_route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name or path unauthenticated users are redirected to. |
-| `auth.logout_redirect` | `/` | Fallback redirect after logout. |
-| `auth.methods` | `['password', 'passkey', 'social']` | The login methods this realm accepts. A method left out has its routes closed, not merely hidden — see [Login](/auth/login/). |
-| `auth.mfa` | `if_enrolled` (`OIDC_AUTH_MFA`) | How hard the realm insists on a second factor: `never`, `if_enrolled` or `always` — see [Multi-factor](/auth/multi-factor/#requiring-a-factor). |
-| `auth.email_verification_required` | `false` (`OIDC_AUTH_EMAIL_VERIFICATION_REQUIRED`) | Whether an unconfirmed address blocks the login — see [Required actions](/auth/required-actions/). |
-| `auth.acr_values` | `['single_factor' => '1', 'multi_factor' => '2']` | The `acr` value a login earns with one method in `amr` and with several; both are advertised as `acr_values_supported`. Substitute URIs or RFC 6711 names your relying parties expect. |
-| `auth.password.min_length` | `8` | Minimum length of a new password — see [Password policy](/auth/passwords/#password-policy). |
-| `auth.password.mixed_case`, `numbers`, `symbols`, `uncompromised` | `false` | Composition rules of the password policy. |
-| `auth.password.history` | `0` | Previous passwords a new one may not repeat; `0` disables the check. |
-| `auth.password.max_age_days` | `null` | Days after which the password counts as expired, raising the `update_password` [required action](/auth/required-actions/). |
-| `auth.two_factor.challenge_providers` | `['totp', 'webauthn']` | Factor keys offered at the challenge step. |
-| `auth.two_factor.secret_length` | `16` | TOTP secret length. |
-| `auth.two_factor.window` | `1` | TOTP validation window. |
-| `auth.two_factor.recovery_codes` | `8` | Number of recovery codes generated. |
-| `auth.factors` | TOTP, recovery, WebAuthn providers | The registered `FactorProvider` classes. |
+
+## Login
+
+Where the interactive login lives and what an authentication reports — `LoginSettings`.
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `login.username` | `email` (`OIDC_AUTH_USERNAME`) | The credential field used to log in. |
+| `login.route` | `login` (`OIDC_LOGIN_ROUTE`) | Route name or path unauthenticated users are redirected to. |
+| `login.home` | `/dashboard` (`OIDC_AUTH_HOME`) | Where to send a user after a successful login/registration. |
+| `login.logout_redirect` | `/` | Fallback redirect after logout. |
+| `login.acr_single_factor` | `'1'` | The `acr` value a login earns with one method in `amr`. |
+| `login.acr_multi_factor` | `'2'` | The `acr` value a login earns with several. Both are advertised as `acr_values_supported`; substitute URIs or RFC 6711 names your relying parties expect. |
+
+## Authentication
+
+What the realm demands before it hands out a session — `AuthenticationSettings`.
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `authentication.methods` | `['password', 'passkey', 'social']` | The login methods this realm accepts. A method left out has its routes closed, not merely hidden — see [Login](/auth/login/). |
+| `authentication.mfa` | `if_enrolled` (`OIDC_AUTH_MFA`) | How hard the realm insists on a second factor: `never`, `if_enrolled` or `always` — see [Multi-factor](/auth/multi-factor/#requiring-a-factor). |
+| `authentication.email_verification_required` | `false` (`OIDC_AUTH_EMAIL_VERIFICATION_REQUIRED`) | Whether an unconfirmed address blocks the login — see [Required actions](/auth/required-actions/). |
+
+## Credentials
+
+The second factors a user can enroll and be challenged with — `CredentialSettings`.
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `credentials.factors` | TOTP, recovery, WebAuthn providers | The registered `FactorProvider` classes. |
+| `credentials.challenge_providers` | `['totp', 'webauthn']` | Factor keys offered at the challenge step. |
+| `credentials.totp_secret_length` | `16` | TOTP secret length. |
+| `credentials.totp_window` | `1` | TOTP validation window. |
+| `credentials.recovery_codes` | `8` | Number of recovery codes generated. |
+
+## Password policy
+
+What a new password must satisfy — `PasswordPolicy`. See [Password policy](/auth/passwords/#password-policy).
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `password_policy.min_length` | `8` | Minimum length of a new password. |
+| `password_policy.mixed_case`, `numbers`, `symbols`, `uncompromised` | `false` | Composition rules of the password policy. |
+| `password_policy.history` | `0` | Previous passwords a new one may not repeat; `0` disables the check. |
+| `password_policy.max_age_days` | `null` | Days after which the password counts as expired, raising the `update_password` [required action](/auth/required-actions/). |
 
 ## Audit, resources
 

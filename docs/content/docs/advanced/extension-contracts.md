@@ -70,7 +70,7 @@ interface ScopeRepository
 ```
 
 The default `ConfiguredScopeRepository` merges scopes in order: first, the configured
-catalog (`oidc.scopes.catalog`) reduced to what the requested resources own; second, the scopes
+catalog (`oidc.scopes`) reduced to what the requested resources own; second, the scopes
 those resources declare in `oidc.resources`; third, the built-in OIDC scopes (`openid`, `profile`,
 `email`), which hold under every audience. The first occurrence of a scope id wins. Its
 `finalize()` filters out scopes no requested resource owns.
