@@ -242,13 +242,23 @@ The constants are on `Bambamboole\LaravelOidc\Server\Shared\Context\OidcContext`
 publishes `oidc.client_id` — the client of the authorize or token request — for the same reason
 and for log correlation.
 
-A job dispatched from outside a package route (a console command, or one of your own controllers
-in a multi-realm deployment) carries no realm and falls back to `config('oidc.realm')`. Set it
-yourself when that is not the realm you mean:
+Code running outside a package route (a console command, or one of your own controllers
+in a multi-realm deployment) has no realm of its own and falls back to `config('oidc.realm')`.
+Run it in the realm you mean instead:
 
 ```php
-Context::add('oidc.realm', $realm);
+use Bambamboole\LaravelOidc\Server\Realms\CurrentRealm;
+
+CurrentRealm::runAs('acme', function (): void {
+    $clients->createAuthorizationCodeGrantClient('Portal', ['https://portal.test/callback']);
+    SendWelcomeMail::dispatch($user);
+});
 ```
+
+Inside the callback everything that resolves the current realm sees `acme`, whatever host the
+request came in on: new rows are scoped to it, `IssuerResolver` and the `Keyring` serve it,
+`route()` links into it, and jobs dispatched inside carry it to the worker. The realm it
+interrupted is restored afterwards, so calls nest.
 
 ## What the package scopes
 
