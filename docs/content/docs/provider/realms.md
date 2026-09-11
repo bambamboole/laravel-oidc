@@ -63,9 +63,14 @@ Where realms appear in URLs is `oidc.routes.realms`:
   ],
   ```
 
-  An application with a realm model skips the map and resolves the host in its own
-  [`RealmRepository`](#resolving-the-realm), which is what lets a customer bring their own domain.
-  A host no realm is served from answers 404.
+  An application with a realm model skips the map: it resolves the host in its own
+  [`RealmRepository`](#resolving-the-realm) and names it in `Realm::host()`, which is what lets a
+  customer bring their own domain. A host no realm is served from answers 404.
+
+  The issuer is the realm's host with the scheme and port of `oidc.issuer`, whichever host the
+  request, queued job or console command runs on. Every absolute URL to a route behind
+  `ResolveRealm` — the package's own and any of yours — points at the current realm's host, so a
+  password reset sent from an admin console on another host links into the realm it belongs to.
 
   :::danger[The Host header chooses the realm]
   Configure Laravel's trusted hosts (and trusted proxies behind a load balancer) before using this
@@ -83,7 +88,7 @@ It must have no path of its own. Routes are registered at the application root, 
 the realm supplies the only path there is, so `https://example.com/idp` would be carried into the
 discovery document while the endpoints stayed at `https://example.com/oauth/…` — an issuer whose
 own metadata URL answers 404. Serve the provider from its own host or subdomain, or use `domain`
-mode, where each realm's host is the origin and `oidc.issuer` supplies only the scheme.
+mode, where each realm's host is the origin and `oidc.issuer` supplies only the scheme and port.
 :::
 
 ### Metadata that is not prefixed
@@ -140,9 +145,7 @@ $this->app->singleton(RealmRepository::class, EloquentRealmRepository::class);
 
 Both contracts are singletons. A resolver must derive the realm from the current request on
 every call rather than remember it — under Octane one instance serves many requests. Resolution
-therefore runs many times per request, and in `domain` mode so does `findByDomain()` — the issuer
-consults it too, to tell a host the request arrived on from one that merely comes from `app.url`.
-Memoize inside the repository, keyed by the value looked up, rather than caching a realm on the
+therefore runs many times per request, and in `domain` mode so does `findByDomain()`. Memoize inside the repository, keyed by the value looked up, rather than caching a realm on the
 resolver.
 
 The shipped resolvers read the realm from the URL — the `{realm}` path segment, or the single
@@ -153,7 +156,8 @@ that derives the realm from anything outside the URL, a request header say, must
 
 ## Realm settings
 
-`Realm` is the contract your model implements. Beyond its identifier it exposes nine typed
+`Realm` is the contract your model implements. Beyond its identifier and, in `domain` routing,
+its `host()`, it exposes ten typed
 settings objects; every behavior that may differ between tenants reads from them instead of
 from `config('oidc.*')`:
 
@@ -184,6 +188,11 @@ class Tenant extends Model implements Realm
     public function id(): string
     {
         return $this->slug;
+    }
+
+    public function host(): ?string
+    {
+        return $this->domain;
     }
 
     public function tokens(): TokenSettings
