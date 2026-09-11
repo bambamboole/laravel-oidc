@@ -66,12 +66,22 @@ The `Realm` contract's `id()` is now `identifier()`. On an Eloquent model `id()`
 attribute — `$realm->id` resolved as a relation — so rename the method on your implementation;
 what it returns is unchanged.
 
+## 0.30: new migrations
+
+Two migrations ship with 0.30: `oidc_password_reset_tokens`, and a `session_id` column on
+`oidc_sessions` that records the browser session each login happened in. Publish and run them:
+
+```bash
+php artisan vendor:publish --tag=oidc-migrations
+php artisan migrate
+```
+
 ## 0.30: realm-scoped password reset links
 
 Reset links moved out of Laravel's `password_reset_tokens` into the package's own
 `oidc_password_reset_tokens` table, keyed by user and bound to the realm that sent them: an email
 address is only unique within a realm, so the email-keyed table let one realm's request replace
-another's link. Run the new migration. Links sent before the upgrade stop working.
+another's link. Links sent before the upgrade stop working.
 
 The package no longer reads `config('auth.passwords')`. The link lifetime is
 `oidc.tokens.password_reset` (seconds), the user provider is `oidc.auth.provider`, and the resend
