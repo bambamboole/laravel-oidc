@@ -5,6 +5,13 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.28.0](https://github.com/bambamboole/laravel-oidc/compare/v0.27.1...v0.28.0) (2026-09-11)
+
+
+### Features
+
+* **server:** carry the realm and client into queued jobs ([d2ffb9e](https://github.com/bambamboole/laravel-oidc/commit/d2ffb9e298683ec78a979c1e0a252e80f1c1d466))
+
 ## [0.27.1](https://github.com/bambamboole/laravel-oidc/compare/v0.27.0...v0.27.1) (2026-09-11)
 
 
