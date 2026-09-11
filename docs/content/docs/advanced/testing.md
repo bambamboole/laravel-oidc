@@ -95,6 +95,26 @@ needed after `config([...])` changes.
 is skipped for that client; register a client via `createOidcClient()`
 instead when a test asserts consent behavior.
 
+## Rows the package stores
+
+Sessions, session participants, consents, access and refresh tokens, authorization codes and
+authentication contexts have model factories, for a test that needs the row without the flow
+that writes it:
+
+```php
+use Bambamboole\LaravelOidc\Server\Sessions\Models\OidcSession;
+use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
+use Bambamboole\LaravelOidc\Server\Tokens\Models\RefreshToken;
+
+$session = OidcSession::factory()->forUser($user)->create();
+$token = AccessToken::factory()->forClient($client)->forUser($user)->create();
+RefreshToken::factory()->forAccessToken($token)->create();
+```
+
+These rows name their user and client without a foreign key, so use `forUser()` and
+`forClient()` rather than `for()`. `forClient()` also puts the row in the client's realm;
+otherwise a row lands in the current one.
+
 ## The full authorization-code flow
 
 `authorizeAndApprove()` drives authorize → approve → token with PKCE:

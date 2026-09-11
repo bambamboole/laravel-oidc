@@ -184,30 +184,12 @@ function expectExchangeDenied(Closure $callback, string $error): void
  */
 function issueRefreshToken(mixed $test, ?string $clientId = null, bool $expired = false): array
 {
-    $accessTokenId = Str::random(80);
-    $refreshTokenId = Str::random(80);
+    $accessToken = AccessToken::factory()->forUser($test->user)->create(['client_id' => $clientId ?? $test->client->id]);
+    $refreshToken = RefreshToken::factory()
+        ->forAccessToken($accessToken)
+        ->create($expired ? ['expires_at' => now()->subDay()] : []);
 
-    $accessToken = new AccessToken;
-    $accessToken->forceFill([
-        'realm_id' => AccessToken::currentRealm(),
-        'id' => $accessTokenId,
-        'user_id' => $test->user->id,
-        'client_id' => $clientId ?? $test->client->id,
-        'scopes' => ['openid'],
-        'revoked' => false,
-        'expires_at' => now()->addHour(),
-    ])->save();
-
-    $refreshToken = new RefreshToken;
-    $refreshToken->forceFill([
-        'realm_id' => RefreshToken::currentRealm(),
-        'id' => $refreshTokenId,
-        'access_token_id' => $accessTokenId,
-        'revoked' => false,
-        'expires_at' => $expired ? now()->subDay() : now()->addDay(),
-    ])->save();
-
-    return [$refreshTokenId, $refreshToken, $accessToken];
+    return [$refreshToken->id, $refreshToken, $accessToken];
 }
 
 /**
@@ -358,15 +340,7 @@ function persistedIdTokenAsBearer(mixed $test): string
         ->getToken($config->signer(), $config->signingKey())
         ->toString();
 
-    (new AccessToken)->forceFill([
-        'realm_id' => AccessToken::currentRealm(),
-        'id' => $tokenId,
-        'user_id' => $test->user->id,
-        'client_id' => $test->client->id,
-        'scopes' => ['openid'],
-        'revoked' => false,
-        'expires_at' => now()->addHour(),
-    ])->save();
+    AccessToken::factory()->forClient($test->client)->forUser($test->user)->create(['id' => $tokenId]);
 
     return $jwt;
 }

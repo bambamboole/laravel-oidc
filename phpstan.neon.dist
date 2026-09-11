@@ -6,6 +6,7 @@ parameters:
     tmpDir: %currentWorkingDirectory%/.phpstan-cache/main
     paths:
         - packages/server/src
+        - packages/server/database/factories
         - packages/client/src
         - packages/ui/src
     level: 6

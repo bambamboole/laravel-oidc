@@ -53,6 +53,7 @@
     },
     "autoload": {
         "psr-4": {
+            "Bambamboole\\LaravelOidc\\Server\\Database\\Factories\\": "packages/server/database/factories/",
             "Bambamboole\\LaravelOidc\\Server\\": "packages/server/src/",
             "Bambamboole\\LaravelOidc\\Client\\": "packages/client/src/",
             "Bambamboole\\LaravelOidc\\Ui\\": "packages/ui/src/"
