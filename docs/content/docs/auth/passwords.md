@@ -1,6 +1,6 @@
 ---
 title: Password reset & confirmation
-description: The password-reset flow built on Laravel's Password broker, and the password-confirmation screen that gates sensitive actions.
+description: The realm-scoped password-reset flow, and the password-confirmation screen that gates sensitive actions.
 ---
 
 This page covers two related flows: **password reset** (for a user who has forgotten their
@@ -9,8 +9,31 @@ a sensitive action).
 
 ## Password reset
 
-Reset is built on Laravel's `Password` broker (`config('auth.defaults.passwords')`, default
-`users`) and your bound [`ResetUserPassword`](/auth/overview/) action. It spans four handlers.
+Reset runs through a Laravel `PasswordBroker` over the package's own token store and your bound
+[`ResetUserPassword`](/auth/overview/) action. It spans four handlers.
+
+### Reset links
+
+The package keeps its links in `oidc_password_reset_tokens`, not in Laravel's
+`password_reset_tokens`, and does not read `config('auth.passwords')`. A user has at most one link
+at a time: requesting another replaces it, and a successful reset deletes it.
+
+A link belongs to the realm that sent it and is refused on any other, even for the same user. Only
+a hash of its token is stored. It lives for the realm's
+`tokens.password_reset` lifetime (one hour by default). A second link requested within a minute
+of the first is held back with `RESET_THROTTLED`.
+
+To send a link from your own code (an administrator resetting a user's password, say), call the
+`SendPasswordResetLink` action inside the user's realm:
+
+```php
+use Bambamboole\LaravelOidc\Server\Authentication\Actions\SendPasswordResetLink;
+use Bambamboole\LaravelOidc\Server\Realms\CurrentRealm;
+
+$status = CurrentRealm::runAs($realm, fn (): string => app(SendPasswordResetLink::class)($user->email));
+```
+
+The user provider is `oidc.auth.provider`, the same one the login uses.
 
 ### Routes
 
@@ -27,8 +50,8 @@ Reset is built on Laravel's `Password` broker (`config('auth.defaults.passwords'
 
 `POST identity.password.email` is throttled to **5 requests per minute**, validates `email`
 (`required|email`), lowercases it, and calls the broker's `sendResetLink`. The route throttle caps
-how often the endpoint can be hit at all; the broker additionally enforces its own per-user window
-(returning `RESET_THROTTLED`). On `RESET_LINK_SENT`:
+how often the endpoint can be hit at all; the broker additionally holds back a second link for the
+same user within a minute (returning `RESET_THROTTLED`). On `RESET_LINK_SENT`:
 
 - A JSON request receives `{"status": "..."}` with **`200`**.
 - A browser request is redirected `back()` with the translated status in the session.
