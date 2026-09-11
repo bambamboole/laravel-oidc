@@ -66,24 +66,46 @@ test('the methods table lists confirmed enrollments across providers with their 
     $rows = collect($data);
 
     expect($rows->pluck('label')->all())->toBe(['Work phone', 'Yubikey'])
-        ->and($rows->firstWhere('label', 'Work phone')['role'])->toBe(__('oidc-ui::security.role.second-factor-only'))
-        ->and($rows->firstWhere('label', 'Yubikey')['role'])->toBe(__('oidc-ui::security.role.login-and-second-factor'))
-        ->and($rows->firstWhere('label', 'Yubikey')['description'])->toBe(__('oidc-ui::auth.two-factor.method.webauthn'));
+        ->and($rows->firstWhere('label', 'Work phone'))->toMatchArray([
+            'role' => __('oidc-ui::security.role.second-factor-only'),
+            'description' => __('oidc-ui::auth.two-factor.method.totp'),
+            'last_used_at_diff' => __('oidc-ui::security.methods.never-used'),
+        ])
+        ->and($rows->firstWhere('label', 'Yubikey'))->toMatchArray([
+            'role' => __('oidc-ui::security.role.login-and-second-factor'),
+            'description' => __('oidc-ui::auth.two-factor.method.webauthn'),
+        ])
+        ->and($rows->pluck('actions')->map(fn (array $actions): int => count($actions))->all())->toBe([1, 1]);
 });
 
 test('the methods table backs the list with a recovery-codes row', function (): void {
     $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
     app(TotpFactorProvider::class)->enroll($user, 'Work phone');
     $user->totpFactors()->update(['confirmed_at' => now()]);
+    $codes = app(RecoveryCodeProvider::class);
+    $codes->generate($user);
+    $codes->verify($user, $codes->beginChallenge($user, $codes->enrollments($user)[0]), [
+        'recovery_code' => $codes->codes($user)[0],
+    ]);
+
+    /** @var array<int, array<string, mixed>> $data */
+    $data = $this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data');
+    $backup = collect($data)->firstWhere('label', __('oidc-ui::security.recovery-codes.heading'));
+
+    expect($backup['description'])->toBe(__('oidc-ui::security.recovery-codes.remaining', ['remaining' => 7, 'total' => 8]))
+        ->and($backup['role'])->toBe(__('oidc-ui::security.role.backup'))
+        ->and($backup['actions'])->toHaveCount(1);
+});
+
+test('the methods table leaves the recovery-codes row out while nothing it backs up is confirmed', function (): void {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'secret']);
+    app(TotpFactorProvider::class)->enroll($user, 'Pending phone');
     app(RecoveryCodeProvider::class)->generate($user);
 
     /** @var array<int, array<string, mixed>> $data */
     $data = $this->actingAs($user)->loadTable(TwoFactorMethodsTable::class)->assertOk()->json('data');
-    $rows = collect($data);
-    $backup = $rows->firstWhere('label', __('oidc-ui::security.recovery-codes.heading'));
 
-    expect($backup['description'])->toBe(__('oidc-ui::security.recovery-codes.remaining', ['remaining' => 8, 'total' => 8]))
-        ->and($backup['role'])->toBe(__('oidc-ui::security.role.backup'));
+    expect($data)->toBe([]);
 });
 
 test('revoking the last challengeable factor takes the recovery codes with it', function (): void {

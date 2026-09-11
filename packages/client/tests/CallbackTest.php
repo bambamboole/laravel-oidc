@@ -123,6 +123,15 @@ it('rejects a failed token exchange and does not log in', function (): void {
     $this->assertGuest();
 });
 
+it('rejects an id token whose subject has no local user and does not log in', function (): void {
+    $this->withSession($this->fake->callbackContext())
+        ->get($this->fake->callbackUrl())
+        ->assertRedirect(route('login'))
+        ->assertSessionHasErrors('oidc');
+
+    $this->assertGuest();
+});
+
 it('rejects an id token with a tampered signature and does not log in', function (): void {
     $this->fake->withInvalidSignature();
 
