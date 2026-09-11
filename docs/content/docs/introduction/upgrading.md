@@ -60,6 +60,12 @@ A published config that defines its own social providers now keeps the shipped o
 replacing them; if you were relying on a published `social.providers` map to *hide* a shipped
 provider, note that a provider without a configured `client_id` is inert anyway.
 
+## 0.30: `Realm::identifier()`
+
+The `Realm` contract's `id()` is now `identifier()`. On an Eloquent model `id()` shadowed the `id`
+attribute — `$realm->id` resolved as a relation — so rename the method on your implementation;
+what it returns is unchanged.
+
 ## 0.26: a scope belongs to one resource
 
 Scopes are no longer a flat catalog per realm. Every scope belongs to exactly one resource server

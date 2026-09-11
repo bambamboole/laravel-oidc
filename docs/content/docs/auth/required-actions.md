@@ -115,7 +115,7 @@ final readonly class AcceptTermsAction implements RequiredAction
 
     public function isPending(Authenticatable $user, Realm $realm): bool
     {
-        return $user->accepted_terms_version < $realm->id();
+        return $user->accepted_terms_version < $realm->identifier();
     }
 
     public function route(): string
