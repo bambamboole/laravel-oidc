@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Authentication\PasswordResetTokens;
 use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentPrompt;
 use Bambamboole\LaravelOidc\Server\Consents\Views\ConsentView;
@@ -57,6 +58,11 @@ function createUsersUsing(Closure $action): void
             return ($this->action)($input);
         }
     });
+}
+
+function passwordResetToken(CanResetPassword $user): string
+{
+    return app(PasswordResetTokens::class)->create($user);
 }
 
 function resetUserPasswordsUsing(Closure $action): void

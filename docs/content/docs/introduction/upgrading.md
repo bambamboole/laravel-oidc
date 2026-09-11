@@ -66,6 +66,18 @@ The `Realm` contract's `id()` is now `identifier()`. On an Eloquent model `id()`
 attribute — `$realm->id` resolved as a relation — so rename the method on your implementation;
 what it returns is unchanged.
 
+## 0.30: realm-scoped password reset links
+
+Reset links moved out of Laravel's `password_reset_tokens` into the package's own
+`oidc_password_reset_tokens` table, keyed by user and bound to the realm that sent them: an email
+address is only unique within a realm, so the email-keyed table let one realm's request replace
+another's link. Run the new migration. Links sent before the upgrade stop working.
+
+The package no longer reads `config('auth.passwords')`. The link lifetime is
+`oidc.tokens.password_reset` (seconds), the user provider is `oidc.auth.provider`, and the resend
+throttle is fixed at a minute. `SendPasswordResetLink` sends the link of the realm it runs in — wrap
+it in `CurrentRealm::runAs()` to reset another realm's user.
+
 ## 0.26: a scope belongs to one resource
 
 Scopes are no longer a flat catalog per realm. Every scope belongs to exactly one resource server

@@ -14,7 +14,10 @@ use Bambamboole\LaravelOidc\Server\Shared\Realms\IssuerResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\RealmResolver;
 use Bambamboole\LaravelOidc\Server\Tests\Realms\RecordResolvedRealm;
 use Bambamboole\LaravelOidc\Server\Tests\Realms\RoutesRealmsByDomain;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Workbench\App\Models\User;
 
 uses(RoutesRealmsByDomain::class);
 
@@ -169,4 +172,21 @@ it('hands the realm it runs in to the jobs dispatched inside', function (): void
 
     expect(RecordResolvedRealm::$seen['realm'])->toBe('acme')
         ->and(RecordResolvedRealm::$seen['issuer'])->toBe('https://acme.id.test');
+});
+
+it('honours a reset link only in the realm that sent it', function (): void {
+    $user = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => Hash::make('old-password')]);
+    $token = CurrentRealm::runAs('acme', fn (): string => passwordResetToken($user));
+    resetUserPasswordsUsing(function (CanResetPassword $user, array $input): void {
+        $user->forceFill(['password' => Hash::make($input['password'])])->save();
+    });
+    $reset = [
+        'token' => $token,
+        'email' => 'm@example.com',
+        'password' => 'new-password',
+        'password_confirmation' => 'new-password',
+    ];
+
+    $this->postJson('https://globex.id.test/auth/reset-password', $reset)->assertJsonValidationErrors('email');
+    $this->postJson('https://acme.id.test/auth/reset-password', $reset)->assertOk();
 });
