@@ -15,8 +15,9 @@ a login or token flow. If you need stronger delivery guarantees, build them into
 
 ## Event reference
 
-Every event class exposes its record type as a `TYPE` constant. The type is a dotted string whose
-first segment is the category (`auth`, `oauth`, `admin`), available via `$record->category()`.
+Every audit event carries its type on the contract as `$event->type`; the package's own events use
+the `Shared\Audit\AuditEventType` enum, whose value is a dotted string with the category
+(`auth`, `oauth`, `admin`) as its first segment, available via `$record->category()`.
 `$record->failure` marks the records a monitoring setup usually alerts on.
 
 | Event | Type | Context keys |
@@ -208,39 +209,43 @@ application-level actions can share the audit trail:
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEvent;
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditRecord;
 
-final readonly class ExportDownloaded implements AuditEvent
+final class ExportDownloaded implements AuditEvent
 {
-    public function __construct(public string $userId, public string $file) {}
+    public string|BackedEnum $type { get => AppAuditType::ExportDownloaded; }
+
+    public function __construct(public readonly string $userId, public readonly string $file) {}
 
     public function auditRecord(): AuditRecord
     {
-        return new AuditRecord('app.export.downloaded', userId: $this->userId, context: ['file' => $this->file]);
+        return new AuditRecord($this->type, userId: $this->userId, context: ['file' => $this->file]);
     }
 }
 
 event(new ExportDownloaded($user->id, 'report.csv'));
 ```
 
+`$type` takes your own backed enum or a plain string; `AuditRecord` and `FakeAuditSink` store and
+compare an enum as its value. PHP does not allow a hooked property in a `readonly class`, so mark
+the constructor parameters `readonly` instead.
+
 ## Testing
 
 The package ships an in-memory fake for host-app test suites:
 
 ```php
-use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginFailed;
-use Bambamboole\LaravelOidc\Server\Authentication\Events\LoginSucceeded;
+use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditEventType;
 use Bambamboole\LaravelOidc\Server\Shared\Audit\AuditSink;
 use Bambamboole\LaravelOidc\Server\Testing\FakeAuditSink;
-use Bambamboole\LaravelOidc\Server\Tokens\Events\TokenIssued;
 
 $sink = new FakeAuditSink;
 app()->instance(AuditSink::class, $sink);
 
 // ... drive a flow ...
 
-$sink->assertRecorded(LoginSucceeded::TYPE, fn ($record) => $record->userId === (string) $user->id);
-$sink->assertNotRecorded(LoginFailed::TYPE);
+$sink->assertRecorded(AuditEventType::LoginSucceeded, fn ($record) => $record->userId === (string) $user->id);
+$sink->assertNotRecorded(AuditEventType::LoginFailed);
 $sink->assertNothingRecorded();
-$sink->records(TokenIssued::TYPE); // list<AuditRecord>
+$sink->records(AuditEventType::TokenIssued); // list<AuditRecord>
 ```
 
 `Event::fake()` works too, but it also silences the recording listener; assert on the sink when a
