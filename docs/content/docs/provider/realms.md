@@ -185,7 +185,7 @@ use Bambamboole\LaravelOidc\Server\Shared\Realms\Settings\TokenSettings;
 
 class Tenant extends Model implements Realm
 {
-    public function id(): string
+    public function identifier(): string
     {
         return $this->slug;
     }

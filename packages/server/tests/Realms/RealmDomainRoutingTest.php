@@ -65,7 +65,7 @@ it('serves the realm key set from the realm host', function (): void {
 it('resolves the realm from the host', function (): void {
     $this->get('https://acme.id.test/.well-known/openid-configuration');
 
-    expect(app(RealmResolver::class)->current()->id())->toBe('acme')
+    expect(app(RealmResolver::class)->current()->identifier())->toBe('acme')
         ->and(app(IssuerResolver::class)->url())->toBe('https://acme.id.test');
 });
 
