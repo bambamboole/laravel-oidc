@@ -5,6 +5,20 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.29.0](https://github.com/bambamboole/laravel-oidc/compare/v0.28.0...v0.29.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** `Realm` gains `host(): ?string`, and the domain-routed issuer no longer takes the request's scheme.
+* **server:** bind a consent to the resource it was given for
+
+### Bug Fixes
+
+* **server:** bind a consent to the resource it was given for ([621d74f](https://github.com/bambamboole/laravel-oidc/commit/621d74f6b5e695bbc892dbc4b4a9986c6c7bdbd8))
+* **server:** point domain-routed realm URLs at the realm's host ([7aa6c7f](https://github.com/bambamboole/laravel-oidc/commit/7aa6c7fac7b7da1820ee29e225ebea5c8162c335))
+* **server:** report expires_in as the lifetime the token was granted ([23f0029](https://github.com/bambamboole/laravel-oidc/commit/23f00298e784cb5e77bb6b97b71fbcad0324851c))
+
 ## [0.28.0](https://github.com/bambamboole/laravel-oidc/compare/v0.27.1...v0.28.0) (2026-09-11)
 
 
