@@ -37,9 +37,15 @@
   ```bash
   composer check
   ```
+- A consuming app may install `Date::use(CarbonImmutable::class)`, whose instances neither extend
+  `Illuminate\Support\Carbon` nor mutate in place. `composer test:immutable` (`OIDC_TEST_DATES=immutable`, wired in
+  `tests/Pest.php`) replays the whole suite under it and runs as part of `composer check` and its own CI matrix cell.
+  Type package date values as `Carbon\CarbonInterface` or `DateTimeInterface`, never as the concrete
+  `Illuminate\Support\Carbon`.
 - For narrower loops while developing:
   ```bash
   composer test            # or composer test:parallel
+  composer test:immutable  # the suite under Date::use(CarbonImmutable::class)
   composer test:lint
   composer analyse
   composer rector:test
