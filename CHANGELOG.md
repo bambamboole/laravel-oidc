@@ -5,6 +5,13 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.27.1](https://github.com/bambamboole/laravel-oidc/compare/v0.27.0...v0.27.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* type date values against CarbonInterface ([#171](https://github.com/bambamboole/laravel-oidc/issues/171)) ([7978392](https://github.com/bambamboole/laravel-oidc/commit/79783924701ef239741789392224d5a503998deb))
+
 ## [0.27.0](https://github.com/bambamboole/laravel-oidc/compare/v0.26.0...v0.27.0) (2026-09-11)
 
 
