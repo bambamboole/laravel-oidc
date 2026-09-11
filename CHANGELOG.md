@@ -5,6 +5,24 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.27.0](https://github.com/bambamboole/laravel-oidc/compare/v0.26.0...v0.27.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** a route behind bare `auth:oidc` now admits client_credentials tokens that it previously rejected. A route that means "a human" must say so — pair the guard with CheckScopes, or branch on ClientPrincipal.
+* **server:** bind every scope to the resource that owns it
+
+### Features
+
+* **server:** authenticate a client_credentials token as its client ([704b17c](https://github.com/bambamboole/laravel-oidc/commit/704b17c42515894bf3f6a250ea3d6d882adf9bde))
+* **server:** bind every scope to the resource that owns it ([bf1629c](https://github.com/bambamboole/laravel-oidc/commit/bf1629cfbab2f14f7b9bbeb569e49f3b7e3d4ade))
+
+
+### Documentation
+
+* describe scopes that belong to a resource ([10d3e39](https://github.com/bambamboole/laravel-oidc/commit/10d3e3958445e429ce7e52510fb5b0493f5b46ea))
+
 ## [0.26.0](https://github.com/bambamboole/laravel-oidc/compare/v0.25.0...v0.26.0) (2026-09-10)
 
 
