@@ -78,6 +78,14 @@ Where realms appear in URLs is `oidc.routes.realms`:
 
 The mode is fixed when the routes are registered; the route **names** are the same in all three.
 
+:::caution[`oidc.issuer` is an origin, not a base URL]
+It must have no path of its own. Routes are registered at the application root, and in `path` mode
+the realm supplies the only path there is, so `https://example.com/idp` would be carried into the
+discovery document while the endpoints stayed at `https://example.com/oauth/…` — an issuer whose
+own metadata URL answers 404. Serve the provider from its own host or subdomain, or use `domain`
+mode, where each realm's host is the origin and `oidc.issuer` supplies only the scheme.
+:::
+
 ### Metadata that is not prefixed
 
 RFC 8414 and RFC 9728 build their metadata URLs by inserting the well-known segment *ahead* of
@@ -116,8 +124,8 @@ In `single` and `path` mode the `RouteRealmResolver` reads the `{realm}` route p
 bound `RealmRepository` for it, and answers 404 for an identifier the repository does not know. In
 `domain` mode the `DomainRealmResolver` asks `findByDomain()` for the request host instead, and a
 host no realm is served from is a 404 just the same. Without a realm to read — every request in
-`single` mode, and console commands or queued jobs in any mode — resolution falls back to
-`config('oidc.realm')`. The
+`single` mode, and console commands or queued jobs in any mode — resolution falls back to the
+[context](#realms-outside-a-request) and then to `config('oidc.realm')`. The
 default `ConfiguredRealmRepository` accepts every identifier, serves it with the configured
 settings, and maps hosts through `oidc.routes.domains`, so a deployment that only scopes data per
 tenant needs no code.
@@ -131,7 +139,11 @@ $this->app->singleton(RealmRepository::class, EloquentRealmRepository::class);
 ```
 
 Both contracts are singletons. A resolver must derive the realm from the current request on
-every call rather than remember it — under Octane one instance serves many requests.
+every call rather than remember it — under Octane one instance serves many requests. Resolution
+therefore runs many times per request, and in `domain` mode so does `findByDomain()` — the issuer
+consults it too, to tell a host the request arrived on from one that merely comes from `app.url`.
+Memoize inside the repository, keyed by the value looked up, rather than caching a realm on the
+resolver.
 
 The shipped resolvers read the realm from the URL — the `{realm}` path segment, or the single
 configured realm. The cacheable documents (`jwks.json`, discovery, RFC 8414 and RFC 9728 metadata)
@@ -193,25 +205,41 @@ the advertised protected resources, and the install-time first-party provisionin
 ### ResolveRealm
 
 The `ResolveRealm` middleware runs on every package route: it records the realm on the request,
-registers it as the default `{realm}` for URL generation, and — in `path` mode — gives the
-provider its own session cookie (see [Sessions](#sessions)).
+registers it as the default `{realm}` for URL generation, publishes it to the context, and — in
+`path` mode — gives the provider its own session cookie (see [Sessions](#sessions)).
 
 It also removes `{realm}` from the matched route's parameters. That is load-bearing rather than
 cosmetic: Laravel hands route parameters to controller methods positionally, so a leading realm
 would shift every other argument along by one.
 
-### URL generation outside a request
+### Realms outside a request
 
-`route('oidc.authorize')` needs a realm. During a request `ResolveRealm` supplies the matched
-one. Outside a request the default is `config('oidc.realm')`, registered at boot. A queued job
-that generates URLs for a realm other than that default has to set it itself:
+There is no request to read a realm from in a queued job, so the realm travels with the job
+instead. `ResolveRealm` publishes the resolved realm to
+[Laravel's context](https://laravel.com/docs/context), which Laravel serializes into every job
+dispatched while serving the request and restores before the job runs:
 
 ```php
-URL::defaults(['realm' => $realm]);
+Context::get('oidc.realm'); // 'acme', in the request and in every job it queued
 ```
 
-This applies to queued password-reset and email-verification notifications in a multi-realm
-deployment.
+The resolver reads it back, so a job dispatched from `acme` resolves `acme` on the worker: its
+`inRealm()` queries hit that realm's rows, `IssuerResolver` names that realm's issuer, and the
+`Keyring` signs with that realm's key. `route('oidc.authorize')` gets the same treatment — the
+package syncs the default `{realm}` from the context before each job runs, so queued
+password-reset and email-verification notifications link back into the realm that sent them.
+
+The constants are on `Bambamboole\LaravelOidc\Server\Shared\Context\OidcContext`, which also
+publishes `oidc.client_id` — the client of the authorize or token request — for the same reason
+and for log correlation.
+
+A job dispatched from outside a package route (a console command, or one of your own controllers
+in a multi-realm deployment) carries no realm and falls back to `config('oidc.realm')`. Set it
+yourself when that is not the realm you mean:
+
+```php
+Context::add('oidc.realm', $realm);
+```
 
 ## What the package scopes
 
