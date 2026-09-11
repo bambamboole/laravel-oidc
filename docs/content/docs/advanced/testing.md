@@ -28,7 +28,7 @@ $this->actingAsIdentity($user, amr: ['pwd', 'otp'], authTime: time() - 60);
 ```
 
 There is no `acr` parameter: the grant derives `acr` from `amr` through the bound
-`AcrResolver` (`oidc.auth.acr_values`: `1` for a single method, `2` for multiple by default).
+`AcrResolver` (`oidc.login.acr_single_factor` / `oidc.login.acr_multi_factor`: `1` for a single method, `2` for multiple by default).
 
 ## Acting as a token user
 

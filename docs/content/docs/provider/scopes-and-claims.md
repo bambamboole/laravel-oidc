@@ -5,7 +5,7 @@ description: The OIDC scope catalog and how an authenticated user is mapped to c
 
 ## Scope catalog
 
-The provider understands the OIDC standard scopes — `openid`, `profile` and `email` — merged with your configured catalog (`scopes.catalog`, below). On a conflict the configured
+The provider understands the OIDC standard scopes — `openid`, `profile` and `email` — merged with your configured catalog (`scopes`, below). On a conflict the configured
 catalog wins over the built-in OIDC scopes — so you can
 override the description of a standard scope simply by defining it in your catalog.
 
@@ -83,13 +83,10 @@ defaults are now.
 
 ### Registering API scopes
 
-Feed your API scope catalog to the provider through `config/oidc.php`'s `scopes.catalog`
-option:
+Feed your API scope catalog to the provider through `config/oidc.php`'s `scopes` option:
 
 ```php
-'scopes' => [
-    'catalog' => App\Auth\ApiScopes::class,   // or an inline [scope => description] map
-],
+'scopes' => App\Auth\ApiScopes::class,   // or an inline [scope => description] map
 ```
 
 An inline map lists the realm's scopes and the descriptions of the scopes the resources in

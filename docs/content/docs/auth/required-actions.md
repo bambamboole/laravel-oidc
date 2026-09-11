@@ -75,9 +75,9 @@ than a detail of one login screen.
 
 | Key | Pending when | Configured by |
 | --- | --- | --- |
-| `verify_email` | the user's address is unconfirmed | `oidc.auth.email_verification_required` |
-| `update_password` | the password is older than the rotation window | `oidc.auth.password.max_age_days` |
-| `configure_mfa` | the user has no factor that can be challenged | `oidc.auth.mfa` = `always` |
+| `verify_email` | the user's address is unconfirmed | `oidc.authentication.email_verification_required` |
+| `update_password` | the password is older than the rotation window | `oidc.password_policy.max_age_days` |
+| `configure_mfa` | the user has no factor that can be challenged | `oidc.authentication.mfa` = `always` |
 
 There is deliberately no separate list of enabled actions: each one's trigger is already a realm
 setting, and a second switch would only be a way for the two to disagree. All three read

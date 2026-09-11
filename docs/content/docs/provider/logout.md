@@ -17,7 +17,7 @@ and `client_id` is not in the hint's `aud`, the request is answered with `400 in
 
 `post_logout_redirect_uri` is only honored when it is registered on that client
 (`oidc_clients.post_logout_redirect_uris`); otherwise the browser lands on the fallback
-(`oidc.auth.logout_redirect`). Without a hint or a `client_id` there is no client to validate
+(`oidc.login.logout_redirect`). Without a hint or a `client_id` there is no client to validate
 against, so the fallback is always used. When present, `state` is appended to the redirect.
 
 ### Threat model

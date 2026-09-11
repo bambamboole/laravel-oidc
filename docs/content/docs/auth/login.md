@@ -29,7 +29,7 @@ would not otherwise accept.
 
 The store action is throttled to **5 requests per minute** and runs the following steps:
 
-1. **Validate.** The username field (`config('oidc.auth.username')`, default `email`) and `password`
+1. **Validate.** The username field (`config('oidc.login.username')`, default `email`) and `password`
    are both `required|string`.
 2. **Normalize.** The username is **lowercased** before it is used as a credential.
 3. **Verify credentials** against the `identity` guard's user provider
@@ -87,12 +87,12 @@ the `remember` field), the **session is regenerated**, and:
 
 - A JSON request (`wantsJson`) receives an empty **`200`** response.
 - A browser request is redirected via `redirect()->intended(...)` to
-  `config('oidc.auth.home')` (default `/dashboard`).
+  `config('oidc.login.home')` (default `/dashboard`).
 
 ## Deferring to the two-factor challenge
 
 After the primary factor succeeds, the package looks up the user's **confirmed, challengeable**
-enrollments, filtered by `config('oidc.auth.two_factor.challenge_providers')` (default `['totp']`).
+enrollments, filtered by `config('oidc.credentials.challenge_providers')` (default `['totp']`).
 
 - If the [post-login pipeline](/auth/post-login-pipeline/) called `requireMfa()` but the user has
   **no** challengeable factor, the login is denied.

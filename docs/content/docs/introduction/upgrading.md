@@ -9,6 +9,57 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.30: flatter config keys
+
+Four keys in `config/oidc.php` moved. `mergeConfigFrom` merges only the first level of a config
+array, so a published copy keeps whatever shape it was published with — rename the keys in your
+own `config/oidc.php`, or re-publish it with
+`php artisan vendor:publish --tag=oidc-config --force` and re-apply your changes.
+
+| Old | New |
+| --- | --- |
+| `oidc.tokens.lifetimes.*` | `oidc.tokens.*` |
+| `oidc.scopes.catalog` | `oidc.scopes` (the catalog is the value itself) |
+| `oidc.clients.first_party.provision.*` | `oidc.install_self.*` |
+| `oidc.session.token.session_key` | *(removed — the key is a constant on `SessionTokenIssuer`)* |
+
+`oidc.auth` was four concerns in one key, and the only key in the file that nested a settings group
+inside a settings group. It is now one flat key per `Realm` settings object, the way every other
+key in the file already worked:
+
+| Old | New |
+| --- | --- |
+| `oidc.auth.{guard,provider,api_guard}` | unchanged — deployment-wide, not per realm |
+| `oidc.auth.username` | `oidc.login.username` |
+| `oidc.auth.login_route` | `oidc.login.route` |
+| `oidc.auth.home` | `oidc.login.home` |
+| `oidc.auth.logout_redirect` | `oidc.login.logout_redirect` |
+| `oidc.auth.acr_values.single_factor` | `oidc.login.acr_single_factor` |
+| `oidc.auth.acr_values.multi_factor` | `oidc.login.acr_multi_factor` |
+| `oidc.auth.methods` | `oidc.authentication.methods` |
+| `oidc.auth.mfa` | `oidc.authentication.mfa` |
+| `oidc.auth.email_verification_required` | `oidc.authentication.email_verification_required` |
+| `oidc.auth.factors` | `oidc.credentials.factors` |
+| `oidc.auth.two_factor.challenge_providers` | `oidc.credentials.challenge_providers` |
+| `oidc.auth.two_factor.secret_length` | `oidc.credentials.totp_secret_length` |
+| `oidc.auth.two_factor.window` | `oidc.credentials.totp_window` |
+| `oidc.auth.two_factor.recovery_codes` | `oidc.credentials.recovery_codes` |
+| `oidc.auth.password.*` | `oidc.password_policy.*` |
+
+Every environment variable keeps its name, so a deployment that configures the package through the
+environment has nothing to change.
+
+No behavior changed and nothing new is configurable. `oidc.tokens` and `oidc.scopes` each held a
+single child; `install_self` collects the input to the one-shot `oidc:install-self` command, which
+is not client configuration and is never read at runtime.
+
+Alongside the renames, `resources`, `social.providers` and `routes.domains` are now merged by name
+on top of the first-level merge — see
+[How a published config is merged](/introduction/configuration/#how-a-published-config-is-merged).
+A published config that defines its own social providers now keeps the shipped ones instead of
+replacing them; if you were relying on a published `social.providers` map to *hide* a shipped
+provider, note that a provider without a configured `client_id` is inert anyway.
+
 ## 0.26: a scope belongs to one resource
 
 Scopes are no longer a flat catalog per realm. Every scope belongs to exactly one resource server
@@ -68,7 +119,7 @@ changes no configuration keeps the behavior it had. What changed regardless:
 - **`$api->requireMfa()` for a user without a factor no longer denies the login** when a factor
   could be enrolled — it holds the login on enrollment instead, matching `mfa = always`. It still
   denies when nothing could satisfy the demand.
-- **`PasswordCredential::isExpired()` is enforced.** With `auth.password.max_age_days` set, an
+- **`PasswordCredential::isExpired()` is enforced.** With `password_policy.max_age_days` set, an
   expired password now holds the login on the new `identity.password.change` screen instead of
   merely reporting. A post-login hook that used to deny on it can be deleted. The rotation clock
   starts at a user's first password login the package sees, so nobody is expired retroactively.
@@ -202,18 +253,18 @@ and `revoke()` replace the old `oauth_*` magic properties.
 
 | Old | New |
 | --- | --- |
-| `oidc.passport.scopes` | `oidc.scopes.catalog` |
+| `oidc.passport.scopes` | `oidc.scopes` |
 | `oidc.passport.token_model` | *(removed — the package owns its token model)* |
 | `passport.guard` | `oidc.auth.guard` |
 | `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` | *(removed — the keypair lives in `oidc_signing_keys`; run `oidc:rotate-keys --if-missing`)* |
 
-One key is new: `oidc.tokens.lifetimes.refresh_token` (was `Passport::refreshTokensExpireIn()`).
+One key is new: `oidc.tokens.refresh_token` (was `Passport::refreshTokensExpireIn()`).
 
 ### 7. Replace the runtime and test APIs
 
 | Old | New |
 | --- | --- |
-| `Passport::tokensCan([...])` | `config(['oidc.scopes.catalog' => [...]])` |
+| `Passport::tokensCan([...])` | `config(['oidc.scopes' => [...]])` |
 | `Passport::actingAs($user, $scopes, $guard)` | `$this->actingAsOidcUser($user, $scopes, $guard)` |
 | `Passport::authorizationView(...)` | bind the [`ConsentView` contract](/provider/endpoints/#consent-view-required) |
 | `Laravel\Passport\Http\Middleware\CheckToken` | `Bambamboole\LaravelOidc\Server\Tokens\Http\Middleware\CheckScopes` |

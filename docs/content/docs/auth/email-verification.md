@@ -9,7 +9,7 @@ verify/resend endpoints abort or no-op otherwise. The notification is triggered 
 event fired during [registration](/auth/registration/).
 
 Verification is **optional by default**: the routes exist, but nothing forces a user through them.
-Set `oidc.auth.email_verification_required` to make an unconfirmed address block the login — see
+Set `oidc.authentication.email_verification_required` to make an unconfirmed address block the login — see
 [Required actions](/auth/required-actions/).
 
 ## Routes
@@ -22,7 +22,7 @@ Set `oidc.auth.email_verification_required` to make an unconfirmed address block
 
 All three need a subject, which is **either** an authenticated `identity` session **or** a login
 pending on the [`verify_email` required action](/auth/required-actions/) — with
-`oidc.auth.email_verification_required` on, no session exists until the address is confirmed, so
+`oidc.authentication.email_verification_required` on, no session exists until the address is confirmed, so
 these routes cannot sit behind the guard.
 
 ## The verification notice
@@ -30,7 +30,7 @@ these routes cannot sit behind the guard.
 `GET identity.verification.notice` (`EmailVerificationPromptController`) renders through the bound
 `EmailVerificationView` contract. If the subject already has a verified email the action is
 settled: mid-login that finishes the ceremony, and otherwise it redirects via
-`redirect()->intended(...)` to `config('oidc.auth.home')` (default `/dashboard`).
+`redirect()->intended(...)` to `config('oidc.login.home')` (default `/dashboard`).
 
 ## The signed verify route
 

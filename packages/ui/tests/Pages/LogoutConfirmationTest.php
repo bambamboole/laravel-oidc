@@ -47,7 +47,7 @@ it('ends the session and redirects to the sealed target when the prompt is confi
 
 it('redirects a signed-out browser instead of rendering the prompt', function (): void {
     $this->get(route('oidc.logout'))
-        ->assertRedirect(config('oidc.auth.logout_redirect', '/'));
+        ->assertRedirect(config('oidc.login.logout_redirect', '/'));
 });
 
 it('links cancel to the realm home and names no client when the request identified none', function (): void {
@@ -61,7 +61,7 @@ it('links cancel to the realm home and names no client when the request identifi
 
     expect($content)->toContain(__('oidc-ui::oauth.logout.requested'))
         ->and($content)->not->toContain(__('oidc-ui::oauth.logout.signed-in-as', ['email' => 'null']))
-        ->and($content)->toContain(config('oidc.auth.home', '/dashboard'))
+        ->and($content)->toContain(config('oidc.login.home', '/dashboard'))
         ->and($content)->toContain('sealed');
 });
 

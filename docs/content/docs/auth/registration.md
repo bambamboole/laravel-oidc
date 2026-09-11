@@ -33,7 +33,7 @@ The store action is throttled to **5 requests per minute**, then runs the follow
 ### Response
 
 - A JSON request (`wantsJson`) receives an empty **`201`** response.
-- A browser request is redirected via `redirect()->intended(...)` to `config('oidc.auth.home')`
+- A browser request is redirected via `redirect()->intended(...)` to `config('oidc.login.home')`
   (default `/dashboard`).
 
 ## Validation lives in your action
