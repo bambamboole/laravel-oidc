@@ -24,6 +24,7 @@ function consentPrompt(Client $client, array $scopes): ConsentPrompt
         user: new GenericUser(['id' => 1]),
         scopes: $scopes,
         authToken: 'test-auth-token',
+        resources: ['https://op.test'],
     );
 }
 

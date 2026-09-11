@@ -83,6 +83,7 @@ it('renders the subclass, not the base page, for every auth page', function (): 
             user: new GenericUser(['id' => 1]),
             scopes: [],
             authToken: 'auth-token-123',
+            resources: ['https://op.test'],
         )],
     ];
 
