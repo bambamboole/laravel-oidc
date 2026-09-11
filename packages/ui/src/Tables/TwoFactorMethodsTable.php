@@ -13,7 +13,7 @@ use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Lattice\Actions\Components\Action;
 use Lattice\Core\Enums\ColorName;
 use Lattice\Table\Attributes\AsTable;
@@ -132,7 +132,7 @@ class TwoFactorMethodsTable extends TableDefinition
                 : $method,
             'role' => $this->role($enrollment->providerKey),
             'last_used_at_diff' => $enrollment->lastUsedAt instanceof \DateTimeInterface
-                ? __('oidc-ui::security.methods.last-used-at', ['time' => Carbon::instance($enrollment->lastUsedAt)->diffForHumans()])
+                ? __('oidc-ui::security.methods.last-used-at', ['time' => Date::instance($enrollment->lastUsedAt)->diffForHumans()])
                 : __('oidc-ui::security.methods.never-used'),
         ];
     }

@@ -36,8 +36,11 @@ jobs:
         php: ['8.4']
         testbench: ['11.*']
         stability: [prefer-stable, prefer-lowest]
+        # A consuming app may run on Date::use(CarbonImmutable::class); the
+        # immutable cell replays the whole suite under it.
+        dates: [default, immutable]
 
-    name: PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }}
+    name: PHP ${{ matrix.php }} - Testbench ${{ matrix.testbench }} - ${{ matrix.stability }} - ${{ matrix.dates }} dates
 
     steps:
       - name: Checkout code
@@ -55,6 +58,8 @@ jobs:
 
       - name: Tests (Pest)
         run: vendor/bin/pest --parallel
+        env:
+          OIDC_TEST_DATES: ${{ matrix.dates }}
 
   mautic:
     runs-on: ubuntu-latest

@@ -5,6 +5,7 @@ includes:
 parameters:
     tmpDir: %currentWorkingDirectory%/.phpstan-cache/tests
     paths:
+        - tests
         - packages/server/tests
         - packages/client/tests
         - packages/ui/tests

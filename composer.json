@@ -91,7 +91,8 @@
             "@test:lint",
             "@analyse",
             "@rector:test",
-            "@test:parallel"
+            "@test:parallel",
+            "@test:immutable"
         ],
         "check:mautic": "@composer --working-dir=packages/mautic check",
         "lint:fix": "./vendor/bin/pint",
@@ -104,6 +105,10 @@
         ],
         "test": "./vendor/bin/pest",
         "test:parallel": "./vendor/bin/pest --parallel",
+        "test:immutable": [
+            "@putenv OIDC_TEST_DATES=immutable",
+            "@php vendor/bin/pest --parallel"
+        ],
         "test:mautic": "@composer --working-dir=packages/mautic test",
         "install:mautic": "@composer --working-dir=packages/mautic install",
         "post-autoload-dump": [
