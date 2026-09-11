@@ -186,7 +186,13 @@ it('expires a password past max_age_days whichever date class the app installs',
     $this->travel(31)->days();
 
     expect($passwords->isExpired($user))->toBeTrue();
-})->with([Carbon::class, CarbonImmutable::class]);
+})->with([
+    // Keys are load-bearing: an unkeyed [Carbon::class, CarbonImmutable::class] is a valid
+    // [class, method] callable, because Carbon answers any static call through __callStatic.
+    // Pest calls a dataset it finds callable instead of iterating it.
+    'mutable dates' => Carbon::class,
+    'immutable dates' => CarbonImmutable::class,
+]);
 
 it('does not expire a password when the realm sets no maximum age', function (): void {
     $user = userWithPassword('password');
