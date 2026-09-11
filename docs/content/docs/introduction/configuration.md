@@ -48,7 +48,7 @@ Every other key follows the first-level rule, so re-read this page after an upgr
 | `tokens.refresh_token` | `1209600` (`OIDC_REFRESH_TOKEN_TTL`) | Idle cap on an interactive session: a refresh token unused for this long is dead. |
 | `tokens.password_reset` | `3600` (`OIDC_PASSWORD_RESET_TTL`) | How long a password reset link stays valid, in seconds. See [Password reset](/auth/passwords/#reset-links). |
 | `session.cookie_name` | `null` (`OIDC_SESSION_COOKIE`) | Name of the provider's session cookie under `path` realm routing; `null` derives `{session.cookie}-oidc-{realm}`. Unused under `single` routing, where provider and application share one session. |
-| `session.absolute_lifetime` | `2592000` (`OIDC_SESSION_ABSOLUTE_LIFETIME`) | Absolute cap on an interactive session, from login (30 days). Refresh is denied past this; the user must re-authenticate. Drives `context.expires_at`, the refresh deny-check, and context pruning. |
+| `session.absolute_lifetime` | `2592000` (`OIDC_SESSION_ABSOLUTE_LIFETIME`) | Absolute cap on an interactive session, from login (30 days), never extended. Refresh is denied past it and the session becomes eligible for back-channel logout; the authorization endpoint does not re-check it. Drives `context.expires_at`, the refresh deny-check, and context pruning — see [Sessions](/provider/sessions/#lifetimes). |
 | `session.token.ttl` | `3600` (`OIDC_SESSION_TOKEN_TTL`) | Root token lifetime in seconds — see [Browser-fetch](/advanced/browser-fetch/). |
 | `session.token.refresh_skew` | `60` | Seconds before expiry at which the root token is re-minted instead of reused. |
 | `session.token.scopes` | `null` | Scopes granted to the root token. `null` grants every non-hidden scope. |

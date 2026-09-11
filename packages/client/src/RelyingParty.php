@@ -117,6 +117,9 @@ class RelyingParty
             throw new OidcClientException('No local user matched the id_token subject.');
         }
 
+        // The guard regenerates the session on login; doing it again here would
+        // detach the provider's OIDC session from the browser session it
+        // recorded, which matters when the app is its own relying party.
         $this->manager->guard()->login($user);
 
         session()->put('oidc-client.tokens', [
@@ -125,8 +128,6 @@ class RelyingParty
             'id_token' => $idToken,
             'expires_at' => is_numeric($response->json('expires_in')) ? time() + (int) $response->json('expires_in') : null,
         ]);
-
-        $request->session()->regenerate();
 
         if (config('oidc-client.backchannel_logout.enabled', false)) {
             $sid = $claims['sid'] ?? null;

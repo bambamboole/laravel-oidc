@@ -6,6 +6,8 @@ use Bambamboole\LaravelOidc\Client\BackchannelLogoutStore;
 use Bambamboole\LaravelOidc\Client\Exceptions\OidcClientException;
 use Bambamboole\LaravelOidc\Client\Facades\OidcClient;
 use Bambamboole\LaravelOidc\Client\Testing\OidcClientFake;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Workbench\App\Models\User;
@@ -149,4 +151,19 @@ it('stores the access token expiry alongside the tokens', function (): void {
         ->toBeInt()
         ->toBeGreaterThanOrEqual(time() + 3590)
         ->toBeLessThanOrEqual(time() + 3610);
+});
+
+it('keeps the session id the guard established, so a self-SSO provider keeps pointing at it', function (): void {
+    $atLogin = null;
+
+    Event::listen(Login::class, function () use (&$atLogin): void {
+        $atLogin = session()->getId();
+    });
+
+    $this->withSession($this->fake->callbackContext())
+        ->get($this->fake->loginAs($this->user))
+        ->assertRedirect('/dashboard');
+
+    expect($atLogin)->not->toBeNull()
+        ->and(session()->getId())->toBe($atLogin);
 });
