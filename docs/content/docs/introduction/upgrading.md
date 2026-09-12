@@ -9,6 +9,30 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.31: a first-party client per realm
+
+`oidc_clients.provisioning_key` carried a unique index across the whole table, so only one realm in
+a deployment could hold a first-party client. `oidc:install-self` and `oidc:client` failed in every
+other realm with *"Self-SSO is already provisioned for another realm"*. The index is now
+`(realm_id, provisioning_key)` and the provisioner looks the client up within the current realm, so
+each realm provisions and reconciles its own.
+
+The migration is rewritten rather than stacked. Re-publish it and, on a database that already ran
+the old one, drop the single-column index and add the composite one:
+
+```bash
+php artisan vendor:publish --tag=oidc-migrations --force
+```
+
+```sql
+DROP INDEX oidc_clients_provisioning_key_unique ON oidc_clients;
+CREATE UNIQUE INDEX oidc_clients_realm_id_provisioning_key_unique
+    ON oidc_clients (realm_id, provisioning_key);
+```
+
+`FirstPartyClientProvisioner` no longer takes a `RealmResolver`; it resolved one only for the
+cross-realm check that is gone. Nothing else about provisioning changed.
+
 ## 0.30: flatter config keys
 
 Four keys in `config/oidc.php` moved. `mergeConfigFrom` merges only the first level of a config
