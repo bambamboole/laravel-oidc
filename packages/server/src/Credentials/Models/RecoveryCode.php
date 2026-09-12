@@ -7,13 +7,12 @@ namespace Bambamboole\LaravelOidc\Server\Credentials\Models;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property string $id
+ * @property string $user_id
  * @property string $code
  * @property CarbonInterface|null $used_at
- * @property-read Model $authenticatable
  */
 class RecoveryCode extends Model
 {
@@ -28,14 +27,6 @@ class RecoveryCode extends Model
     protected $hidden = [
         'code',
     ];
-
-    /**
-     * @return MorphTo<Model, $this>
-     */
-    public function authenticatable(): MorphTo
-    {
-        return $this->morphTo();
-    }
 
     /**
      * @return array<string, string>

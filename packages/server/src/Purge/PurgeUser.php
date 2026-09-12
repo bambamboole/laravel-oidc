@@ -18,7 +18,6 @@ use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AuthorizationCode;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\RefreshToken;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -54,10 +53,8 @@ final readonly class PurgeUser
             OidcSession::query()->where('user_id', $id)->delete();
             PasswordResetToken::query()->where('user_id', $id)->delete();
 
-            if ($user instanceof Model) {
-                foreach ([SocialAccount::class, PasswordHistory::class, TotpFactor::class, RecoveryCode::class] as $model) {
-                    $model::query()->whereMorphedTo('authenticatable', $user)->delete();
-                }
+            foreach ([SocialAccount::class, PasswordHistory::class, TotpFactor::class, RecoveryCode::class] as $model) {
+                $model::query()->where('user_id', $id)->delete();
             }
         });
     }

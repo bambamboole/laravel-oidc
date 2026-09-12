@@ -17,7 +17,7 @@ return new class extends Migration
     {
         Schema::create('oidc_password_history', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->uuidMorphs('authenticatable', 'oidc_password_history_authenticatable_index');
+            $table->uuid('user_id')->index();
             $table->string('hash');
             $table->timestamp('created_at');
         });

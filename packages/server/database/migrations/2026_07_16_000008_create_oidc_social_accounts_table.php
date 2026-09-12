@@ -12,8 +12,8 @@ return new class extends Migration
     {
         Schema::create('oidc_social_accounts', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
-            $table->uuidMorphs('authenticatable', 'oidc_social_authenticatable_index');
+            $table->string('realm_id')->index();
+            $table->uuid('user_id')->index();
             $table->string('provider');
             $table->string('provider_user_id');
             $table->string('email')->nullable();
