@@ -23,7 +23,7 @@ return new class extends Migration
             $table->uuid('context_id')->nullable();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
-            $table->dateTime('expires_at')->nullable()->index();
+            $table->timestamp('expires_at')->nullable()->index();
         });
     }
 
