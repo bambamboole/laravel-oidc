@@ -18,7 +18,6 @@ class OidcSessionRepository
         $session->realm_id = OidcSession::currentRealm();
         $session->user_id = $userId;
         $session->browser_session_id = $browserSessionId;
-        $session->created_at = now();
         $session->expires_at = now()->add($this->realms->current()->sessions()->absolute());
         $session->save();
 

@@ -29,6 +29,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ?string $context_id
  * @property ?CarbonInterface $revoked_at
  * @property ?CarbonInterface $expires_at
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  */
 class AuthorizationCode extends Model
 {
@@ -38,8 +40,6 @@ class AuthorizationCode extends Model
     use HasFactory;
 
     protected $table = 'oidc_auth_codes';
-
-    public $timestamps = false;
 
     protected $guarded = [];
 

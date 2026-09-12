@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $access_token_id
  * @property ?CarbonInterface $revoked_at
  * @property ?CarbonInterface $expires_at
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  */
 class RefreshToken extends Model
 {
@@ -32,8 +34,6 @@ class RefreshToken extends Model
     protected $keyType = 'string';
 
     public $incrementing = false;
-
-    public $timestamps = false;
 
     protected $guarded = [];
 

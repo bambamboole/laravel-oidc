@@ -29,6 +29,7 @@ return new class extends Migration
             $table->json('scopes');
             $table->timestamp('granted_at');
             $table->timestamp('revoked_at')->nullable();
+            $table->timestamps();
 
             $table->unique(['realm_id', 'user_id', 'client_id', 'resource']);
 

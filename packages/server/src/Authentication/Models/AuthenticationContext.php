@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property ?int $auth_time
  * @property array<string, mixed> $id_token_claims
  * @property array<string, mixed> $access_token_claims
- * @property ?CarbonInterface $created_at
+ * @property CarbonInterface $created_at
  * @property ?CarbonInterface $expires_at
  */
 class AuthenticationContext extends Model
