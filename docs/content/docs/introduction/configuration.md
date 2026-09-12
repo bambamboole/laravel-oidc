@@ -34,7 +34,7 @@ Every other key follows the first-level rule, so re-read this page after an upgr
 ## Schema
 
 These are read only while migrating, and only by the shipped migrations. They
-say where the package's `user_id` and `realm_id` columns point, because both
+say where the package's `user_id` and `realm` columns point, because both
 name a table the application owns rather than one the package ships. A `null`
 table writes no foreign key for that column at all.
 
@@ -42,8 +42,8 @@ table writes no foreign key for that column at all.
 | --- | --- | --- |
 | `migrations.users.table` | `'users'` (`OIDC_MIGRATIONS_USERS_TABLE`) | Table every `user_id` column references, with `on delete cascade`. Set it to `null` to leave `user_id` unconstrained. |
 | `migrations.users.column` | `'id'` (`OIDC_MIGRATIONS_USERS_COLUMN`) | The column referenced there. It must be unique and, because every `user_id` is a native `uuid`, uuid-typed. |
-| `migrations.realms.table` | `null` (`OIDC_MIGRATIONS_REALMS_TABLE`) | Table every `realm_id` column references. Off by default: a realm is an opaque identifier the application owns, and there need not be a table behind it. |
-| `migrations.realms.column` | `'slug'` (`OIDC_MIGRATIONS_REALMS_COLUMN`) | The column referenced there. `realm_id` holds the realm's identifier, not its primary key, so this usually names a unique slug column rather than `id`. |
+| `migrations.realms.table` | `null` (`OIDC_MIGRATIONS_REALMS_TABLE`) | Table every `realm` column references. Off by default: a realm is an opaque identifier the application owns, and there need not be a table behind it. |
+| `migrations.realms.column` | `'slug'` (`OIDC_MIGRATIONS_REALMS_COLUMN`) | The column referenced there. `realm` holds the realm's identifier, not its primary key, so this usually names a unique slug column rather than `id`. |
 
 Changing these after the tables exist has no effect — the constraints are
 written once, when the migration runs.
