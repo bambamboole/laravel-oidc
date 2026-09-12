@@ -16,6 +16,7 @@ use Bambamboole\LaravelOidc\Server\Credentials\ConfigureMfaAction;
 use Bambamboole\LaravelOidc\Server\Credentials\CredentialsServiceProvider;
 use Bambamboole\LaravelOidc\Server\Installation\InstallationServiceProvider;
 use Bambamboole\LaravelOidc\Server\Protocol\ProtocolServiceProvider;
+use Bambamboole\LaravelOidc\Server\Purge\Commands\PruneCommand;
 use Bambamboole\LaravelOidc\Server\Realms\Enums\RealmRouting;
 use Bambamboole\LaravelOidc\Server\Realms\RealmsServiceProvider;
 use Bambamboole\LaravelOidc\Server\Scopes\ScopesServiceProvider;
@@ -129,6 +130,10 @@ class OidcServiceProvider extends ServiceProvider
         $this->publishesMigrations([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'oidc-migrations');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([PruneCommand::class]);
+        }
 
         AboutCommand::add('OIDC', fn (): array => [
             'Issuer' => config('oidc.issuer') ?? 'not set',
