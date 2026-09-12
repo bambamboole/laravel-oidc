@@ -16,7 +16,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('oidc_password_history', function (Blueprint $table): void {
+        Schema::create('oidc_password_histories', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->uuid('user_id')->index();
             $table->string('hash');
@@ -28,6 +28,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('oidc_password_history');
+        Schema::dropIfExists('oidc_password_histories');
     }
 };
