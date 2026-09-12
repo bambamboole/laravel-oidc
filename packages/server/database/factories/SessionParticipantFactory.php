@@ -8,7 +8,6 @@ use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Sessions\Models\OidcSession;
 use Bambamboole\LaravelOidc\Server\Sessions\Models\SessionParticipant;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<SessionParticipant>
@@ -21,7 +20,7 @@ class SessionParticipantFactory extends Factory
     {
         return [
             'session_id' => fn (): string => OidcSession::factory()->create()->id,
-            'client_id' => (string) Str::uuid(),
+            'client_id' => fn (): string => (string) Client::factory()->create()->getKey(),
             'created_at' => now(),
         ];
     }

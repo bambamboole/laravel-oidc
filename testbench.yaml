@@ -16,3 +16,4 @@ workbench:
     commands: false
     components: false
     views: false
+    factories: true

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Database\ForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,10 @@ return new class extends Migration
             $table->json('access_token_claims');
             $table->timestamp('created_at')->nullable();
             $table->timestamp('expires_at')->nullable()->index();
+
+            $table->foreign('session_id')->references('id')->on('oidc_sessions')->cascadeOnDelete();
+            ForeignKeys::realm($table);
+            ForeignKeys::user($table);
         });
     }
 

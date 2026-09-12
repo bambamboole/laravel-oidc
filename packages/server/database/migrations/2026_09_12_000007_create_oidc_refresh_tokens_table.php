@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Database\ForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,6 +17,9 @@ return new class extends Migration
             $table->char('access_token_id', 80)->index();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamp('expires_at')->nullable()->index();
+
+            $table->foreign('access_token_id')->references('id')->on('oidc_access_tokens')->cascadeOnDelete();
+            ForeignKeys::realm($table);
         });
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Authentication\Models\AuthenticationContext;
 use Bambamboole\LaravelOidc\Server\Clients\ClientRepository;
+use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Consents\Models\Consent;
 use Bambamboole\LaravelOidc\Server\Realms\CurrentRealm;
 use Bambamboole\LaravelOidc\Server\Sessions\Models\OidcSession;
@@ -19,6 +20,7 @@ it('inserts a row the schema accepts', function (Factory $factory): void {
     expect($factory->create()->exists)->toBeTrue();
 })->with([
     'access token' => fn (): Factory => AccessToken::factory(),
+    'client' => fn (): Factory => Client::factory(),
     'authentication context' => fn (): Factory => AuthenticationContext::factory(),
     'authorization code' => fn (): Factory => AuthorizationCode::factory(),
     'consent' => fn (): Factory => Consent::factory(),

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Database\ForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,15 +22,21 @@ return new class extends Migration
     {
         Schema::create('oidc_consents', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('realm_id')->index();
+            $table->string('realm_id');
             $table->uuid('user_id');
-            $table->foreignUuid('client_id')->index();
+            $table->foreignUuid('client_id');
             $table->string('resource');
             $table->json('scopes');
             $table->timestamp('granted_at');
             $table->timestamp('revoked_at')->nullable();
 
             $table->unique(['realm_id', 'user_id', 'client_id', 'resource']);
+
+            $table->index(['realm_id', 'client_id']);
+
+            $table->foreign(['realm_id', 'client_id'])->references(['realm_id', 'id'])->on('oidc_clients')->cascadeOnDelete();
+            ForeignKeys::realm($table);
+            ForeignKeys::user($table);
         });
     }
 
