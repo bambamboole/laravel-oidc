@@ -1,9 +1,13 @@
 <?php
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Ui\Fragments\RecoveryCodesFragment;
+use Bambamboole\LaravelOidc\Ui\Support\ScreenSubject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Lattice\Ui\PageSchema;
 use Workbench\App\Models\User;
 
 /**
@@ -75,4 +79,33 @@ it('serves the default endpoints behind the session they assume', function (): v
     );
 
     expect($default->gatherMiddleware())->toBe(config('lattice.forms.middleware'));
+});
+
+it('renders the recovery codes to the pending user mid-login', function (): void {
+    parkedOnEnrollment();
+
+    $this->withHeader('X-Inertia', 'true')
+        ->get(route('identity.two-factor.setup'))
+        ->assertOk();
+
+    $user = User::query()->where('email', 'm@example.com')->sole();
+    $codes = app(RecoveryCodeProvider::class)->generate($user);
+
+    // Called directly: the fragment's own endpoint seals a component ref, which
+    // is Lattice's to verify, and this is about who the fragment acts for.
+    $schema = app(RecoveryCodesFragment::class)->schema(PageSchema::make());
+
+    expect(json_encode($schema->renderable()))->toContain($codes[0]);
+});
+
+it('prefers the signed-in user over a pending login', function (): void {
+    $user = User::create(['name' => 'S', 'email' => 's@example.com', 'password' => Hash::make('password')]);
+
+    $this->actingAs($user);
+
+    expect(ScreenSubject::current()?->getAttribute('email'))->toBe('s@example.com');
+});
+
+it('has no subject for an anonymous visitor', function (): void {
+    expect(ScreenSubject::current())->toBeNull();
 });

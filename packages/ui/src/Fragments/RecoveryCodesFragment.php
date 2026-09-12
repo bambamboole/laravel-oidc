@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Ui\Fragments;
 
 use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
+use Bambamboole\LaravelOidc\Ui\Support\ScreenSubject;
 use Lattice\Core\Attributes\AsFragment;
 use Lattice\Fragments\FragmentDefinition;
 use Lattice\Ui\Components\Stack;
@@ -24,9 +25,7 @@ class RecoveryCodesFragment extends FragmentDefinition
 
     public function schema(PageSchema $schema): PageSchema
     {
-        $user = auth()->user();
-
-        abort_unless($user !== null, 403);
+        $user = ScreenSubject::currentOrFail();
 
         $codes = $this->recoveryCodes->codes($user);
 
