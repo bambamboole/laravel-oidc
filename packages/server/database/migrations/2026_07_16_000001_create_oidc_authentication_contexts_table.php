@@ -17,7 +17,7 @@ return new class extends Migration
             $table->uuid('session_id')->nullable()->index();
             $table->json('amr');
             $table->string('acr')->nullable();
-            $table->unsignedInteger('auth_time')->nullable();
+            $table->unsignedBigInteger('auth_time')->nullable();
             $table->json('id_token_claims');
             $table->json('access_token_claims');
             $table->timestamp('created_at')->nullable();

@@ -58,7 +58,7 @@ class AuthorizationCode extends Model
         return [
             'scopes' => 'array',
             'audience' => 'array',
-            'auth_time' => 'int',
+            'auth_time' => 'integer',
             'revoked_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
