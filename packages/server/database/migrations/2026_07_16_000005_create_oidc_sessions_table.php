@@ -6,6 +6,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * `browser_session_id` is the browser session a login happened in, so ending
+ * that browser session can end the OIDC session behind it without reading the
+ * session payload.
+ */
 return new class extends Migration
 {
     public function up(): void
@@ -14,6 +19,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
             $table->uuid('user_id')->index();
+            $table->string('browser_session_id')->nullable()->index();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('expires_at')->index();
             $table->timestamp('revoked_at')->nullable();

@@ -7,9 +7,13 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * One row per (realm, user, client): the union of every scope the user has
- * ever approved for that client. Withdrawal sets `revoked_at` rather than
- * deleting, so a later approval reuses the row.
+ * One row per (realm, user, client, resource): the union of every scope the
+ * user has ever approved for that client at that resource. Withdrawal sets
+ * `revoked_at` rather than deleting, so a later approval reuses the row.
+ *
+ * The resource is part of the identity of a consent because the same scope
+ * name means a different thing at each resource server that declares it —
+ * without it, an approval for one resource would cover every other.
  */
 return new class extends Migration
 {
@@ -20,11 +24,12 @@ return new class extends Migration
             $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
             $table->uuid('user_id');
             $table->foreignUuid('client_id')->index();
+            $table->string('resource');
             $table->json('scopes');
             $table->timestamp('granted_at');
             $table->timestamp('revoked_at')->nullable();
 
-            $table->unique(['realm_id', 'user_id', 'client_id']);
+            $table->unique(['realm_id', 'user_id', 'client_id', 'resource']);
         });
     }
 
