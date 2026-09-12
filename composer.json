@@ -65,7 +65,7 @@
             "Bambamboole\\LaravelOidc\\Client\\Tests\\": "packages/client/tests/",
             "Bambamboole\\LaravelOidc\\Ui\\Tests\\": "packages/ui/tests/",
             "Workbench\\App\\": "workbench/app/",
-            "Workbench\\Database\\": "workbench/database/"
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/"
         }
     },
     "homepage": "https://github.com/bambamboole/laravel-oidc",
