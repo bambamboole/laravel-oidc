@@ -52,7 +52,7 @@ final readonly class PurgeUser
                 ->whereIn('session_id', OidcSession::query()->where('user_id', $id)->select('id'))
                 ->delete();
             OidcSession::query()->where('user_id', $id)->delete();
-            PasswordResetToken::query()->whereKey($id)->delete();
+            PasswordResetToken::query()->where('user_id', $id)->delete();
 
             if ($user instanceof Model) {
                 foreach ([SocialAccount::class, PasswordHistory::class, TotpFactor::class, RecoveryCode::class] as $model) {
