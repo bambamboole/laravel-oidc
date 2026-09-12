@@ -21,7 +21,7 @@ return new class extends Migration
             $table->json('audience')->nullable();
             $table->char('auth_code_id', 80)->nullable()->index();
             $table->uuid('context_id')->nullable();
-            $table->boolean('revoked')->default(false);
+            $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
             $table->dateTime('expires_at')->nullable()->index();
         });

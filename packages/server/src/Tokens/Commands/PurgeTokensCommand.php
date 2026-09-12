@@ -33,7 +33,7 @@ class PurgeTokensCommand extends Command
             $deleted = $model::query()
                 ->where(function (Builder $query) use ($purgeRevoked, $purgeExpired, $cutoff): void {
                     if ($purgeRevoked) {
-                        $query->orWhere('revoked', true);
+                        $query->orWhereNotNull('revoked_at');
                     }
 
                     if ($purgeExpired) {

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('nonce')->nullable();
             $table->unsignedBigInteger('auth_time')->nullable();
             $table->uuid('context_id')->nullable();
-            $table->boolean('revoked')->default(false);
+            $table->timestamp('revoked_at')->nullable();
             $table->dateTime('expires_at')->nullable()->index();
         });
     }

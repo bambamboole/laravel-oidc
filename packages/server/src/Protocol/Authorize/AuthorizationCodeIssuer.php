@@ -63,7 +63,6 @@ final readonly class AuthorizationCodeIssuer
             'nonce' => $request->nonce,
             'auth_time' => $authTime,
             'context_id' => $this->createContext($userId, $sid, $authTime),
-            'revoked' => false,
             'expires_at' => (new DateTimeImmutable)->add(new DateInterval(self::TTL)),
         ]);
 

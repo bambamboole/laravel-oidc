@@ -29,7 +29,6 @@ class AuthorizationCodeFactory extends Factory
             'scopes' => ['openid'],
             'code_challenge' => Str::random(43),
             'code_challenge_method' => 'S256',
-            'revoked' => false,
             'expires_at' => now()->addMinutes(10),
         ];
     }

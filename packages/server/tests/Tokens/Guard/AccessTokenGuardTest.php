@@ -65,7 +65,6 @@ function bearerIssuedElsewhere(mixed $test): string
         'user_id' => $test->user->id,
         'client_id' => $test->client->id,
         'scopes' => ['openid'],
-        'revoked' => false,
         'expires_at' => now()->addHour(),
     ])->save();
 
@@ -133,7 +132,7 @@ it('rejects a userless token whose client is revoked or gone', function (string 
     $jwt = clientCredentialsBearer($machine);
 
     $case === 'revoked'
-        ? $machine->forceFill(['revoked' => true])->save()
+        ? $machine->forceFill(['revoked_at' => now()])->save()
         : $machine->delete();
 
     $this->getJson('/guarded', ['Authorization' => "Bearer $jwt"])

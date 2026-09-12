@@ -71,7 +71,7 @@ final readonly class RefreshTokenGrant implements Grant
             throw OAuthServerException::invalidGrant('The refresh token was not issued to this client.');
         }
 
-        if ($refreshToken->revoked) {
+        if ($refreshToken->isRevoked()) {
             if ($accessToken->auth_code_id !== null) {
                 $this->revoker->revokeChain($accessToken->auth_code_id);
             }
