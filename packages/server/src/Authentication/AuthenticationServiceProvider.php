@@ -22,6 +22,7 @@ use Bambamboole\LaravelOidc\Server\Authentication\Views\PasswordUpdateView;
 use Bambamboole\LaravelOidc\Server\Authentication\Views\RegisterView;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\AcrResolver;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\DeviceRecognizer;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\IdentityGuard;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\LoginFinalizer;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\MissingAuthViewException;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\PendingActions;
@@ -42,7 +43,7 @@ class AuthenticationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $identityGuard = (string) config('oidc.auth.guard', 'identity');
+        $identityGuard = IdentityGuard::name();
 
         if (! config()->has("auth.guards.{$identityGuard}")) {
             config()->set("auth.guards.{$identityGuard}", [
