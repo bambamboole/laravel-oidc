@@ -21,7 +21,6 @@ use Bambamboole\LaravelOidc\Server\Tokens\Models\AuthorizationCode;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\RefreshToken;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Workbench\App\Models\User;
 
 function purgeTestUser(string $name): User
@@ -43,10 +42,10 @@ function seedHoldings(User $user, Client $client): void
     AuthenticationContext::factory()->forUser($user)->create();
     SessionParticipant::factory()->inSession(OidcSession::factory()->forUser($user)->create())->forClient($client)->create();
     passwordResetToken($user);
-    $user->hasMany(SocialAccount::class, 'user_id')->forceCreate(['realm_id' => SocialAccount::currentRealm(), 'provider' => 'github', 'provider_user_id' => Str::uuid()->toString()]);
-    $user->hasMany(PasswordHistory::class, 'user_id')->create(['hash' => 'hash', 'created_at' => now()]);
-    $user->hasMany(TotpFactor::class, 'user_id')->create(['name' => 'Phone', 'secret' => 'secret']);
-    $user->hasMany(RecoveryCode::class, 'user_id')->create(['code' => 'code']);
+    SocialAccount::factory()->forUser($user)->create();
+    PasswordHistory::factory()->forUser($user)->create();
+    TotpFactor::factory()->forUser($user)->create();
+    RecoveryCode::factory()->forUser($user)->create();
 }
 
 /** @return array<string, int> */

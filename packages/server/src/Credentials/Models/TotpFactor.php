@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Credentials\Models;
 
+use Bambamboole\LaravelOidc\Server\Database\Factories\TotpFactorFactory;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -19,18 +21,23 @@ use Illuminate\Database\Eloquent\Model;
  */
 class TotpFactor extends Model
 {
+    /** @use HasFactory<TotpFactorFactory> */
+    use HasFactory;
+
     use HasUuids;
 
     protected $table = 'oidc_totp_factors';
 
-    protected $fillable = [
-        'name',
-        'secret',
-    ];
+    protected $guarded = [];
 
     protected $hidden = [
         'secret',
     ];
+
+    protected static function newFactory(): TotpFactorFactory
+    {
+        return TotpFactorFactory::new();
+    }
 
     /**
      * @return array<string, string>
