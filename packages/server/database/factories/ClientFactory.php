@@ -21,7 +21,7 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
-            'realm' => Client::currentRealm(),
+            'realm_id' => Client::currentRealm(),
             'client_id' => (string) Str::uuid(),
             'name' => 'Test Client',
             'secret' => Str::random(40),

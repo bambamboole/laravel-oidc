@@ -262,7 +262,7 @@ interrupted is restored afterwards, so calls nest.
 
 ## What the package scopes
 
-`realm` is stored on `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
+`realm_id` is stored on `oidc_clients`, `oidc_access_tokens`, `oidc_refresh_tokens`,
 `oidc_auth_codes`, `oidc_consents`, `oidc_sessions`, `oidc_signing_keys`,
 `oidc_authentication_contexts`, `oidc_password_reset_tokens` and `oidc_social_accounts`. A `client_id` only has to be unique
 **within** its realm, so the same readable name can exist in several; likewise a social
@@ -282,7 +282,7 @@ into the wrong realm:
 
 1. **The user provider.** `retrieveByCredentials()` must carry a hard realm constraint. Without it,
    a password that is valid in one realm authenticates in every realm.
-2. **The uniqueness constraint.** `users.email` must be `unique(realm, email)`, not globally
+2. **The uniqueness constraint.** `users.email` must be `unique(realm_id, email)`, not globally
    unique — otherwise a realm can never have a user that exists elsewhere.
 
 Write a test that signs in with realm A's credentials against realm B's URL and asserts a
@@ -299,7 +299,7 @@ package keeps for each:
 | --- | --- |
 | `PurgeUser($user)` | The user's tokens, codes, consents, sessions, authentication contexts, reset link, social accounts, password history and second factors, and every client the user registered (with `PurgeClient`). |
 | `PurgeClient($client)` | The client and every token, code, consent and session participation issued to it. |
-| `PurgeRealm($realm)` | Every row stored under the realm's identifier, and the participants of its sessions. |
+| `PurgeRealm($realm)` | Every row stored under the realm's `realm_id`, and the participants of its sessions. |
 
 Each runs in a transaction. None of them deletes your own rows, and none tells a relying party
 that its sessions ended — revoke and notify first when back-channel logout should fire. Password
@@ -344,4 +344,4 @@ In `domain` mode each realm is served from its own host, so the browser separate
 already and the package leaves the session alone.
 
 In all three modes the realm's SSO session (`oidc_sessions`) and its stashed authorize request are
-scoped by `realm`.
+scoped by `realm_id`.

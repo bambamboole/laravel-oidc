@@ -121,7 +121,7 @@ class ClientRepository
         $client->setAttribute($client->getKeyName(), $client->newUniqueId());
 
         $client->forceFill([
-            'realm' => Client::currentRealm(),
+            'realm_id' => Client::currentRealm(),
             // A generated client answers to its own key until someone gives it a
             // readable name; the two stay separate so renaming never touches tokens.
             'client_id' => $clientId ?? $client->getKey(),

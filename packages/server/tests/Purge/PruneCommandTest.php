@@ -24,7 +24,7 @@ function prunedAccessToken(mixed $test, string $id, ?CarbonInterface $revokedAt,
 {
     (new AccessToken)->forceFill([
         'id' => $id,
-        'realm' => AccessToken::currentRealm(),
+        'realm_id' => AccessToken::currentRealm(),
         'user_id' => (string) $test->user->id,
         'client_id' => (string) $test->client->id,
         'scopes' => ['openid'],
@@ -62,14 +62,14 @@ it('prunes refresh tokens and authorization codes on the same rule', function ()
 
     (new RefreshToken)->forceFill([
         'id' => 'refresh',
-        'realm' => RefreshToken::currentRealm(),
+        'realm_id' => RefreshToken::currentRealm(),
         'access_token_id' => 'access',
         'expires_at' => now()->subWeeks(2),
     ])->save();
 
     (new AuthorizationCode)->forceFill([
         'code' => str_repeat('c', 80),
-        'realm' => AuthorizationCode::currentRealm(),
+        'realm_id' => AuthorizationCode::currentRealm(),
         'user_id' => $this->user->id,
         'client_id' => $this->client->id,
         'scopes' => ['openid'],
@@ -123,7 +123,7 @@ it('prunes password reset links past the window they were valid for', function (
 function pruneTestContext(CarbonInterface $expiresAt): AuthenticationContext
 {
     $context = new AuthenticationContext;
-    $context->realm = AuthenticationContext::currentRealm();
+    $context->realm_id = AuthenticationContext::currentRealm();
     $context->user_id = (string) User::factory()->create()->getKey();
     $context->amr = ['pwd'];
     $context->acr = '1';

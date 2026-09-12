@@ -33,7 +33,7 @@ final readonly class PasswordResetTokens implements TokenRepositoryInterface
 
         PasswordResetToken::query()->create([
             'user_id' => $this->userId($user),
-            'realm' => $this->realms->current()->identifier(),
+            'realm_id' => $this->realms->current()->identifier(),
             'token' => hash('sha256', $token),
             'created_at' => now(),
         ]);

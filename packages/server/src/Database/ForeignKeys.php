@@ -8,7 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 
 /**
  * The two foreign keys whose target belongs to the application rather than to
- * the package: `user_id` points at whatever table holds users, `realm` at
+ * the package: `user_id` points at whatever table holds users, `realm_id` at
  * whatever table holds realms, if any. Both are configured under
  * `oidc.migrations`, and a null table writes no constraint at all.
  *
@@ -21,7 +21,7 @@ final class ForeignKeys
         self::constrain($table, $column, 'users');
     }
 
-    public static function realm(Blueprint $table, string $column = 'realm'): void
+    public static function realm(Blueprint $table, string $column = 'realm_id'): void
     {
         self::constrain($table, $column, 'realms');
     }

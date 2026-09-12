@@ -9,29 +9,6 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
-## 0.32: `realm_id` is now `realm`
-
-The column never held an id. It holds the realm's identifier — the slug the application
-resolves a request to, which is why `migrations.realms.column` already defaulted to `slug`.
-The name said otherwise, so it is now `realm` on all ten scoped tables: `oidc_clients`,
-`oidc_access_tokens`, `oidc_refresh_tokens`, `oidc_auth_codes`, `oidc_consents`,
-`oidc_sessions`, `oidc_signing_keys`, `oidc_authentication_contexts`,
-`oidc_password_reset_tokens` and `oidc_social_accounts`.
-
-`$model->realm_id` becomes `$model->realm`, and so does the attribute key in any
-`create()`/`forceFill()` of your own. The migrations are rewritten rather than stacked:
-
-```bash
-php artisan vendor:publish --tag=oidc-migrations --force
-```
-
-On a database that already ran the old ones, rename the column on each of the ten tables —
-the composite unique indexes follow the column, so drop and recreate the ones that name it:
-
-```sql
-ALTER TABLE oidc_clients RENAME COLUMN realm_id TO realm;
-```
-
 ## 0.32: client secrets are encrypted, not hashed
 
 `oidc_clients.secret` held a bcrypt hash, so a secret was readable only in the request that

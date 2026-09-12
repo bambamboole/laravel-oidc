@@ -79,7 +79,7 @@ final readonly class JwtAccessTokenMinter implements AccessTokenMinter
         $jwt = $builder->getToken($config->signer(), $config->signingKey())->toString();
 
         AccessToken::query()->forceCreate([
-            'realm' => AccessToken::currentRealm(),
+            'realm_id' => AccessToken::currentRealm(),
             'id' => $jti,
             'user_id' => $userId,
             'client_id' => $client->getKey(),

@@ -22,7 +22,7 @@ callback against that pending authorization and exchanges the code for the upstr
 (`SocialAuthenticationController::callback`).
 
 Every upstream identity linked to a local user is stored in `oidc_social_accounts`
-(`2026_07_16_000008_create_oidc_social_accounts_table`): `user_id`, `realm`, `provider`,
+(`2026_07_16_000008_create_oidc_social_accounts_table`): `user_id`, `realm_id`, `provider`,
 `provider_user_id` (the last three unique together),
 `email`, `name`, `nickname`, `avatar`, `access_token`, `refresh_token`, `token_expires_at`, and the
 upstream claims as `raw` JSON.

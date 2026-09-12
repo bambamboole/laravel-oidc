@@ -18,12 +18,12 @@ return new class extends Migration
     {
         Schema::create('oidc_password_reset_tokens', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('realm');
+            $table->string('realm_id');
             $table->uuid('user_id');
             $table->string('token');
             $table->timestamp('created_at');
 
-            $table->unique(['realm', 'user_id']);
+            $table->unique(['realm_id', 'user_id']);
 
             ForeignKeys::realm($table);
             ForeignKeys::user($table);

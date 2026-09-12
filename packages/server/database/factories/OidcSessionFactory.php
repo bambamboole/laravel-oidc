@@ -20,7 +20,7 @@ class OidcSessionFactory extends Factory
     public function definition(): array
     {
         return [
-            'realm' => OidcSession::currentRealm(),
+            'realm_id' => OidcSession::currentRealm(),
             'user_id' => self::newUserId(...),
             'created_at' => now(),
             'expires_at' => now()->addHour(),
