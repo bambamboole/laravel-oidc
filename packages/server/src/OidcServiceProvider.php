@@ -21,6 +21,7 @@ use Bambamboole\LaravelOidc\Server\Realms\RealmsServiceProvider;
 use Bambamboole\LaravelOidc\Server\Scopes\ScopesServiceProvider;
 use Bambamboole\LaravelOidc\Server\Sessions\SessionsServiceProvider;
 use Bambamboole\LaravelOidc\Server\Sessions\SessionTokenGuard;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\IdentityGuard;
 use Bambamboole\LaravelOidc\Server\Shared\Authentication\RequiredActionRegistry;
 use Bambamboole\LaravelOidc\Server\Shared\Installation\EnvironmentFile;
 use Bambamboole\LaravelOidc\Server\Shared\SigningKeys\SigningKeyStore;
@@ -131,7 +132,7 @@ class OidcServiceProvider extends ServiceProvider
 
         AboutCommand::add('OIDC', fn (): array => [
             'Issuer' => config('oidc.issuer') ?? 'not set',
-            'Auth Guard' => config('oidc.auth.guard', 'identity'),
+            'Auth Guard' => IdentityGuard::name(),
             'Session Token Guard' => SessionTokenGuard::name() ?? 'not set',
             'Self-SSO Client' => FirstPartyClientConfig::fromConfig()->isConfigured() ? 'configured' : 'not configured',
             'Signing Key Store' => class_basename((string) config('oidc.keys.store', DatabaseSigningKeyStore::class)),

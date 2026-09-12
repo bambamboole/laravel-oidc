@@ -35,6 +35,7 @@ use Bambamboole\LaravelOidc\Server\Protocol\Http\Controllers\UserinfoController;
 use Bambamboole\LaravelOidc\Server\Realms\Enums\RealmRouting;
 use Bambamboole\LaravelOidc\Server\Realms\Http\Middleware\ResolveRealm;
 use Bambamboole\LaravelOidc\Server\Sessions\Http\Controllers\EndSessionController;
+use Bambamboole\LaravelOidc\Server\Shared\Authentication\IdentityGuard;
 use Bambamboole\LaravelOidc\Server\SigningKeys\Http\Controllers\JwksController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -44,7 +45,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 
-$guard = (string) config('oidc.auth.guard', 'identity');
+$guard = IdentityGuard::name();
 $guest = 'guest:'.$guard;
 $authenticated = AuthenticateIdentity::class.':'.$guard;
 // A required action is settled either mid-login, before any session exists,
