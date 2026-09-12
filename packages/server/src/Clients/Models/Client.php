@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Bambamboole\LaravelOidc\Server\Clients\Models;
 
 use Bambamboole\LaravelOidc\Server\Clients\Enums\TokenEndpointAuthMethod;
+use Bambamboole\LaravelOidc\Server\Database\Factories\ClientFactory;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AuthorizationCode;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -40,6 +42,9 @@ class Client extends Model
 {
     use BelongsToRealm, HasUuids;
 
+    /** @use HasFactory<ClientFactory> */
+    use HasFactory;
+
     protected $table = 'oidc_clients';
 
     protected $guarded = [];
@@ -48,6 +53,11 @@ class Client extends Model
 
     /** Readable only on the instance that set it; the column holds a hash. */
     public ?string $plainSecret = null;
+
+    protected static function newFactory(): ClientFactory
+    {
+        return ClientFactory::new();
+    }
 
     /** @return array<string, string> */
     protected function casts(): array

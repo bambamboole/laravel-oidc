@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Database\ForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,9 +19,9 @@ return new class extends Migration
     {
         Schema::create('oidc_access_tokens', function (Blueprint $table): void {
             $table->char('id', 80)->primary();
-            $table->string('realm_id')->index();
+            $table->string('realm_id');
             $table->foreignUuid('user_id')->nullable()->index();
-            $table->foreignUuid('client_id')->index();
+            $table->foreignUuid('client_id');
             $table->string('name')->nullable();
             $table->json('context')->nullable();
             $table->json('scopes')->nullable();
@@ -30,6 +31,12 @@ return new class extends Migration
             $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
             $table->timestamp('expires_at')->nullable()->index();
+
+            $table->index(['realm_id', 'client_id']);
+
+            $table->foreign(['realm_id', 'client_id'])->references(['realm_id', 'id'])->on('oidc_clients')->cascadeOnDelete();
+            ForeignKeys::realm($table);
+            ForeignKeys::user($table);
         });
     }
 

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bambamboole\LaravelOidc\Server\Database\ForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,6 +25,9 @@ return new class extends Migration
             $table->timestamp('expires_at')->index();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamp('logout_notified_at')->nullable();
+
+            ForeignKeys::realm($table);
+            ForeignKeys::user($table);
         });
     }
 
