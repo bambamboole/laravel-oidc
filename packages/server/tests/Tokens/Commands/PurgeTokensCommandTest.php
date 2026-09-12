@@ -21,7 +21,7 @@ function purgeTokenFixture(mixed $test, string $id, bool $revoked, string $expir
         'user_id' => (string) $test->user->id,
         'client_id' => (string) $test->client->id,
         'scopes' => ['openid'],
-        'revoked' => $revoked,
+        'revoked_at' => $revoked ? now() : null,
         'expires_at' => $expiresAt,
     ])->save();
 
@@ -54,7 +54,6 @@ it('purges refresh tokens and authorization codes too', function (): void {
     (new RefreshToken)->forceFill([
         'id' => 'refresh',
         'access_token_id' => 'access',
-        'revoked' => false,
         'expires_at' => now()->subWeeks(2)->toDateTimeString(),
     ])->save();
 
@@ -65,7 +64,7 @@ it('purges refresh tokens and authorization codes too', function (): void {
         'scopes' => ['openid'],
         'code_challenge' => str_repeat('c', 43),
         'code_challenge_method' => 'S256',
-        'revoked' => true,
+        'revoked_at' => now(),
         'expires_at' => now()->addHour()->toDateTimeString(),
     ])->save();
 

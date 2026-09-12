@@ -153,7 +153,6 @@ final readonly class InteractiveTokenIssuer
             'realm_id' => $this->realms->current()->identifier(),
             'id' => $id,
             'access_token_id' => $accessToken->jti,
-            'revoked' => false,
             'expires_at' => (new DateTimeImmutable)->add($this->realms->current()->tokens()->refreshToken()),
         ]);
 

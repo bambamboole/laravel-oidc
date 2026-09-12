@@ -39,7 +39,7 @@ return new class extends Migration
             $table->boolean('backchannel_logout_session_required')->default(false);
             $table->boolean('consent_required')->default(true);
             $table->string('provisioning_key', 64)->nullable()->unique();
-            $table->boolean('revoked')->default(false);
+            $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
 
             $table->unique(['realm_id', 'client_id']);

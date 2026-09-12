@@ -8,6 +8,7 @@ use Bambamboole\LaravelOidc\Server\Clients\Enums\TokenEndpointAuthMethod;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
 use Bambamboole\LaravelOidc\Server\Tokens\Models\AuthorizationCode;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property bool $backchannel_logout_session_required
  * @property bool $consent_required
  * @property ?string $provisioning_key
- * @property bool $revoked
+ * @property ?CarbonInterface $revoked_at
  * @property ?string $owner_type
  * @property ?string $owner_id
  */
@@ -61,7 +62,7 @@ class Client extends Model
             'allowed_exchange_audiences' => 'array',
             'backchannel_logout_session_required' => 'bool',
             'consent_required' => 'bool',
-            'revoked' => 'bool',
+            'revoked_at' => 'datetime',
         ];
     }
 
@@ -93,6 +94,11 @@ class Client extends Model
                 return $this->castAttributeAsHashedString('secret', $value);
             },
         );
+    }
+
+    public function isRevoked(): bool
+    {
+        return $this->revoked_at !== null;
     }
 
     public function firstParty(): bool

@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ?string $nonce
  * @property ?int $auth_time
  * @property ?string $context_id
- * @property bool $revoked
+ * @property ?CarbonInterface $revoked_at
  * @property ?CarbonInterface $expires_at
  */
 class AuthorizationCode extends Model
@@ -59,7 +59,7 @@ class AuthorizationCode extends Model
             'scopes' => 'array',
             'audience' => 'array',
             'auth_time' => 'int',
-            'revoked' => 'bool',
+            'revoked_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
     }
@@ -73,5 +73,10 @@ class AuthorizationCode extends Model
     public function issuedTo(Client $client): bool
     {
         return (string) $this->client_id === (string) $client->getKey();
+    }
+
+    public function isRevoked(): bool
+    {
+        return $this->revoked_at !== null;
     }
 }

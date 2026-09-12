@@ -27,14 +27,13 @@ class AccessTokenFactory extends Factory
             'user_id' => (string) Str::uuid(),
             'client_id' => (string) Str::uuid(),
             'scopes' => ['openid'],
-            'revoked' => false,
             'expires_at' => now()->addHour(),
         ];
     }
 
     public function revoked(): static
     {
-        return $this->state(['revoked' => true]);
+        return $this->state(['revoked_at' => now()]);
     }
 
     public function expired(): static
