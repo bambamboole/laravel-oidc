@@ -6,6 +6,7 @@ namespace Bambamboole\LaravelOidc\Ui\Fields;
 use Bambamboole\LaravelOidc\Server\Credentials\Data\EnrollmentOption;
 use Bambamboole\LaravelOidc\Server\Credentials\Enums\FactorSetupKind;
 use Bambamboole\LaravelOidc\Server\Credentials\FactorRegistry;
+use Bambamboole\LaravelOidc\Ui\Support\ScreenSubject;
 use Lattice\Form\Attributes\AsField;
 use Lattice\Form\Components\Field;
 
@@ -82,7 +83,7 @@ class TwoFactorSetupField extends Field
         $component->reset();
 
         $option = self::option((string) ($get('option') ?? ''));
-        $user = auth()->user();
+        $user = ScreenSubject::current();
 
         if (! $option instanceof EnrollmentOption || $user === null) {
             return;

@@ -12,6 +12,7 @@ use Bambamboole\LaravelOidc\Server\Credentials\RecoveryCodeProvider;
 use Bambamboole\LaravelOidc\Ui\Actions\RegenerateRecoveryCodesAction;
 use Bambamboole\LaravelOidc\Ui\Actions\RevokeFactorAction;
 use Bambamboole\LaravelOidc\Ui\Support\FactorMethodName;
+use Bambamboole\LaravelOidc\Ui\Support\ScreenSubject;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Date;
 use Lattice\Actions\Components\Action;
@@ -88,7 +89,7 @@ class TwoFactorMethodsTable extends TableDefinition
     public function source(): TableSource
     {
         return new CallbackTableSource(function (TableQuery $query): TableResult {
-            $user = auth()->user();
+            $user = ScreenSubject::current();
 
             if ($user === null) {
                 return TableResult::fromItems([]);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Ui\Actions;
 
+use Bambamboole\LaravelOidc\Ui\Support\ScreenSubject;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Lattice\Actions\ActionDefinition;
@@ -26,7 +27,7 @@ class SendVerificationEmailAction extends ActionDefinition
 
     public function handle(Request $request): ActionResult
     {
-        $user = auth()->user();
+        $user = ScreenSubject::current();
 
         abort_unless($user instanceof MustVerifyEmail, 403);
 
