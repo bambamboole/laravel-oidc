@@ -8,11 +8,11 @@ use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property string $id
  * @property string $realm_id
+ * @property string $user_id
  * @property string $provider
  * @property string $provider_user_id
  * @property string|null $email
@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $refresh_token
  * @property CarbonInterface|null $token_expires_at
  * @property array<string, mixed>|null $raw
- * @property-read Model $authenticatable
  */
 class SocialAccount extends Model
 {
@@ -48,14 +47,6 @@ class SocialAccount extends Model
         'access_token',
         'refresh_token',
     ];
-
-    /**
-     * @return MorphTo<Model, $this>
-     */
-    public function authenticatable(): MorphTo
-    {
-        return $this->morphTo();
-    }
 
     /**
      * @return array<string, string>

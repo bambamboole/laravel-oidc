@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('oidc_totp_factors', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->uuidMorphs('authenticatable', 'oidc_totp_authenticatable_index');
+            $table->uuid('user_id')->index();
             $table->string('name');
             $table->text('secret');
             $table->timestamp('confirmed_at')->nullable();

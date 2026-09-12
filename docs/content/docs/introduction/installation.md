@@ -20,8 +20,8 @@ The service provider is auto-discovered.
 
 The package ships migrations for its own tables (clients, access tokens, refresh tokens,
 authorization codes, consents, signing keys, authentication contexts, TOTP factors, recovery
-codes, sessions, session participants, social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and the user
-references (`user_id`, `uuidMorphs` on `authenticatable`) are native `uuid` columns — **your
+codes, sessions, session participants, social accounts). Every package table uses a UUID (v7, time-ordered) primary key, and
+every user reference is a native `uuid` `user_id` column — **your
 user model must be UUID-keyed** (e.g. `HasUuids`). The `laravel/passkeys` migration derives its
 `user_id` type from your user model automatically; publish it if you also want to change that
 table's own primary key.

@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('oidc_recovery_codes', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->uuidMorphs('authenticatable', 'oidc_recovery_authenticatable_index');
+            $table->uuid('user_id')->index();
             $table->text('code');
             $table->timestamp('used_at')->nullable();
             $table->timestamps();

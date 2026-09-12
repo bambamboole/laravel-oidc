@@ -7,13 +7,12 @@ namespace Bambamboole\LaravelOidc\Server\Credentials\Models;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property string $id
+ * @property string $user_id
  * @property string $hash
  * @property CarbonInterface $created_at
- * @property-read Model $authenticatable
  */
 class PasswordHistory extends Model
 {
@@ -26,14 +25,6 @@ class PasswordHistory extends Model
     protected $guarded = [];
 
     protected $hidden = ['hash'];
-
-    /**
-     * @return MorphTo<Model, $this>
-     */
-    public function authenticatable(): MorphTo
-    {
-        return $this->morphTo();
-    }
 
     /**
      * @return array<string, string>

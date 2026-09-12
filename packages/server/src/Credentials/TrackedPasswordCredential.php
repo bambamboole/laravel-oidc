@@ -63,7 +63,7 @@ final readonly class TrackedPasswordCredential implements PasswordCredential
             return;
         }
 
-        $user->morphMany(PasswordHistory::class, 'authenticatable')->create([
+        $user->hasMany(PasswordHistory::class, 'user_id')->create([
             'hash' => $hash,
             'created_at' => now(),
         ]);
@@ -108,7 +108,7 @@ final readonly class TrackedPasswordCredential implements PasswordCredential
         }
 
         if ($user instanceof Model) {
-            $stored = $user->morphMany(PasswordHistory::class, 'authenticatable')
+            $stored = $user->hasMany(PasswordHistory::class, 'user_id')
                 ->latest('created_at')
                 ->limit($window)
                 ->pluck('hash')
@@ -122,7 +122,7 @@ final readonly class TrackedPasswordCredential implements PasswordCredential
 
     private function latest(Model $user): ?PasswordHistory
     {
-        $latest = $user->morphMany(PasswordHistory::class, 'authenticatable')->latest('created_at')->first();
+        $latest = $user->hasMany(PasswordHistory::class, 'user_id')->latest('created_at')->first();
 
         return $latest instanceof PasswordHistory ? $latest : null;
     }
@@ -131,7 +131,7 @@ final readonly class TrackedPasswordCredential implements PasswordCredential
     {
         $keep = max(1, $this->policy()->history);
 
-        $stale = $user->morphMany(PasswordHistory::class, 'authenticatable')
+        $stale = $user->hasMany(PasswordHistory::class, 'user_id')
             ->latest('created_at')
             ->skip($keep)
             ->limit(PHP_INT_MAX)

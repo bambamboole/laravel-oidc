@@ -149,7 +149,7 @@ it('keeps social accounts per realm, so one upstream identity may link to a diff
     $acmeUser = User::create(['name' => 'M', 'email' => 'm@example.com', 'password' => 'x']);
     app(SocialAccountManager::class)->link($acmeUser, 'google', $socialUser);
 
-    expect(app(SocialAccountManager::class)->findAccount('google', 'g-123')?->authenticatable->is($acmeUser))->toBeTrue();
+    expect(app(SocialAccountManager::class)->findAccount('google', 'g-123')?->user_id)->toBe((string) $acmeUser->id);
 
     enterRealm('globex');
 
@@ -158,7 +158,7 @@ it('keeps social accounts per realm, so one upstream identity may link to a diff
     $globexUser = User::create(['name' => 'G', 'email' => 'g@example.com', 'password' => 'x']);
     app(SocialAccountManager::class)->link($globexUser, 'google', $socialUser);
 
-    expect(app(SocialAccountManager::class)->findAccount('google', 'g-123')?->authenticatable->is($globexUser))->toBeTrue()
+    expect(app(SocialAccountManager::class)->findAccount('google', 'g-123')?->user_id)->toBe((string) $globexUser->id)
         ->and(SocialAccount::query()->count())->toBe(2);
 });
 

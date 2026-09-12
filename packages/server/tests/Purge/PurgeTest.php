@@ -43,10 +43,10 @@ function seedHoldings(User $user, Client $client): void
     AuthenticationContext::factory()->forUser($user)->create();
     SessionParticipant::factory()->inSession(OidcSession::factory()->forUser($user)->create())->forClient($client)->create();
     passwordResetToken($user);
-    $user->morphMany(SocialAccount::class, 'authenticatable')->forceCreate(['realm_id' => SocialAccount::currentRealm(), 'provider' => 'github', 'provider_user_id' => Str::uuid()->toString()]);
-    $user->morphMany(PasswordHistory::class, 'authenticatable')->create(['hash' => 'hash', 'created_at' => now()]);
-    $user->morphMany(TotpFactor::class, 'authenticatable')->create(['name' => 'Phone', 'secret' => 'secret']);
-    $user->morphMany(RecoveryCode::class, 'authenticatable')->create(['code' => 'code']);
+    $user->hasMany(SocialAccount::class, 'user_id')->forceCreate(['realm_id' => SocialAccount::currentRealm(), 'provider' => 'github', 'provider_user_id' => Str::uuid()->toString()]);
+    $user->hasMany(PasswordHistory::class, 'user_id')->create(['hash' => 'hash', 'created_at' => now()]);
+    $user->hasMany(TotpFactor::class, 'user_id')->create(['name' => 'Phone', 'secret' => 'secret']);
+    $user->hasMany(RecoveryCode::class, 'user_id')->create(['code' => 'code']);
 }
 
 /** @return array<string, int> */
