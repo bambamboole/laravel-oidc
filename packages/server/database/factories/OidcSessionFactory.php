@@ -21,7 +21,6 @@ class OidcSessionFactory extends Factory
     public function definition(): array
     {
         return [
-            'sid' => (string) Str::uuid(),
             'realm_id' => OidcSession::currentRealm(),
             'user_id' => (string) Str::uuid(),
             'created_at' => now(),

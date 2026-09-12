@@ -12,10 +12,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property string $sid
+ * @property string $id
  * @property string $realm_id
  * @property string $user_id
- * @property ?string $session_id The id of the browser session the login happened in.
+ * @property ?string $browser_session_id The id of the browser session the login happened in.
  * @property ?CarbonInterface $created_at
  * @property ?CarbonInterface $expires_at
  * @property ?CarbonInterface $revoked_at
@@ -31,12 +31,6 @@ class OidcSession extends Model
     public $timestamps = false;
 
     protected $table = 'oidc_sessions';
-
-    protected $primaryKey = 'sid';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
 
     protected $guarded = [];
 
@@ -60,11 +54,5 @@ class OidcSession extends Model
     {
         return $this->revoked_at === null
             && ($this->expires_at === null || $this->expires_at->isFuture());
-    }
-
-    /** @return array<int, string> */
-    public function uniqueIds(): array
-    {
-        return ['sid'];
     }
 }

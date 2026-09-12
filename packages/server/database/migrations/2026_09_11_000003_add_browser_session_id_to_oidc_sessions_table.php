@@ -15,15 +15,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('oidc_sessions', function (Blueprint $table): void {
-            $table->string('session_id')->nullable()->index()->after('user_id');
+            $table->string('browser_session_id')->nullable()->index()->after('user_id');
         });
     }
 
     public function down(): void
     {
         Schema::table('oidc_sessions', function (Blueprint $table): void {
-            $table->dropIndex(['session_id']);
-            $table->dropColumn('session_id');
+            $table->dropIndex(['browser_session_id']);
+            $table->dropColumn('browser_session_id');
         });
     }
 };

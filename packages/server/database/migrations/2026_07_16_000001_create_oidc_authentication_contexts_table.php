@@ -14,7 +14,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
             $table->uuid('user_id')->index();
-            $table->uuid('sid')->nullable()->index();
+            $table->uuid('session_id')->nullable()->index();
             $table->json('amr');
             $table->string('acr')->nullable();
             $table->unsignedInteger('auth_time')->nullable();

@@ -20,7 +20,7 @@ class SessionParticipantFactory extends Factory
     public function definition(): array
     {
         return [
-            'sid' => fn (): string => OidcSession::factory()->create()->sid,
+            'session_id' => fn (): string => OidcSession::factory()->create()->id,
             'client_id' => (string) Str::uuid(),
             'created_at' => now(),
         ];
@@ -28,7 +28,7 @@ class SessionParticipantFactory extends Factory
 
     public function inSession(OidcSession $session): static
     {
-        return $this->state(['sid' => $session->sid]);
+        return $this->state(['session_id' => $session->id]);
     }
 
     public function forClient(Client $client): static

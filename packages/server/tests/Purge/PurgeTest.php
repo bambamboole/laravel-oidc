@@ -93,7 +93,7 @@ it('purges a client with everything issued to it, and nothing of another client'
     RefreshToken::factory()->forAccessToken(AccessToken::factory()->forClient($client)->forUser($user)->create())->create();
     AuthorizationCode::factory()->forClient($client)->forUser($user)->create();
     Consent::factory()->forClient($client)->forUser($user)->create();
-    SessionParticipant::factory()->forClient($client)->create(['sid' => OidcSession::query()->value('sid')]);
+    SessionParticipant::factory()->forClient($client)->create(['session_id' => OidcSession::query()->value('id')]);
 
     app(PurgeClient::class)($client);
 
@@ -115,5 +115,5 @@ it('purges every row kept under a realm, and nothing of another realm', function
 
     expect(packageRowCounts('acme'))->each->toBe(0)
         ->and(packageRowCounts('globex'))->toBe($globex)
-        ->and(SessionParticipant::query()->whereNotIn('sid', OidcSession::query()->select('sid'))->exists())->toBeFalse();
+        ->and(SessionParticipant::query()->whereNotIn('session_id', OidcSession::query()->select('id'))->exists())->toBeFalse();
 });
