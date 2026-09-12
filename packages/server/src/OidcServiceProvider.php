@@ -89,8 +89,8 @@ class OidcServiceProvider extends ServiceProvider
     {
         $this->mergeConfig();
 
-        // Written by the Keys, Clients and Installation commands alike, so it
-        // is bound where all of them are wired.
+        // Written by both the Clients and Installation commands, so it is bound
+        // where the two are wired.
         $this->app->singleton(EnvironmentFile::class);
 
         // The built-in required actions come from two domains and the order a
