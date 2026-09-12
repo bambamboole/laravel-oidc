@@ -16,6 +16,7 @@ use Bambamboole\LaravelOidc\Server\Credentials\Views\FactorSetupView;
 use Bambamboole\LaravelOidc\Server\Credentials\Views\TwoFactorChallengeView;
 use Bambamboole\LaravelOidc\Server\Sessions\Views\LogoutConfirmationView;
 use Illuminate\Support\ServiceProvider;
+use Lattice\Core\Facades\Lattice;
 
 /**
  * Binds this package's Lattice pages as the container implementation of
@@ -55,10 +56,7 @@ class UiServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Registered directly on the loader rather than via loadTranslationsFrom():
-        // the i18next route resolves only the translation loader, never the
-        // translator, so the deferred loadTranslationsFrom() callback would never fire.
-        $this->app->make('translation.loader')->addNamespace('oidc-ui', __DIR__.'/../resources/lang');
+        Lattice::translations('oidc-ui', __DIR__.'/../resources/lang');
 
         $this->publishes([
             __DIR__.'/../config/oidc-ui.php' => config_path('oidc-ui.php'),
