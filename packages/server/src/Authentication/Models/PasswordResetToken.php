@@ -6,27 +6,23 @@ namespace Bambamboole\LaravelOidc\Server\Authentication\Models;
 
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property string $user_id
+ * @property string $id
  * @property string $realm_id
+ * @property string $user_id
  * @property string $token
  * @property CarbonInterface $created_at
  */
 class PasswordResetToken extends Model
 {
-    use BelongsToRealm;
-
-    public $incrementing = false;
+    use BelongsToRealm, HasUuids;
 
     public $timestamps = false;
 
     protected $table = 'oidc_password_reset_tokens';
-
-    protected $primaryKey = 'user_id';
-
-    protected $keyType = 'string';
 
     protected $guarded = [];
 
