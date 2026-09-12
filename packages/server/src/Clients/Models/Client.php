@@ -7,14 +7,11 @@ namespace Bambamboole\LaravelOidc\Server\Clients\Models;
 use Bambamboole\LaravelOidc\Server\Clients\Enums\TokenEndpointAuthMethod;
 use Bambamboole\LaravelOidc\Server\Database\Factories\ClientFactory;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
-use Bambamboole\LaravelOidc\Server\Tokens\Models\AccessToken;
-use Bambamboole\LaravelOidc\Server\Tokens\Models\AuthorizationCode;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -80,18 +77,6 @@ class Client extends Model
     public function owner(): MorphTo
     {
         return $this->morphTo('owner');
-    }
-
-    /** @return HasMany<AccessToken, $this> */
-    public function tokens(): HasMany
-    {
-        return $this->hasMany(AccessToken::class, 'client_id');
-    }
-
-    /** @return HasMany<AuthorizationCode, $this> */
-    public function authCodes(): HasMany
-    {
-        return $this->hasMany(AuthorizationCode::class, 'client_id');
     }
 
     /** @return Attribute<never, ?string> */
