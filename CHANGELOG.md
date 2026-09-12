@@ -5,6 +5,67 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.31.0](https://github.com/bambamboole/laravel-oidc/compare/v0.30.0...v0.31.0) (2026-09-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** oidc:purge, oidc:prune-authentication-contexts and oidc:prune-sessions are replaced by oidc:prune -- update your schedule. The --revoked, --expired and --hours options are gone; retention is configured under oidc.pruning. --hours was documented as covering records that expired or were revoked at least that long ago, but only expiry was held back and revoked records were deleted at once; revocation now waits out the same window. oidc_password_reset_tokens is pruned for the first time, so the first run clears a backlog.
+* **server:** the domain actions under <Domain>\Actions and Credentials\ConfigureMfaAction are no longer final. Nothing that worked stops working; a subclass of one must itself be declared readonly.
+* **ui:** lattice-php/lattice is now >=0.77. config/oidc.php gains routes.screen_middleware, and the auth screens' component endpoints move to /oidc-ui (below /realms/{realm}/oidc-ui in `path` routing).
+* **server:** oidc_clients.provisioning_key is unique per realm rather than per table, and the migration is rewritten rather than stacked. On a database that already ran the old one, drop the single-column unique index and add (realm_id, provisioning_key) -- see the upgrade guide. FirstPartyClientProvisioner's constructor no longer takes a RealmResolver.
+* **server:** drop the Client relations nothing reads
+* **server:** pluralise the password history table
+* **server:** date every row, and stamp the ones that change
+* **server:** give the schema foreign keys
+* **server:** keep the authorization code out of the rows that point at it
+* **server:** point the four user-owned tables at a plain user_id
+* **server:** type the session participant's client_id as a uuid
+* **server:** keep a pending password reset per realm, not per user
+* **server:** give expires_at and auth_time one type each
+* **server:** fold the two add-column migrations into their create migrations
+* **server:** name the OIDC session column id, like every other table
+* **server:** record when a revocation happened, not just that it did
+* **server:** an AuditEvent must type $type as a BackedEnum, and a sink reading $record->type as a string now reads $record->type->value.
+* **server:** classes implementing AuditEvent must expose a $type, and the events' TYPE constants are replaced by AuditEventType cases.
+
+### Features
+
+* **server:** carry the audit type on the event contract ([#183](https://github.com/bambamboole/laravel-oidc/issues/183)) ([a208f4c](https://github.com/bambamboole/laravel-oidc/commit/a208f4c3a1fae3f5b5c0d96b9a6e25eddfa52af2))
+* **server:** date every row, and stamp the ones that change ([e6fe04a](https://github.com/bambamboole/laravel-oidc/commit/e6fe04a6fcb6bc5a8b5f346a46e66ee0c984a58e))
+* **server:** give the schema foreign keys ([cde075a](https://github.com/bambamboole/laravel-oidc/commit/cde075ad8054638f498952cefd87092a38483581))
+* **server:** require a backed enum as the audit event type ([#184](https://github.com/bambamboole/laravel-oidc/issues/184)) ([4d543b2](https://github.com/bambamboole/laravel-oidc/commit/4d543b26ca4cef6f8dd4846fcad9fdb4297a1e25))
+
+
+### Bug Fixes
+
+* **client:** keep the session id the guard established, and document the session model ([#181](https://github.com/bambamboole/laravel-oidc/issues/181)) ([25ab6ba](https://github.com/bambamboole/laravel-oidc/commit/25ab6ba1025c7c9ae86082b8c0a73c9c0e814448))
+* **mautic:** repair the claims failure page, the API settings and the OAuth state ([63b7ca0](https://github.com/bambamboole/laravel-oidc/commit/63b7ca0dffa0a705452134ed79864cb9c248da2b))
+* **server:** keep a pending password reset per realm, not per user ([15d2116](https://github.com/bambamboole/laravel-oidc/commit/15d2116d00bf1e11dbfd113ab36ce2dd99ae334c))
+* **server:** map the workbench factory namespace to the directory it lives in ([28733a6](https://github.com/bambamboole/laravel-oidc/commit/28733a6135b079850166bcc9a5e80d24e7a50456))
+* **server:** scope the first-party provisioning key per realm ([b4ded24](https://github.com/bambamboole/laravel-oidc/commit/b4ded2463b81d899dfd03a75412b8c96d256536d))
+* **ui:** resolve the screen subject in one place, not five ([113f50c](https://github.com/bambamboole/laravel-oidc/commit/113f50cb75564247b27bf7be23806d98c06ed50f))
+* **ui:** serve the auth screens' components from their own endpoint area ([91a0b8c](https://github.com/bambamboole/laravel-oidc/commit/91a0b8c83798283ab654a08b2ee4aefe6fb295ad))
+
+
+### Refactoring
+
+* correct four stale comments and cut the narration around them ([4d0ce04](https://github.com/bambamboole/laravel-oidc/commit/4d0ce04e165380c2424550f8882f5e06bf18b232))
+* **server:** drop the Client relations nothing reads ([d685478](https://github.com/bambamboole/laravel-oidc/commit/d685478fad2cd812323a603ca56f402f84f2edbd))
+* **server:** fold the two add-column migrations into their create migrations ([32cce5f](https://github.com/bambamboole/laravel-oidc/commit/32cce5fd0ab06a2ad0aa4a33361f47ee6aa904f5))
+* **server:** give expires_at and auth_time one type each ([dde514e](https://github.com/bambamboole/laravel-oidc/commit/dde514eea639ea5354f99d4d8bc975a5f772cbd3))
+* **server:** keep the authorization code out of the rows that point at it ([0cdaf03](https://github.com/bambamboole/laravel-oidc/commit/0cdaf0354a1c14fd8435622e937aacc4cd0f5571))
+* **server:** let the foreign keys do the cascading Purge did by hand ([05ee833](https://github.com/bambamboole/laravel-oidc/commit/05ee833df95021ad892682c8fa02a6444d6e8f9e))
+* **server:** make the domain actions extendable, as the docs describe ([96fe520](https://github.com/bambamboole/laravel-oidc/commit/96fe52041eed0b1d0d50784437dfe4a41df4c0d3))
+* **server:** name the OIDC session column id, like every other table ([5a4d160](https://github.com/bambamboole/laravel-oidc/commit/5a4d1607e74799a01f0b049594414a941c7688fc))
+* **server:** pluralise the password history table ([54f334a](https://github.com/bambamboole/laravel-oidc/commit/54f334a3852c1eb71414b542819c17a69430cdf5))
+* **server:** point the four user-owned tables at a plain user_id ([f68dec7](https://github.com/bambamboole/laravel-oidc/commit/f68dec740d844ec068123268e91cb700d114b03b))
+* **server:** prune through prunable models, behind one command ([0636338](https://github.com/bambamboole/laravel-oidc/commit/0636338b0429259bcea0bf4ebe190848fdc6f23f))
+* **server:** record when a revocation happened, not just that it did ([b8f675c](https://github.com/bambamboole/laravel-oidc/commit/b8f675cf2bb811bccca5f4be5ca4683602e37107))
+* **server:** resolve the identity guard name in one place ([b4c5ec4](https://github.com/bambamboole/laravel-oidc/commit/b4c5ec445e77668027ab41d1ea43eec6af6aa550))
+* **server:** type the session participant's client_id as a uuid ([dce59cd](https://github.com/bambamboole/laravel-oidc/commit/dce59cd152fbdca05a9587ce0bb91bf57fafe2d5))
+* **ui:** register translations through Lattice's own API ([003e5b7](https://github.com/bambamboole/laravel-oidc/commit/003e5b75c1945ce672d43553f6ee18a9d640c9de))
+
 ## [0.30.0](https://github.com/bambamboole/laravel-oidc/compare/v0.29.0...v0.30.0) (2026-09-11)
 
 
