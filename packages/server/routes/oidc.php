@@ -57,13 +57,15 @@ $social = RequireLoginMethod::class.':social';
 
 /** @var array<int, string> $shared */
 $shared = (array) config('oidc.routes.middleware', []);
+/** @var array<int, string> $screens */
+$screens = (array) config('oidc.routes.screen_middleware', []);
 $routing = RealmRouting::configured();
 
 Route::middleware([ResolveRealm::class, ...$shared])
     ->prefix($routing->prefix())
     ->where(['realm' => '[A-Za-z0-9._-]+'])
-    ->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject): void {
-        Route::middleware('web')->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject): void {
+    ->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject, $screens): void {
+        Route::middleware(['web', ...$screens])->group(function () use ($guest, $authenticated, $passwordConfirmed, $password, $passkey, $social, $actionSubject): void {
             Route::middleware($guest)->group(function () use ($password, $passkey, $social): void {
                 Route::get('auth/login', [AuthenticatedSessionController::class, 'create'])->name('identity.login');
                 Route::get('auth/register', [RegisteredUserController::class, 'create'])->middleware($password)->name('identity.register');

@@ -351,6 +351,11 @@ return [
     'routes' => [
         'middleware' => [],
 
+        // Middleware for the interactive screens only — login, registration,
+        // password, verification, two-factor and consent. `middleware` above
+        // also covers the protocol endpoints, which no browser session backs.
+        'screen_middleware' => [],
+
         // `single` serves the configured realm from the application root, so the
         // issuer is the bare origin and provider and application share one
         // session. `path` serves every realm below /realms/{realm} with its own

@@ -9,6 +9,30 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.31: the auth screens serve their own component endpoints
+
+A realm that always requires a second factor parks the login on the enrollment
+screen before any session exists — the user is deliberately a guest on every
+guard, and the subject comes from the pending login instead. The screen rendered,
+but the wizard's own Next button drives a Lattice form endpoint, and those run
+behind `['web', 'auth']`, so the request that begins the enrollment was rejected
+and the user could not get past the screen.
+
+`oidc-ui` now registers a Lattice endpoint area and serves the auth screens'
+components from it, so they call back into endpoints that do not demand a
+session. This needs `lattice-php/lattice` **0.77 or newer**; the constraint was
+raised accordingly.
+
+Two things are worth knowing if you have customised routing:
+
+- `config/oidc.php` gains `routes.screen_middleware`, applied to the interactive
+  screens only. `routes.middleware` still covers every package route, protocol
+  endpoints included. `oidc-ui` sets `screen_middleware` for you in its
+  `register()`; set it yourself only if you are not using that package.
+- The area mounts its endpoints below `/oidc-ui` (below `/realms/{realm}/oidc-ui`
+  in `path` routing). Nothing serves that prefix today, but a host application
+  that does must move out of the way.
+
 ## 0.31: a first-party client per realm
 
 `oidc_clients.provisioning_key` carried a unique index across the whole table, so only one realm in

@@ -28,7 +28,7 @@
         "illuminate/validation": "^13.0",
         "illuminate/view": "^13.0",
         "laravel/passkeys": "^0.2.1",
-        "lattice-php/lattice": ">=0.70 <1.0",
+        "lattice-php/lattice": ">=0.77 <1.0",
         "lcobucci/clock": "^3.2",
         "lcobucci/jwt": "^5.0",
         "phpseclib/phpseclib": "^3.0.15",
