@@ -16,7 +16,7 @@ use Illuminate\Contracts\Session\Session;
  * so every logout path — this action or the application's own — does that
  * work exactly once.
  */
-final readonly class EndSession
+readonly class EndSession
 {
     public function __construct(private AuthFactory $auth) {}
 
