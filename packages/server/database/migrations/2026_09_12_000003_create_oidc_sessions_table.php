@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('realm_id')->index();
             $table->uuid('user_id')->index();
             $table->string('browser_session_id')->nullable()->index();
-            $table->timestamp('created_at')->nullable();
+            $table->timestamps();
             $table->timestamp('expires_at')->index();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamp('logout_notified_at')->nullable();

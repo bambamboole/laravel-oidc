@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('realm_id')->index();
             $table->char('access_token_id', 80)->index();
             $table->timestamp('revoked_at')->nullable();
+            $table->timestamps();
             $table->timestamp('expires_at')->nullable()->index();
 
             $table->foreign('access_token_id')->references('id')->on('oidc_access_tokens')->cascadeOnDelete();

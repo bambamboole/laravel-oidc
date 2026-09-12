@@ -14,7 +14,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('session_id');
             $table->uuid('client_id');
-            $table->timestamp('created_at')->nullable();
+            $table->timestamp('created_at');
             $table->unique(['session_id', 'client_id']);
             $table->index('client_id');
 

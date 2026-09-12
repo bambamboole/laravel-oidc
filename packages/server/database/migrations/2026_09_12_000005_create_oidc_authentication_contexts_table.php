@@ -21,7 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('auth_time')->nullable();
             $table->json('id_token_claims');
             $table->json('access_token_claims');
-            $table->timestamp('created_at')->nullable();
+            $table->timestamp('created_at');
             $table->timestamp('expires_at')->nullable()->index();
 
             $table->foreign('session_id')->references('id')->on('oidc_sessions')->cascadeOnDelete();
