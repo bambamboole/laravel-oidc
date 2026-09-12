@@ -8,12 +8,14 @@ use Bambamboole\LaravelOidc\Server\Clients\Models\Client;
 use Bambamboole\LaravelOidc\Server\Database\Factories\AuthorizationCodeFactory;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property string $id
+ * @property string $code The secret the browser carries back from the redirect.
  * @property string $realm_id
  * @property string $user_id
  * @property string $client_id
@@ -30,22 +32,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AuthorizationCode extends Model
 {
-    use BelongsToRealm;
+    use BelongsToRealm, HasUuids;
 
     /** @use HasFactory<AuthorizationCodeFactory> */
     use HasFactory;
 
     protected $table = 'oidc_auth_codes';
 
-    protected $primaryKey = 'id';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
     public $timestamps = false;
 
     protected $guarded = [];
+
+    protected $hidden = ['code'];
 
     protected static function newFactory(): AuthorizationCodeFactory
     {

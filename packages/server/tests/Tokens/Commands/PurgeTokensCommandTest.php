@@ -60,7 +60,7 @@ it('purges refresh tokens and authorization codes too', function (): void {
     ])->save();
 
     (new AuthorizationCode)->forceFill([
-        'id' => 'code',
+        'code' => str_repeat('c', 80),
         'realm_id' => AuthorizationCode::currentRealm(),
         'user_id' => $this->user->id,
         'client_id' => $this->client->id,

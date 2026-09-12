@@ -6,6 +6,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * `auth_code_id` labels the refresh chain a token belongs to, and deliberately
+ * carries no foreign key: `oidc:purge` removes a spent code long before the
+ * chain it started expires. A cascade would take live tokens with it, and a
+ * null would make a replayed refresh token stop revoking its chain.
+ */
 return new class extends Migration
 {
     public function up(): void
@@ -19,7 +25,7 @@ return new class extends Migration
             $table->json('context')->nullable();
             $table->json('scopes')->nullable();
             $table->json('audience')->nullable();
-            $table->char('auth_code_id', 80)->nullable()->index();
+            $table->uuid('auth_code_id')->nullable()->index();
             $table->uuid('context_id')->nullable();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
