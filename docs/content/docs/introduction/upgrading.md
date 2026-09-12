@@ -9,6 +9,23 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.31: Mautic plugin fixes
+
+Three defects in the Mautic bundle, all fixed without any action on your part:
+
+- The claims policy failure fatalled on the page meant to display it.
+  `ClaimsNotSatisfiedException` carried the unmet requirements in a property that
+  Symfony's `AuthenticationException` does not serialize, and Mautic stashes the
+  failure in the session for the login page to render.
+- The four API-token settings (`oidc_api_user_email`, `oidc_api_user_claim`,
+  `oidc_api_allowed_client_ids`, `oidc_api_audience`) were never rendered in
+  **Settings → Configuration → OpenID Connect**, so saving that tab submitted
+  them empty and cleared them. **If you set them by hand in `local.php`, check
+  them after upgrading** — an earlier save may have blanked them.
+- The OAuth `state` was inherited from Mautic's `hash('sha1', uniqid(mt_rand()))`,
+  which is time-derived and not a CSPRNG. It now uses `random_bytes(32)`, as the
+  PKCE verifier and the nonce beside it already did.
+
 ## 0.31: one prune command, and the models decide what is spent
 
 `oidc:purge`, `oidc:prune-authentication-contexts` and `oidc:prune-sessions` are replaced by a
