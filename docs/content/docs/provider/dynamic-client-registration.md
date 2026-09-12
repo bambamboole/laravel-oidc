@@ -75,7 +75,7 @@ else MCP clients send) is ignored:
 | --- | --- | --- |
 | `redirect_uris` | required | Absolute, no user-info or fragment; `http(s)` with a host in `allowed_redirect_domains`, or a scheme in `allowed_redirect_schemes` (non-HTTP schemes still need a host, so `cursor://anysphere.cursor-retrieval/…` passes while `cursor:/callback` is rejected). |
 | `client_name` | first redirect host | Trimmed. |
-| `token_endpoint_auth_method` | `none` | `none` registers a public client. `client_secret_basic` or `client_secret_post` registers a confidential client; the response then carries `client_secret` (returned once) and `client_secret_expires_at: 0`. Anything else is rejected. |
+| `token_endpoint_auth_method` | `none` | `none` registers a public client. `client_secret_basic` or `client_secret_post` registers a confidential client; the response then carries `client_secret` and `client_secret_expires_at: 0`. Anything else is rejected. |
 | `grant_types` | `["authorization_code", "refresh_token"]` | Must include `authorization_code` and may only add `refresh_token`. |
 | `response_types` | `["code"]` | Must be exactly `["code"]`. |
 | `post_logout_redirect_uris` | `[]` | Validated like `redirect_uris`; honoured by [RP-initiated logout](/provider/logout/). |
