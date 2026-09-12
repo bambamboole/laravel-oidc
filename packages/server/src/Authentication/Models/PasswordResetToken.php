@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Authentication\Models;
 
+use Bambamboole\LaravelOidc\Server\Database\Factories\PasswordResetTokenFactory;
 use Bambamboole\LaravelOidc\Server\Shared\Realms\BelongsToRealm;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -22,11 +24,19 @@ class PasswordResetToken extends Model
 
     public $timestamps = false;
 
+    /** @use HasFactory<PasswordResetTokenFactory> */
+    use HasFactory;
+
     protected $table = 'oidc_password_reset_tokens';
 
     protected $guarded = [];
 
     protected $hidden = ['token'];
+
+    protected static function newFactory(): PasswordResetTokenFactory
+    {
+        return PasswordResetTokenFactory::new();
+    }
 
     /** @return array<string, string> */
     protected function casts(): array

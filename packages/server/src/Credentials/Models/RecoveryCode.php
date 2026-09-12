@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Bambamboole\LaravelOidc\Server\Credentials\Models;
 
+use Bambamboole\LaravelOidc\Server\Database\Factories\RecoveryCodeFactory;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -16,17 +18,23 @@ use Illuminate\Database\Eloquent\Model;
  */
 class RecoveryCode extends Model
 {
+    /** @use HasFactory<RecoveryCodeFactory> */
+    use HasFactory;
+
     use HasUuids;
 
     protected $table = 'oidc_recovery_codes';
 
-    protected $fillable = [
-        'code',
-    ];
+    protected $guarded = [];
 
     protected $hidden = [
         'code',
     ];
+
+    protected static function newFactory(): RecoveryCodeFactory
+    {
+        return RecoveryCodeFactory::new();
+    }
 
     /**
      * @return array<string, string>
