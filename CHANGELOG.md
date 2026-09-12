@@ -5,6 +5,23 @@ All notable changes to `bambamboole/laravel-oidc` are documented here. The forma
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (pre-1.0: minor versions may carry
 breaking changes).
 
+## [0.32.0](https://github.com/bambamboole/laravel-oidc/compare/v0.31.0...v0.32.0) (2026-09-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server:** name the realm column realm, not realm_id
+* **server:** store client secrets encrypted instead of hashed
+
+### Features
+
+* **server:** store client secrets encrypted instead of hashed ([de0d80b](https://github.com/bambamboole/laravel-oidc/commit/de0d80bffac35869317caa419607749735369aeb))
+
+
+### Refactoring
+
+* **server:** name the realm column realm, not realm_id ([7b93196](https://github.com/bambamboole/laravel-oidc/commit/7b931965f75c5fb8d3699e247828fd78f82c8729))
+
 ## [0.31.0](https://github.com/bambamboole/laravel-oidc/compare/v0.30.0...v0.31.0) (2026-09-12)
 
 
