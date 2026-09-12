@@ -116,7 +116,7 @@ language file.
 ### History and rotation
 
 `Bambamboole\LaravelOidc\Server\Shared\Credentials\PasswordCredential` (bound to `Credentials\TrackedPasswordCredential`) keeps the hashes a user's password
-has had in `oidc_password_history` (a `PasswordHistory` morph on the user). The package writes a row
+has had in `oidc_password_histories` (a `PasswordHistory` row per user). The package writes a row
 after every reset and registration it handles, and once on a user's first password login when it has
 no row yet, so an existing user's rotation clock starts at their first login after the upgrade. Rows
 beyond the history window are pruned on every change. If your application changes a password through

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use SensitiveParameter;
 
 /**
- * History lives in oidc_password_history and starts on the first login or
+ * History lives in oidc_password_histories and starts on the first login or
  * change the package sees, so a user it has never tracked has no rotation
  * clock and only the current hash counts as history.
  */
