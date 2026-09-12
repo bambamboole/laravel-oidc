@@ -10,6 +10,7 @@ parameters:
         - packages/client/tests
         - packages/ui/tests
         - workbench/app
+        - workbench/database
     level: 6
     ignoreErrors:
         # The realm-routing markers are composed through Pest's file-level uses(), which PHPStan's
