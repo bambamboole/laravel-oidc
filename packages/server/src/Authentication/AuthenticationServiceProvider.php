@@ -6,7 +6,6 @@ namespace Bambamboole\LaravelOidc\Server\Authentication;
 
 use Bambamboole\LaravelOidc\Server\Authentication\Actions\ResetPassword as ResetPasswordAction;
 use Bambamboole\LaravelOidc\Server\Authentication\Actions\SendPasswordResetLink;
-use Bambamboole\LaravelOidc\Server\Authentication\Commands\PruneAuthenticationContextsCommand;
 use Bambamboole\LaravelOidc\Server\Authentication\Context\AuthenticationContextStore;
 use Bambamboole\LaravelOidc\Server\Authentication\Listeners\DispatchLoggedOut;
 use Bambamboole\LaravelOidc\Server\Authentication\Pipeline\InteractiveLoginFinalizer;
@@ -84,10 +83,6 @@ class AuthenticationServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(Logout::class, DispatchLoggedOut::class);
-
-        if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuthenticationContextsCommand::class]);
-        }
 
         ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => route(
             'identity.password.reset',

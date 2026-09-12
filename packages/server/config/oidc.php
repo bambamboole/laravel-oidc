@@ -61,6 +61,18 @@ return [
         'password_reset' => (int) env('OIDC_PASSWORD_RESET_TTL', 3600),
     ],
 
+    // How long `oidc:prune` keeps records it could already delete, in seconds.
+    // `tokens` covers revoked and expired access tokens, refresh tokens and
+    // authorization codes; introspection and audit read them for a while after
+    // they stop being usable. `sessions` is a correctness window rather than a
+    // preference: a queued back-channel logout job reads its session row, and a
+    // session that has not been announced yet must outlive the job that
+    // announces it.
+    'pruning' => [
+        'tokens' => (int) env('OIDC_PRUNING_TOKENS', 604800),
+        'sessions' => (int) env('OIDC_PRUNING_SESSIONS', 86400),
+    ],
+
     'session' => [
         'cookie_name' => env('OIDC_SESSION_COOKIE'),
 

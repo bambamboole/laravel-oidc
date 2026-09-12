@@ -9,6 +9,40 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.31: one prune command, and the models decide what is spent
+
+`oidc:purge`, `oidc:prune-authentication-contexts` and `oidc:prune-sessions` are replaced by a
+single `oidc:prune`. Each model now carries a `prunable()` query through Laravel's `MassPrunable`,
+and the command runs `model:prune` over the package's models — `model:prune` scans the
+application's own namespace, so it cannot find them unaided. Replace the three entries in your
+schedule with one:
+
+```php
+Schedule::command('oidc:prune')->daily();
+```
+
+`oidc_password_reset_tokens` is pruned for the first time: nothing ever deleted from it before, so
+expect the first run to clear a backlog.
+
+The `--revoked`, `--expired` and `--hours` options are gone. Retention moves to config, in seconds
+like every other lifetime in the file:
+
+```php
+'pruning' => [
+    'tokens' => (int) env('OIDC_PRUNING_TOKENS', 604800),
+    'sessions' => (int) env('OIDC_PRUNING_SESSIONS', 86400),
+],
+```
+
+One behaviour change comes with it. `--hours` was documented as covering records "that expired **or
+were revoked** at least this many hours ago", but the query applied the cutoff only to expiry and
+deleted every revoked record immediately. Revocation is now held for the same window, so a token
+that was just revoked survives until its retention passes — which is what introspection and audit
+read it for.
+
+`oidc:prune` takes `--pretend` and `--chunk` from `model:prune`. The `Purge\Purge{User,Client,Realm}`
+actions are unaffected: they delete everything one subject owns, which is not a question of age.
+
 ## 0.31: the auth screens serve their own component endpoints
 
 A realm that always requires a second factor parks the login on the enrollment

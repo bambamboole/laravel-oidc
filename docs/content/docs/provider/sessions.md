@@ -104,7 +104,7 @@ Which Laravel session the provider uses depends on [realm routing](/provider/rea
 ## Pruning
 
 `oidc_sessions` and `oidc_session_participants` grow one row per login and per participating client.
-Schedule `oidc:prune-sessions` and `oidc:dispatch-expired-session-logouts` — see
+Schedule `oidc:prune` and `oidc:dispatch-expired-session-logouts` — see
 [Scheduled maintenance](/provider/scheduled-maintenance/).
 
 `PurgeUser` deletes a user's session rows outright. It does not notify relying parties, so end the
