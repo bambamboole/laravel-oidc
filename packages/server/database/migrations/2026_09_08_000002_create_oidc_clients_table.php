@@ -23,7 +23,7 @@ return new class extends Migration
     {
         Schema::create('oidc_clients', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
+            $table->string('realm_id')->index();
             $table->string('client_id');
             $table->nullableUuidMorphs('owner');
             $table->string('name');

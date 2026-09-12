@@ -21,7 +21,7 @@ return new class extends Migration
     {
         Schema::create('oidc_consents', function (Blueprint $table): void {
             $table->uuid('id')->primary();
-            $table->string('realm_id')->default((string) config('oidc.realm', 'default'))->index();
+            $table->string('realm_id')->index();
             $table->uuid('user_id');
             $table->foreignUuid('client_id')->index();
             $table->string('resource');

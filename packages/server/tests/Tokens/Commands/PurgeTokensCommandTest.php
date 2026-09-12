@@ -18,6 +18,7 @@ function purgeTokenFixture(mixed $test, string $id, bool $revoked, string $expir
     $token = new AccessToken;
     $token->forceFill([
         'id' => $id,
+        'realm_id' => AccessToken::currentRealm(),
         'user_id' => (string) $test->user->id,
         'client_id' => (string) $test->client->id,
         'scopes' => ['openid'],
@@ -53,12 +54,14 @@ it('purges refresh tokens and authorization codes too', function (): void {
 
     (new RefreshToken)->forceFill([
         'id' => 'refresh',
+        'realm_id' => RefreshToken::currentRealm(),
         'access_token_id' => 'access',
         'expires_at' => now()->subWeeks(2)->toDateTimeString(),
     ])->save();
 
     (new AuthorizationCode)->forceFill([
         'id' => 'code',
+        'realm_id' => AuthorizationCode::currentRealm(),
         'user_id' => $this->user->id,
         'client_id' => $this->client->id,
         'scopes' => ['openid'],

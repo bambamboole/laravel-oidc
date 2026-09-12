@@ -8,6 +8,7 @@ use Carbon\CarbonInterface;
 function pruneTestContext(string $userId, CarbonInterface $expiresAt): AuthenticationContext
 {
     $context = new AuthenticationContext;
+    $context->realm_id = AuthenticationContext::currentRealm();
     $context->user_id = $userId;
     $context->amr = ['pwd'];
     $context->acr = '1';
