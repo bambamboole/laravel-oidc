@@ -9,6 +9,22 @@ nor `league/oauth2-server` is a dependency any more.
 
 This is a clean break. **No data migration ships with the package** — the new tables start empty.
 
+## 0.32: client secrets are encrypted, not hashed
+
+`oidc_clients.secret` held a bcrypt hash, so a secret was readable only in the request that
+minted it. It now holds a Laravel-encrypted value and `$client->secret` returns the plaintext,
+which is what an admin console needs to show a secret again rather than force a rotation.
+
+- The column is now `text`; re-run the package migrations, or widen it yourself.
+- **Existing rows do not survive.** A bcrypt hash cannot be decrypted, so every stored secret
+  has to be rotated — `ClientRepository::regenerateSecret()` for each confidential client.
+- The `Client::$plainSecret` property is gone. Read `$client->secret` instead; it works on any
+  instance, not just the one that set it.
+- `secret` stays in the model's `$hidden`, so it never appears in `toArray()`/`toJson()` by
+  accident. Read the attribute, or `makeVisible('secret')`, where you mean to expose it.
+- The secret is only as protected as `APP_KEY`. Rotating that key without re-encrypting leaves
+  every client secret unreadable.
+
 ## 0.31: Mautic plugin fixes
 
 Three defects in the Mautic bundle, all fixed without any action on your part:
