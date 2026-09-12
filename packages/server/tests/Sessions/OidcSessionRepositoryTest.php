@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bambamboole\LaravelOidc\Server\Sessions\Models\OidcSession;
 use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
+use Illuminate\Support\Str;
 
 it('creates a session, records participants idempotently, revokes and notifies', function (): void {
     config(['oidc.session.absolute_lifetime' => 3600]);
@@ -16,10 +17,13 @@ it('creates a session, records participants idempotently, revokes and notifies',
         ->and($session->expires_at->isFuture())->toBeTrue()
         ->and($session->revoked_at)->toBeNull();
 
-    $registry->recordParticipant($sid, 'client-a');
-    $registry->recordParticipant($sid, 'client-a');
-    $registry->recordParticipant($sid, 'client-b');
-    expect($registry->participantClientIds($sid))->toEqualCanonicalizing(['client-a', 'client-b']);
+    $first = (string) Str::uuid();
+    $second = (string) Str::uuid();
+
+    $registry->recordParticipant($sid, $first);
+    $registry->recordParticipant($sid, $first);
+    $registry->recordParticipant($sid, $second);
+    expect($registry->participantClientIds($sid))->toEqualCanonicalizing([$first, $second]);
 
     $registry->revoke($sid);
     expect($registry->find($sid)->revoked_at)->not->toBeNull();

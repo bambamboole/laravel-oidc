@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Bambamboole\LaravelOidc\Server\Sessions\Models\OidcSession;
 use Bambamboole\LaravelOidc\Server\Sessions\Models\SessionParticipant;
 use Bambamboole\LaravelOidc\Server\Sessions\OidcSessionRepository;
+use Illuminate\Support\Str;
 
 function pruneTestSession(string $userId, DateTimeInterface $expiresAt, ?DateTimeInterface $notifiedAt): string
 {
@@ -15,7 +16,7 @@ function pruneTestSession(string $userId, DateTimeInterface $expiresAt, ?DateTim
         'expires_at' => $expiresAt,
         'logout_notified_at' => $notifiedAt,
     ]);
-    $repository->recordParticipant($sid, 'some-client');
+    $repository->recordParticipant($sid, (string) Str::uuid());
 
     return $sid;
 }
