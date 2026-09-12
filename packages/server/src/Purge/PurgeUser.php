@@ -49,7 +49,7 @@ final readonly class PurgeUser
             Consent::query()->where('user_id', $id)->delete();
             AuthenticationContext::query()->where('user_id', $id)->delete();
             SessionParticipant::query()
-                ->whereIn('sid', OidcSession::query()->where('user_id', $id)->select('sid'))
+                ->whereIn('session_id', OidcSession::query()->where('user_id', $id)->select('id'))
                 ->delete();
             OidcSession::query()->where('user_id', $id)->delete();
             PasswordResetToken::query()->whereKey($id)->delete();

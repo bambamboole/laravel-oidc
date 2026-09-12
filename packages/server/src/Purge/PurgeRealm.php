@@ -40,7 +40,7 @@ final readonly class PurgeRealm
     {
         DB::transaction(function () use ($realm): void {
             SessionParticipant::query()
-                ->whereIn('sid', OidcSession::query()->where('realm_id', $realm)->select('sid'))
+                ->whereIn('session_id', OidcSession::query()->where('realm_id', $realm)->select('id'))
                 ->delete();
             OidcSession::query()->where('realm_id', $realm)->delete();
 

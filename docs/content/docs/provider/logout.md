@@ -66,8 +66,8 @@ carries is ended by its absolute lifetime and `oidc:dispatch-expired-session-log
 
 ### Ending a session from elsewhere
 
-An OIDC session records the id of the browser session its login happened in (`session_id` on
-`oidc_sessions`). An account page that lists a user's browser sessions can end the OIDC session
+An OIDC session records the id of the browser session its login happened in
+(`browser_session_id` on `oidc_sessions`). An account page that lists a user's browser sessions can end the OIDC session
 behind one of them without reading the session payload:
 
 ```php

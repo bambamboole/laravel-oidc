@@ -29,11 +29,11 @@ it('prunes sessions only once both expiry and logout notification are past the g
     $this->artisan('oidc:prune-sessions')->assertExitCode(0);
 
     expect(OidcSession::query()->whereKey($unnotified)->exists())->toBeTrue()
-        ->and(SessionParticipant::query()->where('sid', $unnotified)->exists())->toBeTrue()
+        ->and(SessionParticipant::query()->where('session_id', $unnotified)->exists())->toBeTrue()
         ->and(OidcSession::query()->whereKey($recentlyNotified)->exists())->toBeTrue()
-        ->and(SessionParticipant::query()->where('sid', $recentlyNotified)->exists())->toBeTrue()
+        ->and(SessionParticipant::query()->where('session_id', $recentlyNotified)->exists())->toBeTrue()
         ->and(OidcSession::query()->whereKey($notified)->exists())->toBeFalse()
-        ->and(SessionParticipant::query()->where('sid', $notified)->exists())->toBeFalse()
+        ->and(SessionParticipant::query()->where('session_id', $notified)->exists())->toBeFalse()
         ->and(OidcSession::query()->whereKey($recent)->exists())->toBeTrue()
-        ->and(SessionParticipant::query()->where('sid', $recent)->exists())->toBeTrue();
+        ->and(SessionParticipant::query()->where('session_id', $recent)->exists())->toBeTrue();
 });

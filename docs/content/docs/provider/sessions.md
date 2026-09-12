@@ -13,7 +13,7 @@ logout.
 | | Laravel's session | `oidc_sessions` |
 | --- | --- | --- |
 | What it is | Browser ↔ server state, behind a cookie and `SESSION_DRIVER` | The OIDC SSO session |
-| Identified by | Laravel's session id | `sid`, a UUID and the table's primary key |
+| Identified by | Laravel's session id | `id`, a UUID, published as the `sid` claim |
 | Holds | Login state, CSRF token, flash data, the package's own keys below | The user, the realm, the participating clients, the absolute expiry |
 | Lifetime | `config('session.lifetime')` — idle, extended by use | `oidc.session.absolute_lifetime` — absolute, from login, never extended |
 | Ends when | The browser is logged out, or it goes idle | It is revoked at logout, or reaches its absolute expiry |
@@ -24,17 +24,17 @@ logout.
 Three separate mappings exist, each for a different job.
 
 **`oidc.sid` in Laravel's session.** On the `Login` event for the identity guard, `StartOidcSession`
-inserts the `oidc_sessions` row and writes its `sid` into Laravel's session. This is what the
-authorize endpoint reads to stamp `sid` onto the authentication context, and what the logout listener
+inserts the `oidc_sessions` row and writes its `id` into Laravel's session. This is what the
+authorize endpoint reads to stamp `session_id` onto the authentication context, and what the logout listener
 reads to know which SSO session to revoke.
 
-**`session_id` on `oidc_sessions`.** The same listener records the browser session id the login ended
+**`browser_session_id` on `oidc_sessions`.** The same listener records the browser session id the login ended
 in. `OidcSessionRepository::findByBrowserSession()` looks a session up by it, so an account page
 listing a user's browser sessions can end the OIDC session behind one without decoding the session
 payload — which would break under an encrypted or differently serialized session. See
 [Logout](/provider/logout/#ending-a-session-from-elsewhere).
 
-:::caution[`session_id` is recorded once]
+:::caution[`browser_session_id` is recorded once]
 It is written at login and never updated. An application that regenerates the session afterwards —
 on a privilege change, for instance — leaves the recorded id stale, and `findByBrowserSession()`
 stops finding the row. Laravel's session guard already regenerates as part of `login()`, so a second
@@ -50,7 +50,7 @@ session — see [Back-channel logout](/client/backchannel-logout/).
 
 | Key | Holds |
 | --- | --- |
-| `oidc.sid` | The `oidc_sessions.sid` of this browser's SSO session |
+| `oidc.sid` | The `oidc_sessions.id` of this browser's SSO session |
 | `oidc.auth_time` | When the user authenticated, for `auth_time` and `max_age` |
 | `oidc.amr` | The authentication methods used, which `acr` is derived from |
 | `oidc.id_token_claims`, `oidc.access_token_claims` | Claims buffered by the [post-login pipeline](/auth/post-login-pipeline/) |
