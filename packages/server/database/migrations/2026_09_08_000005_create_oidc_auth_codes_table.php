@@ -6,12 +6,18 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * `id` is what descendant tokens are labelled with; `code` is the secret the
+ * browser carries back from the redirect. Keeping them apart keeps a 320-bit
+ * credential out of every row that merely points at this one.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('oidc_auth_codes', function (Blueprint $table): void {
-            $table->char('id', 80)->primary();
+            $table->uuid('id')->primary();
+            $table->char('code', 80)->unique();
             $table->string('realm_id')->index();
             $table->foreignUuid('user_id')->index();
             $table->foreignUuid('client_id')->index();

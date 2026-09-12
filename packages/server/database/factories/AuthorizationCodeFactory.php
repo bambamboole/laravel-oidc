@@ -22,7 +22,7 @@ class AuthorizationCodeFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => bin2hex(random_bytes(40)),
+            'code' => bin2hex(random_bytes(40)),
             'realm_id' => AuthorizationCode::currentRealm(),
             'user_id' => (string) Str::uuid(),
             'client_id' => (string) Str::uuid(),

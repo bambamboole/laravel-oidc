@@ -49,7 +49,7 @@ final readonly class AuthorizationCodeGrant implements Grant
             throw OAuthServerException::invalidRequest('The code parameter is missing.');
         }
 
-        $authCode = AuthorizationCode::query()->inRealm()->find($code)
+        $authCode = AuthorizationCode::query()->inRealm()->where('code', $code)->first()
             ?? throw OAuthServerException::invalidGrant('The authorization code is invalid.');
 
         // Ownership before replay detection: only the client the code was

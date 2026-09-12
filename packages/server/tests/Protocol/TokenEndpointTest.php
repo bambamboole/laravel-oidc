@@ -206,7 +206,7 @@ it('rejects a code presented by another client and leaves it usable for its righ
 it('rejects an expired authorization code', function (): void {
     $pkce = $this->pkce();
     $code = obtainAuthorizationCode($this, $pkce);
-    AuthorizationCode::query()->whereKey($code)->update(['expires_at' => now()->subMinute()]);
+    AuthorizationCode::query()->where('code', $code)->update(['expires_at' => now()->subMinute()]);
 
     $this->post('/oauth/token', codeRedemption($this, $code, $pkce))
         ->assertStatus(400)

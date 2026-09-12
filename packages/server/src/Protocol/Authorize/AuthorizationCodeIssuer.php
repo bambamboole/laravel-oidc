@@ -52,7 +52,7 @@ final readonly class AuthorizationCodeIssuer
 
         AuthorizationCode::query()->forceCreate([
             'realm_id' => AuthorizationCode::currentRealm(),
-            'id' => $code,
+            'code' => $code,
             'user_id' => $userId,
             'client_id' => $client->getKey(),
             'scopes' => $request->scopes,

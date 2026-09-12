@@ -26,6 +26,7 @@ final class TokenRevoker implements AccessTokenRevoker
         return AccessToken::query()->whereKey($jti)->whereNull('revoked_at')->update(['revoked_at' => $now]) === 1;
     }
 
+    /** @param  string  $authCodeId  the id of the authorization code the chain descends from, which may already be purged */
     public function revokeChain(string $authCodeId): void
     {
         $now = Date::now();
